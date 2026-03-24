@@ -66,7 +66,7 @@ export default async function PortalApprenantsPage({ params }: { params: { token
                   <div className="text-sm font-medium text-surface-900 flex items-center gap-1.5">
                     {ins.apprenant?.prenom} {ins.apprenant?.nom}
                     {ins.apprenant?.situation_handicap && (
-                      <Accessibility className="h-3.5 w-3.5 text-brand-500" title={`Handicap: ${ins.apprenant.type_handicap || 'Non précisé'}`} />
+                      <Accessibility className="h-3.5 w-3.5 text-brand-500" />
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-surface-500">

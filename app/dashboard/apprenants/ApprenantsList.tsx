@@ -186,7 +186,7 @@ export function ApprenantsList({ apprenants, clients, sessions, inscriptions }: 
                           <div className="text-sm font-medium text-surface-900 flex items-center gap-1.5">
                             {a.civilite} {a.prenom} {a.nom}
                             {a.situation_handicap && (
-                              <Accessibility className="h-3.5 w-3.5 text-brand-500" title="Situation de handicap" />
+                              <Accessibility className="h-3.5 w-3.5 text-brand-500" />
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-surface-500">
