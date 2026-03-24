@@ -23,7 +23,7 @@ export default async function ContactsPage() {
     <div className="animate-fade-in">
       <ContactsList
         contacts={(contacts || []) as Contact[]}
-        clients={(clients || []) as Pick<Client, 'id' | 'raison_sociale' | 'type'>[]}
+        clients={(clients || []) as any[]}
       />
     </div>
   )

@@ -47,8 +47,8 @@ export default async function SessionsPage() {
     <div className="animate-fade-in">
       <SessionsList
         sessions={sessionsWithCounts as Session[]}
-        formations={(formations || []) as Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures'>[]}
-        formateurs={(formateurs || []) as Pick<Formateur, 'id' | 'prenom' | 'nom'>[]}
+        formations={(formations || []) as any[]}
+        formateurs={(formateurs || []) as any[]}
       />
     </div>
   )

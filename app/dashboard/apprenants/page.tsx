@@ -45,8 +45,8 @@ export default async function ApprenantsPage() {
     <div className="animate-fade-in">
       <ApprenantsList
         apprenants={(apprenants || []) as Apprenant[]}
-        clients={(clients || []) as Pick<Client, 'id' | 'raison_sociale'>[]}
-        sessions={(sessions || []) as Pick<Session, 'id' | 'reference' | 'date_debut' | 'date_fin' | 'formation'>[]}
+        clients={(clients || []) as any[]}
+        sessions={(sessions || []) as any[]}
         inscriptions={inscriptions}
       />
     </div>

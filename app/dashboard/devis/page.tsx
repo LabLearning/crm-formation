@@ -37,8 +37,8 @@ export default async function DevisPage() {
     <div className="animate-fade-in">
       <DevisList
         devisList={(devisList || []) as Devis[]}
-        clients={(clients || []) as Pick<Client, 'id' | 'raison_sociale' | 'type' | 'nom' | 'prenom'>[]}
-        formations={(formations || []) as Pick<Formation, 'id' | 'intitule' | 'reference' | 'tarif_inter_ht'>[]}
+        clients={(clients || []) as any[]}
+        formations={(formations || []) as any[]}
       />
     </div>
   )
