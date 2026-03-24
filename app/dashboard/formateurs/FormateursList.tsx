@@ -1,0 +1,290 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import {
+  Plus, Search, MoreHorizontal, Pencil, Trash2, Save,
+  Presentation, Star, Award, Clock, Calendar, Euro,
+  CheckCircle2, XCircle, ShieldCheck, AlertTriangle,
+} from 'lucide-react'
+import { Button, Badge, Input, Select, Modal, Avatar, useToast } from '@/components/ui'
+import {
+  createFormateurAction, updateFormateurAction, deleteFormateurAction,
+  toggleFormateurAction, updateHabilitationAction,
+} from './actions'
+import { formatDate } from '@/lib/utils'
+import type { Formateur } from '@/lib/types/formation'
+
+interface FormateursListProps {
+  formateurs: Formateur[]
+  sessionCounts: Record<string, number>
+}
+
+const contratLabels: Record<string, string> = {
+  salarie: 'Salarié',
+  prestataire: 'Prestataire',
+  benevole: 'Bénévole',
+}
+
+const contratOptions = Object.entries(contratLabels).map(([v, l]) => ({ value: v, label: l }))
+
+function FormateurForm({ formateur, onDone }: { formateur?: Formateur; onDone: () => void }) {
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string[]>>({})
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsLoading(true); setErrors({})
+    const fd = new FormData(e.currentTarget)
+    const result = formateur ? await updateFormateurAction(formateur.id, fd) : await createFormateurAction(fd)
+    if (result.success) { toast('success', formateur ? 'Formateur mis à jour' : 'Formateur créé'); onDone() }
+    else if (result.errors) setErrors(result.errors)
+    else toast('error', result.error || 'Erreur')
+    setIsLoading(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+      <div className="grid grid-cols-3 gap-3">
+        <Select id="civilite" name="civilite" label="Civilité" options={[{ value: '', label: '—' }, { value: 'M.', label: 'M.' }, { value: 'Mme', label: 'Mme' }]} defaultValue={formateur?.civilite || ''} />
+        <Input id="prenom" name="prenom" label="Prénom *" defaultValue={formateur?.prenom || ''} error={errors.prenom?.[0]} />
+        <Input id="nom" name="nom" label="Nom *" defaultValue={formateur?.nom || ''} error={errors.nom?.[0]} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Input id="email" name="email" type="email" label="Email" defaultValue={formateur?.email || ''} error={errors.email?.[0]} />
+        <Input id="telephone" name="telephone" label="Téléphone" defaultValue={formateur?.telephone || ''} />
+      </div>
+
+      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Qualifications (Qualiopi C5)</div>
+      <textarea id="qualifications" name="qualifications" rows={3} className="input-base resize-none" placeholder="Diplômes, formations, expériences..." defaultValue={formateur?.qualifications || ''} />
+      <Input id="domaines_expertise" name="domaines_expertise" label="Domaines d'expertise" placeholder="Management, Bureautique, Sécurité (séparés par des virgules)" defaultValue={formateur?.domaines_expertise?.join(', ') || ''} />
+      <Input id="certifications" name="certifications" label="Certifications" placeholder="PMP, ITIL, PSM (séparés par des virgules)" defaultValue={formateur?.certifications?.join(', ') || ''} />
+
+      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Contrat</div>
+      <div className="grid grid-cols-2 gap-3">
+        <Select id="type_contrat" name="type_contrat" label="Type de contrat" options={contratOptions} defaultValue={formateur?.type_contrat || 'prestataire'} />
+        <Input id="siret" name="siret" label="SIRET (si prestataire)" defaultValue={formateur?.siret || ''} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Input id="tarif_journalier" name="tarif_journalier" type="number" label="Tarif journalier (€)" defaultValue={formateur?.tarif_journalier?.toString() || ''} />
+        <Input id="tarif_horaire" name="tarif_horaire" type="number" label="Tarif horaire (€)" defaultValue={formateur?.tarif_horaire?.toString() || ''} />
+      </div>
+
+      <div className="flex justify-end gap-3 pt-3 border-t border-surface-100">
+        <Button type="button" variant="secondary" onClick={onDone}>Annuler</Button>
+        <Button type="submit" isLoading={isLoading} icon={<Save className="h-4 w-4" />}>
+          {formateur ? 'Mettre à jour' : 'Créer le formateur'}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function HabilitationModal({ formateur, onDone }: { formateur: Formateur; onDone: () => void }) {
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsLoading(true)
+    const fd = new FormData(e.currentTarget)
+    const result = await updateHabilitationAction(formateur.id, fd)
+    if (result.success) { toast('success', 'Habilitation mise à jour'); onDone() }
+    else toast('error', result.error || 'Erreur')
+    setIsLoading(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-surface-600">
+        Mise à jour des habilitations de <strong>{formateur.prenom} {formateur.nom}</strong> (Qualiopi C5, Indicateur 21)
+      </p>
+      <Input id="date_derniere_habilitation" name="date_derniere_habilitation" type="date" label="Date de dernière habilitation" defaultValue={formateur.date_derniere_habilitation || ''} />
+      <Input id="prochaine_mise_a_jour" name="prochaine_mise_a_jour" type="date" label="Prochaine mise à jour prévue" defaultValue={formateur.prochaine_mise_a_jour || ''} />
+      <textarea id="habilitation_notes" name="habilitation_notes" rows={2} className="input-base resize-none" placeholder="Notes sur la mise à jour..." />
+
+      {/* History */}
+      {formateur.historique_habilitations && (formateur.historique_habilitations as unknown[]).length > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-2">Historique</div>
+          <div className="space-y-1.5 max-h-32 overflow-y-auto">
+            {(formateur.historique_habilitations as { date: string; notes: string }[]).reverse().map((h, i) => (
+              <div key={i} className="text-xs text-surface-600 p-2 bg-surface-50 rounded-lg">
+                <span className="font-medium">{h.date}</span>
+                {h.notes && <span className="text-surface-400"> — {h.notes}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-3 pt-2">
+        <Button type="button" variant="secondary" onClick={onDone}>Fermer</Button>
+        <Button type="submit" isLoading={isLoading} icon={<ShieldCheck className="h-4 w-4" />}>Enregistrer</Button>
+      </div>
+    </form>
+  )
+}
+
+export function FormateursList({ formateurs, sessionCounts }: FormateursListProps) {
+  const { toast } = useToast()
+  const [search, setSearch] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editFormateur, setEditFormateur] = useState<Formateur | null>(null)
+  const [habilitationFormateur, setHabilitationFormateur] = useState<Formateur | null>(null)
+  const [activeMenu, setActiveMenu] = useState<string | null>(null)
+
+  const filtered = useMemo(() => {
+    if (!search) return formateurs
+    const s = search.toLowerCase()
+    return formateurs.filter((f) =>
+      f.prenom.toLowerCase().includes(s) || f.nom.toLowerCase().includes(s) ||
+      f.domaines_expertise.some((d) => d.toLowerCase().includes(s)) ||
+      (f.email || '').toLowerCase().includes(s)
+    )
+  }, [formateurs, search])
+
+  function needsRenewal(f: Formateur): boolean {
+    if (!f.prochaine_mise_a_jour) return false
+    const diff = new Date(f.prochaine_mise_a_jour).getTime() - Date.now()
+    return diff < 30 * 24 * 60 * 60 * 1000 // < 30 jours
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Supprimer ce formateur ?')) return
+    const result = await deleteFormateurAction(id)
+    if (result.success) toast('success', 'Formateur supprimé')
+    else toast('error', result.error || 'Erreur')
+    setActiveMenu(null)
+  }
+
+  async function handleToggle(id: string, current: boolean) {
+    const result = await toggleFormateurAction(id, !current)
+    if (result.success) toast('success', !current ? 'Formateur activé' : 'Formateur désactivé')
+    setActiveMenu(null)
+  }
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Formateurs</h1>
+          <p className="text-surface-500 mt-1 text-sm">{formateurs.length} formateur{formateurs.length > 1 ? 's' : ''}</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Nouveau formateur</Button>
+      </div>
+
+      <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-surface-200/60 max-w-md mb-5">
+        <Search className="h-4 w-4 text-surface-400" />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, expertise..." className="bg-transparent text-sm text-surface-700 placeholder:text-surface-400 focus:outline-none flex-1" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {filtered.map((f) => (
+          <div key={f.id} className={`card p-5 hover:shadow-card transition-shadow ${!f.is_active ? 'opacity-60' : ''}`}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <Avatar firstName={f.prenom} lastName={f.nom} size="lg" />
+                <div>
+                  <div className="text-sm font-semibold text-surface-900">{f.civilite} {f.prenom} {f.nom}</div>
+                  <div className="text-xs text-surface-500">{contratLabels[f.type_contrat] || f.type_contrat}</div>
+                  {f.note_moyenne && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Star className="h-3 w-3 text-warning-500 fill-warning-500" />
+                      <span className="text-xs font-medium text-surface-700">{f.note_moyenne}/5</span>
+                      <span className="text-2xs text-surface-400">({f.nombre_evaluations})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="relative">
+                <button onClick={() => setActiveMenu(activeMenu === f.id ? null : f.id)} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+                {activeMenu === f.id && (
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border shadow-elevated py-1 z-20 animate-in-scale origin-top-right">
+                    <button onClick={() => { setEditFormateur(f); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                      <Pencil className="h-4 w-4 text-surface-400" /> Modifier
+                    </button>
+                    <button onClick={() => { setHabilitationFormateur(f); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
+                      <ShieldCheck className="h-4 w-4" /> Habilitations
+                    </button>
+                    <button onClick={() => handleToggle(f.id, f.is_active)} className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm ${f.is_active ? 'text-warning-600 hover:bg-warning-50' : 'text-success-600 hover:bg-success-50'}`}>
+                      {f.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                      {f.is_active ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <button onClick={() => handleDelete(f.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-danger-600 hover:bg-danger-50">
+                      <Trash2 className="h-4 w-4" /> Supprimer
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Expertise tags */}
+            {f.domaines_expertise.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {f.domaines_expertise.map((d) => (
+                  <Badge key={d} variant="info">{d}</Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Certifications */}
+            {f.certifications.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {f.certifications.map((c) => (
+                  <Badge key={c} variant="success"><Award className="h-3 w-3 mr-0.5" />{c}</Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div className="flex items-center gap-4 text-xs text-surface-500 pt-3 border-t border-surface-100">
+              <span className="flex items-center gap-1">
+                <Presentation className="h-3.5 w-3.5" />
+                {sessionCounts[f.id] || 0} sessions
+              </span>
+              {f.tarif_journalier && (
+                <span className="flex items-center gap-1">
+                  <Euro className="h-3.5 w-3.5" />
+                  {Number(f.tarif_journalier).toLocaleString('fr-FR')} €/j
+                </span>
+              )}
+              {needsRenewal(f) && (
+                <span className="flex items-center gap-1 text-warning-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Renouvellement
+                </span>
+              )}
+            </div>
+
+            {/* Habilitation status */}
+            {f.date_derniere_habilitation && (
+              <div className="text-2xs text-surface-400 mt-2">
+                Dernière habilitation : {formatDate(f.date_derniere_habilitation, { day: 'numeric', month: 'short', year: 'numeric' })}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
+          <Presentation className="h-6 w-6 text-surface-400" />
+          <p className="text-sm text-surface-500">Aucun formateur trouvé</p>
+        </div>
+      )}
+
+      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau formateur" size="lg">
+        <FormateurForm onDone={() => setCreateOpen(false)} />
+      </Modal>
+      <Modal isOpen={!!editFormateur} onClose={() => setEditFormateur(null)} title="Modifier le formateur" size="lg">
+        {editFormateur && <FormateurForm formateur={editFormateur} onDone={() => setEditFormateur(null)} />}
+      </Modal>
+      <Modal isOpen={!!habilitationFormateur} onClose={() => setHabilitationFormateur(null)} title="Gestion des habilitations">
+        {habilitationFormateur && <HabilitationModal formateur={habilitationFormateur} onDone={() => setHabilitationFormateur(null)} />}
+      </Modal>
+    </div>
+  )
+}
