@@ -11,13 +11,14 @@ import type { User } from '@/lib/types'
 interface LeadFormProps {
   lead?: Lead
   users: Pick<User, 'id' | 'first_name' | 'last_name'>[]
+  hideAssign?: boolean
   onSuccess: () => void
   onCancel: () => void
 }
 
 const sourceOptions = Object.entries(LEAD_SOURCE_LABELS).map(([value, label]) => ({ value, label }))
 
-export function LeadForm({ lead, users, onSuccess, onCancel }: LeadFormProps) {
+export function LeadForm({ lead, users, hideAssign, onSuccess, onCancel }: LeadFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
@@ -163,14 +164,16 @@ export function LeadForm({ lead, users, onSuccess, onCancel }: LeadFormProps) {
         />
       </div>
 
-      <Select
-        id="assigned_to"
-        name="assigned_to"
-        label="Assigné à"
-        options={userOptions}
-        defaultValue={lead?.assigned_to || ''}
-        placeholder="Sélectionner un responsable"
-      />
+      {!hideAssign && (
+        <Select
+          id="assigned_to"
+          name="assigned_to"
+          label="Assigné à"
+          options={userOptions}
+          defaultValue={lead?.assigned_to || ''}
+          placeholder="Sélectionner un responsable"
+        />
+      )}
 
       <div className="flex items-center gap-2 pt-2">
         <label htmlFor="commentaire" className="text-sm font-medium text-surface-700">

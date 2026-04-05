@@ -21,6 +21,18 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
   }
 
   const supabase = await createServiceRoleClient()
+
+  // Si c'est un apporteur, auto-lier le lead à sa fiche
+  let apporteurId = parsed.data.apporteur_id || null
+  if (session.user.role === 'apporteur_affaires' && !apporteurId) {
+    const { data: apporteurRecord } = await supabase
+      .from('apporteurs_affaires')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single()
+    apporteurId = apporteurRecord?.id || null
+  }
+
   const insertData = {
     ...parsed.data,
     organization_id: session.organization.id,
@@ -28,8 +40,9 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
     montant_estime: parsed.data.montant_estime || null,
     nombre_stagiaires: parsed.data.nombre_stagiaires || null,
     date_souhaitee: parsed.data.date_souhaitee || null,
-    apporteur_id: parsed.data.apporteur_id || null,
-    assigned_to: parsed.data.assigned_to || session.user.id,
+    apporteur_id: apporteurId,
+    assigned_to: parsed.data.assigned_to || (session.user.role === 'apporteur_affaires' ? null : session.user.id),
+    source: session.user.role === 'apporteur_affaires' ? 'apporteur' : (parsed.data.source || 'autre'),
     status: 'nouveau' as const,
   }
 

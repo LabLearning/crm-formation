@@ -375,7 +375,7 @@ export function LeadsPipeline({ leads, users }: LeadsPipelineProps) {
 
       {/* Create Modal */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau lead" description="Ajoutez un nouveau prospect" size="lg">
-        <LeadForm users={users} onSuccess={() => { setCreateOpen(false); toast('success', 'Lead cree') }} onCancel={() => setCreateOpen(false)} />
+        <LeadForm users={users} hideAssign={users.length === 0} onSuccess={() => { setCreateOpen(false); toast('success', 'Lead créé') }} onCancel={() => setCreateOpen(false)} />
       </Modal>
 
       {/* Detail Modal */}
