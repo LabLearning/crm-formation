@@ -11,6 +11,13 @@ import { formatDateTime } from '@/lib/utils'
 
 export default async function DashboardPage() {
   const { user, organization } = await getSession()
+
+  // Rôles commerciaux → redirigés vers leur Vue Terrain
+  if (['commercial', 'directeur_commercial', 'apporteur_affaires'].includes(user.role)) {
+    const { redirect } = await import('next/navigation')
+    redirect('/dashboard/commercial')
+  }
+
   let data
   try {
     data = await getDashboardData()
