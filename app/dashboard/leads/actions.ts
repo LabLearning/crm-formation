@@ -10,9 +10,13 @@ import type { ActionResult } from '@/lib/types'
 export async function createLeadAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession()
 
+  // Champs obligatoires qui doivent rester en string même vide
+  const requiredFields = ['contact_nom', 'source']
   const raw: Record<string, unknown> = {}
   for (const [key, value] of formData.entries()) {
-    if (key !== 'formation_id') raw[key] = value
+    if (key === 'formation_id') continue
+    // Champs optionnels : convertir '' en undefined pour éviter les erreurs de coerce
+    raw[key] = (!requiredFields.includes(key) && value === '') ? undefined : value
   }
 
   // Pour l'apporteur, forcer la source
@@ -22,6 +26,7 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
 
   const parsed = createLeadSchema.safeParse(raw)
   if (!parsed.success) {
+    console.error('[Create Lead Validation]', JSON.stringify(parsed.error.flatten()))
     return { success: false, errors: parsed.error.flatten().fieldErrors }
   }
 
@@ -58,8 +63,8 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
     .single()
 
   if (error) {
-    console.error('[Create Lead]', error)
-    return { success: false, error: 'Erreur lors de la création du lead' }
+    console.error('[Create Lead Insert]', error.message, error.details, error.hint)
+    return { success: false, error: `Erreur : ${error.message}` }
   }
 
   await logAudit({
