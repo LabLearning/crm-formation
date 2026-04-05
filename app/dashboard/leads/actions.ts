@@ -12,7 +12,12 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
 
   const raw: Record<string, unknown> = {}
   for (const [key, value] of formData.entries()) {
-    raw[key] = value
+    if (key !== 'formation_id') raw[key] = value
+  }
+
+  // Pour l'apporteur, forcer la source
+  if (session.user.role === 'apporteur_affaires') {
+    raw.source = 'apporteur'
   }
 
   const parsed = createLeadSchema.safeParse(raw)
