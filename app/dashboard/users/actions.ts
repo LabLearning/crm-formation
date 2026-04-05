@@ -72,7 +72,7 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
 
   // Generate invite link via Supabase Auth (without sending its default email)
   const serviceClient = await createServiceRoleClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm-formation-five.vercel.app'
 
   const { data: linkData, error: linkError } = await serviceClient.auth.admin.generateLink({
     type: 'invite',
@@ -95,7 +95,7 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     toEmail: parsed.data.email,
     role: parsed.data.role,
     orgName: session.organization.name,
-    orgEmail: session.organization.email || 'noreply@lab-learning.fr',
+    orgEmail: 'noreply@lab-learning.fr',
     invitedByName: inviterName,
     inviteUrl,
   })
