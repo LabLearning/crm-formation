@@ -105,6 +105,36 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
       role: parsed.data.role,
       status: 'invited',
     }, { onConflict: 'id' })
+
+    // Auto-créer la fiche métier liée au user
+    if (parsed.data.role === 'apporteur_affaires') {
+      await supabase.from('apporteurs_affaires').upsert({
+        organization_id: session.organization.id,
+        user_id: authUserId,
+        nom: '',
+        email: parsed.data.email,
+        taux_commission: 10,
+        is_active: true,
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
+    } else if (parsed.data.role === 'formateur') {
+      await supabase.from('formateurs').upsert({
+        organization_id: session.organization.id,
+        user_id: authUserId,
+        nom: '',
+        prenom: '',
+        email: parsed.data.email,
+        specialites: [],
+        is_active: true,
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
+    } else if (parsed.data.role === 'apprenant') {
+      await supabase.from('apprenants').upsert({
+        organization_id: session.organization.id,
+        user_id: authUserId,
+        nom: '',
+        prenom: '',
+        email: parsed.data.email,
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
+    }
   }
 
   const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${authUserId}`

@@ -43,7 +43,7 @@ interface Props {
   interactionsToday: any[]
   devisEnCours: any[]
   commissions?: any[]
-  apporteurInfo?: { taux_commission: number; mode_commission: string } | null
+  apporteurInfo?: { taux_commission: number } | null
   apporteurClients?: any[]
 }
 
@@ -450,7 +450,7 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                   Taux de commission : <strong>{apporteurInfo.taux_commission}%</strong>
                 </div>
                 <div className="text-xs text-surface-500">
-                  Mode : {apporteurInfo.mode_commission === 'pourcentage' ? 'Pourcentage du montant HT' : 'Montant fixe par dossier'}
+                  Pourcentage calculé sur le montant HT du dossier
                 </div>
               </div>
             </div>

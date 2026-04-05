@@ -12,6 +12,27 @@ export default async function CommercialPage() {
   const isDirecteur = session.user.role === 'directeur_commercial'
   const isApporteur = session.user.role === 'apporteur_affaires'
 
+  // Récupérer la fiche apporteur si applicable
+  let apporteurRecordId: string | null = null
+  if (isApporteur) {
+    const { data: apporteurRecord } = await supabase
+      .from('apporteurs_affaires')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+    apporteurRecordId = apporteurRecord?.id || null
+
+    if (!apporteurRecordId) {
+      // Pas de fiche liée — afficher l'état "compte non configuré"
+      const { AccountNotLinked } = await import('@/components/dashboard/AccountNotLinked')
+      return (
+        <div className="animate-fade-in">
+          <AccountNotLinked roleName="Apporteur d'affaires" userName={session.user.first_name || 'Apporteur'} />
+        </div>
+      )
+    }
+  }
+
   // Leads — directeur sees all, apporteur sees sourced, commercial sees assigned
   let leadsQuery = supabase
     .from('leads')
@@ -19,17 +40,8 @@ export default async function CommercialPage() {
     .eq('organization_id', orgId)
     .order('updated_at', { ascending: false })
     .limit(100)
-  if (isApporteur) {
-    const { data: apporteurRecord } = await supabase
-      .from('apporteurs_affaires')
-      .select('id')
-      .eq('user_id', userId)
-      .single()
-    if (apporteurRecord) {
-      leadsQuery = leadsQuery.eq('apporteur_id', apporteurRecord.id)
-    } else {
-      leadsQuery = leadsQuery.eq('apporteur_id', '00000000-0000-0000-0000-000000000000')
-    }
+  if (isApporteur && apporteurRecordId) {
+    leadsQuery = leadsQuery.eq('apporteur_id', apporteurRecordId)
   } else if (!isDirecteur) {
     leadsQuery = leadsQuery.eq('assigned_to', userId)
   }
@@ -65,36 +77,35 @@ export default async function CommercialPage() {
   let commissions: any[] = []
   let apporteurInfo: any = null
   let apporteurClients: any[] = []
-  if (isApporteur) {
+  if (isApporteur && apporteurRecordId) {
     const { data: apporteurRecord } = await supabase
       .from('apporteurs_affaires')
-      .select('id, taux_commission, mode_commission')
-      .eq('user_id', userId)
+      .select('id, taux_commission')
+      .eq('id', apporteurRecordId)
       .single()
     apporteurInfo = apporteurRecord
-    if (apporteurRecord) {
-      const { data: comms } = await supabase
-        .from('commissions')
-        .select('id, montant, status, date_validation, lead:leads(contact_nom, contact_prenom, entreprise, montant_estime, status)')
-        .eq('apporteur_id', apporteurRecord.id)
-        .order('date_validation', { ascending: false })
-        .limit(30)
-      commissions = comms || []
 
-      // Clients liés aux leads de l'apporteur
-      const { data: leadsWithClient } = await supabase
-        .from('leads')
-        .select('client_id')
-        .eq('apporteur_id', apporteurRecord.id)
-        .not('client_id', 'is', null)
-      const clientIds = [...new Set((leadsWithClient || []).map((l: any) => l.client_id).filter(Boolean))]
-      if (clientIds.length > 0) {
-        const { data: clients } = await supabase
-          .from('clients')
-          .select('id, raison_sociale, ville, secteur_activite')
-          .in('id', clientIds)
-        apporteurClients = clients || []
-      }
+    const { data: comms } = await supabase
+      .from('commissions')
+      .select('id, montant, status, date_validation, lead:leads(contact_nom, contact_prenom, entreprise, montant_estime, status)')
+      .eq('apporteur_id', apporteurRecordId)
+      .order('date_validation', { ascending: false })
+      .limit(30)
+    commissions = comms || []
+
+    // Clients liés aux leads de l'apporteur
+    const { data: leadsWithClient } = await supabase
+      .from('leads')
+      .select('client_id')
+      .eq('apporteur_id', apporteurRecordId)
+      .not('client_id', 'is', null)
+    const clientIds = [...new Set((leadsWithClient || []).map((l: any) => l.client_id).filter(Boolean))]
+    if (clientIds.length > 0) {
+      const { data: clients } = await supabase
+        .from('clients')
+        .select('id, raison_sociale, ville, secteur_activite')
+        .in('id', clientIds)
+      apporteurClients = clients || []
     }
   }
 
