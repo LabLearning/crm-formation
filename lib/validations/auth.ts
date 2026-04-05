@@ -22,8 +22,9 @@ export const inviteUserSchema = z.object({
   role: z.enum([
     'super_admin',
     'gestionnaire',
+    'directeur_commercial',
     'commercial',
-    'comptable',
+    'apporteur_affaires',
     'formateur',
     'apprenant',
   ], { message: 'Rôle invalide' }),
@@ -36,8 +37,9 @@ export const updateUserSchema = z.object({
   role: z.enum([
     'super_admin',
     'gestionnaire',
+    'directeur_commercial',
     'commercial',
-    'comptable',
+    'apporteur_affaires',
     'formateur',
     'apprenant',
   ]).optional(),
