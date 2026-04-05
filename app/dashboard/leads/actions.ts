@@ -17,7 +17,7 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
 
   // Pour l'apporteur, forcer la source
   if (session.user.role === 'apporteur_affaires') {
-    raw.source = 'apporteur'
+    raw.source = 'apporteur_affaires'
   }
 
   const parsed = createLeadSchema.safeParse(raw)
@@ -47,7 +47,7 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
     date_souhaitee: parsed.data.date_souhaitee || null,
     apporteur_id: apporteurId,
     assigned_to: parsed.data.assigned_to || (session.user.role === 'apporteur_affaires' ? null : session.user.id),
-    source: session.user.role === 'apporteur_affaires' ? 'apporteur' : (parsed.data.source || 'autre'),
+    source: session.user.role === 'apporteur_affaires' ? 'apporteur_affaires' : (parsed.data.source || 'autre'),
     status: 'nouveau' as const,
   }
 

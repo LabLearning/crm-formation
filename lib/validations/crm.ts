@@ -11,7 +11,7 @@ export const createLeadSchema = z.object({
   entreprise: z.string().optional(),
   siret: z.string().optional(),
   source: z.enum([
-    'site_web', 'apporteur_affaires', 'apporteur', 'phoning', 'salon',
+    'site_web', 'apporteur_affaires', 'phoning', 'salon',
     'bouche_a_oreille', 'reseaux_sociaux', 'email_entrant',
     'partenaire', 'ancien_client', 'autre',
   ]).optional().default('autre'),
