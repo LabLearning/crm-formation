@@ -234,3 +234,84 @@ export async function stopImpersonationAction(): Promise<ActionResult> {
   ;(cookieStore as any).delete('ll_impersonate')
   return { success: true }
 }
+
+export async function resendInvitationAction(invitationId: string): Promise<ActionResult> {
+  const session = await getSession()
+
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Acces non autorise' }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const { data: invitation } = await supabase
+    .from('invitations')
+    .select('*')
+    .eq('id', invitationId)
+    .eq('organization_id', session.organization.id)
+    .single()
+
+  if (!invitation) {
+    return { success: false, error: 'Invitation introuvable' }
+  }
+
+  // Extend expiry
+  await supabase
+    .from('invitations')
+    .update({ expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+    .eq('id', invitationId)
+
+  // Regenerate invite link
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm-formation-five.vercel.app'
+
+  const { data: linkData } = await supabase.auth.admin.generateLink({
+    type: 'invite',
+    email: invitation.email,
+    options: {
+      data: { invitation_token: invitation.token },
+      redirectTo: `${appUrl}/dashboard`,
+    },
+  })
+
+  let inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
+  if (inviteUrl.includes('localhost')) {
+    inviteUrl = inviteUrl.replace(/http:\/\/localhost:\d+/g, appUrl)
+  }
+
+  const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
+
+  await sendInvitationEmail({
+    toEmail: invitation.email,
+    role: invitation.role,
+    orgName: session.organization.name,
+    orgEmail: 'noreply@lab-learning.fr',
+    invitedByName: inviterName,
+    inviteUrl,
+  })
+
+  revalidatePath('/dashboard/users')
+  return { success: true }
+}
+
+export async function cancelInvitationAction(invitationId: string): Promise<ActionResult> {
+  const session = await getSession()
+
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Acces non autorise' }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const { error } = await supabase
+    .from('invitations')
+    .delete()
+    .eq('id', invitationId)
+    .eq('organization_id', session.organization.id)
+
+  if (error) {
+    return { success: false, error: 'Erreur lors de la suppression' }
+  }
+
+  revalidatePath('/dashboard/users')
+  return { success: true }
+}
