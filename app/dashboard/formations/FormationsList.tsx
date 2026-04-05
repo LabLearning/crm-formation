@@ -13,9 +13,10 @@ import type { Formation } from '@/lib/types/formation'
 
 interface FormationsListProps {
   formations: Formation[]
+  readOnly?: boolean
 }
 
-export function FormationsList({ formations }: FormationsListProps) {
+export function FormationsList({ formations, readOnly }: FormationsListProps) {
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all')
@@ -56,9 +57,11 @@ export function FormationsList({ formations }: FormationsListProps) {
             {formations.length} formation{formations.length > 1 ? 's' : ''} au catalogue
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
-          Nouvelle formation
-        </Button>
+        {!readOnly && (
+          <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
+            Nouvelle formation
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -89,25 +92,27 @@ export function FormationsList({ formations }: FormationsListProps) {
                 <h3 className="text-sm font-semibold text-surface-900 line-clamp-2">{f.intitule}</h3>
                 {f.sous_titre && <p className="text-xs text-surface-500 mt-0.5 truncate">{f.sous_titre}</p>}
               </div>
-              <div className="relative ml-2">
-                <button onClick={() => setActiveMenu(activeMenu === f.id ? null : f.id)} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-                {activeMenu === f.id && (
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border shadow-elevated py-1 z-20 animate-in-scale origin-top-right">
-                    <button onClick={() => { setEditFormation(f); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
-                      <Pencil className="h-4 w-4 text-surface-400" /> Modifier
-                    </button>
-                    <button onClick={() => handleToggle(f.id, f.is_active)} className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm ${f.is_active ? 'text-warning-600 hover:bg-warning-50' : 'text-success-600 hover:bg-success-50'}`}>
-                      {f.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      {f.is_active ? 'Désactiver' : 'Activer'}
-                    </button>
-                    <button onClick={() => handleDelete(f.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-danger-600 hover:bg-danger-50">
-                      <Trash2 className="h-4 w-4" /> Supprimer
-                    </button>
-                  </div>
-                )}
-              </div>
+              {!readOnly && (
+                <div className="relative ml-2">
+                  <button onClick={() => setActiveMenu(activeMenu === f.id ? null : f.id)} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                  {activeMenu === f.id && (
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border shadow-elevated py-1 z-20 animate-in-scale origin-top-right">
+                      <button onClick={() => { setEditFormation(f); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                        <Pencil className="h-4 w-4 text-surface-400" /> Modifier
+                      </button>
+                      <button onClick={() => handleToggle(f.id, f.is_active)} className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm ${f.is_active ? 'text-warning-600 hover:bg-warning-50' : 'text-success-600 hover:bg-success-50'}`}>
+                        {f.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {f.is_active ? 'Désactiver' : 'Activer'}
+                      </button>
+                      <button onClick={() => handleDelete(f.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-danger-600 hover:bg-danger-50">
+                        <Trash2 className="h-4 w-4" /> Supprimer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Tags row */}
