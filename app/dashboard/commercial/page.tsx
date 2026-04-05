@@ -61,9 +61,10 @@ export default async function CommercialPage() {
   }
   const { data: devis } = await devisQuery
 
-  // Commissions pour l'apporteur
+  // Données spécifiques apporteur
   let commissions: any[] = []
   let apporteurInfo: any = null
+  let apporteurClients: any[] = []
   if (isApporteur) {
     const { data: apporteurRecord } = await supabase
       .from('apporteurs_affaires')
@@ -74,11 +75,26 @@ export default async function CommercialPage() {
     if (apporteurRecord) {
       const { data: comms } = await supabase
         .from('commissions')
-        .select('id, montant, status, date_validation, lead:leads(contact_nom, contact_prenom, entreprise)')
+        .select('id, montant, status, date_validation, lead:leads(contact_nom, contact_prenom, entreprise, montant_estime, status)')
         .eq('apporteur_id', apporteurRecord.id)
         .order('date_validation', { ascending: false })
-        .limit(20)
+        .limit(30)
       commissions = comms || []
+
+      // Clients liés aux leads de l'apporteur
+      const { data: leadsWithClient } = await supabase
+        .from('leads')
+        .select('client_id')
+        .eq('apporteur_id', apporteurRecord.id)
+        .not('client_id', 'is', null)
+      const clientIds = [...new Set((leadsWithClient || []).map((l: any) => l.client_id).filter(Boolean))]
+      if (clientIds.length > 0) {
+        const { data: clients } = await supabase
+          .from('clients')
+          .select('id, raison_sociale, ville, secteur_activite')
+          .in('id', clientIds)
+        apporteurClients = clients || []
+      }
     }
   }
 
@@ -92,6 +108,7 @@ export default async function CommercialPage() {
         devisEnCours={devis || []}
         commissions={commissions}
         apporteurInfo={apporteurInfo}
+        apporteurClients={apporteurClients}
       />
     </div>
   )
