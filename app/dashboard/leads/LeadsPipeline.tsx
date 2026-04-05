@@ -24,9 +24,17 @@ import type { Lead, LeadStatus } from '@/lib/types/crm'
 import type { User } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
+interface Formation {
+  id: string
+  intitule: string
+  prix_ht: number | null
+}
+
 interface LeadsPipelineProps {
   leads: Lead[]
   users: Pick<User, 'id' | 'first_name' | 'last_name'>[]
+  formations?: Formation[]
+  isApporteur?: boolean
 }
 
 const COLUMN_BG: Record<LeadStatus, string> = {
@@ -63,7 +71,7 @@ function scoreBg(s: number) { return s >= 70 ? 'bg-success-50' : s >= 40 ? 'bg-w
 type ViewMode = 'kanban' | 'list' | 'cards'
 type FilterChip = 'all' | 'gagne' | 'perdu' | 'today' | 'high_score'
 
-export function LeadsPipeline({ leads, users }: LeadsPipelineProps) {
+export function LeadsPipeline({ leads, users, formations = [], isApporteur }: LeadsPipelineProps) {
   const { toast } = useToast()
   const [view, setView] = useState<ViewMode>('kanban')
   const [createOpen, setCreateOpen] = useState(false)
@@ -374,8 +382,8 @@ export function LeadsPipeline({ leads, users }: LeadsPipelineProps) {
       )}
 
       {/* Create Modal */}
-      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau lead" description="Ajoutez un nouveau prospect" size="lg">
-        <LeadForm users={users} hideAssign={users.length === 0} onSuccess={() => { setCreateOpen(false); toast('success', 'Lead créé') }} onCancel={() => setCreateOpen(false)} />
+      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau lead" description={isApporteur ? 'Soumettez un prospect à Lab Learning' : 'Ajoutez un nouveau prospect'} size="lg">
+        <LeadForm users={users} formations={formations} isApporteur={isApporteur} hideAssign={isApporteur || users.length === 0} onSuccess={() => { setCreateOpen(false); toast('success', 'Lead créé') }} onCancel={() => setCreateOpen(false)} />
       </Modal>
 
       {/* Detail Modal */}

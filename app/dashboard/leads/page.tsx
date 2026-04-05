@@ -43,11 +43,23 @@ export default async function LeadsPage() {
     .eq('status', 'active')
     .in('role', ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial'])
 
+  // Formations pour le sélecteur (apporteur)
+  const { data: formations } = await supabase
+    .from('formations')
+    .select('id, intitule, prix_ht')
+    .eq('organization_id', session.organization.id)
+    .eq('is_active', true)
+    .order('intitule')
+
+  const isApporteur = session.user.role === 'apporteur_affaires'
+
   return (
     <div className="animate-fade-in">
       <LeadsPipeline
         leads={(leads || []) as Lead[]}
         users={users || []}
+        formations={formations || []}
+        isApporteur={isApporteur}
       />
     </div>
   )
