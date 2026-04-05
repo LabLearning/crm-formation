@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/lib/types'
 
 export async function setupAccountAction(formData: FormData): Promise<ActionResult> {
@@ -12,11 +12,11 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
   const uid = formData.get('uid') as string
 
   if (!firstName || !lastName) {
-    return { success: false, error: 'Veuillez renseigner votre prenom et nom' }
+    return { success: false, error: 'Veuillez renseigner votre prénom et nom' }
   }
 
   if (!password || password.length < 8) {
-    return { success: false, error: 'Le mot de passe doit contenir au moins 8 caracteres' }
+    return { success: false, error: 'Le mot de passe doit contenir au moins 8 caractères' }
   }
 
   if (password !== confirmPassword) {
@@ -29,7 +29,7 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
 
   const supabase = await createServiceRoleClient()
 
-  // Verify invitation token against our table
+  // Vérifier le token d'invitation contre notre table
   const { data: invitation } = await supabase
     .from('invitations')
     .select('*')
@@ -38,14 +38,14 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     .single()
 
   if (!invitation) {
-    return { success: false, error: 'Invitation invalide ou deja utilisee' }
+    return { success: false, error: 'Invitation invalide ou déjà utilisée' }
   }
 
   if (new Date(invitation.expires_at) < new Date()) {
-    return { success: false, error: 'Cette invitation a expire. Demandez un nouveau lien.' }
+    return { success: false, error: 'Cette invitation a expiré. Demandez un nouveau lien.' }
   }
 
-  // Update password + confirm email in Supabase Auth
+  // Mettre à jour le mot de passe + confirmer l'email dans Supabase Auth
   const { error: authError } = await supabase.auth.admin.updateUserById(uid, {
     password,
     email_confirm: true,
@@ -56,7 +56,7 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     return { success: false, error: authError.message }
   }
 
-  // Update user profile in users table
+  // Mettre à jour le profil dans la table users
   await supabase
     .from('users')
     .update({
@@ -66,11 +66,18 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     })
     .eq('id', uid)
 
-  // Mark invitation as accepted
+  // Marquer l'invitation comme acceptée
   await supabase
     .from('invitations')
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', invitation.id)
 
-  return { success: true, data: { email: invitation.email } }
+  // Connexion automatique côté serveur (pose les cookies de session)
+  const anonClient = await createServerSupabaseClient()
+  await anonClient.auth.signInWithPassword({
+    email: invitation.email,
+    password,
+  })
+
+  return { success: true }
 }

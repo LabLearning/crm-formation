@@ -22,11 +22,11 @@ function SetupForm() {
           </div>
           <h1 className="text-xl font-heading font-bold text-surface-900 mb-2">Lien invalide</h1>
           <p className="text-surface-500 text-sm mb-6">
-            Ce lien d'invitation est invalide ou a expire.
-            Demandez a votre administrateur de vous renvoyer une invitation.
+            Ce lien d'invitation est invalide ou a expiré.
+            Demandez à votre administrateur de vous renvoyer une invitation.
           </p>
           <a href="/login" className="btn-primary inline-flex items-center gap-2 px-6 py-2.5">
-            Retour a la connexion
+            Retour à la connexion
           </a>
         </div>
       </div>
@@ -44,14 +44,6 @@ function SetupForm() {
     const result = await setupAccountAction(formData)
 
     if (result.success) {
-      // Auto-login with the password just set
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      const email = (result.data as any)?.email
-      const pwd = formData.get('password') as string
-      if (email && pwd) {
-        await supabase.auth.signInWithPassword({ email, password: pwd })
-      }
       setSuccess(true)
       setTimeout(() => {
         window.location.href = '/dashboard'
@@ -70,7 +62,7 @@ function SetupForm() {
             <CheckCircle2 className="h-7 w-7 text-success-600" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-surface-900 mb-2">
-            Compte active
+            Compte activé
           </h1>
           <p className="text-surface-500 text-sm">
             Connexion en cours, redirection vers votre tableau de bord...
@@ -94,7 +86,7 @@ function SetupForm() {
             Bienvenue chez Lab Learning
           </h1>
           <p className="text-surface-500 mt-2 text-sm">
-            Finalisez la creation de votre compte
+            Finalisez la création de votre compte
           </p>
         </div>
 
@@ -102,7 +94,7 @@ function SetupForm() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-surface-700 mb-1.5">
-                Prenom
+                Prénom
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
@@ -123,7 +115,7 @@ function SetupForm() {
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
-              <input id="password" name="password" type="password" placeholder="Minimum 8 caracteres" required minLength={8} className="input-base pl-10" />
+              <input id="password" name="password" type="password" placeholder="Minimum 8 caractères" required minLength={8} className="input-base pl-10" />
             </div>
           </div>
 
@@ -149,7 +141,7 @@ function SetupForm() {
         </form>
 
         <p className="text-center text-xs text-surface-400 mt-6">
-          Lab Learning — Formation professionnelle certifiee Qualiopi
+          Lab Learning — Formation professionnelle certifiée Qualiopi
         </p>
       </div>
     </div>
