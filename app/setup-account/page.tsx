@@ -1,71 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Lock, User, ArrowRight, Loader2 } from 'lucide-react'
+import { setupAccountAction } from './actions'
 
 export default function SetupAccountPage() {
-  const router = useRouter()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('Veuillez renseigner votre prenom et nom')
-      return
-    }
-
-    if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caracteres')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
-      return
-    }
-
     setLoading(true)
 
-    try {
-      const supabase = createClient()
+    const formData = new FormData(e.currentTarget)
+    const result = await setupAccountAction(formData)
 
-      // Update password in Supabase Auth
-      const { error: authError } = await supabase.auth.updateUser({
-        password,
-        data: { first_name: firstName.trim(), last_name: lastName.trim() },
-      })
-
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
-        return
-      }
-
-      // Update user profile in users table
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase
-          .from('users')
-          .update({
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            status: 'active',
-          })
-          .eq('id', user.id)
-      }
-
-      router.push('/dashboard')
-    } catch {
-      setError('Une erreur est survenue')
+    if (result.success) {
+      // Full page reload to refresh session cookies
+      window.location.href = '/dashboard'
+    } else {
+      setError(result.error || 'Une erreur est survenue')
       setLoading(false)
     }
   }
@@ -100,9 +55,8 @@ export default function SetupAccountPage() {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
                 <input
                   id="firstName"
+                  name="firstName"
                   type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Jean"
                   required
                   className="input-base pl-10"
@@ -115,9 +69,8 @@ export default function SetupAccountPage() {
               </label>
               <input
                 id="lastName"
+                name="lastName"
                 type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
                 placeholder="Dupont"
                 required
                 className="input-base"
@@ -133,9 +86,8 @@ export default function SetupAccountPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
               <input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Minimum 8 caracteres"
                 required
                 minLength={8}
@@ -152,9 +104,8 @@ export default function SetupAccountPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
               <input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Retapez votre mot de passe"
                 required
                 minLength={8}
