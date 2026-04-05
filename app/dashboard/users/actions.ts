@@ -302,15 +302,42 @@ export async function cancelInvitationAction(invitationId: string): Promise<Acti
 
   const supabase = await createServiceRoleClient()
 
-  const { error } = await supabase
+  // Get invitation to find the email
+  const { data: invitation } = await supabase
+    .from('invitations')
+    .select('email')
+    .eq('id', invitationId)
+    .eq('organization_id', session.organization.id)
+    .single()
+
+  if (!invitation) {
+    return { success: false, error: 'Invitation introuvable' }
+  }
+
+  // Delete the auth user created by generateLink (if not yet accepted)
+  const { data: { users: authUsers } } = await supabase.auth.admin.listUsers()
+  const authUser = (authUsers || []).find(u => u.email === invitation.email)
+  if (authUser) {
+    // Only delete if user has never confirmed / signed in
+    const hasConfirmed = authUser.email_confirmed_at != null
+    if (!hasConfirmed) {
+      await supabase.auth.admin.deleteUser(authUser.id)
+    }
+  }
+
+  // Delete from users table (invited status)
+  await supabase
+    .from('users')
+    .delete()
+    .eq('email', invitation.email)
+    .eq('organization_id', session.organization.id)
+    .eq('status', 'invited')
+
+  // Delete the invitation
+  await supabase
     .from('invitations')
     .delete()
     .eq('id', invitationId)
-    .eq('organization_id', session.organization.id)
-
-  if (error) {
-    return { success: false, error: 'Erreur lors de la suppression' }
-  }
 
   revalidatePath('/dashboard/users')
   return { success: true }
