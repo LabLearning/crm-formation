@@ -39,16 +39,19 @@ const SEC: Record<string, {
 }
 const DEF = SEC['G\u00e9n\u00e9ral']
 
-interface SidebarProps { permissions: Permission[]; orgName: string; collapsed: boolean; onToggle: () => void }
+interface SidebarProps { permissions: Permission[]; orgName: string; userRole: string; collapsed: boolean; onToggle: () => void }
 
-export function Sidebar({ permissions, orgName, collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(
     Object.fromEntries(navigation.map(s => [s.title, true]))
   )
   const toggleSection = (title: string) => setOpenSections(prev => ({ ...prev, [title]: !prev[title] }))
   const isActive = (href: string) => href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
-  const isVisible = (module?: CRMModule) => !module || hasAnyPermission(permissions, module)
+  const isVisible = (item: { module?: CRMModule; hideForRoles?: string[] }) => {
+    if (item.hideForRoles?.includes(userRole)) return false
+    return !item.module || hasAnyPermission(permissions, item.module)
+  }
 
   return (
     <aside className={cn('fixed left-0 top-0 bottom-0 z-30 flex flex-col bg-white border-r border-surface-200/60 transition-all duration-300 ease-out', collapsed ? 'w-[68px]' : 'w-[260px]')}>
@@ -65,7 +68,7 @@ export function Sidebar({ permissions, orgName, collapsed, onToggle }: SidebarPr
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
         {navigation.map(section => {
-          const visibleItems = section.items.filter(item => isVisible(item.module as CRMModule | undefined))
+          const visibleItems = section.items.filter(item => isVisible(item))
           if (visibleItems.length === 0) return null
           const c = SEC[section.title] || DEF
 

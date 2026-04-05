@@ -10,7 +10,7 @@ export const navigation: NavSection[] = [
   {
     title: 'Commercial',
     items: [
-      { label: 'Vue Terrain', href: '/dashboard/commercial', icon: 'Presentation', module: 'leads' },
+      { label: 'Vue Terrain', href: '/dashboard/commercial', icon: 'Presentation', module: 'leads', hideForRoles: ['apporteur_affaires'] },
       { label: 'Leads', href: '/dashboard/leads', icon: 'UserPlus', module: 'leads' },
       { label: 'Clients', href: '/dashboard/clients', icon: 'Building2', module: 'clients' },
       { label: 'Contacts', href: '/dashboard/contacts', icon: 'Users', module: 'contacts' },

@@ -113,6 +113,7 @@ export interface NavItem {
   icon: string
   module?: CRMModule
   children?: NavItem[]
+  hideForRoles?: string[]
 }
 
 export interface NavSection {

@@ -70,6 +70,7 @@ export function DashboardShell({ user, orgName, permissions, children, impersona
           <Sidebar
             permissions={permissions}
             orgName={orgName}
+            userRole={user.role}
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
@@ -81,6 +82,7 @@ export function DashboardShell({ user, orgName, permissions, children, impersona
           onClose={() => setMobileNavOpen(false)}
           permissions={permissions}
           orgName={orgName}
+          userRole={user.role}
         />
 
         {/* Main content */}

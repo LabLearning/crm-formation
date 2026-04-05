@@ -28,9 +28,10 @@ interface MobileNavProps {
   onClose: () => void
   permissions: Permission[]
   orgName: string
+  userRole: string
 }
 
-export function MobileNav({ isOpen, onClose, permissions, orgName }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, permissions, orgName, userRole }: MobileNavProps) {
   const pathname = usePathname()
 
   if (!isOpen) return null
@@ -40,9 +41,9 @@ export function MobileNav({ isOpen, onClose, permissions, orgName }: MobileNavPr
     return pathname.startsWith(href)
   }
 
-  const isVisible = (module?: CRMModule) => {
-    if (!module) return true
-    return hasAnyPermission(permissions, module)
+  const isVisible = (item: { module?: CRMModule; hideForRoles?: string[] }) => {
+    if (item.hideForRoles?.includes(userRole)) return false
+    return !item.module || hasAnyPermission(permissions, item.module)
   }
 
   return (
@@ -70,7 +71,7 @@ export function MobileNav({ isOpen, onClose, permissions, orgName }: MobileNavPr
 
         <nav className="overflow-y-auto py-3 px-2.5 max-h-[calc(100vh-60px)]">
           {navigation.map((section) => {
-            const visibleItems = section.items.filter((item) => isVisible(item.module as CRMModule | undefined))
+            const visibleItems = section.items.filter((item) => isVisible(item))
             if (visibleItems.length === 0) return null
 
             return (
