@@ -87,17 +87,8 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     console.error('[Invite Link Error]', linkError)
   }
 
-  // Build invite URL through our own /auth/confirm route (server-side token verification)
-  const tokenHash = linkData?.properties?.hashed_token
-  let inviteUrl: string
-  if (tokenHash) {
-    inviteUrl = `${appUrl}/auth/confirm?token_hash=${tokenHash}&type=invite&next=/dashboard`
-  } else {
-    inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
-    if (inviteUrl.includes('localhost')) {
-      inviteUrl = inviteUrl.replace(/http:\/\/localhost:\d+/g, appUrl)
-    }
-  }
+  // Build invite URL — direct link to setup-account with invitation token + user id
+  const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${linkData?.user?.id || ''}`
   const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
 
   await sendInvitationEmail({
@@ -279,16 +270,10 @@ export async function resendInvitationAction(invitationId: string): Promise<Acti
     },
   })
 
-  const tokenHash = linkData?.properties?.hashed_token
-  let inviteUrl: string
-  if (tokenHash) {
-    inviteUrl = `${appUrl}/auth/confirm?token_hash=${tokenHash}&type=invite&next=/dashboard`
-  } else {
-    inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
-    if (inviteUrl.includes('localhost')) {
-      inviteUrl = inviteUrl.replace(/http:\/\/localhost:\d+/g, appUrl)
-    }
-  }
+  // Find the auth user id
+  const { data: { users: authUsers } } = await supabase.auth.admin.listUsers()
+  const authUser = (authUsers || []).find((u: any) => u.email === invitation.email)
+  const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${authUser?.id || ''}`
 
   const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
 

@@ -1,7 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/lib/types'
 
 export async function setupAccountAction(formData: FormData): Promise<ActionResult> {
@@ -9,7 +8,8 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
   const lastName = (formData.get('lastName') as string)?.trim()
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
-  const userId = formData.get('uid') as string
+  const token = formData.get('token') as string
+  const uid = formData.get('uid') as string
 
   if (!firstName || !lastName) {
     return { success: false, error: 'Veuillez renseigner votre prenom et nom' }
@@ -23,27 +23,29 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     return { success: false, error: 'Les mots de passe ne correspondent pas' }
   }
 
-  // Try session first, fallback to uid param
-  let uid = userId
-  if (!uid) {
-    const anonClient = await createServerSupabaseClient()
-    const { data: { user } } = await anonClient.auth.getUser()
-    uid = user?.id || ''
-  }
-
-  if (!uid) {
-    return { success: false, error: 'Session expiree. Veuillez cliquer a nouveau sur le lien d\'invitation.' }
+  if (!token || !uid) {
+    return { success: false, error: 'Lien d\'invitation invalide' }
   }
 
   const supabase = await createServiceRoleClient()
 
-  // Verify user exists
-  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(uid)
-  if (!authUser) {
-    return { success: false, error: 'Utilisateur introuvable' }
+  // Verify invitation token against our table
+  const { data: invitation } = await supabase
+    .from('invitations')
+    .select('*')
+    .eq('token', token)
+    .is('accepted_at', null)
+    .single()
+
+  if (!invitation) {
+    return { success: false, error: 'Invitation invalide ou deja utilisee' }
   }
 
-  // Update password in Supabase Auth
+  if (new Date(invitation.expires_at) < new Date()) {
+    return { success: false, error: 'Cette invitation a expire. Demandez un nouveau lien.' }
+  }
+
+  // Update password + confirm email in Supabase Auth
   const { error: authError } = await supabase.auth.admin.updateUserById(uid, {
     password,
     email_confirm: true,
@@ -68,9 +70,7 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
   await supabase
     .from('invitations')
     .update({ accepted_at: new Date().toISOString() })
-    .eq('email', authUser.email)
-    .is('accepted_at', null)
+    .eq('id', invitation.id)
 
-  revalidatePath('/dashboard')
-  return { success: true, data: { email: authUser.email } }
+  return { success: true }
 }
