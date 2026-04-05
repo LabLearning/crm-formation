@@ -1,12 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Lock, User, ArrowRight, Loader2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Lock, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 import { setupAccountAction } from './actions'
 
 export default function SetupAccountPage() {
+  const searchParams = useSearchParams()
+  const uid = searchParams.get('uid') || ''
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -14,15 +18,37 @@ export default function SetupAccountPage() {
     setLoading(true)
 
     const formData = new FormData(e.currentTarget)
+    formData.set('uid', uid)
     const result = await setupAccountAction(formData)
 
     if (result.success) {
-      // Full page reload to refresh session cookies
-      window.location.href = '/dashboard'
+      setSuccess(true)
+      // Redirect to login after short delay
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 2000)
     } else {
       setError(result.error || 'Une erreur est survenue')
       setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-success-100 mb-5">
+            <CheckCircle2 className="h-7 w-7 text-success-600" />
+          </div>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 mb-2">
+            Compte active
+          </h1>
+          <p className="text-surface-500 text-sm">
+            Redirection vers la page de connexion...
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
