@@ -53,7 +53,7 @@ BEGIN
         'apporteur_affaires',
         m,
         CASE WHEN m IN ('leads') THEN true ELSE false END,
-        CASE WHEN m IN ('leads','clients','formations','sessions','apporteurs') THEN true ELSE false END,
+        CASE WHEN m IN ('leads','clients','formations') THEN true ELSE false END,
         CASE WHEN m IN ('leads') THEN true ELSE false END,
         false
       )

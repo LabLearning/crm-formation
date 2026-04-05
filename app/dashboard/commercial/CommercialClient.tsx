@@ -6,7 +6,7 @@ import {
   Phone, Mail, Building2, UserPlus, Search, MapPin,
   Calculator, ClipboardList, Send, Mails, CalendarDays,
   TrendingUp, Target, CheckCircle2, Clock, ArrowRight,
-  ChevronRight, Star, Filter, X,
+  ChevronRight, Star, Filter, X, Euro, Wallet,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -19,9 +19,9 @@ interface Lead {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  nouveau: 'Nouveau', contacte: 'Contacte', qualification: 'Qualifie',
-  proposition_envoyee: 'Proposition', negociation: 'Negociation',
-  gagne: 'Gagne', perdu: 'Perdu',
+  nouveau: 'Nouveau', contacte: 'Contacté', qualification: 'Qualifié',
+  proposition_envoyee: 'Proposition', negociation: 'Négociation',
+  gagne: 'Gagné', perdu: 'Perdu',
 }
 const STATUS_COLORS: Record<string, string> = {
   nouveau: 'bg-brand-100 text-brand-700', contacte: 'bg-cyan-100 text-cyan-700',
@@ -30,18 +30,41 @@ const STATUS_COLORS: Record<string, string> = {
   perdu: 'bg-red-100 text-red-700',
 }
 
-interface Props {
-  userName: string; userRole?: string; leads: Lead[]
-  interactionsToday: any[]; devisEnCours: any[]
+const COMMISSION_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'default' }> = {
+  payee: { label: 'Payée', variant: 'success' },
+  validee: { label: 'Validée', variant: 'warning' },
+  en_attente: { label: 'En attente', variant: 'default' },
 }
 
-export function CommercialClient({ userName, userRole, leads, interactionsToday, devisEnCours }: Props) {
+interface Props {
+  userName: string
+  userRole?: string
+  leads: Lead[]
+  interactionsToday: any[]
+  devisEnCours: any[]
+  commissions?: any[]
+  apporteurInfo?: { taux_commission: number; mode_commission: string } | null
+}
+
+export function CommercialClient({ userName, userRole, leads, interactionsToday, devisEnCours, commissions = [], apporteurInfo }: Props) {
   const isDirecteur = userRole === 'directeur_commercial'
+  const isApporteur = userRole === 'apporteur_affaires'
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [tab, setTab] = useState<'accueil' | 'leads' | 'outils'>('accueil')
 
-  const today = new Date().toISOString().split('T')[0]
+  const tabs = isApporteur
+    ? [
+        { id: 'accueil' as const, label: 'Accueil' },
+        { id: 'leads' as const, label: 'Mes leads (' + leads.length + ')' },
+        { id: 'commissions' as const, label: 'Commissions' },
+      ]
+    : [
+        { id: 'accueil' as const, label: 'Accueil' },
+        { id: 'leads' as const, label: 'Mes leads (' + leads.length + ')' },
+        { id: 'outils' as const, label: 'Outils' },
+      ]
+
+  const [tab, setTab] = useState<string>('accueil')
 
   const stats = useMemo(() => ({
     total: leads.length,
@@ -51,7 +74,10 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
     actionsAujourdhui: interactionsToday.length,
     devisOuverts: devisEnCours.length,
     montantPipeline: leads.filter(l => !['gagne', 'perdu'].includes(l.status)).reduce((s, l) => s + (l.montant_estime || 0), 0),
-  }), [leads, interactionsToday, devisEnCours])
+    totalCommissions: commissions.reduce((s, c) => s + (c.montant || 0), 0),
+    commissionsPendantes: commissions.filter(c => c.status !== 'payee').reduce((s, c) => s + (c.montant || 0), 0),
+    commissionsPayees: commissions.filter(c => c.status === 'payee').reduce((s, c) => s + (c.montant || 0), 0),
+  }), [leads, interactionsToday, devisEnCours, commissions])
 
   const filtered = useMemo(() => {
     let f = leads.slice()
@@ -74,21 +100,19 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
         </h1>
         <p className="text-surface-500 mt-1 text-sm">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          {' -- '}
+          {' — '}
           {isDirecteur
-            ? `${stats.total} leads equipe - ${stats.actionsAujourdhui} action${stats.actionsAujourdhui > 1 ? 's' : ''} aujourd'hui`
+            ? `${stats.total} leads équipe`
+            : isApporteur
+            ? `${stats.total} lead${stats.total > 1 ? 's' : ''} apporté${stats.total > 1 ? 's' : ''}`
             : `${stats.actionsAujourdhui} action${stats.actionsAujourdhui > 1 ? 's' : ''} aujourd'hui`
           }
         </p>
       </div>
 
-      {/* Tabs mobile */}
+      {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-surface-100 rounded-lg p-0.5">
-        {([
-          { id: 'accueil' as const, label: 'Accueil' },
-          { id: 'leads' as const, label: 'Mes leads (' + stats.total + ')' },
-          { id: 'outils' as const, label: 'Outils' },
-        ]).map(t => (
+        {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={cn('flex-1 px-3 py-2.5 rounded-md text-sm font-medium transition-colors', tab === t.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500')}>
             {t.label}
@@ -99,44 +123,80 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
       {/* ─── ACCUEIL ─── */}
       {tab === 'accueil' && (
         <div className="space-y-4">
-          {/* KPIs - big touch targets */}
+          {/* KPIs */}
           <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Pipeline', value: stats.enCours, sub: Number(stats.montantPipeline).toLocaleString('fr-FR') + ' EUR', color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'Gagnes', value: stats.gagnes, sub: 'leads convertis', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { label: 'Nouveaux', value: stats.nouveaux, sub: 'a traiter', color: 'text-violet-600', bg: 'bg-violet-50' },
-              { label: 'Aujourd\'hui', value: stats.actionsAujourdhui, sub: 'actions realisees', color: 'text-amber-600', bg: 'bg-amber-50' },
-            ].map(k => (
-              <div key={k.label} className={cn('rounded-2xl p-5', k.bg)}>
-                <div className={cn('text-3xl font-heading font-bold', k.color)}>{k.value}</div>
-                <div className="text-sm font-medium text-surface-700 mt-1">{k.label}</div>
-                <div className="text-xs text-surface-500 mt-0.5">{k.sub}</div>
-              </div>
-            ))}
+            {isApporteur ? (
+              <>
+                {[
+                  { label: 'Leads apportés', value: stats.total, sub: `${stats.gagnes} gagné${stats.gagnes > 1 ? 's' : ''}`, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'En cours', value: stats.enCours, sub: 'dans le pipeline', color: 'text-violet-600', bg: 'bg-violet-50' },
+                  { label: 'Commissions', value: Number(stats.totalCommissions).toLocaleString('fr-FR') + ' €', sub: `${Number(stats.commissionsPayees).toLocaleString('fr-FR')} € payées`, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Taux conversion', value: stats.total > 0 ? Math.round((stats.gagnes / stats.total) * 100) + '%' : '—', sub: 'leads gagnés', color: 'text-amber-600', bg: 'bg-amber-50' },
+                ].map(k => (
+                  <div key={k.label} className={cn('rounded-2xl p-5', k.bg)}>
+                    <div className={cn('text-2xl font-heading font-bold', k.color)}>{k.value}</div>
+                    <div className="text-sm font-medium text-surface-700 mt-1">{k.label}</div>
+                    <div className="text-xs text-surface-500 mt-0.5">{k.sub}</div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {[
+                  { label: 'Pipeline', value: stats.enCours, sub: Number(stats.montantPipeline).toLocaleString('fr-FR') + ' €', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Gagnés', value: stats.gagnes, sub: 'leads convertis', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Nouveaux', value: stats.nouveaux, sub: 'à traiter', color: 'text-violet-600', bg: 'bg-violet-50' },
+                  { label: 'Aujourd\'hui', value: stats.actionsAujourdhui, sub: 'actions réalisées', color: 'text-amber-600', bg: 'bg-amber-50' },
+                ].map(k => (
+                  <div key={k.label} className={cn('rounded-2xl p-5', k.bg)}>
+                    <div className={cn('text-3xl font-heading font-bold', k.color)}>{k.value}</div>
+                    <div className="text-sm font-medium text-surface-700 mt-1">{k.label}</div>
+                    <div className="text-xs text-surface-500 mt-0.5">{k.sub}</div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
 
-          {/* Quick actions - big buttons for iPad */}
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Actions rapides</div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: 'Nouveau lead', href: '/dashboard/leads', icon: UserPlus, color: 'text-blue-600 bg-blue-50' },
-                { label: 'Simulateur', href: '/dashboard/simulateur', icon: Calculator, color: 'text-violet-600 bg-violet-50' },
-                { label: 'Audit terrain', href: '/dashboard/audit', icon: ClipboardList, color: 'text-amber-600 bg-amber-50' },
-                { label: 'Prospection', href: '/dashboard/prospection', icon: Send, color: 'text-emerald-600 bg-emerald-50' },
-                { label: 'Mailing', href: '/dashboard/mailing', icon: Mails, color: 'text-rose-600 bg-rose-50' },
-                { label: 'Agenda', href: '/dashboard/agenda', icon: CalendarDays, color: 'text-teal-600 bg-teal-50' },
-              ].map(a => (
-                <Link key={a.href} href={a.href}
-                  className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-surface-200/80 hover:shadow-card transition-all active:scale-[0.98]">
-                  <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', a.color)}>
-                    <a.icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium text-surface-800">{a.label}</span>
-                </Link>
-              ))}
+          {/* Quick actions — apporteur vs commercial/directeur */}
+          {!isApporteur && (
+            <div className="card p-4">
+              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Actions rapides</div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Nouveau lead', href: '/dashboard/leads', icon: UserPlus, color: 'text-blue-600 bg-blue-50' },
+                  { label: 'Simulateur', href: '/dashboard/simulateur', icon: Calculator, color: 'text-violet-600 bg-violet-50' },
+                  { label: 'Audit terrain', href: '/dashboard/audit', icon: ClipboardList, color: 'text-amber-600 bg-amber-50' },
+                  { label: 'Prospection', href: '/dashboard/prospection', icon: Send, color: 'text-emerald-600 bg-emerald-50' },
+                  { label: 'Mailing', href: '/dashboard/mailing', icon: Mails, color: 'text-rose-600 bg-rose-50' },
+                  { label: 'Agenda', href: '/dashboard/agenda', icon: CalendarDays, color: 'text-teal-600 bg-teal-50' },
+                ].map(a => (
+                  <Link key={a.href} href={a.href}
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-surface-200/80 hover:shadow-card transition-all active:scale-[0.98]">
+                    <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', a.color)}>
+                      <a.icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-medium text-surface-800">{a.label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Apporteur: bouton soumettre un lead */}
+          {isApporteur && (
+            <Link href="/dashboard/leads"
+              className="card p-5 flex items-center gap-4 hover:shadow-card transition-all active:scale-[0.99]">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600">
+                <UserPlus className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <div className="text-base font-heading font-semibold text-surface-900">Soumettre un nouveau lead</div>
+                <div className="text-sm text-surface-500 mt-0.5">Proposer un prospect à Lab Learning</div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-surface-300 shrink-0" />
+            </Link>
+          )}
 
           {/* Recent leads */}
           <div className="card p-4">
@@ -161,8 +221,8 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
             </div>
           </div>
 
-          {/* Devis en cours */}
-          {devisEnCours.length > 0 && (
+          {/* Devis en cours (pas pour apporteur) */}
+          {!isApporteur && devisEnCours.length > 0 && (
             <div className="card p-4">
               <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Devis en cours</div>
               <div className="space-y-1.5">
@@ -171,9 +231,9 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-50 transition-colors">
                     <div>
                       <div className="text-sm font-medium text-surface-800">{d.numero}</div>
-                      <div className="text-xs text-surface-500">{d.client?.raison_sociale || '--'}</div>
+                      <div className="text-xs text-surface-500">{d.client?.raison_sociale || '—'}</div>
                     </div>
-                    <div className="text-sm font-bold text-surface-900">{d.montant_ht ? Number(d.montant_ht).toLocaleString('fr-FR') + ' EUR' : '--'}</div>
+                    <div className="text-sm font-bold text-surface-900">{d.montant_ht ? Number(d.montant_ht).toLocaleString('fr-FR') + ' €' : '—'}</div>
                   </Link>
                 ))}
               </div>
@@ -185,23 +245,21 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
       {/* ─── MES LEADS ─── */}
       {tab === 'leads' && (
         <div className="space-y-3">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
             <input className="input-base pl-11 text-base py-3" placeholder="Rechercher un lead..." value={search} onChange={e => setSearch(e.target.value)} />
             {search && <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400"><X className="h-4 w-4" /></button>}
           </div>
 
-          {/* Filter chips */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
             {[
               { id: 'all', label: 'Tous ' + leads.length },
               { id: 'nouveau', label: 'Nouveaux ' + stats.nouveaux },
-              { id: 'contacte', label: 'Contactes' },
-              { id: 'qualification', label: 'Qualifies' },
+              { id: 'contacte', label: 'Contactés' },
+              { id: 'qualification', label: 'Qualifiés' },
               { id: 'proposition_envoyee', label: 'Proposition' },
-              { id: 'negociation', label: 'Nego' },
-              { id: 'gagne', label: 'Gagnes' },
+              { id: 'negociation', label: 'Négo' },
+              { id: 'gagne', label: 'Gagnés' },
             ].map(f => (
               <button key={f.id} onClick={() => setFilterStatus(f.id)}
                 className={cn('px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0',
@@ -211,7 +269,6 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
             ))}
           </div>
 
-          {/* Leads list - big touch targets */}
           <div className="space-y-2">
             {filtered.map(lead => (
               <div key={lead.id} className="card p-4">
@@ -230,10 +287,9 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                 </div>
 
                 {lead.montant_estime && lead.montant_estime > 0 && (
-                  <div className="text-sm font-bold text-success-600 mb-2">{Number(lead.montant_estime).toLocaleString('fr-FR')} EUR</div>
+                  <div className="text-sm font-bold text-success-600 mb-2">{Number(lead.montant_estime).toLocaleString('fr-FR')} €</div>
                 )}
 
-                {/* Action buttons - big for touch */}
                 <div className="flex gap-2 mt-3 pt-3 border-t border-surface-100">
                   {lead.contact_telephone && (
                     <a href={'tel:' + lead.contact_telephone}
@@ -255,22 +311,90 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
               </div>
             ))}
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-sm text-surface-400">Aucun lead trouve</div>
+              <div className="text-center py-12 text-sm text-surface-400">Aucun lead trouvé</div>
             )}
           </div>
         </div>
       )}
 
-      {/* ─── OUTILS ─── */}
-      {tab === 'outils' && (
+      {/* ─── COMMISSIONS (apporteur uniquement) ─── */}
+      {tab === 'commissions' && isApporteur && (
+        <div className="space-y-4">
+          {/* Résumé commissions */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl p-5 bg-emerald-50">
+              <div className="text-2xl font-heading font-bold text-emerald-600">{Number(stats.commissionsPayees).toLocaleString('fr-FR')} €</div>
+              <div className="text-sm font-medium text-surface-700 mt-1">Payées</div>
+            </div>
+            <div className="rounded-2xl p-5 bg-amber-50">
+              <div className="text-2xl font-heading font-bold text-amber-600">{Number(stats.commissionsPendantes).toLocaleString('fr-FR')} €</div>
+              <div className="text-sm font-medium text-surface-700 mt-1">En attente</div>
+            </div>
+          </div>
+
+          {apporteurInfo && (
+            <div className="card p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-surface-100 flex items-center justify-center shrink-0">
+                <Wallet className="h-5 w-5 text-surface-500" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-surface-800">
+                  Taux de commission : {apporteurInfo.taux_commission}%
+                </div>
+                <div className="text-xs text-surface-500">
+                  Mode : {apporteurInfo.mode_commission === 'pourcentage' ? 'Pourcentage du montant' : 'Montant fixe'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Liste des commissions */}
+          <div className="card overflow-hidden">
+            <div className="px-4 py-3 border-b border-surface-100">
+              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Historique des commissions</div>
+            </div>
+            {commissions.length > 0 ? (
+              <div className="divide-y divide-surface-100">
+                {commissions.map((c: any) => {
+                  const cs = COMMISSION_STATUS[c.status] || COMMISSION_STATUS.en_attente
+                  return (
+                    <div key={c.id} className="px-4 py-3.5 flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-surface-900 truncate">
+                          {c.lead?.contact_prenom} {c.lead?.contact_nom}
+                        </div>
+                        <div className="text-xs text-surface-500 truncate">{c.lead?.entreprise || '—'}</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Badge variant={cs.variant}>{cs.label}</Badge>
+                        <span className="text-sm font-bold text-surface-900">
+                          {Number(c.montant || 0).toLocaleString('fr-FR')} €
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-sm text-surface-400">
+                <Euro className="h-8 w-8 mx-auto mb-2 text-surface-300" />
+                Aucune commission pour le moment
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── OUTILS (commercial/directeur uniquement) ─── */}
+      {tab === 'outils' && !isApporteur && (
         <div className="space-y-3">
           <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-1">Outils terrain</div>
           {[
             { label: 'Simulateur Budget OPCO', desc: 'Calculer le budget formation d\'un prospect', href: '/dashboard/simulateur', icon: Calculator, color: 'text-violet-600 bg-violet-50' },
-            { label: 'Audit de Conformite', desc: 'Diagnostic reglementaire sur le terrain', href: '/dashboard/audit', icon: ClipboardList, color: 'text-amber-600 bg-amber-50' },
+            { label: 'Audit de Conformité', desc: 'Diagnostic réglementaire sur le terrain', href: '/dashboard/audit', icon: ClipboardList, color: 'text-amber-600 bg-amber-50' },
             { label: 'Prospection Email', desc: 'Envoyer un email de prospection', href: '/dashboard/prospection', icon: Send, color: 'text-emerald-600 bg-emerald-50' },
             { label: 'Mailing', desc: 'Envoyer un email avec template', href: '/dashboard/mailing', icon: Mails, color: 'text-rose-600 bg-rose-50' },
-            { label: 'Agenda', desc: 'Planning et taches', href: '/dashboard/agenda', icon: CalendarDays, color: 'text-teal-600 bg-teal-50' },
+            { label: 'Agenda', desc: 'Planning et tâches', href: '/dashboard/agenda', icon: CalendarDays, color: 'text-teal-600 bg-teal-50' },
           ].map(tool => (
             <Link key={tool.href} href={tool.href}
               className="card p-5 flex items-center gap-4 hover:shadow-card transition-all active:scale-[0.99]">
@@ -285,9 +409,9 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
             </Link>
           ))}
 
-          <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mt-6 mb-1">Acces CRM</div>
+          <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mt-6 mb-1">Accès CRM</div>
           {[
-            { label: 'Pipeline Leads', desc: 'Vue Kanban complete', href: '/dashboard/leads', icon: Target, color: 'text-blue-600 bg-blue-50' },
+            { label: 'Pipeline Leads', desc: 'Vue Kanban complète', href: '/dashboard/leads', icon: Target, color: 'text-blue-600 bg-blue-50' },
             { label: 'Clients', desc: 'Fiches clients', href: '/dashboard/clients', icon: Building2, color: 'text-surface-600 bg-surface-100' },
             { label: 'Devis', desc: 'Mes devis en cours', href: '/dashboard/devis', icon: Star, color: 'text-surface-600 bg-surface-100' },
           ].map(tool => (

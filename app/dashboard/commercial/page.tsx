@@ -61,6 +61,27 @@ export default async function CommercialPage() {
   }
   const { data: devis } = await devisQuery
 
+  // Commissions pour l'apporteur
+  let commissions: any[] = []
+  let apporteurInfo: any = null
+  if (isApporteur) {
+    const { data: apporteurRecord } = await supabase
+      .from('apporteurs_affaires')
+      .select('id, taux_commission, mode_commission')
+      .eq('user_id', userId)
+      .single()
+    apporteurInfo = apporteurRecord
+    if (apporteurRecord) {
+      const { data: comms } = await supabase
+        .from('commissions')
+        .select('id, montant, status, date_validation, lead:leads(contact_nom, contact_prenom, entreprise)')
+        .eq('apporteur_id', apporteurRecord.id)
+        .order('date_validation', { ascending: false })
+        .limit(20)
+      commissions = comms || []
+    }
+  }
+
   return (
     <div className="animate-fade-in">
       <CommercialClient
@@ -69,6 +90,8 @@ export default async function CommercialPage() {
         leads={leads || []}
         interactionsToday={interactions || []}
         devisEnCours={devis || []}
+        commissions={commissions}
+        apporteurInfo={apporteurInfo}
       />
     </div>
   )
