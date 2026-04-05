@@ -1,10 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { inviteUserSchema, updateUserSchema } from '@/lib/validations/auth'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
+import { sendInvitationEmail } from '@/lib/email'
 import type { ActionResult } from '@/lib/types'
 
 export async function inviteUserAction(formData: FormData): Promise<ActionResult> {
@@ -68,21 +70,35 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     return { success: false, error: 'Erreur lors de la création de l\'invitation' }
   }
 
-  // Invite via Supabase Auth (sends magic link)
+  // Generate invite link via Supabase Auth (without sending its default email)
   const serviceClient = await createServiceRoleClient()
-  const { error: authError } = await serviceClient.auth.admin.inviteUserByEmail(parsed.data.email, {
-    data: {
-      first_name: '',
-      last_name: '',
-      invitation_token: invitation.token,
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+  const { data: linkData, error: linkError } = await serviceClient.auth.admin.generateLink({
+    type: 'invite',
+    email: parsed.data.email,
+    options: {
+      data: { invitation_token: invitation.token },
+      redirectTo: `${appUrl}/dashboard`,
     },
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
   })
 
-  if (authError) {
-    // Even if email fails, invitation is created — user can register manually
-    console.error('[Invite Auth Error]', authError)
+  if (linkError) {
+    console.error('[Invite Link Error]', linkError)
   }
+
+  // Send branded invitation email
+  const inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
+  const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
+
+  await sendInvitationEmail({
+    toEmail: parsed.data.email,
+    role: parsed.data.role,
+    orgName: session.organization.name,
+    orgEmail: session.organization.email || 'noreply@lab-learning.fr',
+    invitedByName: inviterName,
+    inviteUrl,
+  })
 
   await logAudit({
     action: 'invite',
@@ -164,5 +180,54 @@ export async function toggleUserStatusAction(userId: string, newStatus: 'active'
   })
 
   revalidatePath('/dashboard/users')
+  return { success: true }
+}
+
+export async function startImpersonationAction(targetUserId: string): Promise<ActionResult> {
+  const session = await getSession()
+
+  if (session.user.role !== 'super_admin') {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const { data: targetUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('id', targetUserId)
+    .eq('organization_id', session.organization.id)
+    .single()
+
+  if (!targetUser) {
+    return { success: false, error: 'Utilisateur introuvable' }
+  }
+
+  if (targetUser.role === 'super_admin') {
+    return { success: false, error: 'Impossible d\'accéder au compte d\'un Super Admin' }
+  }
+
+  const cookieStore = cookies()
+  ;(cookieStore as any).set('ll_impersonate', targetUserId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 8,
+  })
+
+  await logAudit({
+    action: 'start_impersonation',
+    entity_type: 'user',
+    entity_id: targetUserId,
+    details: { impersonated_by: session.user.id },
+  })
+
+  return { success: true }
+}
+
+export async function stopImpersonationAction(): Promise<ActionResult> {
+  const cookieStore = cookies()
+  ;(cookieStore as any).delete('ll_impersonate')
   return { success: true }
 }

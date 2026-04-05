@@ -32,6 +32,10 @@ export function isAdmin(role: UserRole): boolean {
   return role === 'super_admin' || role === 'gestionnaire'
 }
 
+export function isCommercialManager(role: UserRole): boolean {
+  return role === 'directeur_commercial'
+}
+
 export function isSuperAdmin(role: UserRole): boolean {
   return role === 'super_admin'
 }

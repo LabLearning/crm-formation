@@ -1,9 +1,10 @@
 import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Users, TrendingUp } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
+import { NouveauLeadForm } from './NouveauLeadForm'
 
 const SL: Record<string, string> = {
   nouveau: 'Nouveau', contacte: 'Contacte', qualification: 'Qualification',
@@ -34,8 +35,21 @@ export default async function ApporteurLeadsPage({ params }: { params: { token: 
   return (
     <div className="animate-fade-in">
       <h1 className="text-xl font-heading font-bold text-surface-900 tracking-heading mb-1">Mes leads</h1>
-      <p className="text-surface-500 text-sm mb-6">Suivi de vos prospects transmis</p>
+      <p className="text-surface-500 text-sm mb-6">Soumettez un prospect ou consultez l&apos;avancement de vos leads transmis</p>
 
+      {/* New lead form */}
+      <div className="mb-8">
+        <NouveauLeadForm token={params.token} />
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex-1 h-px bg-surface-100" />
+        <span className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Vos leads transmis</span>
+        <div className="flex-1 h-px bg-surface-100" />
+      </div>
+
+      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total', value: all.length, color: 'text-surface-900' },

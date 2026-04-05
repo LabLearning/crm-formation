@@ -12,21 +12,20 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
   if (!context) redirect('/portail/expired')
 
   const supabase = await createServiceRoleClient()
-  const field = context.type === 'apprenant' ? 'apprenant_id' : 'formateur_id' as string
-  const targetId = context.type === 'apprenant' ? context.apprenant.id : context.formateur.id
+  const field = context.type === 'apprenant' ? 'apprenant_id' : context.type === 'formateur' ? 'formateur_id' : 'organization_id'
+  const targetId = context.type === 'apprenant' ? context.apprenant.id : context.type === 'formateur' ? (context as any).formateur.id : context.organization.id
 
   // Documents assigned to this person
   const { data: documents } = await supabase
     .from('documents')
     .select('*, signatures(*)')
-    .eq(context.type === 'apprenant' ? 'apprenant_id' : 'organization_id',
-        context.type === 'apprenant' ? targetId : context.organization.id)
+    .eq(field, targetId)
     .order('created_at', { ascending: false })
 
   const allDocs = documents || []
 
   // Also get pending signatures
-  const email = context.type === 'apprenant' ? context.apprenant.email : context.formateur.email
+  const email = context.type === 'apprenant' ? context.apprenant.email : context.type === 'formateur' ? (context as any).formateur.email : null
   let pendingSignatures: { id: string; signataire_nom: string; status: string; token: string; document: { nom: string; type: string } }[] = []
   if (email) {
     const { data: sigs } = await supabase
@@ -40,7 +39,7 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes documents</h1>
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes documents</h1>
         <p className="text-surface-500 mt-1">Documents et attestations</p>
       </div>
 
@@ -53,9 +52,9 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
               <div key={sig.id} className="flex items-center justify-between p-3 rounded-xl bg-warning-50">
                 <div className="flex items-center gap-3">
                   <FileText className="h-4 w-4 text-warning-600" />
-                  <div>
-                    <div className="text-sm font-medium text-surface-800">{sig.document?.nom || 'Document'}</div>
-                    <div className="text-xs text-surface-500">{DOCUMENT_TYPE_LABELS[(sig.document?.type as any) || 'autre']}</div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-surface-800 truncate">{sig.document?.nom || 'Document'}</div>
+                    <div className="text-xs text-surface-500">{(DOCUMENT_TYPE_LABELS as any)[sig.document?.type || 'autre']}</div>
                   </div>
                 </div>
                 <Badge variant="warning">En attente de signature</Badge>
@@ -82,10 +81,10 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <FileText className="h-4 w-4 text-surface-400 shrink-0" />
-                      <span className="text-sm font-medium text-surface-900">{doc.nom}</span>
+                      <span className="text-sm font-medium text-surface-900 truncate">{doc.nom}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-3.5"><Badge variant="default">{DOCUMENT_TYPE_LABELS[(doc.type as any) || 'autre']}</Badge></td>
+                  <td className="px-6 py-3.5"><Badge variant="default">{(DOCUMENT_TYPE_LABELS as any)[doc.type || 'autre']}</Badge></td>
                   <td className="px-6 py-3.5 hidden md:table-cell text-sm text-surface-500">{formatDate(doc.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                 </tr>
               ))}

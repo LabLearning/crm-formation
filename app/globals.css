@@ -44,6 +44,8 @@
            focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-400
            hover:border-surface-300
            disabled:bg-surface-100 disabled:text-surface-500 disabled:cursor-not-allowed;
+    /* Ensure minimum touch target height on mobile */
+    min-height: 44px;
   }
 
   /* ─── Buttons ─── */
@@ -140,5 +142,35 @@
 
   .table-row {
     @apply hover:bg-surface-50/60 transition-colors duration-150;
+  }
+
+  /* ─── Portal mobile utilities ─── */
+
+  /* Full-bleed card on mobile */
+  .portal-card {
+    @apply bg-white border-b border-surface-200/60 md:rounded-2xl md:border md:border-surface-200/80 md:shadow-xs;
+  }
+
+  /* Portal stat grid — 2 col on mobile, 4 on desktop */
+  .portal-stats {
+    @apply grid grid-cols-2 gap-3 md:gap-4;
+  }
+
+  .portal-stat {
+    @apply bg-white rounded-2xl border border-surface-200/80 shadow-xs p-4 flex items-center gap-3 active:scale-[0.98] transition-transform;
+  }
+
+  .portal-stat-icon {
+    @apply shrink-0 h-10 w-10 rounded-xl flex items-center justify-center;
+  }
+
+  /* Touch-friendly list item */
+  .portal-list-item {
+    @apply flex items-center gap-3 px-4 py-3.5 bg-white border-b border-surface-100 last:border-0 active:bg-surface-50 transition-colors;
+  }
+
+  /* Section title in portals */
+  .portal-section-title {
+    @apply text-sm font-heading font-semibold text-surface-900 tracking-tight;
   }
 }

@@ -19,15 +19,16 @@ export default async function ClientFacturesPage({ params }: { params: { token: 
 
   const statusConfig: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'danger' }> = {
     brouillon: { label: 'Brouillon', variant: 'default' },
+    emise: { label: 'Emise', variant: 'info' },
     envoyee: { label: 'Envoyee', variant: 'info' },
+    payee_partiellement: { label: 'Partiellement payee', variant: 'warning' },
     payee: { label: 'Payee', variant: 'success' },
     en_retard: { label: 'En retard', variant: 'danger' },
-    relancee: { label: 'Relancee', variant: 'warning' },
     annulee: { label: 'Annulee', variant: 'default' },
   }
 
   const totalDu = (factures || [])
-    .filter((f: any) => ['envoyee', 'en_retard', 'relancee'].includes(f.status))
+    .filter((f: any) => ['emise', 'envoyee', 'payee_partiellement', 'en_retard'].includes(f.status))
     .reduce((sum: number, f: any) => sum + (f.montant_ttc || 0), 0)
 
   const totalPaye = (factures || [])
@@ -42,19 +43,19 @@ export default async function ClientFacturesPage({ params }: { params: { token: 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="card p-4 text-center">
-          <div className="text-2xl font-heading font-bold text-surface-900">{(factures || []).length}</div>
+          <div className="text-xl md:text-2xl font-heading font-bold text-surface-900">{(factures || []).length}</div>
           <div className="text-[11px] text-surface-400 mt-0.5">Total factures</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-heading font-bold text-success-600">{Number(totalPaye).toLocaleString('fr-FR')} EUR</div>
+          <div className="text-lg md:text-2xl font-heading font-bold text-success-600 break-all">{Number(totalPaye).toLocaleString('fr-FR')} EUR</div>
           <div className="text-[11px] text-surface-400 mt-0.5">Paye</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-heading font-bold text-warning-600">{Number(totalDu).toLocaleString('fr-FR')} EUR</div>
+          <div className="text-lg md:text-2xl font-heading font-bold text-warning-600 break-all">{Number(totalDu).toLocaleString('fr-FR')} EUR</div>
           <div className="text-[11px] text-surface-400 mt-0.5">En attente</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-heading font-bold text-danger-600">
+          <div className="text-xl md:text-2xl font-heading font-bold text-danger-600">
             {(factures || []).filter((f: any) => f.status === 'en_retard').length}
           </div>
           <div className="text-[11px] text-surface-400 mt-0.5">En retard</div>

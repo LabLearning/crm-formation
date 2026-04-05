@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, MoreHorizontal, Send, Check, Trash2,
-  FileSignature, Building2, Euro, Clock, PenTool,
+  FileSignature, Building2, Euro, Clock, PenTool, Download,
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
@@ -121,6 +121,9 @@ export function ConventionsList({ conventions, clients, formations }: Convention
                 </button>
                 {activeMenu === c.id && (
                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border shadow-elevated py-1 z-20 animate-in-scale origin-top-right">
+                    <a href={`/api/pdf/convention/${c.id}`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                      <Download className="h-4 w-4 text-surface-400" /> Télécharger PDF
+                    </a>
                     {c.status === 'brouillon' && (
                       <button onClick={() => handleStatus(c.id, 'envoyee')} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
                         <Send className="h-4 w-4" /> Marquer envoyée

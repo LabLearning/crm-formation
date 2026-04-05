@@ -1,52 +1,62 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck,
-  Calendar, ListChecks, Star, Menu, X,
-  Users, CheckSquare, Receipt, FileSignature, Building2,
+  Calendar, ListChecks, Star, Users, CheckSquare,
+  Receipt, FileSignature, Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
 import type { PortalContext } from '@/lib/portal-auth'
 
+interface NavItem {
+  label: string
+  short: string
+  href: string
+  icon: React.ElementType
+}
+
 interface PortalShellProps { context: PortalContext; children: React.ReactNode }
 
-const apprenantNav = [
-  { label: 'Accueil', href: '', icon: LayoutDashboard },
-  { label: 'Mes formations', href: '/formations', icon: GraduationCap },
-  { label: 'Documents', href: '/documents', icon: FileText },
-  { label: 'Evaluations', href: '/evaluations', icon: ClipboardCheck },
-  { label: 'Questionnaires', href: '/questionnaires', icon: ListChecks },
+const apprenantNav: NavItem[] = [
+  { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
+  { label: 'Mes formations', short: 'Formations', href: '/formations', icon: GraduationCap },
+  { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
+  { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: ClipboardCheck },
+  { label: 'Questionnaires', short: 'QCM', href: '/questionnaires', icon: ListChecks },
 ]
-const formateurNav = [
-  { label: 'Accueil', href: '', icon: LayoutDashboard },
-  { label: 'Mes sessions', href: '/sessions', icon: Calendar },
-  { label: 'Apprenants', href: '/apprenants', icon: Users },
-  { label: 'Emargement', href: '/emargement', icon: CheckSquare },
-  { label: 'Evaluations', href: '/evaluations', icon: Star },
-  { label: 'Documents', href: '/documents', icon: FileText },
+
+const formateurNav: NavItem[] = [
+  { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
+  { label: 'Mes sessions', short: 'Sessions', href: '/sessions', icon: Calendar },
+  { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
+  { label: 'Emargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
+  { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
+  { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
 ]
-const clientNav = [
-  { label: 'Accueil', href: '', icon: LayoutDashboard },
-  { label: 'Formations', href: '/formations-client', icon: GraduationCap },
-  { label: 'Conventions', href: '/conventions-client', icon: FileSignature },
-  { label: 'Factures', href: '/factures-client', icon: Receipt },
-  { label: 'Documents', href: '/documents', icon: FileText },
+
+const clientNav: NavItem[] = [
+  { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
+  { label: 'Formations', short: 'Formations', href: '/formations-client', icon: GraduationCap },
+  { label: 'Conventions', short: 'Conventions', href: '/conventions-client', icon: FileSignature },
+  { label: 'Factures', short: 'Factures', href: '/factures-client', icon: Receipt },
+  { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
 ]
-const apporteurNav = [
-  { label: 'Accueil', href: '', icon: LayoutDashboard },
-  { label: 'Mes leads', href: '/leads-apporteur', icon: Users },
-  { label: 'Commissions', href: '/commissions-apporteur', icon: Receipt },
+
+const apporteurNav: NavItem[] = [
+  { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
+  { label: 'Mes leads', short: 'Leads', href: '/leads-apporteur', icon: Users },
+  { label: 'Commissions', short: 'Commissions', href: '/commissions-apporteur', icon: Receipt },
 ]
-const partenaireNav = [
-  { label: 'Tableau de bord', href: '', icon: LayoutDashboard },
-  { label: 'Dossiers', href: '/dossiers-partenaire', icon: FileSignature },
-  { label: 'Sessions', href: '/sessions-partenaire', icon: Calendar },
-  { label: 'Leads', href: '/leads-apporteur', icon: Users },
-  { label: 'Commissions', href: '/commissions-apporteur', icon: Receipt },
+
+const partenaireNav: NavItem[] = [
+  { label: 'Tableau de bord', short: 'Tableau', href: '', icon: LayoutDashboard },
+  { label: 'Dossiers', short: 'Dossiers', href: '/dossiers-partenaire', icon: FileSignature },
+  { label: 'Sessions', short: 'Sessions', href: '/sessions-partenaire', icon: Calendar },
+  { label: 'Leads', short: 'Leads', href: '/leads-apporteur', icon: Users },
+  { label: 'Commissions', short: 'Commis.', href: '/commissions-apporteur', icon: Receipt },
 ]
 
 function isPartenaire(ctx: PortalContext) {
@@ -54,26 +64,59 @@ function isPartenaire(ctx: PortalContext) {
 }
 
 function getDisplayInfo(ctx: PortalContext) {
-  if (ctx.type === 'apprenant') return { name: ctx.apprenant.prenom + ' ' + ctx.apprenant.nom, firstName: ctx.apprenant.prenom, lastName: ctx.apprenant.nom, subtitle: 'Espace apprenant' }
-  if (ctx.type === 'formateur') return { name: ctx.formateur.prenom + ' ' + ctx.formateur.nom, firstName: ctx.formateur.prenom, lastName: ctx.formateur.nom, subtitle: 'Espace formateur' }
+  if (ctx.type === 'apprenant') return {
+    name: ctx.apprenant.prenom + ' ' + ctx.apprenant.nom,
+    firstName: ctx.apprenant.prenom,
+    lastName: ctx.apprenant.nom,
+    subtitle: 'Espace apprenant',
+  }
+  if (ctx.type === 'formateur') return {
+    name: ctx.formateur.prenom + ' ' + ctx.formateur.nom,
+    firstName: ctx.formateur.prenom,
+    lastName: ctx.formateur.nom,
+    subtitle: 'Espace formateur',
+  }
   if (ctx.type === 'client') {
     const c = ctx.contact
-    return { name: c ? c.prenom + ' ' + c.nom : (ctx.client.raison_sociale || 'Client'), firstName: c?.prenom || ctx.client.raison_sociale?.charAt(0) || 'C', lastName: c?.nom || '', subtitle: 'Espace client' }
+    return {
+      name: c ? c.prenom + ' ' + c.nom : (ctx.client.raison_sociale || 'Client'),
+      firstName: c?.prenom || ctx.client.raison_sociale?.charAt(0) || 'C',
+      lastName: c?.nom || '',
+      subtitle: 'Espace client',
+    }
   }
   if (ctx.type === 'apporteur') {
     const isP = ctx.apporteur.categorie === 'partenaire'
-    const label = isP ? ('Espace partenaire' + (ctx.apporteur.nom_enseigne ? ' - ' + ctx.apporteur.nom_enseigne : '')) : 'Espace apporteur'
-    return { name: (ctx.apporteur.prenom || '') + ' ' + ctx.apporteur.nom, firstName: ctx.apporteur.prenom || ctx.apporteur.nom.charAt(0), lastName: ctx.apporteur.nom, subtitle: label }
+    const label = isP
+      ? ('Partenaire' + (ctx.apporteur.nom_enseigne ? ' · ' + ctx.apporteur.nom_enseigne : ''))
+      : 'Apporteur d\'affaires'
+    return {
+      name: (ctx.apporteur.prenom || '') + ' ' + ctx.apporteur.nom,
+      firstName: ctx.apporteur.prenom || ctx.apporteur.nom.charAt(0),
+      lastName: ctx.apporteur.nom,
+      subtitle: label,
+    }
   }
   return { name: '', firstName: '', lastName: '', subtitle: '' }
 }
 
+// Portal brand color
+const PORTAL_GREEN = '#195144'
+
 export function PortalShell({ context, children }: PortalShellProps) {
   const pathname = usePathname()
-  const [mobileNav, setMobileNav] = useState(false)
   const basePath = '/portail/' + context.token
-  const nav = context.type === 'apprenant' ? apprenantNav : context.type === 'formateur' ? formateurNav : context.type === 'apporteur' ? (isPartenaire(context) ? partenaireNav : apporteurNav) : clientNav
+  const nav = context.type === 'apprenant'
+    ? apprenantNav
+    : context.type === 'formateur'
+    ? formateurNav
+    : context.type === 'apporteur'
+    ? (isPartenaire(context) ? partenaireNav : apporteurNav)
+    : clientNav
   const info = getDisplayInfo(context)
+
+  // For mobile bottom nav, limit to 5 items max for formateur (6 items)
+  const mobileNav = nav.length <= 5 ? nav : nav.slice(0, 5)
 
   function isActive(href: string) {
     const full = basePath + href
@@ -83,59 +126,135 @@ export function PortalShell({ context, children }: PortalShellProps) {
 
   return (
     <div className="min-h-screen bg-surface-50">
-      <header className="sticky top-0 z-30 bg-white border-b border-surface-200/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+
+      {/* ── Mobile header (< md) ─────────────────────────────── */}
+      <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
+        <div className="h-14 px-4 flex items-center justify-between">
+          {/* Logo + org name */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: PORTAL_GREEN }}
+            >
+              <span className="text-sm font-bold text-white leading-none">
+                {context.organization.name.charAt(0)}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-heading font-bold text-surface-900 truncate leading-tight">
+                {context.organization.name}
+              </div>
+              <div className="text-[10px] text-surface-400 leading-none">{info.subtitle}</div>
+            </div>
+          </div>
+          {/* User avatar */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="text-right hidden xs:block">
+              <div className="text-xs font-medium text-surface-700 leading-tight">{info.name}</div>
+            </div>
+            <Avatar firstName={info.firstName} lastName={info.lastName} size="sm" />
+          </div>
+        </div>
+      </header>
+
+      {/* ── Desktop header (≥ md) ────────────────────────────── */}
+      <header className="hidden md:block sticky top-0 z-30 bg-white border-b border-surface-200/60">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobileNav(!mobileNav)} className="lg:hidden p-2 rounded-xl text-surface-500 hover:bg-surface-100">
-              {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-            <div className="h-9 w-9 rounded-xl bg-brand-600 flex items-center justify-center shrink-0">
+            <div
+              className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: PORTAL_GREEN }}
+            >
               <span className="text-lg font-bold text-white">{context.organization.name.charAt(0)}</span>
             </div>
-            <div className="hidden sm:block">
+            <div>
               <div className="text-sm font-heading font-bold text-surface-900">{context.organization.name}</div>
               <div className="text-[10px] text-surface-400">{info.subtitle}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
+            <div className="text-right">
               <div className="text-sm font-medium text-surface-800">{info.name}</div>
               <div className="text-[10px] text-surface-500 capitalize">{context.type}</div>
             </div>
             <Avatar firstName={info.firstName} lastName={info.lastName} size="sm" />
           </div>
         </div>
-        <div className="hidden lg:block border-t border-surface-100">
+        {/* Desktop tab nav */}
+        <div className="border-t border-surface-100">
           <div className="max-w-6xl mx-auto px-6">
             <nav className="flex gap-1 -mb-px">
-              {nav.map(item => (
-                <Link key={item.href} href={basePath + item.href}
-                  className={cn('flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-                    isActive(item.href) ? 'border-brand-600 text-brand-700' : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300')}>
-                  <item.icon className="h-4 w-4" />{item.label}
+              {nav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={basePath + item.href}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                    isActive(item.href)
+                      ? 'border-b-2 text-[#195144]'
+                      : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
+                  )}
+                  style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
                 </Link>
               ))}
             </nav>
           </div>
         </div>
       </header>
-      {mobileNav && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-surface-900/40" onClick={() => setMobileNav(false)} />
-          <div className="absolute left-0 top-16 bottom-0 w-64 bg-white shadow-modal p-4">
-            <nav className="space-y-1">
-              {nav.map(item => (
-                <Link key={item.href} href={basePath + item.href} onClick={() => setMobileNav(false)}
-                  className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors',
-                    isActive(item.href) ? 'bg-brand-50 text-brand-700 font-medium' : 'text-surface-600 hover:bg-surface-50')}>
-                  <item.icon className={cn('h-[18px] w-[18px]', isActive(item.href) ? 'text-brand-600' : 'text-surface-400')} />{item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+
+      {/* ── Main content ─────────────────────────────────────── */}
+      {/* pb-24 on mobile clears the fixed bottom nav */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-5 md:px-6 py-5 md:py-8 pb-28 md:pb-10">
+        {children}
+      </main>
+
+      {/* ── Mobile bottom tab bar ─────────────────────────────── */}
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/97 backdrop-blur-md border-t border-surface-200/80"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className={cn(
+          'grid',
+          mobileNav.length === 3 && 'grid-cols-3',
+          mobileNav.length === 4 && 'grid-cols-4',
+          mobileNav.length === 5 && 'grid-cols-5',
+          mobileNav.length === 6 && 'grid-cols-6',
+        )}>
+          {mobileNav.map((item) => {
+            const active = isActive(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={basePath + item.href}
+                className="relative flex flex-col items-center justify-center gap-0.5 py-2.5 min-h-[56px] transition-all duration-200 active:scale-95"
+              >
+                {/* Active indicator — top bar */}
+                {active && (
+                  <span
+                    className="absolute top-0 left-3 right-3 h-[2px] rounded-full"
+                    style={{ backgroundColor: PORTAL_GREEN }}
+                  />
+                )}
+                {/* Icon */}
+                <item.icon
+                  className="h-[22px] w-[22px] transition-colors"
+                  style={{ color: active ? PORTAL_GREEN : '#a8a29e' }}
+                />
+                {/* Label */}
+                <span
+                  className="text-[10px] font-medium leading-none transition-colors"
+                  style={{ color: active ? PORTAL_GREEN : '#a8a29e' }}
+                >
+                  {item.short}
+                </span>
+              </Link>
+            )
+          })}
         </div>
-      )}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-8">{children}</main>
+      </nav>
     </div>
   )
 }

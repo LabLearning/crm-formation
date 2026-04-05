@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, MoreHorizontal, ShieldAlert, ShieldOff, Mail } from 'lucide-react'
+import { UserPlus, MoreHorizontal, ShieldAlert, ShieldOff, Mail, UserCog } from 'lucide-react'
 import { Button, Input, Select, Badge, Avatar, Modal, useToast } from '@/components/ui'
-import { inviteUserAction, updateUserRoleAction, toggleUserStatusAction } from './actions'
+import { inviteUserAction, updateUserRoleAction, toggleUserStatusAction, startImpersonationAction } from './actions'
 import { ROLE_LABELS, ROLE_COLORS, STATUS_LABELS, STATUS_COLORS } from '@/lib/types'
 import { formatDateTime } from '@/lib/utils'
 import type { User, UserRole } from '@/lib/types'
@@ -60,6 +60,16 @@ export function UsersList({ users, currentUserId, isAdmin, isSuperAdmin }: Users
     const result = await toggleUserStatusAction(userId, newStatus as 'active' | 'suspended')
     if (result.success) {
       toast('success', newStatus === 'suspended' ? 'Utilisateur suspendu' : 'Utilisateur réactivé')
+    } else {
+      toast('error', result.error || 'Erreur')
+    }
+    setActiveMenu(null)
+  }
+
+  async function handleImpersonate(userId: string) {
+    const result = await startImpersonationAction(userId)
+    if (result.success) {
+      window.location.href = '/dashboard'
     } else {
       toast('error', result.error || 'Erreur')
     }
@@ -182,6 +192,18 @@ export function UsersList({ users, currentUserId, isAdmin, isSuperAdmin }: Users
                                       {opt.label}
                                     </button>
                                   ))}
+                                  <div className="border-t border-surface-100 my-1" />
+                                </>
+                              )}
+                              {isSuperAdmin && (
+                                <>
+                                  <button
+                                    onClick={() => handleImpersonate(user.id)}
+                                    className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+                                  >
+                                    <UserCog className="h-4 w-4" />
+                                    Aperçu du compte
+                                  </button>
                                   <div className="border-t border-surface-100 my-1" />
                                 </>
                               )}

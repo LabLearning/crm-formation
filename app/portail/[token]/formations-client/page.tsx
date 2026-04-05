@@ -11,22 +11,7 @@ export default async function ClientFormationsPage({ params }: { params: { token
 
   const supabase = await createServiceRoleClient()
 
-  // Get sessions linked to this client via inscriptions of their apprenants
-  const { data: inscriptions } = await supabase
-    .from('inscriptions')
-    .select(`
-      id, status, date_inscription,
-      apprenant:apprenants(id, prenom, nom),
-      session:sessions(
-        id, reference, date_debut, date_fin, horaires, lieu, status, capacite_max,
-        formation:formations(intitule, duree_heures, modalite, objectifs_pedagogiques)
-      )
-    `)
-    .eq('apprenant.entreprise', context.client.raison_sociale || '')
-    .order('date_inscription', { ascending: false })
-    .limit(100)
-
-  // Also try via dossiers
+  // Get sessions linked to this client via dossiers
   const { data: dossiers } = await supabase
     .from('dossiers_formation')
     .select(`

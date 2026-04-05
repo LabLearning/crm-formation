@@ -46,7 +46,7 @@ export default async function PortalApprenantsPage({ params }: { params: { token
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes apprenants</h1>
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes apprenants</h1>
         <p className="text-surface-500 mt-1">{inscriptions.length} apprenant{inscriptions.length > 1 ? 's' : ''} inscrit{inscriptions.length > 1 ? 's' : ''}</p>
       </div>
 
@@ -54,41 +54,49 @@ export default async function PortalApprenantsPage({ params }: { params: { token
         <div key={session.id} className="card overflow-hidden">
           <div className="px-6 py-4 bg-surface-50 border-b border-surface-200">
             <div className="text-sm font-semibold text-surface-900">
-              {session.formation?.intitule || session.reference || 'Session'}
+              {(session.formation as any)?.intitule || session.reference || 'Session'}
             </div>
             <div className="text-xs text-surface-500">{session.reference} · {session.inscriptions.length} apprenant{session.inscriptions.length > 1 ? 's' : ''}</div>
           </div>
           <div className="divide-y divide-surface-100">
             {session.inscriptions.map((ins: any) => (
-              <div key={ins.id} className="px-6 py-3.5 flex items-center gap-4">
+              <div key={ins.id} className="px-4 py-3.5 flex items-center gap-3">
                 <Avatar firstName={ins.apprenant?.prenom || ''} lastName={ins.apprenant?.nom || ''} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-surface-900 flex items-center gap-1.5">
-                    {ins.apprenant?.prenom} {ins.apprenant?.nom}
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-sm font-medium text-surface-900 truncate">{ins.apprenant?.prenom} {ins.apprenant?.nom}</span>
                     {ins.apprenant?.situation_handicap && (
-                      <Accessibility className="h-3.5 w-3.5 text-brand-500" />
+                      <Accessibility className="h-3.5 w-3.5 text-brand-500 shrink-0" />
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-surface-500">
-                    {ins.apprenant?.email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{ins.apprenant.email}</span>}
-                    {ins.apprenant?.entreprise && <span className="flex items-center gap-0.5"><Building2 className="h-3 w-3" />{ins.apprenant.entreprise}</span>}
+                  <div className="flex flex-col gap-0.5 text-xs text-surface-500">
+                    {ins.apprenant?.email && (
+                      <span className="flex items-center gap-1 truncate">
+                        <Mail className="h-3 w-3 shrink-0 text-surface-400" />
+                        <span className="truncate">{ins.apprenant.email}</span>
+                      </span>
+                    )}
+                    {ins.apprenant?.entreprise && (
+                      <span className="flex items-center gap-1 truncate">
+                        <Building2 className="h-3 w-3 shrink-0 text-surface-400" />
+                        <span className="truncate">{ins.apprenant.entreprise}</span>
+                      </span>
+                    )}
                   </div>
-                  {/* Show handicap adaptation needs to formateur */}
                   {ins.apprenant?.situation_handicap && ins.apprenant?.besoins_adaptation && (
-                    <div className="mt-1 text-xs text-brand-600 bg-brand-50 rounded-lg px-2 py-1 inline-block">
-                      Adaptations : {ins.apprenant.besoins_adaptation}
+                    <div className="mt-1 text-xs text-brand-600 bg-brand-50 rounded-lg px-2 py-1 line-clamp-2">
+                      {ins.apprenant.besoins_adaptation}
                     </div>
                   )}
                 </div>
-                <Badge variant={INSCRIPTION_STATUS_COLORS[ins.status as InscriptionStatus]}>
-                  {INSCRIPTION_STATUS_LABELS[ins.status as InscriptionStatus]}
-                </Badge>
-                {ins.taux_assiduite > 0 && (
-                  <div className="text-right shrink-0">
-                    <div className="text-xs text-surface-400">Assiduité</div>
-                    <div className="text-sm font-bold text-surface-800">{ins.taux_assiduite}%</div>
-                  </div>
-                )}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge variant={INSCRIPTION_STATUS_COLORS[ins.status as InscriptionStatus]}>
+                    {INSCRIPTION_STATUS_LABELS[ins.status as InscriptionStatus]}
+                  </Badge>
+                  {ins.taux_assiduite > 0 && (
+                    <span className="text-xs font-bold text-surface-600">{ins.taux_assiduite}%</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

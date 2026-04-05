@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, MoreHorizontal, Pencil, Trash2, Send, Check,
-  X, FileText, ArrowRight, Euro, Calendar, Building2, Eye,
+  X, FileText, ArrowRight, Euro, Calendar, Building2, Eye, Download,
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import {
@@ -192,6 +192,9 @@ export function DevisList({ devisList, clients, formations }: DevisListProps) {
                           <button onClick={() => { setDetailDevis(d); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
                             <Eye className="h-4 w-4 text-surface-400" /> Voir / Modifier
                           </button>
+                          <a href={`/api/pdf/devis/${d.id}`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                            <Download className="h-4 w-4 text-surface-400" /> Télécharger PDF
+                          </a>
                           {d.status === 'brouillon' && (
                             <button onClick={() => handleStatusChange(d.id, 'envoye')} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
                               <Send className="h-4 w-4" /> Marquer comme envoyé

@@ -5,8 +5,9 @@
 export type UserRole =
   | 'super_admin'
   | 'gestionnaire'
+  | 'directeur_commercial'
   | 'commercial'
-  | 'comptable'
+  | 'apporteur_affaires'
   | 'formateur'
   | 'apprenant'
 
@@ -135,8 +136,9 @@ export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
   gestionnaire: 'Gestionnaire',
+  directeur_commercial: 'Directeur Commercial',
   commercial: 'Commercial',
-  comptable: 'Comptable',
+  apporteur_affaires: 'Apporteur d\'affaires',
   formateur: 'Formateur',
   apprenant: 'Apprenant',
 }
@@ -144,8 +146,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const ROLE_COLORS: Record<UserRole, BadgeVariant> = {
   super_admin: 'danger',
   gestionnaire: 'info',
+  directeur_commercial: 'info',
   commercial: 'success',
-  comptable: 'warning',
+  apporteur_affaires: 'success',
   formateur: 'default',
   apprenant: 'default',
 }

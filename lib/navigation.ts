@@ -21,11 +21,11 @@ export const navigation: NavSection[] = [
   {
     title: 'Outils',
     items: [
-      { label: 'Agenda', href: '/dashboard/agenda', icon: 'CalendarDays', module: 'leads' },
-      { label: 'Mailing', href: '/dashboard/mailing', icon: 'Mails', module: 'leads' },
-      { label: 'Simulateur OPCO', href: '/dashboard/simulateur', icon: 'Calculator', module: 'leads' },
-      { label: 'Audit Conformité', href: '/dashboard/audit', icon: 'ClipboardList', module: 'leads' },
-      { label: 'Prospection Email', href: '/dashboard/prospection', icon: 'Send', module: 'leads' },
+      { label: 'Agenda', href: '/dashboard/agenda', icon: 'CalendarDays', module: 'devis' },
+      { label: 'Mailing', href: '/dashboard/mailing', icon: 'Mails', module: 'devis' },
+      { label: 'Simulateur OPCO', href: '/dashboard/simulateur', icon: 'Calculator', module: 'devis' },
+      { label: 'Audit Conformité', href: '/dashboard/audit', icon: 'ClipboardList', module: 'devis' },
+      { label: 'Prospection Email', href: '/dashboard/prospection', icon: 'Send', module: 'devis' },
       { label: 'Vue Manager', href: '/dashboard/manager', icon: 'PieChart', module: 'reporting' },
     ],
   },

@@ -28,7 +28,7 @@ export default async function PortalFormationsPage({ params }: { params: { token
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes formations</h1>
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes formations</h1>
         <p className="text-surface-500 mt-1">{allIns.length} formation{allIns.length > 1 ? 's' : ''}</p>
       </div>
 
@@ -39,8 +39,8 @@ export default async function PortalFormationsPage({ params }: { params: { token
           return (
             <div key={ins.id} className="card p-6">
               <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <h2 className="text-sm font-heading font-semibold text-surface-900 tracking-tight">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-heading font-semibold text-surface-900 tracking-tight truncate">
                     {formation?.intitule || 'Formation'}
                   </h2>
                   <div className="flex items-center gap-2 mt-1">
@@ -120,7 +120,7 @@ export default async function PortalFormationsPage({ params }: { params: { token
                     Objectifs pédagogiques
                   </summary>
                   <ul className="mt-2 space-y-1">
-                    {formation.objectifs_pedagogiques.map((obj, i) => (
+                    {formation.objectifs_pedagogiques.map((obj: any, i: number) => (
                       <li key={i} className="text-sm text-surface-600 pl-4 relative before:absolute before:left-0 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-brand-400">
                         {obj}
                       </li>

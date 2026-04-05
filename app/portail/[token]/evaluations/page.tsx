@@ -80,6 +80,8 @@ export default async function PortalEvaluationsPage({ params }: { params: { toke
   }
 
   // ---- FORMATEUR: received evaluations about them ----
+  if (context.type !== 'formateur') redirect('/portail/expired')
+
   const { data: sessions } = await supabase
     .from('sessions')
     .select('id')

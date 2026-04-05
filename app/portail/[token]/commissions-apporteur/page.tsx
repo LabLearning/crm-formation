@@ -13,9 +13,9 @@ export default async function ApporteurCommissionsPage({ params }: { params: { t
   // Get commissions
   const { data: commissions } = await supabase
     .from('commissions')
-    .select('id, montant, status, date_calcul, date_paiement, lead:leads(contact_nom, entreprise, montant_estime)')
+    .select('id, montant_commission, status, created_at, date_paiement, lead:leads(contact_nom, entreprise, montant_estime)')
     .eq('apporteur_id', context.apporteur.id)
-    .order('date_calcul', { ascending: false })
+    .order('created_at', { ascending: false })
 
   // Get leads gagnes for potential commissions
   const { data: leadsGagnes } = await supabase
@@ -25,9 +25,9 @@ export default async function ApporteurCommissionsPage({ params }: { params: { t
     .eq('status', 'gagne')
 
   const allComm = commissions || []
-  const totalGagne = allComm.reduce((s, c: any) => s + (c.montant || 0), 0)
-  const totalPaye = allComm.filter((c: any) => c.status === 'payee').reduce((s, c: any) => s + (c.montant || 0), 0)
-  const enAttente = allComm.filter((c: any) => c.status !== 'payee').reduce((s, c: any) => s + (c.montant || 0), 0)
+  const totalGagne = allComm.reduce((s, c: any) => s + (c.montant_commission || 0), 0)
+  const totalPaye = allComm.filter((c: any) => c.status === 'payee').reduce((s, c: any) => s + (c.montant_commission || 0), 0)
+  const enAttente = allComm.filter((c: any) => c.status !== 'payee').reduce((s, c: any) => s + (c.montant_commission || 0), 0)
   const taux = context.apporteur.taux_commission || 0
   const mode = context.apporteur.mode_calcul || 'pourcentage'
 
@@ -75,7 +75,7 @@ export default async function ApporteurCommissionsPage({ params }: { params: { t
                       <div className="text-xs text-surface-400">{c.lead?.entreprise || ''}</div>
                     </td>
                     <td className="px-5 py-3.5 text-sm text-surface-600">
-                      {c.date_calcul ? formatDate(c.date_calcul, { day: 'numeric', month: 'short', year: 'numeric' }) : '--'}
+                      {c.created_at ? formatDate(c.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) : '--'}
                     </td>
                     <td className="px-5 py-3.5">
                       <Badge variant={c.status === 'payee' ? 'success' : c.status === 'validee' ? 'info' : 'warning'}>
@@ -83,7 +83,7 @@ export default async function ApporteurCommissionsPage({ params }: { params: { t
                       </Badge>
                     </td>
                     <td className="px-5 py-3.5 text-sm text-right font-bold text-surface-900">
-                      {c.montant ? Number(c.montant).toLocaleString('fr-FR') + ' EUR' : '--'}
+                      {c.montant_commission ? Number(c.montant_commission).toLocaleString('fr-FR') + ' EUR' : '--'}
                     </td>
                   </tr>
                 ))}
@@ -101,10 +101,10 @@ export default async function ApporteurCommissionsPage({ params }: { params: { t
             {(leadsGagnes || []).map((l: any) => {
               const hasCommission = allComm.some((c: any) => c.lead?.contact_nom === l.contact_nom)
               return (
-                <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50">
-                  <div>
-                    <div className="text-sm font-medium text-surface-800">{l.contact_nom}</div>
-                    <div className="text-xs text-surface-400">{l.entreprise || ''}</div>
+                <div key={l.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-50">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-surface-800 truncate">{l.contact_nom}</div>
+                    <div className="text-xs text-surface-400 truncate">{l.entreprise || ''}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     {l.montant_estime && <span className="text-xs text-surface-500">{Number(l.montant_estime).toLocaleString('fr-FR')} EUR</span>}

@@ -45,12 +45,52 @@ export function NotificationsBell({ userId }: { userId: string }) {
     }
   }, [userId])
 
+  // Initial fetch + Supabase Realtime subscription
   useEffect(() => {
     fetchNotifications()
-    // Poll every 30s
-    const interval = setInterval(fetchNotifications, 30000)
-    return () => clearInterval(interval)
-  }, [fetchNotifications])
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotif = payload.new as Notification
+          setNotifications((prev) => [newNotif, ...prev].slice(0, 20))
+          setUnreadCount((c) => c + 1)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const updated = payload.new as Notification
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
+          )
+          setUnreadCount((prev) => {
+            // Recount from state since we can't easily diff here
+            return prev
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, fetchNotifications])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

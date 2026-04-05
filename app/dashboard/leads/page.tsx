@@ -7,7 +7,8 @@ export default async function LeadsPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const { data: leads } = await supabase
+  // Apporteur d'affaires: only sees leads they sourced
+  let leadsQuery = supabase
     .from('leads')
     .select(`
       *,
@@ -17,12 +18,30 @@ export default async function LeadsPage() {
     .eq('organization_id', session.organization.id)
     .order('updated_at', { ascending: false })
 
+  if (session.user.role === 'apporteur_affaires') {
+    // Find linked apporteur record
+    const { data: apporteurRecord } = await supabase
+      .from('apporteurs_affaires')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single()
+    if (apporteurRecord) {
+      leadsQuery = leadsQuery.eq('apporteur_id', apporteurRecord.id)
+    } else {
+      leadsQuery = leadsQuery.eq('apporteur_id', '00000000-0000-0000-0000-000000000000')
+    }
+  } else if (session.user.role === 'commercial') {
+    leadsQuery = leadsQuery.eq('assigned_to', session.user.id)
+  }
+
+  const { data: leads } = await leadsQuery
+
   const { data: users } = await supabase
     .from('users')
     .select('id, first_name, last_name')
     .eq('organization_id', session.organization.id)
     .eq('status', 'active')
-    .in('role', ['super_admin', 'gestionnaire', 'commercial'])
+    .in('role', ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial'])
 
   return (
     <div className="animate-fade-in">

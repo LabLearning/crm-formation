@@ -45,39 +45,31 @@ export default async function PortalHomePage({ params }: { params: { token: stri
     const terminees = allInscriptions.filter((i) => i.status === 'complete')
 
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-5 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
-            Bienvenue, {context.apprenant.prenom} !
+          <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">
+            Bonjour, {context.apprenant.prenom} !
           </h1>
-          <p className="text-surface-500 mt-1">Votre espace de formation personnel</p>
+          <p className="text-surface-500 mt-0.5 text-sm">Votre espace de formation personnel</p>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href={`${basePath}/formations`} className="card-hover p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-brand-50"><GraduationCap className="h-5 w-5 text-brand-600" /></div>
-              <div><div className="text-xs text-surface-500">Formations en cours</div><div className="text-xl font-bold text-surface-900">{enCours.length}</div></div>
-            </div>
+        {/* Quick stats — 2 cols on mobile, 4 on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Link href={`${basePath}/formations`} className="portal-stat">
+            <div className="portal-stat-icon bg-brand-50"><GraduationCap className="h-5 w-5 text-brand-600" /></div>
+            <div><div className="text-[11px] text-surface-500 leading-tight">En cours</div><div className="text-xl font-bold text-surface-900">{enCours.length}</div></div>
           </Link>
-          <Link href={`${basePath}/formations`} className="card-hover p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-success-50"><CheckCircle2 className="h-5 w-5 text-success-600" /></div>
-              <div><div className="text-xs text-surface-500">Terminées</div><div className="text-xl font-bold text-success-600">{terminees.length}</div></div>
-            </div>
+          <Link href={`${basePath}/formations`} className="portal-stat">
+            <div className="portal-stat-icon bg-success-50"><CheckCircle2 className="h-5 w-5 text-success-600" /></div>
+            <div><div className="text-[11px] text-surface-500 leading-tight">Terminées</div><div className="text-xl font-bold text-success-600">{terminees.length}</div></div>
           </Link>
-          <Link href={`${basePath}/questionnaires`} className="card-hover p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-warning-50"><ClipboardCheck className="h-5 w-5 text-warning-600" /></div>
-              <div><div className="text-xs text-surface-500">QCM en attente</div><div className="text-xl font-bold text-warning-600">{pendingQcm || 0}</div></div>
-            </div>
+          <Link href={`${basePath}/questionnaires`} className="portal-stat">
+            <div className="portal-stat-icon bg-warning-50"><ClipboardCheck className="h-5 w-5 text-warning-600" /></div>
+            <div><div className="text-[11px] text-surface-500 leading-tight">QCM</div><div className="text-xl font-bold text-warning-600">{pendingQcm || 0}</div></div>
           </Link>
-          <Link href={`${basePath}/documents`} className="card-hover p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-purple-50"><FileText className="h-5 w-5 text-purple-600" /></div>
-              <div><div className="text-xs text-surface-500">Documents</div><div className="text-xl font-bold text-purple-600">{docsCount || 0}</div></div>
-            </div>
+          <Link href={`${basePath}/documents`} className="portal-stat">
+            <div className="portal-stat-icon bg-purple-50"><FileText className="h-5 w-5 text-purple-600" /></div>
+            <div><div className="text-[11px] text-surface-500 leading-tight">Documents</div><div className="text-xl font-bold text-purple-600">{docsCount || 0}</div></div>
           </Link>
         </div>
 
@@ -97,8 +89,8 @@ export default async function PortalHomePage({ params }: { params: { token: stri
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-surface-900">{ins.session?.formation?.intitule || '—'}</div>
-                    <div className="text-xs text-surface-500 mt-0.5">
+                    <div className="text-sm font-medium text-surface-900 truncate">{ins.session?.formation?.intitule || '—'}</div>
+                    <div className="text-xs text-surface-500 mt-0.5 truncate">
                       {ins.session?.lieu || 'Lieu non défini'}
                       {ins.session?.horaires && ` · ${ins.session.horaires}`}
                     </div>
@@ -144,11 +136,11 @@ export default async function PortalHomePage({ params }: { params: { token: stri
       return (
         <div className="space-y-6 animate-fade-in">
           <div>
-            <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
+            <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading truncate">
               Tableau de bord {context.apporteur.nom_enseigne || context.apporteur.raison_sociale || ''}
             </h1>
-            <p className="text-surface-500 mt-1">
-              Espace partenaire - {context.apporteur.secteur || 'Formation professionnelle'} - {context.apporteur.zone_geographique || ''}
+            <p className="text-surface-500 mt-1 text-sm">
+              Espace partenaire — {context.apporteur.secteur || 'Formation professionnelle'}
             </p>
           </div>
 
@@ -161,7 +153,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
               { label: 'Conversion', value: txConversion + '%', color: txConversion >= 20 ? 'text-success-600' : 'text-warning-600' },
             ].map(k => (
               <div key={k.label} className="card p-4 text-center">
-                <div className={`text-2xl font-heading font-bold ${k.color}`}>{k.value}</div>
+                <div className={`text-lg md:text-2xl font-heading font-bold break-all ${k.color}`}>{k.value}</div>
                 <div className="text-[11px] text-surface-400 mt-0.5">{k.label}</div>
               </div>
             ))}
@@ -221,13 +213,13 @@ export default async function PortalHomePage({ params }: { params: { token: stri
               <h2 className="text-sm font-heading font-semibold text-surface-900 tracking-tight mb-3">Derniers prospects</h2>
               <div className="space-y-2">
                 {allLeads.slice(0, 6).map((l: any) => (
-                  <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50">
-                    <div>
-                      <div className="text-sm font-medium text-surface-800">{l.contact_prenom} {l.contact_nom}</div>
-                      <div className="text-xs text-surface-400">{l.entreprise || '--'}</div>
+                  <div key={l.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-50">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-surface-800 truncate">{l.contact_prenom} {l.contact_nom}</div>
+                      <div className="text-xs text-surface-400 truncate">{l.entreprise || '--'}</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {l.montant_estime && <span className="text-xs text-surface-500">{Number(l.montant_estime).toLocaleString('fr-FR')} EUR</span>}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {l.montant_estime && <span className="text-xs text-surface-500 hidden sm:inline">{Number(l.montant_estime).toLocaleString('fr-FR')} EUR</span>}
                       <Badge variant={l.status === 'gagne' ? 'success' : l.status === 'perdu' ? 'danger' : 'default'}>
                         {l.status === 'gagne' ? 'Gagne' : l.status === 'perdu' ? 'Perdu' : 'En cours'}
                       </Badge>
@@ -245,7 +237,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
+          <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading truncate">
             Bienvenue, {context.apporteur.prenom || context.apporteur.nom}
           </h1>
           <p className="text-surface-500 mt-1">Espace apporteur d'affaires</p>
@@ -258,7 +250,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
             { label: 'Conversion', value: txConversion + '%' },
           ].map(k => (
             <div key={k.label} className="card p-4 text-center">
-              <div className="text-2xl font-heading font-bold text-surface-900">{k.value}</div>
+              <div className="text-xl font-heading font-bold text-surface-900 break-all">{k.value}</div>
               <div className="text-[11px] text-surface-400 mt-0.5">{k.label}</div>
             </div>
           ))}
@@ -278,10 +270,10 @@ export default async function PortalHomePage({ params }: { params: { token: stri
             <h2 className="text-sm font-heading font-semibold text-surface-900 tracking-tight mb-3">Derniers leads</h2>
             <div className="space-y-2">
               {allLeads.slice(0, 5).map((l: any) => (
-                <div key={l.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50">
-                  <div>
-                    <div className="text-sm font-medium text-surface-800">{l.contact_nom}</div>
-                    <div className="text-xs text-surface-400">{l.entreprise || '--'}</div>
+                <div key={l.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-50">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-surface-800 truncate">{l.contact_nom}</div>
+                    <div className="text-xs text-surface-400 truncate">{l.entreprise || '--'}</div>
                   </div>
                   <Badge variant={l.status === 'gagne' ? 'success' : l.status === 'perdu' ? 'danger' : 'default'}>
                     {l.status === 'gagne' ? 'Gagne' : l.status === 'perdu' ? 'Perdu' : 'En cours'}
@@ -299,9 +291,9 @@ export default async function PortalHomePage({ params }: { params: { token: stri
   if (context.type === 'client') {
     const { data: conventions } = await supabase
       .from('conventions')
-      .select('id, reference, status, formation:formations(intitule)')
+      .select('id, numero, status, formation:formations(intitule)')
       .eq('client_id', context.client.id)
-      .order('date_creation', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(5)
 
     const { data: factures } = await supabase
@@ -327,10 +319,10 @@ export default async function PortalHomePage({ params }: { params: { token: stri
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
+          <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading truncate">
             Bienvenue, {displayName}
           </h1>
-          <p className="text-surface-500 mt-1">Espace client {context.client.raison_sociale || ''}</p>
+          <p className="text-surface-500 mt-1 truncate">Espace client {context.client.raison_sociale || ''}</p>
         </div>
 
         {/* Alertes */}
@@ -380,13 +372,13 @@ export default async function PortalHomePage({ params }: { params: { token: stri
             <h2 className="text-sm font-heading font-semibold text-surface-900 tracking-tight mb-3">Dernieres conventions</h2>
             <div className="space-y-2">
               {(conventions || []).map((c: any) => (
-                <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-50">
-                  <div>
-                    <div className="text-sm font-medium text-surface-800">{c.formation?.intitule || c.reference}</div>
-                    <div className="text-xs text-surface-400">{c.reference}</div>
+                <div key={c.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-50">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-surface-800 truncate">{c.formation?.intitule || c.numero}</div>
+                    <div className="text-xs text-surface-400">{c.numero}</div>
                   </div>
-                  <Badge variant={c.status === 'signee' ? 'success' : c.status === 'envoyee' ? 'warning' : 'default'}>
-                    {c.status === 'signee' ? 'Signee' : c.status === 'envoyee' ? 'A signer' : c.status}
+                  <Badge variant={['signee_client', 'signee_of', 'signee_complete'].includes(c.status) ? 'success' : c.status === 'envoyee' ? 'warning' : 'default'}>
+                    {['signee_client', 'signee_of', 'signee_complete'].includes(c.status) ? 'Signee' : c.status === 'envoyee' ? 'A signer' : c.status}
                   </Badge>
                 </div>
               ))}
@@ -425,38 +417,30 @@ export default async function PortalHomePage({ params }: { params: { token: stri
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
-          Bienvenue, {context.formateur.prenom} !
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">
+          Bonjour, {context.formateur.prenom} !
         </h1>
-        <p className="text-surface-500 mt-1">Votre espace formateur</p>
+        <p className="text-surface-500 mt-0.5 text-sm">Votre espace formateur</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href={`${basePath}/sessions`} className="card-hover p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-brand-50"><Calendar className="h-5 w-5 text-brand-600" /></div>
-            <div><div className="text-xs text-surface-500">Sessions à venir</div><div className="text-xl font-bold text-brand-600">{upcoming.length}</div></div>
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Link href={`${basePath}/sessions`} className="portal-stat">
+          <div className="portal-stat-icon bg-brand-50"><Calendar className="h-5 w-5 text-brand-600" /></div>
+          <div><div className="text-[11px] text-surface-500 leading-tight">À venir</div><div className="text-xl font-bold text-brand-600">{upcoming.length}</div></div>
         </Link>
-        <Link href={`${basePath}/sessions`} className="card-hover p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-success-50"><Presentation className="h-5 w-5 text-success-600" /></div>
-            <div><div className="text-xs text-surface-500">En cours</div><div className="text-xl font-bold text-success-600">{enCours.length}</div></div>
-          </div>
+        <Link href={`${basePath}/sessions`} className="portal-stat">
+          <div className="portal-stat-icon bg-success-50"><Presentation className="h-5 w-5 text-success-600" /></div>
+          <div><div className="text-[11px] text-surface-500 leading-tight">En cours</div><div className="text-xl font-bold text-success-600">{enCours.length}</div></div>
         </Link>
-        <Link href={`${basePath}/apprenants`} className="card-hover p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-purple-50"><Users className="h-5 w-5 text-purple-600" /></div>
-            <div><div className="text-xs text-surface-500">Apprenants</div><div className="text-xl font-bold text-purple-600">{totalApprenants}</div></div>
-          </div>
+        <Link href={`${basePath}/apprenants`} className="portal-stat">
+          <div className="portal-stat-icon bg-purple-50"><Users className="h-5 w-5 text-purple-600" /></div>
+          <div><div className="text-[11px] text-surface-500 leading-tight">Apprenants</div><div className="text-xl font-bold text-purple-600">{totalApprenants}</div></div>
         </Link>
-        <div className="card p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-surface-100"><CheckCircle2 className="h-5 w-5 text-surface-600" /></div>
-            <div><div className="text-xs text-surface-500">Sessions terminées</div><div className="text-xl font-bold text-surface-700">{done.length}</div></div>
-          </div>
+        <div className="portal-stat">
+          <div className="portal-stat-icon bg-surface-100"><CheckCircle2 className="h-5 w-5 text-surface-600" /></div>
+          <div><div className="text-[11px] text-surface-500 leading-tight">Terminées</div><div className="text-xl font-bold text-surface-700">{done.length}</div></div>
         </div>
       </div>
 
@@ -476,8 +460,8 @@ export default async function PortalHomePage({ params }: { params: { token: stri
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-surface-900">{s.formation?.intitule || s.intitule || '—'}</div>
-                  <div className="text-xs text-surface-500 mt-0.5">
+                  <div className="text-sm font-medium text-surface-900 truncate">{s.formation?.intitule || s.intitule || '—'}</div>
+                  <div className="text-xs text-surface-500 mt-0.5 truncate">
                     {s.reference} · {s.lieu || 'Non défini'}
                     {s.horaires && ` · ${s.horaires}`}
                   </div>

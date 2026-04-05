@@ -6,28 +6,41 @@ export default async function PortalsPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const { data: tokens } = await supabase
-    .from('portal_access_tokens')
-    .select(`
-      *,
-      apprenant:apprenants(prenom, nom, email),
-      formateur:formateurs(prenom, nom, email)
-    `)
-    .eq('organization_id', session.organization.id)
-    .order('created_at', { ascending: false })
-
-  const { data: apprenants } = await supabase
-    .from('apprenants')
-    .select('id, prenom, nom, email')
-    .eq('organization_id', session.organization.id)
-    .order('nom')
-
-  const { data: formateurs } = await supabase
-    .from('formateurs')
-    .select('id, prenom, nom, email')
-    .eq('organization_id', session.organization.id)
-    .eq('is_active', true)
-    .order('nom')
+  const [
+    { data: tokens },
+    { data: apprenants },
+    { data: formateurs },
+    { data: clients },
+    { data: apporteurs },
+  ] = await Promise.all([
+    supabase
+      .from('portal_access_tokens')
+      .select('*, apprenant:apprenants(prenom, nom, email), formateur:formateurs(prenom, nom, email)')
+      .eq('organization_id', session.organization.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('apprenants')
+      .select('id, prenom, nom, email')
+      .eq('organization_id', session.organization.id)
+      .order('nom'),
+    supabase
+      .from('formateurs')
+      .select('id, prenom, nom, email')
+      .eq('organization_id', session.organization.id)
+      .eq('is_active', true)
+      .order('nom'),
+    supabase
+      .from('clients')
+      .select('id, raison_sociale, email, type')
+      .eq('organization_id', session.organization.id)
+      .order('raison_sociale'),
+    supabase
+      .from('apporteurs_affaires')
+      .select('id, nom, prenom, email, categorie, nom_enseigne')
+      .eq('organization_id', session.organization.id)
+      .eq('is_active', true)
+      .order('nom'),
+  ])
 
   return (
     <div className="animate-fade-in">
@@ -35,6 +48,8 @@ export default async function PortalsPage() {
         tokens={tokens || []}
         apprenants={apprenants || []}
         formateurs={formateurs || []}
+        clients={clients || []}
+        apporteurs={apporteurs || []}
         appUrl={process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
       />
     </div>

@@ -39,7 +39,7 @@ export default async function PortalSessionsPage({ params }: { params: { token: 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes sessions</h1>
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-surface-900 tracking-heading">Mes sessions</h1>
         <p className="text-surface-500 mt-1">{sessionsWithCounts.length} session{sessionsWithCounts.length > 1 ? 's' : ''}</p>
       </div>
 
@@ -67,7 +67,7 @@ export default async function PortalSessionsPage({ params }: { params: { token: 
                     {isToday && <Badge variant="info">Aujourd&apos;hui</Badge>}
                     {s.reference && <span className="text-xs font-mono text-surface-400">{s.reference}</span>}
                   </div>
-                  <h3 className="text-sm font-semibold text-surface-900">
+                  <h3 className="text-sm font-semibold text-surface-900 truncate">
                     {s.formation?.intitule || s.intitule || 'Session'}
                   </h3>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-surface-500">

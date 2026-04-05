@@ -104,11 +104,11 @@ function HabilitationModal({ formateur, onDone }: { formateur: Formateur; onDone
       <textarea id="habilitation_notes" name="habilitation_notes" rows={2} className="input-base resize-none" placeholder="Notes sur la mise à jour..." />
 
       {/* History */}
-      {formateur.historique_habilitations && (formateur.historique_habilitations as unknown[]).length > 0 && (
+      {(formateur as any).historique_habilitations && ((formateur as any).historique_habilitations as unknown[]).length > 0 && (
         <div>
           <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-2">Historique</div>
           <div className="space-y-1.5 max-h-32 overflow-y-auto">
-            {(formateur.historique_habilitations as { date: string; notes: string }[]).reverse().map((h, i) => (
+            {((formateur as any).historique_habilitations as { date: string; notes: string }[]).reverse().map((h, i) => (
               <div key={i} className="text-xs text-surface-600 p-2 bg-surface-50 rounded-lg">
                 <span className="font-medium">{h.date}</span>
                 {h.notes && <span className="text-surface-400"> — {h.notes}</span>}

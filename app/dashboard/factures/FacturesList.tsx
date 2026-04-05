@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, MoreHorizontal, Send, Trash2, Eye,
   Receipt, Building2, Euro, Calendar, AlertTriangle,
-  CreditCard, ArrowRight, FileX, Clock,
+  CreditCard, ArrowRight, FileX, Clock, Download,
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import {
@@ -209,6 +209,9 @@ export function FacturesList({ factures, clients }: FacturesListProps) {
                           <button onClick={() => { setDetailFacture(f); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
                             <Eye className="h-4 w-4 text-surface-400" /> Voir le détail
                           </button>
+                          <a href={`/api/pdf/facture/${f.id}`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                            <Download className="h-4 w-4 text-surface-400" /> Télécharger PDF
+                          </a>
                           {f.status === 'brouillon' && (
                             <button onClick={() => handleStatus(f.id, 'emise')} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
                               <Receipt className="h-4 w-4" /> Émettre

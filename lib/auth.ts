@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { User, Organization, Permission } from '@/lib/types'
 
@@ -6,6 +7,7 @@ export interface SessionContext {
   user: User
   organization: Organization
   permissions: Permission[]
+  impersonatedBy?: User
 }
 
 export async function getSession(): Promise<SessionContext> {
@@ -38,6 +40,34 @@ export async function getSession(): Promise<SessionContext> {
 
   if (!organization) {
     redirect('/login')
+  }
+
+  // Check for impersonation cookie (super_admin only)
+  const cookieStore = cookies()
+  const impersonateCookie = (cookieStore as any).get('ll_impersonate')
+
+  if (impersonateCookie?.value && user.role === 'super_admin') {
+    const { data: impersonatedUser } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', impersonateCookie.value)
+      .eq('organization_id', user.organization_id)
+      .single()
+
+    if (impersonatedUser) {
+      const { data: impersonatedPermissions } = await supabase
+        .from('permissions')
+        .select('*')
+        .eq('organization_id', impersonatedUser.organization_id)
+        .eq('role', impersonatedUser.role)
+
+      return {
+        user: impersonatedUser as User,
+        organization: organization as Organization,
+        permissions: (impersonatedPermissions || []) as Permission[],
+        impersonatedBy: user as User,
+      }
+    }
   }
 
   const { data: permissions } = await supabase

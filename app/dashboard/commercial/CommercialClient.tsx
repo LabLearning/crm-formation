@@ -31,11 +31,12 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 interface Props {
-  userName: string; leads: Lead[]
+  userName: string; userRole?: string; leads: Lead[]
   interactionsToday: any[]; devisEnCours: any[]
 }
 
-export function CommercialClient({ userName, leads, interactionsToday, devisEnCours }: Props) {
+export function CommercialClient({ userName, userRole, leads, interactionsToday, devisEnCours }: Props) {
+  const isDirecteur = userRole === 'directeur_commercial'
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [tab, setTab] = useState<'accueil' | 'leads' | 'outils'>('accueil')
@@ -68,10 +69,16 @@ export function CommercialClient({ userName, leads, interactionsToday, devisEnCo
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Bonjour, {userName}</h1>
+        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
+          Bonjour, {userName}
+        </h1>
         <p className="text-surface-500 mt-1 text-sm">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          {' -- '}{stats.actionsAujourdhui} action{stats.actionsAujourdhui > 1 ? 's' : ''} aujourd'hui
+          {' -- '}
+          {isDirecteur
+            ? `${stats.total} leads equipe - ${stats.actionsAujourdhui} action${stats.actionsAujourdhui > 1 ? 's' : ''} aujourd'hui`
+            : `${stats.actionsAujourdhui} action${stats.actionsAujourdhui > 1 ? 's' : ''} aujourd'hui`
+          }
         </p>
       </div>
 
