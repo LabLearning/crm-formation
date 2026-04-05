@@ -87,8 +87,11 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     console.error('[Invite Link Error]', linkError)
   }
 
-  // Send branded invitation email
-  const inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
+  // Send branded invitation email — fix localhost URLs from Supabase config
+  let inviteUrl = linkData?.properties?.action_link || `${appUrl}/login`
+  if (inviteUrl.includes('localhost')) {
+    inviteUrl = inviteUrl.replace(/http:\/\/localhost:\d+/g, appUrl)
+  }
   const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
 
   await sendInvitationEmail({

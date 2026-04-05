@@ -154,21 +154,90 @@ export async function sendTemplateEmail(params: SendEmailParams): Promise<{ succ
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Administrateur',
   gestionnaire: 'Gestionnaire',
+  directeur_commercial: 'Directeur Commercial',
   commercial: 'Commercial',
-  comptable: 'Comptable',
+  apporteur_affaires: 'Apporteur d\'affaires',
   formateur: 'Formateur',
   apprenant: 'Apprenant',
 }
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
-  super_admin: 'Accès complet à toutes les fonctionnalités du CRM',
+  super_admin: 'Accès complet a toutes les fonctionnalites du CRM',
   gestionnaire: 'Gestion des formations, apprenants, dossiers et conventions',
+  directeur_commercial: 'Pilotage equipe commerciale, pipeline, reporting et apporteurs',
   commercial: 'Pipeline commercial, leads, outils de prospection et simulateur OPCO',
-  comptable: 'Facturation, paiements, pièces comptables et reporting financier',
-  formateur: 'Gestion de vos sessions, émargement et suivi des apprenants',
-  apprenant: 'Accès à vos formations, documents et questionnaires',
+  apporteur_affaires: 'Soumission de leads, suivi de vos commissions et dossiers',
+  formateur: 'Gestion de vos sessions, emargement et suivi des apprenants',
+  apprenant: 'Acces a vos formations, documents et questionnaires',
 }
 
+const ROLE_ICONS: Record<string, string> = {
+  super_admin: '&#9733;',
+  gestionnaire: '&#9881;',
+  directeur_commercial: '&#9670;',
+  commercial: '&#10148;',
+  apporteur_affaires: '&#10070;',
+  formateur: '&#9998;',
+  apprenant: '&#9734;',
+}
+
+// ── Shared email shell ──────────────────────────────────────
+function emailShell(opts: { body: string; orgName: string; badge?: string; badgeColor?: string }): string {
+  const badge = opts.badge
+    ? `<td align="right" style="vertical-align:top;">
+        <div style="background-color:${opts.badgeColor || 'rgba(255,255,255,0.18)'};border-radius:20px;padding:5px 14px;display:inline-block;">
+          <span style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${opts.badge}</span>
+        </div>
+      </td>`
+    : ''
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f5;padding:40px 16px;">
+<tr><td align="center">
+<table role="presentation" width="560" cellspacing="0" cellpadding="0" style="max-width:560px;width:100%;">
+
+  <!-- Header -->
+  <tr><td style="background-color:#195144;border-radius:12px 12px 0 0;padding:24px 32px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+      <td>
+        <span style="color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.5px;">Lab Learning</span>
+        <div style="margin-top:4px;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.3px;">Formation professionnelle certifiee Qualiopi</div>
+      </td>
+      ${badge}
+    </tr></table>
+  </td></tr>
+
+  <!-- Body -->
+  <tr><td style="background-color:#ffffff;padding:36px 32px;">${opts.body}</td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background-color:#fafafa;border-radius:0 0 12px 12px;border-top:1px solid #e4e4e7;padding:20px 32px;text-align:center;">
+    <span style="color:#71717a;font-size:12px;font-weight:600;">${opts.orgName}</span>
+    <span style="color:#a1a1aa;font-size:11px;"> &mdash; Organisme de formation certifie Qualiopi</span>
+    <div style="margin-top:6px;color:#a1a1aa;font-size:11px;">
+      <a href="mailto:digital@lab-learning.fr" style="color:#195144;text-decoration:none;">digital@lab-learning.fr</a>
+    </div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+function ctaButton(href: string, label: string, color?: string): string {
+  return `<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:28px 0;">
+  <tr><td align="center">
+    <a href="${href}" target="_blank" style="display:inline-block;padding:14px 48px;background-color:${color || '#195144'};color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:-0.2px;">
+      ${label}
+    </a>
+  </td></tr></table>`
+}
+
+// ── Invitation email ────────────────────────────────────────
 function buildInvitationHtml(params: {
   inviteUrl: string
   role: string
@@ -177,102 +246,56 @@ function buildInvitationHtml(params: {
 }): string {
   const roleLabel = ROLE_LABELS[params.role] || params.role
   const roleDesc = ROLE_DESCRIPTIONS[params.role] || ''
+  const roleIcon = ROLE_ICONS[params.role] || '&#9733;'
 
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invitation ${params.orgName}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f1f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f0;padding:48px 20px;">
-<tr><td align="center">
-<table role="presentation" width="580" cellspacing="0" cellpadding="0" style="max-width:580px;width:100%;">
-
-  <!-- Header -->
-  <tr><td style="background-color:#195144;border-radius:16px 16px 0 0;padding:28px 36px;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr>
-        <td>
-          <div style="display:inline-block;background-color:rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
-            <span style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-0.3px;">Lab Learning</span>
-          </div>
-          <p style="margin:10px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Organisme de formation professionnelle certifié Qualiopi</p>
-        </td>
-        <td align="right" style="vertical-align:middle;">
-          <div style="width:42px;height:42px;background-color:rgba(255,255,255,0.2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;">
-            <span style="color:#ffffff;font-size:20px;">&#10003;</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
-
-  <!-- Body -->
-  <tr><td style="background-color:#ffffff;padding:40px 36px;">
-
-    <h1 style="margin:0 0 8px;color:#1a2e1f;font-size:24px;font-weight:700;letter-spacing:-0.5px;">
-      Vous avez été invité
-    </h1>
-    <p style="margin:0 0 28px;color:#5a7a6a;font-size:15px;line-height:1.5;">
-      <strong style="color:#195144;">${params.invitedByName}</strong> vous invite à rejoindre l'espace
-      de gestion <strong style="color:#1a2e1f;">${params.orgName}</strong>.
+  const body = `
+    <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">Vous etes invite</h1>
+    <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
+      <strong style="color:#18181b;">${params.invitedByName}</strong> vous invite a rejoindre
+      <strong style="color:#195144;">${params.orgName}</strong>.
     </p>
 
-    <!-- Role card -->
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:28px;">
-      <tr><td style="background-color:#f0f7f4;border-left:4px solid #195144;border-radius:0 10px 10px 0;padding:16px 20px;">
-        <p style="margin:0 0 4px;color:#5a7a6a;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">Votre rôle</p>
-        <p style="margin:0 0 6px;color:#1a2e1f;font-size:16px;font-weight:700;">${roleLabel}</p>
-        <p style="margin:0;color:#5a7a6a;font-size:13px;line-height:1.5;">${roleDesc}</p>
+    <!-- Role -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+      <tr><td style="background-color:#f4f4f5;border-radius:10px;padding:20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0"><tr>
+          <td style="vertical-align:top;padding-right:14px;">
+            <div style="width:40px;height:40px;background-color:#195144;border-radius:10px;text-align:center;line-height:40px;">
+              <span style="color:#fff;font-size:18px;">${roleIcon}</span>
+            </div>
+          </td>
+          <td>
+            <div style="color:#18181b;font-size:16px;font-weight:700;margin-bottom:2px;">${roleLabel}</div>
+            <div style="color:#71717a;font-size:13px;line-height:1.5;">${roleDesc}</div>
+          </td>
+        </tr></table>
       </td></tr>
     </table>
 
     <!-- Steps -->
-    <p style="margin:0 0 16px;color:#374151;font-size:14px;font-weight:600;">Pour accéder à votre espace :</p>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:32px;">
-      ${['Cliquez sur le bouton ci-dessous', 'Choisissez votre mot de passe', 'Accédez à votre tableau de bord'].map((step, i) => `
-      <tr><td style="padding:6px 0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:4px;">
+      ${[
+        ['1', 'Cliquez sur le bouton ci-dessous'],
+        ['2', 'Definissez votre mot de passe'],
+        ['3', 'Accedez a votre tableau de bord'],
+      ].map(([n, text]) => `
+      <tr><td style="padding:5px 0;">
         <table role="presentation" cellspacing="0" cellpadding="0"><tr>
-          <td style="width:26px;height:26px;background-color:#195144;border-radius:50%;text-align:center;vertical-align:middle;">
-            <span style="color:#ffffff;font-size:12px;font-weight:700;">${i + 1}</span>
+          <td style="width:28px;height:28px;background-color:#195144;border-radius:50%;text-align:center;line-height:28px;">
+            <span style="color:#fff;font-size:12px;font-weight:800;">${n}</span>
           </td>
-          <td style="padding-left:12px;color:#4b5563;font-size:14px;">${step}</td>
+          <td style="padding-left:12px;color:#3f3f46;font-size:14px;">${text}</td>
         </tr></table>
       </td></tr>`).join('')}
     </table>
 
-    <!-- CTA -->
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 32px;">
-      <tr><td style="border-radius:10px;background-color:#195144;">
-        <a href="${params.inviteUrl}" target="_blank"
-           style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:-0.2px;">
-          Créer mon compte &rarr;
-        </a>
-      </td></tr>
-    </table>
+    ${ctaButton(params.inviteUrl, 'Creer mon compte')}
 
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;line-height:1.6;">
-      Ce lien est valable 48 heures.<br>
-      Si vous n'attendiez pas cette invitation, ignorez simplement cet email.
-    </p>
+    <p style="margin:0;color:#a1a1aa;font-size:12px;text-align:center;line-height:1.6;">
+      Ce lien est valable 7 jours. Si vous n'attendiez pas cette invitation, ignorez cet email.
+    </p>`
 
-  </td></tr>
-
-  <!-- Footer -->
-  <tr><td style="background-color:#f8faf9;border-radius:0 0 16px 16px;border-top:1px solid #e5ede9;padding:20px 36px;text-align:center;">
-    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;">${params.orgName}</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;">
-      Organisme de formation certifié Qualiopi &bull; Formation professionnelle
-    </p>
-  </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`
+  return emailShell({ body, orgName: params.orgName })
 }
 
 export async function sendInvitationEmail(params: {
@@ -320,59 +343,54 @@ export async function sendInvitationEmail(params: {
 
 type PortalType = 'apprenant' | 'formateur' | 'client' | 'apporteur' | 'partenaire'
 
-const PORTAL_CONFIG: Record<PortalType, { title: string; subtitle: string; accentColor: string; accesses: string[] }> = {
+const PORTAL_CONFIG: Record<PortalType, { title: string; subtitle: string; accesses: string[] }> = {
   apprenant: {
-    title: 'Espace Apprenant',
+    title: 'Apprenant',
     subtitle: 'Votre espace de formation personnel',
-    accentColor: '#7C3AED',
     accesses: [
       'Consulter vos formations et votre planning',
-      'Accéder à vos documents et attestations',
+      'Acceder a vos documents et attestations',
       'Passer vos questionnaires et QCM',
-      'Voir vos évaluations de satisfaction',
+      'Voir vos evaluations de satisfaction',
     ],
   },
   formateur: {
-    title: 'Espace Formateur',
+    title: 'Formateur',
     subtitle: 'Votre interface de gestion des sessions',
-    accentColor: '#0891B2',
     accesses: [
       'Consulter votre planning de sessions',
-      'Gérer l\'émargement numérique',
+      'Gerer l\'emargement numerique',
       'Suivre vos apprenants par session',
-      'Accéder à vos documents de formation',
+      'Acceder a vos documents de formation',
     ],
   },
   client: {
-    title: 'Espace Client',
-    subtitle: 'L\'espace dédié à votre entreprise',
-    accentColor: '#195144',
+    title: 'Client',
+    subtitle: 'L\'espace dedie a votre entreprise',
     accesses: [
       'Suivre le planning de vos formations',
       'Consulter et signer vos conventions',
-      'Accéder à vos factures',
-      'Gérer vos documents',
+      'Acceder a vos factures',
+      'Gerer vos documents',
     ],
   },
   apporteur: {
-    title: 'Espace Apporteur',
+    title: 'Apporteur',
     subtitle: 'Votre tableau de bord apporteur d\'affaires',
-    accentColor: '#B45309',
     accesses: [
-      'Suivre vos leads apportés et leur avancement',
-      'Consulter le détail de vos commissions',
+      'Suivre vos leads apportes et leur avancement',
+      'Consulter le detail de vos commissions',
       'Voir le statut de chaque dossier',
     ],
   },
   partenaire: {
-    title: 'Espace Partenaire',
+    title: 'Partenaire',
     subtitle: 'Votre tableau de bord franchise',
-    accentColor: '#195144',
     accesses: [
-      'Tableau de bord avec CA et indicateurs clés',
+      'Tableau de bord avec CA et indicateurs cles',
       'Suivre vos sessions de formation',
-      'Consulter vos commissions en temps réel',
-      'Gérer vos dossiers de formation',
+      'Consulter vos commissions en temps reel',
+      'Gerer vos dossiers de formation',
     ],
   },
 }
@@ -385,103 +403,47 @@ function buildPortalAccessHtml(params: {
 }): string {
   const config = PORTAL_CONFIG[params.portalType]
 
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${config.title} - ${params.orgName}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f1f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f0;padding:48px 20px;">
-<tr><td align="center">
-<table role="presentation" width="580" cellspacing="0" cellpadding="0" style="max-width:580px;width:100%;">
-
-  <!-- Header -->
-  <tr><td style="background-color:#195144;border-radius:16px 16px 0 0;padding:28px 36px;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr>
-        <td>
-          <div style="display:inline-block;background-color:rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
-            <span style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-0.3px;">${params.orgName}</span>
-          </div>
-          <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:12px;">Organisme de formation professionnelle certifié Qualiopi</p>
-        </td>
-        <td align="right" style="vertical-align:top;">
-          <div style="background-color:${config.accentColor};border-radius:8px;padding:6px 12px;display:inline-block;">
-            <span style="color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">${config.title}</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
-
-  <!-- Body -->
-  <tr><td style="background-color:#ffffff;padding:40px 36px;">
-
-    <h1 style="margin:0 0 8px;color:#1a2e1f;font-size:23px;font-weight:700;letter-spacing:-0.5px;">
+  const body = `
+    <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">
       Bonjour ${params.firstName},
     </h1>
-    <p style="margin:0 0 28px;color:#5a7a6a;font-size:15px;line-height:1.6;">
-      <strong style="color:#1a2e1f;">${params.orgName}</strong> vous ouvre l'accès à votre espace personnel.<br>
+    <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
+      <strong style="color:#195144;">${params.orgName}</strong> vous ouvre l'acces a votre espace personnel.
       ${config.subtitle}.
     </p>
 
     <!-- Access list -->
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:32px;">
-      <tr><td style="background-color:#f0f7f4;border-radius:12px;padding:20px 24px;">
-        <p style="margin:0 0 14px;color:#195144;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">Ce que vous pouvez faire</p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+      <tr><td style="background-color:#f4f4f5;border-radius:10px;padding:18px 22px;">
+        <div style="color:#3f3f46;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Ce que vous pouvez faire</div>
         ${config.accesses.map(a => `
         <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:8px;"><tr>
-          <td style="width:20px;vertical-align:top;padding-top:2px;">
-            <div style="width:16px;height:16px;background-color:#195144;border-radius:50%;text-align:center;line-height:16px;">
-              <span style="color:#ffffff;font-size:10px;font-weight:700;">&#10003;</span>
+          <td style="width:22px;vertical-align:top;padding-top:1px;">
+            <div style="width:18px;height:18px;background-color:#195144;border-radius:50%;text-align:center;line-height:18px;">
+              <span style="color:#fff;font-size:10px;">&#10003;</span>
             </div>
           </td>
-          <td style="padding-left:10px;color:#374151;font-size:14px;line-height:1.5;">${a}</td>
+          <td style="padding-left:10px;color:#3f3f46;font-size:14px;line-height:1.5;">${a}</td>
         </tr></table>`).join('')}
       </td></tr>
     </table>
 
-    <!-- No password note -->
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:28px;">
-      <tr><td style="background-color:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;">
-        <p style="margin:0;color:#92400e;font-size:13px;">
-          <strong>Accès simplifié</strong> — Aucun mot de passe requis. Cliquez simplement sur le bouton ci-dessous pour accéder directement à votre espace.
-        </p>
+    <!-- Note -->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:4px;">
+      <tr><td style="background-color:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;">
+        <span style="color:#854d0e;font-size:13px;line-height:1.5;">
+          <strong>Acces simplifie</strong> &mdash; Aucun mot de passe requis. Cliquez sur le bouton pour acceder directement.
+        </span>
       </td></tr>
     </table>
 
-    <!-- CTA -->
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 32px;">
-      <tr><td style="border-radius:10px;background-color:#195144;">
-        <a href="${params.portalUrl}" target="_blank"
-           style="display:inline-block;padding:14px 40px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:-0.2px;">
-          Accéder à mon espace &rarr;
-        </a>
-      </td></tr>
-    </table>
+    ${ctaButton(params.portalUrl, 'Acceder a mon espace')}
 
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;line-height:1.7;">
-      Ce lien est personnel et sécurisé. Ne le partagez pas.<br>
-      Si vous avez des questions, contactez-nous à <a href="mailto:digital@lab-learning.fr" style="color:#195144;">digital@lab-learning.fr</a>
-    </p>
+    <p style="margin:0;color:#a1a1aa;font-size:12px;text-align:center;line-height:1.6;">
+      Ce lien est personnel et securise. Ne le partagez pas.
+    </p>`
 
-  </td></tr>
-
-  <!-- Footer -->
-  <tr><td style="background-color:#f8faf9;border-radius:0 0 16px 16px;border-top:1px solid #e5ede9;padding:20px 36px;text-align:center;">
-    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;">${params.orgName}</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;">
-      Organisme de formation certifié Qualiopi &bull; Formation professionnelle
-    </p>
-  </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`
+  return emailShell({ body, orgName: params.orgName, badge: config.title })
 }
 
 export async function sendPortalAccessEmail(params: {
@@ -564,91 +526,32 @@ export async function sendNewLeadFromApporteurEmail(params: {
     .map(
       ([label, val]) => `
       <tr>
-        <td style="padding:8px 12px;color:#5a7a6a;font-size:13px;font-weight:600;white-space:nowrap;border-bottom:1px solid #e5ede9;">${label}</td>
-        <td style="padding:8px 12px;color:#1a2e1f;font-size:13px;border-bottom:1px solid #e5ede9;">${val}</td>
+        <td style="padding:10px 14px;color:#71717a;font-size:13px;font-weight:600;white-space:nowrap;border-bottom:1px solid #f4f4f5;">${label}</td>
+        <td style="padding:10px 14px;color:#18181b;font-size:13px;border-bottom:1px solid #f4f4f5;">${val}</td>
       </tr>`
     )
     .join('')
 
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nouveau lead apporteur - ${orgName}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f1f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f0;padding:48px 20px;">
-<tr><td align="center">
-<table role="presentation" width="580" cellspacing="0" cellpadding="0" style="max-width:580px;width:100%;">
-
-  <!-- Header -->
-  <tr><td style="background-color:#195144;border-radius:16px 16px 0 0;padding:28px 36px;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr>
-        <td>
-          <div style="display:inline-block;background-color:rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
-            <span style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-0.3px;">${orgName}</span>
-          </div>
-          <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:12px;">Nouveau lead apporteur</p>
-        </td>
-        <td align="right" style="vertical-align:top;">
-          <div style="background-color:rgba(255,255,255,0.2);border-radius:8px;padding:6px 12px;display:inline-block;">
-            <span style="color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">Lead entrant</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
-
-  <!-- Body -->
-  <tr><td style="background-color:#ffffff;padding:40px 36px;">
-
-    <h1 style="margin:0 0 8px;color:#1a2e1f;font-size:22px;font-weight:700;letter-spacing:-0.5px;">
-      Nouveau lead soumis
-    </h1>
-    <p style="margin:0 0 28px;color:#5a7a6a;font-size:15px;line-height:1.6;">
+  const body = `
+    <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">Nouveau lead soumis</h1>
+    <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
       Soumis par <strong style="color:#195144;">${apporteurName}</strong>
-      (<a href="mailto:${apporteurEmail}" style="color:#195144;">${apporteurEmail}</a>)
+      (<a href="mailto:${apporteurEmail}" style="color:#195144;text-decoration:none;">${apporteurEmail}</a>)
     </p>
 
     <!-- Lead details -->
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:32px;border:1px solid #e5ede9;border-radius:12px;overflow:hidden;">
-      <tr><td style="background-color:#f0f7f4;padding:12px 16px;">
-        <p style="margin:0;color:#195144;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">Détails du lead</p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:8px;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+      <tr><td style="background-color:#f4f4f5;padding:10px 14px;">
+        <span style="color:#3f3f46;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Details du lead</span>
       </td></tr>
       <tr><td>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-          ${tableRows}
-        </table>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${tableRows}</table>
       </td></tr>
     </table>
 
-    <!-- CTA -->
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 32px;">
-      <tr><td style="border-radius:10px;background-color:#195144;">
-        <a href="${dashboardUrl}" target="_blank"
-           style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:-0.2px;">
-          Voir le lead dans le CRM &rarr;
-        </a>
-      </td></tr>
-    </table>
+    ${ctaButton(dashboardUrl, 'Voir dans le CRM')}`
 
-  </td></tr>
-
-  <!-- Footer -->
-  <tr><td style="background-color:#f8faf9;border-radius:0 0 16px 16px;border-top:1px solid #e5ede9;padding:20px 36px;text-align:center;">
-    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;">${orgName}</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;">
-      Organisme de formation certifié Qualiopi &bull; Formation professionnelle
-    </p>
-  </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`
+  const html = emailShell({ body, orgName, badge: 'Lead entrant' })
 
   const resendApiKey = process.env.RESEND_API_KEY
   if (!resendApiKey) {
