@@ -64,6 +64,63 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
     details: { contact: parsed.data.contact_nom, entreprise: parsed.data.entreprise },
   })
 
+  // Si soumis par un apporteur → notifier le(s) directeur(s) commercial(aux)
+  if (session.user.role === 'apporteur_affaires') {
+    const { sendNewLeadFromApporteurEmail, createNotification } = await import('@/lib/email')
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+
+    // Trouver les directeurs commerciaux (et super_admin en fallback)
+    const { data: dircos } = await supabase
+      .from('users')
+      .select('id, email, first_name, last_name')
+      .eq('organization_id', session.organization.id)
+      .eq('status', 'active')
+      .in('role', ['directeur_commercial', 'super_admin'])
+
+    const apporteurName = `${session.user.first_name} ${session.user.last_name}`.trim()
+
+    for (const dirco of (dircos || [])) {
+      // Email
+      await sendNewLeadFromApporteurEmail({
+        adminEmail: dirco.email,
+        orgName: session.organization.name,
+        apporteurName,
+        apporteurEmail: session.user.email,
+        lead: {
+          contact_prenom: parsed.data.contact_prenom || '',
+          contact_nom: parsed.data.contact_nom || '',
+          contact_email: parsed.data.contact_email || '',
+          contact_telephone: parsed.data.contact_telephone || '',
+          entreprise: parsed.data.entreprise || '',
+          formation_souhaitee: parsed.data.formation_souhaitee || '',
+          nombre_stagiaires: String(parsed.data.nombre_stagiaires || ''),
+          date_souhaitee: parsed.data.date_souhaitee || '',
+          commentaire: parsed.data.commentaire || '',
+        },
+        dashboardUrl: `${appUrl}/dashboard/leads`,
+      })
+
+      // Notification in-app
+      await createNotification({
+        organizationId: session.organization.id,
+        userId: dirco.id,
+        titre: 'Nouveau lead apporteur',
+        message: `${apporteurName} a soumis un lead : ${parsed.data.contact_prenom || ''} ${parsed.data.contact_nom} — ${parsed.data.entreprise || 'Pas d\'entreprise'}`,
+        type: 'lead',
+        lienUrl: '/dashboard/leads',
+        lienLabel: 'Voir le lead',
+        entityType: 'lead',
+        entityId: data.id,
+      })
+    }
+
+    // Assigner le lead au premier directeur commercial trouvé
+    const dirco = (dircos || []).find(d => d.email !== session.user.email)
+    if (dirco) {
+      await supabase.from('leads').update({ assigned_to: dirco.id }).eq('id', data.id)
+    }
+  }
+
   revalidatePath('/dashboard/leads')
   return { success: true, data }
 }
