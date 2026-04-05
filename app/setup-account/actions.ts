@@ -72,5 +72,5 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', invitation.id)
 
-  return { success: true }
+  return { success: true, data: { email: invitation.email } }
 }

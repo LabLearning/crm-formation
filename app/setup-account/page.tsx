@@ -44,10 +44,18 @@ function SetupForm() {
     const result = await setupAccountAction(formData)
 
     if (result.success) {
+      // Auto-login with the password just set
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const email = (result.data as any)?.email
+      const pwd = formData.get('password') as string
+      if (email && pwd) {
+        await supabase.auth.signInWithPassword({ email, password: pwd })
+      }
       setSuccess(true)
       setTimeout(() => {
-        window.location.href = '/login'
-      }, 2500)
+        window.location.href = '/dashboard'
+      }, 1500)
     } else {
       setError(result.error || 'Une erreur est survenue')
       setLoading(false)
@@ -65,7 +73,7 @@ function SetupForm() {
             Compte active
           </h1>
           <p className="text-surface-500 text-sm">
-            Vous allez etre redirige vers la page de connexion...
+            Connexion en cours, redirection vers votre tableau de bord...
           </p>
         </div>
       </div>
