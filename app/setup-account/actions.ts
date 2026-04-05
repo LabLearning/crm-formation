@@ -29,7 +29,7 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
 
   const supabase = await createServiceRoleClient()
 
-  // Vérifier le token d'invitation contre notre table
+  // Vérifier le token d'invitation
   const { data: invitation } = await supabase
     .from('invitations')
     .select('*')
@@ -45,15 +45,14 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     return { success: false, error: 'Cette invitation a expiré. Demandez un nouveau lien.' }
   }
 
-  // Mettre à jour le mot de passe + confirmer l'email dans Supabase Auth
+  // Mettre à jour le mot de passe + confirmer l'email
   const { error: authError } = await supabase.auth.admin.updateUserById(uid, {
     password,
     email_confirm: true,
-    user_metadata: { first_name: firstName, last_name: lastName },
   })
 
   if (authError) {
-    return { success: false, error: authError.message }
+    return { success: false, error: 'Erreur lors de l\'activation : ' + authError.message }
   }
 
   // Mettre à jour le profil dans la table users
@@ -72,12 +71,18 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', invitation.id)
 
-  // Connexion automatique côté serveur (pose les cookies de session)
+  // Connexion automatique (pose les cookies de session)
   const anonClient = await createServerSupabaseClient()
-  await anonClient.auth.signInWithPassword({
+  const { error: signInError } = await anonClient.auth.signInWithPassword({
     email: invitation.email,
     password,
   })
 
-  return { success: true }
+  if (signInError) {
+    // Si la connexion auto échoue, ce n'est pas grave — l'utilisateur peut se connecter manuellement
+    console.error('[Setup] Auto sign-in failed:', signInError.message)
+    return { success: true, data: { email: invitation.email, autoLogin: false } }
+  }
+
+  return { success: true, data: { email: invitation.email, autoLogin: true } }
 }

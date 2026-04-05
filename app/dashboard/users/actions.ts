@@ -70,25 +70,44 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     return { success: false, error: 'Erreur lors de la création de l\'invitation' }
   }
 
-  // Generate invite link via Supabase Auth (without sending its default email)
-  const serviceClient = await createServiceRoleClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm-formation-five.vercel.app'
+  // Créer le user dans Supabase Auth avec createUser (crée une vraie identité email)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
 
-  const { data: linkData, error: linkError } = await serviceClient.auth.admin.generateLink({
-    type: 'invite',
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: parsed.data.email,
-    options: {
-      data: { invitation_token: invitation.token },
-      redirectTo: `${appUrl}/dashboard`,
-    },
+    email_confirm: false,
+    user_metadata: { invitation_token: invitation.token },
   })
 
-  if (linkError) {
-    console.error('[Invite Link Error]', linkError)
+  if (authError) {
+    // Si le user auth existe déjà, le récupérer
+    if (!authError.message.includes('already')) {
+      console.error('[Create Auth User Error]', authError)
+    }
   }
 
-  // Build invite URL — direct link to setup-account with invitation token + user id
-  const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${linkData?.user?.id || ''}`
+  // Récupérer l'id du user auth
+  let authUserId = authData?.user?.id || ''
+  if (!authUserId) {
+    const { data: { users: allUsers } } = await supabase.auth.admin.listUsers()
+    const found = (allUsers || []).find((u: any) => u.email === parsed.data.email)
+    authUserId = found?.id || ''
+  }
+
+  // Créer le user dans la table users (status: invited)
+  if (authUserId) {
+    await supabase.from('users').upsert({
+      id: authUserId,
+      organization_id: session.organization.id,
+      email: parsed.data.email,
+      first_name: '',
+      last_name: '',
+      role: parsed.data.role,
+      status: 'invited',
+    }, { onConflict: 'id' })
+  }
+
+  const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${authUserId}`
   const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
 
   await sendInvitationEmail({

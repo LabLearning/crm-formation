@@ -44,9 +44,10 @@ function SetupForm() {
     const result = await setupAccountAction(formData)
 
     if (result.success) {
+      const autoLogin = (result.data as any)?.autoLogin
       setSuccess(true)
       setTimeout(() => {
-        window.location.href = '/dashboard'
+        window.location.href = autoLogin ? '/dashboard' : '/login'
       }, 1500)
     } else {
       setError(result.error || 'Une erreur est survenue')
