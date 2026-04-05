@@ -13,6 +13,10 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
     if (!error) {
+      // For invite type, redirect to account setup page
+      if (type === 'invite') {
+        return NextResponse.redirect(`${origin}/setup-account`)
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
