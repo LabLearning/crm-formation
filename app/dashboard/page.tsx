@@ -12,16 +12,17 @@ import { formatDateTime } from '@/lib/utils'
 export default async function DashboardPage() {
   const { user, organization } = await getSession()
 
-  // Chaque rôle a son propre dashboard
+  // Chaque rôle a son propre dashboard dédié
   const { redirect } = await import('next/navigation')
-  if (['commercial', 'directeur_commercial', 'apporteur_affaires'].includes(user.role)) {
-    redirect('/dashboard/commercial')
+  const roleRedirects: Record<string, string> = {
+    commercial: '/dashboard/commercial',
+    directeur_commercial: '/dashboard/commercial',
+    apporteur_affaires: '/dashboard/apporteur-home',
+    formateur: '/dashboard/formateur-home',
+    apprenant: '/dashboard/apprenant-home',
   }
-  if (user.role === 'formateur') {
-    redirect('/dashboard/formateur-home')
-  }
-  if (user.role === 'apprenant') {
-    redirect('/dashboard/apprenant-home')
+  if (roleRedirects[user.role]) {
+    redirect(roleRedirects[user.role])
   }
 
   let data
