@@ -13,8 +13,6 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Mon profil', href: '/dashboard/formateur-home/profil', icon: 'UserCheck', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
       { label: 'Planning', href: '/dashboard/formateur-home/planning', icon: 'CalendarDays', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
-      { label: 'Rapports', href: '/dashboard/formateur-home/rapports', icon: 'FileText', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
-      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
     ],
   },
   // ── COMMERCIAL ───────────────────────────────────────────
@@ -49,7 +47,8 @@ export const navigation: NavSection[] = [
       { label: 'Sessions', href: '/dashboard/sessions', icon: 'Calendar', module: 'sessions' },
       { label: 'Carte sessions', href: '/dashboard/carte-sessions', icon: 'MapPin', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Émargement', href: '/dashboard/emargement', icon: 'UserCheck', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant'] },
-      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant', 'formateur'] },
+      { label: 'Rapports', href: '/dashboard/formateur-home/rapports', icon: 'ClipboardCheck', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant'] },
+      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant'] },
       { label: 'Apprenants', href: '/dashboard/apprenants', icon: 'UserCheck', module: 'apprenants' },
       { label: 'Formateurs', href: '/dashboard/formateurs', icon: 'Presentation', module: 'formateurs' },
     ],
