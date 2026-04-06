@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import { getDashboardData } from './reporting/data'
 import Link from 'next/link'
 import {
@@ -9,20 +10,19 @@ import {
 } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 
+const ROLE_REDIRECTS: Record<string, string> = {
+  commercial: '/dashboard/commercial',
+  directeur_commercial: '/dashboard/commercial',
+  apporteur_affaires: '/dashboard/apporteur-home',
+  formateur: '/dashboard/formateur-home',
+  apprenant: '/dashboard/apprenant-home',
+}
+
 export default async function DashboardPage() {
   const { user, organization } = await getSession()
 
-  // Chaque rôle a son propre dashboard dédié
-  const { redirect } = await import('next/navigation')
-  const roleRedirects: Record<string, string> = {
-    commercial: '/dashboard/commercial',
-    directeur_commercial: '/dashboard/commercial',
-    apporteur_affaires: '/dashboard/apporteur-home',
-    formateur: '/dashboard/formateur-home',
-    apprenant: '/dashboard/apprenant-home',
-  }
-  if (roleRedirects[user.role]) {
-    redirect(roleRedirects[user.role])
+  if (ROLE_REDIRECTS[user.role]) {
+    redirect(ROLE_REDIRECTS[user.role])
   }
 
   let data
