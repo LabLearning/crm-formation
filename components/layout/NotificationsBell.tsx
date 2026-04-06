@@ -22,6 +22,7 @@ const typeColors: Record<string, string> = {
   warning: 'bg-warning-500',
   danger: 'bg-danger-500',
   action: 'bg-purple-500',
+  lead: 'bg-blue-500',
 }
 
 export function NotificationsBell({ userId }: { userId: string }) {
@@ -31,66 +32,30 @@ export function NotificationsBell({ userId }: { userId: string }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const fetchNotifications = useCallback(async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20)
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20)
 
-    if (data) {
-      setNotifications(data as Notification[])
-      setUnreadCount(data.filter((n) => !n.is_read).length)
+      if (data) {
+        setNotifications(data as Notification[])
+        setUnreadCount(data.filter((n) => !n.is_read).length)
+      }
+    } catch {
+      // Silently fail
     }
   }, [userId])
 
-  // Initial fetch + Supabase Realtime subscription
+  // Polling toutes les 30 secondes
   useEffect(() => {
     fetchNotifications()
-
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const newNotif = payload.new as Notification
-          setNotifications((prev) => [newNotif, ...prev].slice(0, 20))
-          setUnreadCount((c) => c + 1)
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const updated = payload.new as Notification
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
-          )
-          setUnreadCount((prev) => {
-            // Recount from state since we can't easily diff here
-            return prev
-          })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId, fetchNotifications])
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -133,8 +98,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-2xl border border-surface-200 shadow-modal z-50 animate-scale-in origin-top-right overflow-hidden">
-          {/* Header */}
+        <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-2xl border border-surface-200 shadow-modal z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-surface-100">
             <h3 className="text-sm font-semibold text-surface-900">Notifications</h3>
             {unreadCount > 0 && (
@@ -144,7 +108,6 @@ export function NotificationsBell({ userId }: { userId: string }) {
             )}
           </div>
 
-          {/* List */}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length > 0 ? (
               notifications.map((n) => (

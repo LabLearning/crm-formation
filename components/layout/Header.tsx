@@ -1,14 +1,32 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Component, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, LogOut, Settings, User as UserIcon, Menu, ChevronDown } from 'lucide-react'
+import { Search, LogOut, Settings, User as UserIcon, Menu, ChevronDown, Bell } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
 import { NotificationsBell } from './NotificationsBell'
 import { ROLE_LABELS } from '@/lib/types'
 import type { User } from '@/lib/types'
+
+// Error boundary pour isoler les crashes de la NotificationsBell
+class NotifErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) return <div className="p-2 text-surface-400"><Bell className="h-5 w-5" /></div>
+    return this.props.children
+  }
+}
+
+function SafeNotifications({ userId }: { userId: string }) {
+  return (
+    <NotifErrorBoundary>
+      <NotificationsBell userId={userId} />
+    </NotifErrorBoundary>
+  )
+}
 
 interface HeaderProps {
   user: User
@@ -64,8 +82,8 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
       {/* Right */}
       <div className="flex items-center gap-1.5">
-        {/* Notifications */}
-        <NotificationsBell userId={user.id} />
+        {/* Notifications — wrapped in error boundary */}
+        <SafeNotifications userId={user.id} />
 
         {/* Separator */}
         <div className="h-6 w-px bg-surface-200 mx-1.5 hidden sm:block" />
