@@ -26,7 +26,48 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .not('status', 'in', '("annule","abandonne")')
     .order('date_inscription', { ascending: true })
 
-  // Émargements
+  // Auto-générer les émargements pour chaque jour × chaque apprenant
+  const allInscriptions = inscriptions || []
+  if (allInscriptions.length > 0 && sessionData.date_debut && sessionData.date_fin) {
+    const days: string[] = []
+    const d = new Date(sessionData.date_debut)
+    const end = new Date(sessionData.date_fin)
+    while (d <= end) {
+      days.push(d.toISOString().split('T')[0])
+      d.setDate(d.getDate() + 1)
+    }
+
+    for (const day of days) {
+      const apprenantIds = allInscriptions.map((i: any) => (i.apprenant as any)?.id).filter(Boolean)
+      if (apprenantIds.length === 0) continue
+
+      // Vérifier ce qui existe déjà
+      const { data: existing } = await supabase
+        .from('emargements')
+        .select('apprenant_id')
+        .eq('session_id', params.id)
+        .eq('date', day)
+        .eq('creneau', 'journee')
+
+      const existingIds = new Set((existing || []).map((e: any) => e.apprenant_id))
+      const toInsert = apprenantIds
+        .filter((id: string) => !existingIds.has(id))
+        .map((id: string) => ({
+          organization_id: session.organization.id,
+          session_id: params.id,
+          apprenant_id: id,
+          date: day,
+          creneau: 'journee',
+          est_present: false,
+        }))
+
+      if (toInsert.length > 0) {
+        await supabase.from('emargements').insert(toInsert)
+      }
+    }
+  }
+
+  // Récupérer les émargements (y compris ceux qu'on vient de créer)
   const { data: emargements } = await supabase
     .from('emargements')
     .select('id, apprenant_id, date, creneau, est_present')

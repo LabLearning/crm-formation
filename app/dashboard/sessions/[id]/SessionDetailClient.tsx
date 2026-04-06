@@ -39,7 +39,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 
 export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, isFormateur, userRole }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<'session' | 'apprenants' | 'rapport'>('session')
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'rapport'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({})
   const [createDate, setCreateDate] = useState('')
@@ -146,9 +146,10 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       </div>
 
       {/* Onglets */}
-      <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5">
+      <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5 overflow-x-auto">
         {[
           { id: 'session' as const, label: 'Session', icon: Calendar },
+          { id: 'presences' as const, label: 'Présences', icon: UserCheck },
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
         ].map(t => (
@@ -242,9 +243,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       )}
 
       {/* ═══════════════════════════════════════════════
-          ONGLET APPRENANTS — Émargement par jour
+          ONGLET PRÉSENCES — Émargement par jour
           ═══════════════════════════════════════════════ */}
-      {tab === 'apprenants' && (
+      {tab === 'presences' && (
         <div className="space-y-4">
           {/* Stats émargement */}
           <div className="grid grid-cols-3 gap-3">
@@ -264,34 +265,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
           </div>
 
-          {/* Créer feuille émargement */}
-          {canEmarge && (
-            <div className="card p-4">
-              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Créer une feuille d'émargement</div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <select value={createDate} onChange={e => setCreateDate(e.target.value)} className="input-base text-sm flex-1">
-                  <option value="">Sélectionner un jour</option>
-                  {sessionDays.map((day, idx) => (
-                    <option key={day} value={day}>
-                      J{idx + 1} — {new Date(day).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </option>
-                  ))}
-                </select>
-                <select value={createCreneau} onChange={e => setCreateCreneau(e.target.value)} className="input-base text-sm">
-                  <option value="journee">Journée entière</option>
-                  <option value="matin">Matin</option>
-                  <option value="apres_midi">Après-midi</option>
-                </select>
-                <button onClick={handleCreateEmargement} disabled={!createDate || isPending}
-                  className="btn-primary flex items-center justify-center gap-2 text-sm whitespace-nowrap">
-                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  Créer
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Émargement par jour */}
+          {/* Émargement par jour (auto-généré) */}
           {sessionDays.map((day, idx) => {
             const dayEmargements = emargementsByDate[day] || []
             if (dayEmargements.length === 0) return null
@@ -370,18 +344,26 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             )
           })}
 
-          {/* Jours sans émargement */}
-          {sessionDays.filter(day => !emargementsByDate[day]?.length).length > 0 && Object.keys(emargementsByDate).length > 0 && (
+          {/* Info si tous les jours sont émargés */}
+          {sessionDays.every(day => (emargementsByDate[day] || []).length > 0) && (
             <div className="text-xs text-surface-400 text-center py-2">
-              {sessionDays.filter(day => !emargementsByDate[day]?.length).length} jour(s) sans feuille d'émargement
+              Feuilles d'émargement générées pour les {sessionDays.length} jours de formation
             </div>
           )}
+        </div>
+      )}
 
-          {/* Récapitulatif par apprenant */}
-          <div className="card overflow-hidden">
-            <div className="px-4 py-3 border-b border-surface-100">
-              <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Récapitulatif par apprenant</span>
-            </div>
+      {/* ═══════════════════════════════════════════════
+          ONGLET APPRENANTS — Liste simple
+          ═══════════════════════════════════════════════ */}
+      {tab === 'apprenants' && (
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-100">
+            <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">
+              {inscriptions.length} apprenant{inscriptions.length > 1 ? 's' : ''} inscrit{inscriptions.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          {inscriptions.length > 0 ? (
             <div className="divide-y divide-surface-100">
               {inscriptions.map((ins: any) => {
                 const a = ins.apprenant
@@ -391,44 +373,38 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 const assiduity = appTotal > 0 ? Math.round((appPresent / appTotal) * 100) : null
 
                 return (
-                  <div key={ins.id} className="px-4 py-3 flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <div key={ins.id} className="px-4 py-3.5 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-blue-600">{(a?.prenom?.[0] || '')}{(a?.nom?.[0] || '')}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</div>
-                      <div className="text-xs text-surface-500">{a?.entreprise || a?.email || ''}</div>
-                    </div>
-                    {/* Résumé émargement par jour */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      {sessionDays.map((day, idx) => {
-                        const dayEm = (emargementsByDate[day] || []).find((e: any) => e.apprenant_id === a?.id)
-                        return (
-                          <div
-                            key={day}
-                            className={cn('h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center',
-                              !dayEm ? 'bg-surface-50 text-surface-300' :
-                              dayEm.est_present ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                            )}
-                            title={`J${idx + 1} — ${dayEm ? (dayEm.est_present ? 'Présent' : 'Absent') : 'Pas d\'émargement'}`}
-                          >
-                            J{idx + 1}
-                          </div>
-                        )
-                      })}
-                    </div>
-                    {assiduity !== null && (
-                      <div className={cn('text-sm font-bold shrink-0 w-12 text-right',
-                        assiduity >= 80 ? 'text-emerald-600' : assiduity >= 50 ? 'text-amber-600' : 'text-red-600'
-                      )}>
-                        {assiduity}%
+                      <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap">
+                        {a?.email && <span className="flex items-center gap-1 truncate"><Mail className="h-3 w-3 shrink-0" />{a.email}</span>}
+                        {a?.telephone && <span className="flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{a.telephone}</span>}
+                        {a?.entreprise && <span className="flex items-center gap-1"><Building2 className="h-3 w-3 shrink-0" />{a.entreprise}</span>}
                       </div>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {assiduity !== null && (
+                        <div className="text-right">
+                          <div className={cn('text-sm font-bold', assiduity >= 80 ? 'text-emerald-600' : assiduity >= 50 ? 'text-amber-600' : 'text-red-600')}>
+                            {assiduity}%
+                          </div>
+                          <div className="text-[10px] text-surface-400">assiduité</div>
+                        </div>
+                      )}
+                      <Badge variant={ins.status === 'confirme' ? 'success' : ins.status === 'inscrit' ? 'info' : 'default'}>
+                        {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}
+                      </Badge>
+                    </div>
                   </div>
                 )
               })}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-12 text-sm text-surface-400">Aucun apprenant inscrit</div>
+          )}
         </div>
       )}
 
