@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { AccountNotLinked } from '@/components/dashboard/AccountNotLinked'
+import { PointageButton } from '@/app/dashboard/pointage/PointageButton'
 import { Calendar, Users, ClipboardCheck, Clock, ChevronRight, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
@@ -61,6 +62,18 @@ export default async function FormateurHomePage() {
   const allSessions = sessions || []
   const prochaine = allSessions.find(s => new Date(s.date_debut) >= new Date())
 
+  // Pointages du jour
+  const { data: todayPointages } = await supabase
+    .from('pointages_formateur')
+    .select('id, heure_arrivee, heure_depart, photo_arrivee_url, photo_depart_url, session_id, session:sessions(reference, formation:formations(intitule))')
+    .eq('formateur_id', formateur.id)
+    .eq('date', today)
+
+  // Sessions actives aujourd'hui (pour le sélecteur de pointage)
+  const sessionsToday = allSessions.filter(s => {
+    return s.date_debut <= today && s.date_fin >= today && ['confirmee', 'en_cours'].includes(s.status)
+  })
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div>
@@ -72,6 +85,14 @@ export default async function FormateurHomePage() {
           {' — Espace formateur'}
         </p>
       </div>
+
+      {/* Pointeuse */}
+      {sessionsToday.length > 0 && (
+        <PointageButton
+          todayPointages={(todayPointages || []) as any[]}
+          sessionsToday={sessionsToday.map(s => ({ id: s.id, reference: s.reference, formation: s.formation as any }))}
+        />
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3">
