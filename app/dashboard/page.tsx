@@ -11,8 +11,8 @@ import {
 import { formatDateTime } from '@/lib/utils'
 
 const ROLE_REDIRECTS: Record<string, string> = {
+  directeur_commercial: '/dashboard/dirco-home',
   commercial: '/dashboard/commercial',
-  directeur_commercial: '/dashboard/commercial',
   apporteur_affaires: '/dashboard/apporteur-home',
   formateur: '/dashboard/formateur-home',
   apprenant: '/dashboard/apprenant-home',
