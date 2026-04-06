@@ -7,10 +7,21 @@ export const navigation: NavSection[] = [
       { label: 'Tableau de bord', href: '/dashboard', icon: 'LayoutDashboard' },
     ],
   },
+  // ── FORMATEUR : section dédiée ───────────────────────────
+  {
+    title: 'Mon espace',
+    items: [
+      { label: 'Mon profil', href: '/dashboard/formateur-home/profil', icon: 'UserCheck', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
+      { label: 'Planning', href: '/dashboard/formateur-home/planning', icon: 'CalendarDays', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
+      { label: 'Rapports', href: '/dashboard/formateur-home/rapports', icon: 'FileText', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
+      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial', 'apporteur_affaires', 'apprenant'] },
+    ],
+  },
+  // ── COMMERCIAL ───────────────────────────────────────────
   {
     title: 'Commercial',
     items: [
-      { label: 'Vue Terrain', href: '/dashboard/commercial', icon: 'Presentation', module: 'leads', hideForRoles: ['apporteur_affaires'] },
+      { label: 'Vue Terrain', href: '/dashboard/commercial', icon: 'Presentation', module: 'leads', hideForRoles: ['apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Leads', href: '/dashboard/leads', icon: 'UserPlus', module: 'leads' },
       { label: 'Clients', href: '/dashboard/clients', icon: 'Building2', module: 'clients' },
       { label: 'Contacts', href: '/dashboard/contacts', icon: 'Users', module: 'contacts' },
@@ -18,6 +29,7 @@ export const navigation: NavSection[] = [
       { label: 'Devis', href: '/dashboard/devis', icon: 'FileText', module: 'devis' },
     ],
   },
+  // ── OUTILS TERRAIN ───────────────────────────────────────
   {
     title: 'Outils',
     items: [
@@ -29,6 +41,7 @@ export const navigation: NavSection[] = [
       { label: 'Vue Manager', href: '/dashboard/manager', icon: 'PieChart', module: 'reporting' },
     ],
   },
+  // ── FORMATIONS ───────────────────────────────────────────
   {
     title: 'Formations',
     items: [
@@ -36,11 +49,12 @@ export const navigation: NavSection[] = [
       { label: 'Sessions', href: '/dashboard/sessions', icon: 'Calendar', module: 'sessions' },
       { label: 'Carte sessions', href: '/dashboard/carte-sessions', icon: 'MapPin', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Émargement', href: '/dashboard/emargement', icon: 'UserCheck', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant'] },
-      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant'] },
+      { label: 'Pointages', href: '/dashboard/pointage', icon: 'Clock', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'apprenant', 'formateur'] },
       { label: 'Apprenants', href: '/dashboard/apprenants', icon: 'UserCheck', module: 'apprenants' },
       { label: 'Formateurs', href: '/dashboard/formateurs', icon: 'Presentation', module: 'formateurs' },
     ],
   },
+  // ── ADMINISTRATIF ────────────────────────────────────────
   {
     title: 'Administratif',
     items: [
@@ -51,6 +65,7 @@ export const navigation: NavSection[] = [
       { label: 'Signatures', href: '/dashboard/signatures', icon: 'PenTool', module: 'signatures' },
     ],
   },
+  // ── FINANCES ─────────────────────────────────────────────
   {
     title: 'Finances',
     items: [
@@ -58,6 +73,7 @@ export const navigation: NavSection[] = [
       { label: 'Paiements', href: '/dashboard/paiements', icon: 'CreditCard', module: 'paiements' },
     ],
   },
+  // ── QUALITÉ ──────────────────────────────────────────────
   {
     title: 'Qualité',
     items: [
@@ -67,6 +83,7 @@ export const navigation: NavSection[] = [
       { label: 'Réclamations', href: '/dashboard/reclamations', icon: 'MessageSquareWarning', module: 'reclamations' },
     ],
   },
+  // ── SYSTÈME ──────────────────────────────────────────────
   {
     title: 'Système',
     items: [
