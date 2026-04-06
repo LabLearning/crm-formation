@@ -57,7 +57,6 @@ interface Session {
   date_debut: string
   date_fin: string
   lieu: string | null
-  nb_places: number | null
   formation: { intitule: string; duree_heures: number | null; categorie: string | null } | null
   formateur: { prenom: string; nom: string } | null
 }
