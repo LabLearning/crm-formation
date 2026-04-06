@@ -34,6 +34,7 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Catalogue', href: '/dashboard/formations', icon: 'GraduationCap', module: 'formations' },
       { label: 'Sessions', href: '/dashboard/sessions', icon: 'Calendar', module: 'sessions' },
+      { label: 'Carte sessions', href: '/dashboard/carte-sessions', icon: 'MapPin', module: 'sessions' },
       { label: 'Apprenants', href: '/dashboard/apprenants', icon: 'UserCheck', module: 'apprenants' },
       { label: 'Formateurs', href: '/dashboard/formateurs', icon: 'Presentation', module: 'formateurs' },
     ],

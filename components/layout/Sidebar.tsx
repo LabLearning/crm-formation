@@ -9,7 +9,7 @@ import {
   FolderOpen, PenTool, Receipt, CreditCard, ClipboardCheck, ListChecks,
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers,
-  ChevronDown, PanelLeftClose, PanelLeft,
+  ChevronDown, PanelLeftClose, PanelLeft, MapPin,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/lib/permissions'
@@ -21,7 +21,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Calendar, UserCheck, Presentation, FileSignature,
   FolderOpen, PenTool, Receipt, CreditCard, ClipboardCheck, ListChecks,
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
-  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers,
+  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin,
 }
 
 // Section colors: colored title + subtle tinted bg on items
