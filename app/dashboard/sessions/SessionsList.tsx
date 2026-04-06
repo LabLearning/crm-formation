@@ -105,7 +105,7 @@ export function SessionsList({ sessions, formations, formateurs }: SessionsListP
       {/* Sessions list */}
       <div className="space-y-3">
         {filtered.map((s) => (
-          <div key={s.id} className={`card p-5 hover:shadow-card transition-shadow ${isToday(s) ? 'ring-2 ring-brand-200' : ''}`}>
+          <div key={s.id} onClick={() => window.location.href = `/dashboard/sessions/${s.id}`} className={`card p-5 hover:shadow-card transition-shadow cursor-pointer ${isToday(s) ? 'ring-2 ring-brand-200' : ''}`}>
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
               {/* Date badge */}
               <div className="shrink-0 text-center lg:w-20">

@@ -200,8 +200,8 @@ export default async function FormateurHomePage() {
 
           return (
             <div key={s.id} className="card overflow-hidden">
-              {/* En-tête session */}
-              <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between">
+              {/* En-tête session — cliquable */}
+              <Link href={`/dashboard/sessions/${s.id}`} className="px-4 py-3 border-b border-surface-100 flex items-center justify-between hover:bg-surface-50 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-surface-900 truncate">
                     {s.formation?.intitule || s.reference}
@@ -219,7 +219,7 @@ export default async function FormateurHomePage() {
                 )}>
                   {s.status === 'en_cours' ? 'En cours' : 'Confirmée'}
                 </span>
-              </div>
+              </Link>
 
               {/* Jours de formation avec statut de pointage */}
               <div className="divide-y divide-surface-100">
