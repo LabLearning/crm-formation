@@ -65,6 +65,15 @@ export async function setupAccountAction(formData: FormData): Promise<ActionResu
     })
     .eq('id', uid)
 
+  // Mettre à jour la fiche métier avec le nom/prénom
+  if (invitation.role === 'formateur') {
+    await supabase.from('formateurs').update({ nom: lastName, prenom: firstName }).eq('user_id', uid)
+  } else if (invitation.role === 'apporteur_affaires') {
+    await supabase.from('apporteurs_affaires').update({ nom: lastName, prenom: firstName }).eq('user_id', uid)
+  } else if (invitation.role === 'apprenant') {
+    await supabase.from('apprenants').update({ nom: lastName, prenom: firstName }).eq('user_id', uid)
+  }
+
   // Marquer l'invitation comme acceptée
   await supabase
     .from('invitations')

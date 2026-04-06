@@ -108,32 +108,41 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
 
     // Auto-créer la fiche métier liée au user
     if (parsed.data.role === 'apporteur_affaires') {
-      await supabase.from('apporteurs_affaires').upsert({
-        organization_id: session.organization.id,
-        user_id: authUserId,
-        nom: '',
-        email: parsed.data.email,
-        taux_commission: 10,
-        is_active: true,
-      }, { onConflict: 'user_id', ignoreDuplicates: true })
+      // Vérifier si une fiche existe déjà
+      const { data: existing } = await supabase.from('apporteurs_affaires').select('id').eq('user_id', authUserId).single()
+      if (!existing) {
+        await supabase.from('apporteurs_affaires').insert({
+          organization_id: session.organization.id,
+          user_id: authUserId,
+          nom: '',
+          email: parsed.data.email,
+          taux_commission: 10,
+          is_active: true,
+        })
+      }
     } else if (parsed.data.role === 'formateur') {
-      await supabase.from('formateurs').upsert({
-        organization_id: session.organization.id,
-        user_id: authUserId,
-        nom: '',
-        prenom: '',
-        email: parsed.data.email,
-        specialites: [],
-        is_active: true,
-      }, { onConflict: 'user_id', ignoreDuplicates: true })
+      const { data: existing } = await supabase.from('formateurs').select('id').eq('user_id', authUserId).single()
+      if (!existing) {
+        await supabase.from('formateurs').insert({
+          organization_id: session.organization.id,
+          user_id: authUserId,
+          nom: '',
+          prenom: '',
+          email: parsed.data.email,
+          is_active: true,
+        })
+      }
     } else if (parsed.data.role === 'apprenant') {
-      await supabase.from('apprenants').upsert({
-        organization_id: session.organization.id,
-        user_id: authUserId,
-        nom: '',
-        prenom: '',
-        email: parsed.data.email,
-      }, { onConflict: 'user_id', ignoreDuplicates: true })
+      const { data: existing } = await supabase.from('apprenants').select('id').eq('user_id', authUserId).single()
+      if (!existing) {
+        await supabase.from('apprenants').insert({
+          organization_id: session.organization.id,
+          user_id: authUserId,
+          nom: '',
+          prenom: '',
+          email: parsed.data.email,
+        })
+      }
     }
   }
 
