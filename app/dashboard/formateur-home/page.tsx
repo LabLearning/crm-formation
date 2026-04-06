@@ -166,10 +166,13 @@ export default async function FormateurHomePage() {
           {[
             { label: 'Émargement', href: '/dashboard/emargement', icon: UserCheck, color: 'text-emerald-600 bg-emerald-50', desc: 'Feuilles de présence' },
             { label: 'Mes apprenants', href: '/dashboard/apprenants', icon: Users, color: 'text-blue-600 bg-blue-50', desc: 'Liste par session' },
+            { label: 'Rapports', href: '/dashboard/formateur-home/rapports', icon: FileText, color: 'text-rose-600 bg-rose-50', desc: 'Bilans de formation' },
+            { label: 'Planning', href: '/dashboard/formateur-home/planning', icon: Calendar, color: 'text-teal-600 bg-teal-50', desc: 'Disponibilités' },
+            { label: 'Mon profil', href: '/dashboard/formateur-home/profil', icon: Users, color: 'text-surface-600 bg-surface-100', desc: 'Compétences & tarifs' },
             { label: 'QCM', href: '/dashboard/qcm', icon: ListChecks, color: 'text-violet-600 bg-violet-50', desc: 'Banque de questions' },
-            { label: 'Évaluations', href: '/dashboard/evaluations', icon: ClipboardCheck, color: 'text-amber-600 bg-amber-50', desc: 'Satisfaction & positionnement' },
-            { label: 'Documents', href: '/dashboard/documents', icon: FileText, color: 'text-rose-600 bg-rose-50', desc: 'Supports & attestations' },
-            { label: 'Catalogue', href: '/dashboard/formations', icon: Calendar, color: 'text-teal-600 bg-teal-50', desc: 'Formations disponibles' },
+            { label: 'Évaluations', href: '/dashboard/evaluations', icon: ClipboardCheck, color: 'text-amber-600 bg-amber-50', desc: 'Satisfaction' },
+            { label: 'Documents', href: '/dashboard/documents', icon: FileText, color: 'text-amber-600 bg-amber-50', desc: 'Supports & contrats' },
+            { label: 'Catalogue', href: '/dashboard/formations', icon: Calendar, color: 'text-surface-600 bg-surface-100', desc: 'Formations' },
           ].map(a => (
             <Link key={a.href} href={a.href}
               className="flex items-center gap-3 p-3 rounded-xl bg-white border border-surface-200/80 hover:shadow-card transition-all active:scale-[0.98]">
