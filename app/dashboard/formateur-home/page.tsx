@@ -69,10 +69,8 @@ export default async function FormateurHomePage() {
     .eq('formateur_id', formateur.id)
     .eq('date', today)
 
-  // Sessions actives aujourd'hui (pour le sélecteur de pointage)
-  const sessionsToday = allSessions.filter(s => {
-    return s.date_debut <= today && s.date_fin >= today && ['confirmee', 'en_cours'].includes(s.status)
-  })
+  // Sessions pointables : confirmées ou en cours (même si pas exactement aujourd'hui)
+  const sessionsPointables = allSessions.filter(s => ['confirmee', 'en_cours'].includes(s.status))
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
@@ -87,10 +85,10 @@ export default async function FormateurHomePage() {
       </div>
 
       {/* Pointeuse */}
-      {sessionsToday.length > 0 && (
+      {sessionsPointables.length > 0 && (
         <PointageButton
           todayPointages={(todayPointages || []) as any[]}
-          sessionsToday={sessionsToday.map(s => ({ id: s.id, reference: s.reference, formation: s.formation as any }))}
+          sessionsToday={sessionsPointables.map(s => ({ id: s.id, reference: s.reference, formation: s.formation as any }))}
         />
       )}
 
@@ -137,37 +135,81 @@ export default async function FormateurHomePage() {
         ))}
       </div>
 
-      {/* Sessions à venir */}
+      {/* Sessions avec statut de pointage */}
       <div className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-surface-100">
-          <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Mes prochaines sessions</div>
+          <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Mes sessions</div>
         </div>
         {allSessions.length > 0 ? (
           <div className="divide-y divide-surface-100">
-            {allSessions.map((s: any) => (
-              <Link key={s.id} href="/dashboard/sessions"
-                className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-50 transition-colors">
-                <div className="h-10 w-10 rounded-xl bg-surface-100 flex items-center justify-center shrink-0">
-                  <Calendar className="h-5 w-5 text-surface-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-surface-900 truncate">
-                    {(s.formation as any)?.intitule || s.reference}
+            {allSessions.map((s: any) => {
+              const pointage = (todayPointages || []).find((p: any) => p.session_id === s.id)
+              const isPointable = ['confirmee', 'en_cours'].includes(s.status)
+              const hasArrivee = pointage?.heure_arrivee
+              const hasDepart = pointage?.heure_depart
+
+              return (
+                <div key={s.id} className="px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      hasArrivee && hasDepart ? 'bg-emerald-100' :
+                      hasArrivee ? 'bg-amber-100' :
+                      isPointable ? 'bg-blue-100' : 'bg-surface-100'
+                    }`}>
+                      {hasArrivee && hasDepart ? (
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                      ) : (
+                        <Calendar className={`h-5 w-5 ${isPointable ? 'text-blue-600' : 'text-surface-500'}`} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-surface-900 truncate">
+                        {(s.formation as any)?.intitule || s.reference}
+                      </div>
+                      <div className="text-xs text-surface-500">
+                        {formatDate(s.date_debut, { day: 'numeric', month: 'long' })}
+                        {s.lieu && ` — ${s.lieu}`}
+                      </div>
+                      {/* Heures de pointage */}
+                      {hasArrivee && (
+                        <div className="flex items-center gap-3 mt-1 text-xs">
+                          <span className="text-emerald-600 font-mono">
+                            Arrivée : {new Date(pointage.heure_arrivee).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {hasDepart && (
+                            <>
+                              <span className="text-red-600 font-mono">
+                                Départ : {new Date(pointage.heure_depart).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className="text-surface-800 font-bold">
+                                {(() => {
+                                  const diff = new Date(pointage.heure_depart).getTime() - new Date(pointage.heure_arrivee).getTime()
+                                  const h = Math.floor(diff / 3600000)
+                                  const m = Math.floor((diff % 3600000) / 60000)
+                                  return `${h}h${String(m).padStart(2, '0')}`
+                                })()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
+                      hasArrivee && hasDepart ? 'bg-emerald-100 text-emerald-700' :
+                      hasArrivee ? 'bg-amber-100 text-amber-700' :
+                      s.status === 'en_cours' ? 'bg-emerald-100 text-emerald-700' :
+                      s.status === 'confirmee' ? 'bg-blue-100 text-blue-700' :
+                      'bg-surface-100 text-surface-600'
+                    }`}>
+                      {hasArrivee && hasDepart ? 'Pointé' :
+                       hasArrivee ? 'En cours' :
+                       s.status === 'en_cours' ? 'En cours' :
+                       s.status === 'confirmee' ? 'Confirmée' : 'Planifiée'}
+                    </span>
                   </div>
-                  <div className="text-xs text-surface-500">
-                    {formatDate(s.date_debut, { day: 'numeric', month: 'long' })}
-                    {s.lieu && ` — ${s.lieu}`}
-                  </div>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
-                  s.status === 'en_cours' ? 'bg-emerald-100 text-emerald-700' :
-                  s.status === 'confirmee' ? 'bg-blue-100 text-blue-700' :
-                  'bg-surface-100 text-surface-600'
-                }`}>
-                  {s.status === 'en_cours' ? 'En cours' : s.status === 'confirmee' ? 'Confirmée' : 'Planifiée'}
-                </span>
-              </Link>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12 text-sm text-surface-400">
