@@ -8,7 +8,7 @@ import {
   GraduationCap, Calendar, UserCheck, Presentation, FileSignature,
   FolderOpen, PenTool, Receipt, CreditCard, ClipboardCheck, ListChecks,
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
-  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin,
+  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/lib/permissions'
@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap, Calendar, UserCheck, Presentation, FileSignature,
   FolderOpen, PenTool, Receipt, CreditCard, ClipboardCheck, ListChecks,
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
-  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin,
+  Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
 }
 
 interface MobileNavProps {
