@@ -1,8 +1,7 @@
 'use client'
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useState } from 'react'
+import { MapPin, Calendar, Users, GraduationCap } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { SessionPin } from './CarteClient'
 
@@ -13,67 +12,124 @@ const STATUS_COLORS: Record<string, string> = {
   terminee: '#71717a',
 }
 
-function createIcon(color: string) {
-  return L.divIcon({
-    className: '',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -30],
-    html: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 2C8.48 2 4 6.48 4 12c0 7.5 10 14 10 14s10-6.5 10-14c0-5.52-4.48-10-10-10z" fill="${color}" stroke="white" stroke-width="2"/>
-      <circle cx="14" cy="12" r="4" fill="white"/>
-    </svg>`,
-  })
+// France bounding box en coords (lat/lng) → position relative sur la carte SVG
+const FRANCE = { minLat: 41.3, maxLat: 51.1, minLng: -5.2, maxLng: 9.6 }
+const MAP_W = 800
+const MAP_H = 900
+
+function toXY(lat: number, lng: number): { x: number; y: number } {
+  const x = ((lng - FRANCE.minLng) / (FRANCE.maxLng - FRANCE.minLng)) * MAP_W
+  const y = MAP_H - ((lat - FRANCE.minLat) / (FRANCE.maxLat - FRANCE.minLat)) * MAP_H
+  return { x, y }
 }
 
-interface MapViewProps {
-  pins: SessionPin[]
-}
-
-export default function MapView({ pins }: MapViewProps) {
-  // Centre de la France
-  const center: [number, number] = [46.6034, 2.3488]
-  const zoom = pins.length === 0 ? 6 : pins.length === 1 ? 10 : 6
+export default function MapView({ pins }: { pins: SessionPin[] }) {
+  const [activePin, setActivePin] = useState<string | null>(null)
 
   return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      scrollWheelZoom={true}
-      style={{ height: '500px', width: '100%' }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {pins.map(pin => {
+    <div className="relative bg-surface-50 rounded-2xl overflow-hidden" style={{ height: 500 }}>
+      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+        {/* Fond carte France simplifié */}
+        <defs>
+          <radialGradient id="bg-grad" cx="50%" cy="45%" r="55%">
+            <stop offset="0%" stopColor="#f0f9ff" />
+            <stop offset="100%" stopColor="#e0f2fe" />
+          </radialGradient>
+        </defs>
+        <rect width={MAP_W} height={MAP_H} fill="url(#bg-grad)" rx="16" />
+
+        {/* Contour simplifié de la France */}
+        <path
+          d="M340,80 L420,60 L480,80 L540,90 L600,100 L650,130 L680,180 L700,250 L720,320 L700,400 L680,450 L650,500 L620,560 L580,620 L520,680 L460,720 L400,760 L340,780 L280,760 L220,720 L180,680 L140,620 L120,560 L100,480 L110,400 L130,320 L160,260 L200,200 L240,150 L290,100 Z"
+          fill="#e0f2fe"
+          stroke="#bae6fd"
+          strokeWidth="2"
+          opacity="0.6"
+        />
+
+        {/* Grille subtile */}
+        {[200, 400, 600].map(y => (
+          <line key={`h${y}`} x1="0" y1={y} x2={MAP_W} y2={y} stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="4,4" />
+        ))}
+        {[200, 400, 600].map(x => (
+          <line key={`v${x}`} x1={x} y1="0" x2={x} y2={MAP_H} stroke="#e2e8f0" strokeWidth="0.5" strokeDasharray="4,4" />
+        ))}
+
+        {/* Pins */}
+        {pins.map(pin => {
+          const { x, y } = toXY(pin.lat, pin.lng)
+          const color = STATUS_COLORS[pin.session.status] || STATUS_COLORS.planifiee
+          const isActive = activePin === pin.id
+          return (
+            <g
+              key={pin.id}
+              transform={`translate(${x},${y})`}
+              onClick={() => setActivePin(isActive ? null : pin.id)}
+              className="cursor-pointer"
+            >
+              {/* Halo */}
+              <circle r={isActive ? 20 : 12} fill={color} opacity={isActive ? 0.15 : 0.1} />
+              {/* Point */}
+              <circle r={isActive ? 8 : 6} fill={color} stroke="white" strokeWidth="2" />
+              {/* Label ville */}
+              <text x="12" y="4" fontSize="11" fontWeight="600" fill="#3f3f46" fontFamily="system-ui">
+                {pin.session.lieu}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Popup pour le pin actif */}
+      {activePin && (() => {
+        const pin = pins.find(p => p.id === activePin)
+        if (!pin) return null
         const color = STATUS_COLORS[pin.session.status] || STATUS_COLORS.planifiee
         return (
-          <Marker
-            key={pin.id}
-            position={[pin.lat, pin.lng]}
-            icon={createIcon(color)}
-          >
-            <Popup>
-              <div style={{ minWidth: 200, fontFamily: 'system-ui, sans-serif' }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#18181b', marginBottom: 4 }}>
+          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-white rounded-xl border border-surface-200 shadow-elevated p-4 z-10">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: color + '20' }}>
+                <GraduationCap className="h-5 w-5" style={{ color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-surface-900 truncate">
                   {pin.session.formation?.intitule || pin.session.reference}
                 </div>
-                <div style={{ fontSize: 12, color: '#71717a', lineHeight: 1.6 }}>
-                  {pin.session.lieu && <div>📍 {pin.session.lieu}</div>}
-                  <div>📅 {formatDate(pin.session.date_debut, { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                  {pin.session.formateur && <div>👤 {pin.session.formateur.prenom} {pin.session.formateur.nom}</div>}
-                  {pin.session.formation?.duree_heures && <div>⏱ {pin.session.formation.duree_heures}h</div>}
-                  {pin.session.nb_places && <div>💺 {pin.session.nb_places} places</div>}
+                <div className="text-xs text-surface-500 space-y-0.5 mt-1">
+                  {pin.session.lieu && (
+                    <div className="flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{pin.session.lieu}</div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3 shrink-0" />
+                    {formatDate(pin.session.date_debut, { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                  {pin.session.formateur && (
+                    <div className="flex items-center gap-1"><Users className="h-3 w-3 shrink-0" />{pin.session.formateur.prenom} {pin.session.formateur.nom}</div>
+                  )}
                 </div>
-                <div style={{ marginTop: 8, display: 'inline-block', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600, color: 'white', backgroundColor: color }}>
-                  {pin.session.status === 'en_cours' ? 'En cours' : pin.session.status === 'confirmee' ? 'Confirmée' : pin.session.status === 'terminee' ? 'Terminée' : 'Planifiée'}
+                <div className="mt-2">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold text-white" style={{ backgroundColor: color }}>
+                    {pin.session.status === 'en_cours' ? 'En cours' : pin.session.status === 'confirmee' ? 'Confirmée' : pin.session.status === 'terminee' ? 'Terminée' : 'Planifiée'}
+                  </span>
                 </div>
               </div>
-            </Popup>
-          </Marker>
+              <button onClick={() => setActivePin(null)} className="text-surface-400 hover:text-surface-600 text-lg leading-none">&times;</button>
+            </div>
+          </div>
         )
-      })}
-    </MapContainer>
+      })()}
+
+      {/* Légende */}
+      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-surface-200/60">
+        <div className="flex items-center gap-3 text-[10px] text-surface-500">
+          {Object.entries({ planifiee: 'Planifiée', confirmee: 'Confirmée', en_cours: 'En cours', terminee: 'Terminée' }).map(([k, v]) => (
+            <div key={k} className="flex items-center gap-1">
+              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[k] }} />
+              {v}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

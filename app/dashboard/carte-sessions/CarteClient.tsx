@@ -4,14 +4,7 @@ import { useState, useMemo } from 'react'
 import { MapPin, Calendar, Users, GraduationCap, List, Map as MapIcon, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
-import dynamic from 'next/dynamic'
-
-// Chargement dynamique de la carte (SSR désactivé — Leaflet a besoin de window)
-const MapView = dynamic(() => import('./MapView'), { ssr: false, loading: () => (
-  <div className="h-[500px] rounded-2xl bg-surface-100 flex items-center justify-center">
-    <div className="text-sm text-surface-400">Chargement de la carte...</div>
-  </div>
-)})
+import MapView from './MapView'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; variant: 'success' | 'warning' | 'info' | 'default' }> = {
   planifiee: { label: 'Planifiée', color: '#6366f1', variant: 'info' },
