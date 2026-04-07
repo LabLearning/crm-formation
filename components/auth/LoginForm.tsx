@@ -51,14 +51,9 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Mobile logo */}
-      <div className="lg:hidden flex items-center gap-3 mb-8">
-        <div className="h-10 w-10 rounded-xl bg-surface-900 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-        </div>
-        <span className="text-lg font-heading font-bold text-surface-900 tracking-tight">FormaCRM</span>
+      {/* Logo Lab Learning */}
+      <div className="flex items-center mb-8">
+        <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-10" />
       </div>
 
       <div className="space-y-2">

@@ -132,18 +132,8 @@ export function PortalShell({ context, children }: PortalShellProps) {
         <div className="h-14 px-4 flex items-center justify-between">
           {/* Logo + org name */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
-              style={{ backgroundColor: PORTAL_GREEN }}
-            >
-              <span className="text-sm font-bold text-white leading-none">
-                {context.organization.name.charAt(0)}
-              </span>
-            </div>
+            <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-7 shrink-0" />
             <div className="min-w-0">
-              <div className="text-sm font-heading font-bold text-surface-900 truncate leading-tight">
-                {context.organization.name}
-              </div>
               <div className="text-[10px] text-surface-400 leading-none">{info.subtitle}</div>
             </div>
           </div>
@@ -161,14 +151,8 @@ export function PortalShell({ context, children }: PortalShellProps) {
       <header className="hidden md:block sticky top-0 z-30 bg-white border-b border-surface-200/60">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ backgroundColor: PORTAL_GREEN }}
-            >
-              <span className="text-lg font-bold text-white">{context.organization.name.charAt(0)}</span>
-            </div>
+            <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-9 shrink-0" />
             <div>
-              <div className="text-sm font-heading font-bold text-surface-900">{context.organization.name}</div>
               <div className="text-[10px] text-surface-400">{info.subtitle}</div>
             </div>
           </div>

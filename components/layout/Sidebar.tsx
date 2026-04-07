@@ -55,14 +55,9 @@ export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }:
 
   return (
     <aside className={cn('fixed left-0 top-0 bottom-0 z-30 flex flex-col bg-white border-r border-surface-200/60 transition-all duration-300 ease-out', collapsed ? 'w-[68px]' : 'w-[260px]')}>
-      {/* Logo */}
+      {/* Logo Lab Learning */}
       <div className={cn('flex items-center h-[60px] border-b border-surface-100 shrink-0 px-4', collapsed ? 'justify-center' : 'gap-3')}>
-        <div className="h-9 w-9 rounded-xl bg-surface-900 flex items-center justify-center shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-        </div>
-        {!collapsed && <div className="min-w-0"><div className="text-sm font-heading font-bold text-surface-900 tracking-tight truncate">FormaCRM</div><div className="text-[0.625rem] text-surface-400 truncate">{orgName}</div></div>}
+        <img src="/logo-lablearning.svg" alt="Lab Learning" className={cn('shrink-0', collapsed ? 'h-8 w-8 object-contain object-left' : 'h-9')} style={{ maxWidth: collapsed ? 32 : 140 }} />
       </div>
 
       {/* Navigation */}

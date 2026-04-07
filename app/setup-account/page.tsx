@@ -77,12 +77,7 @@ function SetupForm() {
     <div className="min-h-screen bg-surface-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4"
-            style={{ backgroundColor: '#195144' }}
-          >
-            <span className="text-white text-xl font-bold">L</span>
-          </div>
+          <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-10 mb-4" />
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
             Bienvenue chez Lab Learning
           </h1>

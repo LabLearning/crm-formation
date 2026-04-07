@@ -7,6 +7,9 @@
     --font-heading: 'Satoshi', system-ui, sans-serif;
     --font-body: 'General Sans', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --ll-green: #195245;
+    --ll-green-light: #6BC291;
+    --ll-green-dark: #0f3a30;
   }
 
   html {
@@ -58,9 +61,14 @@
   }
 
   .btn-primary {
-    @apply btn-base bg-surface-900 text-white
-           hover:bg-surface-800
-           focus-visible:ring-surface-900;
+    @apply btn-base text-white;
+    background-color: var(--ll-green);
+  }
+  .btn-primary:hover {
+    background-color: var(--ll-green-dark);
+  }
+  .btn-primary:focus-visible {
+    --tw-ring-color: var(--ll-green);
   }
 
   .btn-secondary {
