@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: '#EEF2FF', 100: '#E0E7FF', 200: '#C7D2FE', 300: '#A5B4FC',
-          400: '#818CF8', 500: '#6366F1', 600: '#4F46E5', 700: '#4338CA',
-          800: '#3730A3', 900: '#312E81', 950: '#1E1B4B',
+          50: '#ecfdf3', 100: '#d1fae2', 200: '#a7f3c9', 300: '#6BC291',
+          400: '#4eba7a', 500: '#195245', 600: '#134439', 700: '#0f3a30',
+          800: '#0b2e25', 900: '#07231b', 950: '#041610',
         },
         surface: {
           0: '#FFFFFF', 50: '#FAFAFA', 100: '#F5F5F4', 200: '#E7E5E4',
@@ -47,7 +47,7 @@ const config: Config = {
         'card': '0 2px 8px -2px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04)',
         'elevated': '0 8px 24px -8px rgb(0 0 0 / 0.08), 0 2px 8px -4px rgb(0 0 0 / 0.04)',
         'modal': '0 24px 80px -16px rgb(0 0 0 / 0.15), 0 8px 24px -8px rgb(0 0 0 / 0.06)',
-        'glow': '0 0 0 1px rgb(99 102 241 / 0.08), 0 4px 16px -4px rgb(99 102 241 / 0.12)',
+        'glow': '0 0 0 1px rgb(25 82 69 / 0.08), 0 4px 16px -4px rgb(107 194 145 / 0.12)',
       },
       borderRadius: { 'xl': '0.75rem', '2xl': '1rem', '3xl': '1.25rem', '4xl': '1.5rem' },
       backgroundImage: {

@@ -24,23 +24,16 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
 }
 
-// Section colors: harmonisé Lab Learning (#195245 / #6BC291)
-const LL_ACTIVE = 'bg-[#195245]'
-const LL_ACTIVE_TEXT = 'text-white'
-const SEC: Record<string, {
-  titleColor: string; itemsBg: string; activeBg: string; activeText: string; hoverBg: string
-}> = {
-  'G\u00e9n\u00e9ral':    { titleColor: 'text-[#195245]', itemsBg: '',                    activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#195245]/5' },
-  'Mon espace':            { titleColor: 'text-[#195245]', itemsBg: 'bg-[#6BC291]/8',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#6BC291]/10' },
-  'Commercial':            { titleColor: 'text-[#195245]', itemsBg: 'bg-blue-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-blue-50/50' },
-  'Outils':                { titleColor: 'text-[#195245]', itemsBg: 'bg-violet-50/30',     activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-violet-50/50' },
-  'Formations':            { titleColor: 'text-[#195245]', itemsBg: 'bg-[#6BC291]/8',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#6BC291]/10' },
-  'Administratif':         { titleColor: 'text-[#195245]', itemsBg: 'bg-amber-50/30',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-amber-50/50' },
-  'Finances':              { titleColor: 'text-[#195245]', itemsBg: 'bg-rose-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-rose-50/50' },
-  'Qualit\u00e9':          { titleColor: 'text-[#195245]', itemsBg: 'bg-teal-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-teal-50/50' },
-  'Syst\u00e8me':          { titleColor: 'text-surface-400', itemsBg: '',                   activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-surface-50' },
+// Couleurs Lab Learning uniformes pour toutes les sections
+const SEC_DEFAULT = {
+  titleColor: 'text-brand-500',
+  itemsBg: '',
+  activeBg: 'bg-brand-500',
+  activeText: 'text-white',
+  hoverBg: 'hover:bg-brand-50',
 }
-const DEF = SEC['G\u00e9n\u00e9ral']
+const SEC: Record<string, typeof SEC_DEFAULT> = {}
+const DEF = SEC_DEFAULT
 
 interface SidebarProps { permissions: Permission[]; orgName: string; userRole: string; collapsed: boolean; onToggle: () => void }
 
