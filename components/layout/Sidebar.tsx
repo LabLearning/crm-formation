@@ -24,18 +24,21 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
 }
 
-// Section colors: colored title + subtle tinted bg on items
+// Section colors: harmonisé Lab Learning (#195245 / #6BC291)
+const LL_ACTIVE = 'bg-[#195245]'
+const LL_ACTIVE_TEXT = 'text-white'
 const SEC: Record<string, {
   titleColor: string; itemsBg: string; activeBg: string; activeText: string; hoverBg: string
 }> = {
-  'G\u00e9n\u00e9ral': { titleColor: 'text-surface-600', itemsBg: '', activeBg: 'bg-surface-900', activeText: 'text-white', hoverBg: 'hover:bg-surface-50' },
-  'Commercial': { titleColor: 'text-blue-600', itemsBg: 'bg-blue-50/40', activeBg: 'bg-blue-600', activeText: 'text-white', hoverBg: 'hover:bg-blue-50/60' },
-  'Outils': { titleColor: 'text-violet-600', itemsBg: 'bg-violet-50/40', activeBg: 'bg-violet-600', activeText: 'text-white', hoverBg: 'hover:bg-violet-50/60' },
-  'Formations': { titleColor: 'text-emerald-600', itemsBg: 'bg-emerald-50/40', activeBg: 'bg-emerald-600', activeText: 'text-white', hoverBg: 'hover:bg-emerald-50/60' },
-  'Administratif': { titleColor: 'text-amber-600', itemsBg: 'bg-amber-50/40', activeBg: 'bg-amber-600', activeText: 'text-white', hoverBg: 'hover:bg-amber-50/60' },
-  'Finances': { titleColor: 'text-rose-600', itemsBg: 'bg-rose-50/40', activeBg: 'bg-rose-600', activeText: 'text-white', hoverBg: 'hover:bg-rose-50/60' },
-  'Qualit\u00e9': { titleColor: 'text-teal-600', itemsBg: 'bg-teal-50/40', activeBg: 'bg-teal-600', activeText: 'text-white', hoverBg: 'hover:bg-teal-50/60' },
-  'Syst\u00e8me': { titleColor: 'text-slate-500', itemsBg: '', activeBg: 'bg-slate-700', activeText: 'text-white', hoverBg: 'hover:bg-slate-50' },
+  'G\u00e9n\u00e9ral':    { titleColor: 'text-[#195245]', itemsBg: '',                    activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#195245]/5' },
+  'Mon espace':            { titleColor: 'text-[#195245]', itemsBg: 'bg-[#6BC291]/8',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#6BC291]/10' },
+  'Commercial':            { titleColor: 'text-[#195245]', itemsBg: 'bg-blue-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-blue-50/50' },
+  'Outils':                { titleColor: 'text-[#195245]', itemsBg: 'bg-violet-50/30',     activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-violet-50/50' },
+  'Formations':            { titleColor: 'text-[#195245]', itemsBg: 'bg-[#6BC291]/8',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-[#6BC291]/10' },
+  'Administratif':         { titleColor: 'text-[#195245]', itemsBg: 'bg-amber-50/30',      activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-amber-50/50' },
+  'Finances':              { titleColor: 'text-[#195245]', itemsBg: 'bg-rose-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-rose-50/50' },
+  'Qualit\u00e9':          { titleColor: 'text-[#195245]', itemsBg: 'bg-teal-50/30',       activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-teal-50/50' },
+  'Syst\u00e8me':          { titleColor: 'text-surface-400', itemsBg: '',                   activeBg: LL_ACTIVE, activeText: LL_ACTIVE_TEXT, hoverBg: 'hover:bg-surface-50' },
 }
 const DEF = SEC['G\u00e9n\u00e9ral']
 

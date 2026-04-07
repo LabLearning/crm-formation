@@ -35,7 +35,7 @@
   ::-webkit-scrollbar-thumb { @apply bg-surface-300/60 rounded-full hover:bg-surface-400/60; }
 
   /* Selection */
-  ::selection { @apply bg-brand-100 text-brand-900; }
+  ::selection { background-color: rgba(107,194,145,0.2); color: #195245; }
 }
 
 @layer components {
@@ -44,7 +44,7 @@
     @apply w-full rounded-xl border border-surface-200 bg-white px-3.5 py-2.5
            text-sm text-surface-800 placeholder:text-surface-400
            transition-all duration-200 ease-out
-           focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-400
+           focus:outline-none focus:ring-2 focus:ring-[#195245]/10 focus:border-[#6BC291]
            hover:border-surface-300
            disabled:bg-surface-100 disabled:text-surface-500 disabled:cursor-not-allowed;
     /* Ensure minimum touch target height on mobile */
