@@ -74,7 +74,7 @@ export async function sendTemplateEmail(params: SendEmailParams): Promise<{ succ
 
   const subject = renderTemplate(template.sujet, allVars)
   const htmlBody = renderTemplate(template.corps_html, allVars)
-  const fullHtml = wrapInLayout(htmlBody, org?.name || 'FormaCRM')
+  const fullHtml = wrapInLayout(htmlBody, org?.name || 'Lab Learning')
 
   // Log the email
   const { data: emailLog } = await supabase
@@ -113,7 +113,7 @@ export async function sendTemplateEmail(params: SendEmailParams): Promise<{ succ
         'Authorization': `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: `${org?.name || 'FormaCRM'} <${org?.email || 'noreply@formacrm.fr'}>`,
+        from: `${org?.name || 'Lab Learning'} <${org?.email || 'noreply@lab-learning.fr'}>`,
         to: [params.toEmail],
         subject,
         html: fullHtml,

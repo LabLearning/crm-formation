@@ -59,10 +59,7 @@ export function MobileNav({ isOpen, onClose, permissions, orgName, userRole }: M
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </div>
-            <div>
-              <div className="text-sm font-heading font-bold text-surface-900 tracking-tight">FormaCRM</div>
-              <div className="text-[0.625rem] text-surface-400 truncate">{orgName}</div>
-            </div>
+            <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-8" />
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-surface-400 hover:bg-surface-100">
             <X className="h-5 w-5" />

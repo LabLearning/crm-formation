@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'FormaCRM — Gestion de formation Qualiopi',
-  description: 'CRM complet pour organisme de formation certifié Qualiopi',
+  title: 'Lab Learning — Gestion de formation',
+  description: 'Plateforme de gestion Lab Learning — Organisme de formation certifié Qualiopi',
 }
 
 export default function RootLayout({
