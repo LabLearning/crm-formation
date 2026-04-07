@@ -70,7 +70,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Récupérer les émargements (y compris ceux qu'on vient de créer)
   const { data: emargements } = await supabase
     .from('emargements')
-    .select('id, apprenant_id, date, creneau, est_present')
+    .select('id, apprenant_id, date, creneau, est_present, signature_data, signed_at')
     .eq('session_id', params.id)
     .order('date', { ascending: true })
 

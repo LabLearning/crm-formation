@@ -5,11 +5,12 @@ import Link from 'next/link'
 import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
-  GraduationCap, Mail, Phone, Building2, Camera,
+  GraduationCap, Mail, Phone, Building2, Camera, PenTool,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
-import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction } from './actions'
+import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction } from './actions'
+import { SignaturePad } from './SignaturePad'
 
 interface Props {
   session: any
@@ -44,6 +45,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({})
   const [createDate, setCreateDate] = useState('')
   const [createCreneau, setCreateCreneau] = useState('journee')
+  const [signingEmargement, setSigningEmargement] = useState<{ id: string; name: string } | null>(null)
 
   const formation = session.formation
   const formateur = session.formateur
@@ -94,6 +96,14 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     startTransition(async () => {
       await createEmargementJourAction(session.id, createDate, createCreneau)
       setCreateDate('')
+    })
+  }
+
+  function handleSign(signatureBase64: string) {
+    if (!signingEmargement) return
+    startTransition(async () => {
+      await signEmargementAction(signingEmargement.id, signatureBase64)
+      setSigningEmargement(null)
     })
   }
 
@@ -307,35 +317,76 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                   <div className="border-t border-surface-100">
                     {dayEmargements.map((em: any) => {
                       const apprenant = inscriptions.find(i => (i.apprenant as any)?.id === em.apprenant_id)?.apprenant
+                      const isSigned = em.est_present && em.signature_data
+                      const signedTime = em.signed_at ? new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null
+
                       return (
-                        <button
+                        <div
                           key={em.id}
-                          onClick={() => canEmarge && handleTogglePresence(em.id, em.est_present)}
-                          disabled={isPending || !canEmarge}
-                          className={cn('w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-surface-100/60 last:border-0',
-                            em.est_present ? 'bg-emerald-50/50 hover:bg-emerald-50' : 'bg-white hover:bg-surface-50',
-                            !canEmarge && 'cursor-default'
+                          className={cn('flex items-center gap-3 px-4 py-3 border-b border-surface-100/60 last:border-0',
+                            em.est_present ? 'bg-emerald-50/50' : 'bg-white'
                           )}
                         >
                           <div className={cn('h-9 w-9 rounded-full flex items-center justify-center shrink-0',
-                            em.est_present ? 'bg-emerald-100' : 'bg-surface-100'
+                            isSigned ? 'bg-emerald-100' : em.est_present ? 'bg-emerald-100' : 'bg-surface-100'
                           )}>
-                            {em.est_present
-                              ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />
-                              : <XCircle className="h-4.5 w-4.5 text-surface-300" />
+                            {isSigned
+                              ? <PenTool className="h-4 w-4 text-emerald-600" />
+                              : em.est_present
+                              ? <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              : <XCircle className="h-4 w-4 text-surface-300" />
                             }
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-surface-900">{apprenant?.prenom} {apprenant?.nom}</div>
                             <div className="text-xs text-surface-400 flex items-center gap-2">
                               {apprenant?.entreprise && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{apprenant.entreprise}</span>}
-                              {apprenant?.email && <span className="truncate">{apprenant.email}</span>}
+                              {signedTime && <span className="text-emerald-500">Signé à {signedTime}</span>}
                             </div>
                           </div>
-                          <span className={cn('text-xs font-semibold shrink-0', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isSigned && em.signature_data && (
+                              <a href={em.signature_data} target="_blank" rel="noopener noreferrer"
+                                className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 transition-colors">
+                                <PenTool className="h-3.5 w-3.5 text-emerald-600" />
+                              </a>
+                            )}
+
+                            {!em.est_present && canEmarge && (
+                              <button
+                                onClick={() => setSigningEmargement({ id: em.id, name: `${apprenant?.prenom} ${apprenant?.nom}` })}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 transition-colors"
+                              >
+                                <PenTool className="h-3.5 w-3.5" /> Faire signer
+                              </button>
+                            )}
+
+                            {!em.est_present && canEmarge && (
+                              <button
+                                onClick={() => handleTogglePresence(em.id, em.est_present)}
+                                disabled={isPending}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-100 text-surface-600 text-xs font-medium hover:bg-surface-200 transition-colors"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Présent
+                              </button>
+                            )}
+
+                            {em.est_present && !isSigned && canEmarge && (
+                              <button
+                                onClick={() => handleTogglePresence(em.id, em.est_present)}
+                                disabled={isPending}
+                                className="text-xs text-surface-400 hover:text-red-500 transition-colors"
+                              >
+                                Annuler
+                              </button>
+                            )}
+                          </div>
+                          <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
                             {em.est_present ? 'Présent' : 'Absent'}
                           </span>
-                        </button>
+                        </div>
                       )
                     })}
                   </div>
@@ -454,6 +505,15 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
           )}
         </div>
+      )}
+      {/* Modal signature */}
+      {signingEmargement && (
+        <SignaturePad
+          apprenantName={signingEmargement.name}
+          onSign={handleSign}
+          onCancel={() => setSigningEmargement(null)}
+          isPending={isPending}
+        />
       )}
     </div>
   )
