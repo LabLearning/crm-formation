@@ -1,7 +1,7 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — Lab Learning branding */}
+      {/* Left panel — Lab Learning */}
       <div className="hidden lg:flex lg:w-[520px] xl:w-[600px] relative overflow-hidden flex-col justify-between p-14" style={{ backgroundColor: '#195245' }}>
         {/* Background texture */}
         <div className="absolute inset-0 bg-noise opacity-40" />
@@ -21,21 +21,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 space-y-8">
           <div>
             <h1 className="text-[2.5rem] xl:text-[3rem] font-heading font-black text-white leading-[1.1] tracking-display">
-              Gérez vos<br />
-              formations en<br />
-              <span style={{ color: '#6BC291' }}>toute conformité.</span>
+              Votre espace<br />
+              <span style={{ color: '#6BC291' }}>Lab Learning</span>
             </h1>
-            <p className="text-lg leading-relaxed mt-6 max-w-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Le CRM pensé pour les organismes de formation certifiés Qualiopi. De la prospection au bilan.
+            <p className="text-lg leading-relaxed mt-6 max-w-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              Plateforme de gestion interne — formations, sessions, apprenants, conformité Qualiopi.
             </p>
           </div>
 
           {/* Stats row */}
           <div className="flex gap-10">
             {[
-              { value: '7', label: 'Critères' },
-              { value: '32', label: 'Indicateurs' },
-              { value: '100%', label: 'Digital' },
+              { value: '5', label: 'Secteurs' },
+              { value: '67+', label: 'Formations' },
+              { value: 'Qualiopi', label: 'Certifié' },
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-2xl font-heading font-bold text-white tracking-tight">{stat.value}</div>
@@ -43,11 +42,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
             ))}
           </div>
+
+          {/* Secteurs */}
+          <div className="flex flex-wrap gap-2">
+            {['Restauration', 'Boucherie', 'Boulangerie', 'Pâtisserie', 'Hôtellerie'].map(s => (
+              <span key={s} className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(107,194,145,0.15)', color: '#6BC291' }}>
+                {s}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
         <div className="relative z-10 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          {new Date().getFullYear()} Lab Learning — Formation professionnelle
+          {new Date().getFullYear()} Lab Learning — Organisme de formation professionnelle certifié Qualiopi
         </div>
       </div>
 
