@@ -67,12 +67,21 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   }
   const sessionDays = getSessionDays()
 
-  // Émargements groupés par date
-  const emargementsByDate: Record<string, any[]> = {}
+  // Émargements groupés par date puis créneau
+  const emargementsByDateCreneau: Record<string, Record<string, any[]>> = {}
   emargements.forEach(e => {
-    if (!emargementsByDate[e.date]) emargementsByDate[e.date] = []
-    emargementsByDate[e.date].push(e)
+    if (!emargementsByDateCreneau[e.date]) emargementsByDateCreneau[e.date] = {}
+    if (!emargementsByDateCreneau[e.date][e.creneau]) emargementsByDateCreneau[e.date][e.creneau] = []
+    emargementsByDateCreneau[e.date][e.creneau].push(e)
   })
+
+  const CRENEAU_LABELS: Record<string, string> = { matin: 'Matin', apres_midi: 'Après-midi', journee: 'Journée' }
+
+  // Helper : tous les émargements d'un jour (tous créneaux confondus)
+  function getDayEmargements(day: string): any[] {
+    const byC = emargementsByDateCreneau[day] || {}
+    return Object.values(byC).flat()
+  }
 
   // Pointages par date
   const pointagesByDate: Record<string, any> = {}
@@ -203,7 +212,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <div className="divide-y divide-surface-100">
               {sessionDays.map((day, idx) => {
                 const dayPointage = pointagesByDate[day]
-                const dayEmargements = emargementsByDate[day] || []
+                const dayEmargements = getDayEmargements(day)
                 const presentCount = dayEmargements.filter((e: any) => e.est_present).length
                 const isToday = day === today
 
@@ -275,12 +284,14 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
           </div>
 
-          {/* Émargement par jour (auto-généré) */}
+          {/* Émargement par jour — matin + après-midi */}
           {sessionDays.map((day, idx) => {
-            const dayEmargements = emargementsByDate[day] || []
-            if (dayEmargements.length === 0) return null
-            const presentCount = dayEmargements.filter((e: any) => e.est_present).length
-            const isExpanded = expandedDays[day] !== false // ouvert par défaut
+            const dayCreneaux = emargementsByDateCreneau[day] || {}
+            const creneauxList = Object.keys(dayCreneaux).sort() // matin avant apres_midi
+            if (creneauxList.length === 0) return null
+            const allDay = getDayEmargements(day)
+            const presentCount = allDay.filter((e: any) => e.est_present).length
+            const isExpanded = expandedDays[day] !== false
 
             return (
               <div key={day} className="card overflow-hidden">
@@ -290,7 +301,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                      presentCount === dayEmargements.length ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-600'
+                      presentCount === allDay.length ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-600'
                     )}>
                       J{idx + 1}
                     </div>
@@ -299,15 +310,15 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         {new Date(day).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                       </div>
                       <div className="text-xs text-surface-500">
-                        {dayEmargements[0]?.creneau === 'matin' ? 'Matin' : dayEmargements[0]?.creneau === 'apres_midi' ? 'Après-midi' : 'Journée'}
+                        {creneauxList.map(c => CRENEAU_LABELS[c] || c).join(' + ')}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={cn('text-xs font-semibold px-2.5 py-1 rounded-full',
-                      presentCount === dayEmargements.length ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-600'
+                      presentCount === allDay.length ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-600'
                     )}>
-                      {presentCount}/{dayEmargements.length} présent{presentCount > 1 ? 's' : ''}
+                      {presentCount}/{allDay.length} présent{presentCount > 1 ? 's' : ''}
                     </span>
                     {isExpanded ? <ChevronUp className="h-4 w-4 text-surface-400" /> : <ChevronDown className="h-4 w-4 text-surface-400" />}
                   </div>
@@ -315,7 +326,23 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
                 {isExpanded && (
                   <div className="border-t border-surface-100">
-                    {dayEmargements.map((em: any) => {
+                    {creneauxList.map(creneau => {
+                      const creneauEmargements = dayCreneaux[creneau] || []
+                      const creneauPresent = creneauEmargements.filter((e: any) => e.est_present).length
+                      return (
+                        <div key={creneau}>
+                          {/* Sous-en-tête créneau */}
+                          <div className="px-4 py-2 bg-surface-50 border-b border-surface-100 flex items-center justify-between">
+                            <span className="text-xs font-semibold text-surface-600">
+                              {CRENEAU_LABELS[creneau] || creneau}
+                            </span>
+                            <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                              creneauPresent === creneauEmargements.length ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-200 text-surface-500'
+                            )}>
+                              {creneauPresent}/{creneauEmargements.length}
+                            </span>
+                          </div>
+                          {creneauEmargements.map((em: any) => {
                       const apprenant = inscriptions.find(i => (i.apprenant as any)?.id === em.apprenant_id)?.apprenant
                       const isSigned = em.est_present && em.signature_data
                       const signedTime = em.signed_at ? new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null
@@ -389,6 +416,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         </div>
                       )
                     })}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -396,7 +426,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           })}
 
           {/* Info si tous les jours sont émargés */}
-          {sessionDays.every(day => (emargementsByDate[day] || []).length > 0) && (
+          {sessionDays.every(day => getDayEmargements(day).length > 0) && (
             <div className="text-xs text-surface-400 text-center py-2">
               Feuilles d'émargement générées pour les {sessionDays.length} jours de formation
             </div>
