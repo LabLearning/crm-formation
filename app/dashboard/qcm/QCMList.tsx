@@ -119,14 +119,14 @@ export function QCMList({ qcms, formations }: QCMListProps) {
       {/* QCM cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((q) => (
-          <div key={q.id} className="card p-5 hover:shadow-card transition-shadow">
+          <div key={q.id} onClick={() => setBuilderQCM(q)} className="card p-5 hover:shadow-card transition-shadow cursor-pointer">
             <div className="flex items-start justify-between mb-3">
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-surface-900 line-clamp-2">{q.titre}</h3>
                 {q.description && <p className="text-xs text-surface-500 mt-0.5 line-clamp-1">{q.description}</p>}
               </div>
               <div className="relative ml-2">
-                <button onClick={() => setActiveMenu(activeMenu === q.id ? null : q.id)} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
+                <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === q.id ? null : q.id) }} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
                 {activeMenu === q.id && (

@@ -83,7 +83,7 @@ export function FormationsList({ formations, readOnly }: FormationsListProps) {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((f) => (
-          <div key={f.id} className={`card p-5 hover:shadow-card transition-shadow ${!f.is_active ? 'opacity-60' : ''}`}>
+          <div key={f.id} onClick={() => window.location.href = `/dashboard/formations/${f.id}`} className={`card p-5 hover:shadow-card transition-shadow cursor-pointer ${!f.is_active ? 'opacity-60' : ''}`}>
             <div className="flex items-start justify-between mb-3">
               <div className="min-w-0 flex-1">
                 {f.reference && (
@@ -94,7 +94,7 @@ export function FormationsList({ formations, readOnly }: FormationsListProps) {
               </div>
               {!readOnly && (
                 <div className="relative ml-2">
-                  <button onClick={() => setActiveMenu(activeMenu === f.id ? null : f.id)} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
+                  <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === f.id ? null : f.id) }} className="p-1 rounded-lg text-surface-400 hover:bg-surface-100">
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
                   {activeMenu === f.id && (
