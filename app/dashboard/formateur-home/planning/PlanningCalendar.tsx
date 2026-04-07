@@ -21,9 +21,20 @@ interface Session {
   formation: { intitule: string } | null
 }
 
+interface GoogleEvent {
+  id: string
+  title: string
+  date_debut: string
+  date_fin: string
+  all_day: boolean
+  source: 'google'
+}
+
 interface PlanningCalendarProps {
   disponibilites: Dispo[]
   sessions: Session[]
+  googleEvents?: GoogleEvent[]
+  isGoogleConnected?: boolean
 }
 
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -63,7 +74,7 @@ function getMonthDays(year: number, month: number) {
   return days
 }
 
-export function PlanningCalendar({ disponibilites, sessions }: PlanningCalendarProps) {
+export function PlanningCalendar({ disponibilites, sessions, googleEvents = [], isGoogleConnected }: PlanningCalendarProps) {
   const today = new Date().toISOString().split('T')[0]
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
@@ -89,6 +100,22 @@ export function PlanningCalendar({ disponibilites, sessions }: PlanningCalendarP
     })
     return map
   }, [sessions])
+
+  // Google events par date
+  const googleByDate = useMemo(() => {
+    const map: Record<string, GoogleEvent[]> = {}
+    googleEvents.forEach(e => {
+      const d = new Date(e.date_debut)
+      const end = new Date(e.date_fin)
+      while (d <= end) {
+        const key = d.toISOString().split('T')[0]
+        if (!map[key]) map[key] = []
+        map[key].push(e)
+        d.setDate(d.getDate() + 1)
+      }
+    })
+    return map
+  }, [googleEvents])
 
   function handlePrevMonth() {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1) }
@@ -134,8 +161,14 @@ export function PlanningCalendar({ disponibilites, sessions }: PlanningCalendarP
         ))}
         <div className="flex items-center gap-1.5">
           <div className="h-3 w-3 rounded-sm bg-brand-200" />
-          <span className="text-surface-600">Session planifiée</span>
+          <span className="text-surface-600">Session</span>
         </div>
+        {isGoogleConnected && (
+          <div className="flex items-center gap-1.5">
+            <div className="h-3 w-3 rounded-sm bg-rose-200" />
+            <span className="text-surface-600">Google</span>
+          </div>
+        )}
       </div>
 
       {/* Navigation mois */}
@@ -198,6 +231,13 @@ export function PlanningCalendar({ disponibilites, sessions }: PlanningCalendarP
                 {daySessions && daySessions.map((s, i) => (
                   <div key={s.id + i} className="mt-0.5 rounded-sm px-1 py-0.5 bg-brand-100 text-[9px] font-semibold text-brand-700 truncate">
                     {s.formation?.intitule?.substring(0, 12) || s.reference}
+                  </div>
+                ))}
+
+                {/* Google Calendar */}
+                {googleByDate[date]?.map((e, i) => (
+                  <div key={e.id + i} className="mt-0.5 rounded-sm px-1 py-0.5 bg-rose-100 text-[9px] font-semibold text-rose-700 truncate">
+                    {e.title.substring(0, 12)}
                   </div>
                 ))}
               </button>

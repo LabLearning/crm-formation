@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PlanningCalendar } from './PlanningCalendar'
 import { CalendarSync } from './CalendarSync'
+import { getGoogleCalendarEvents } from '@/lib/google-calendar'
 
 export default async function PlanningFormateurPage() {
   const session = await getSession()
@@ -35,6 +36,21 @@ export default async function PlanningFormateurPage() {
     .not('status', 'eq', 'annulee')
     .gte('date_fin', now.toISOString().split('T')[0])
 
+  // Récupérer les événements Google Calendar
+  let googleEvents: any[] = []
+  try {
+    googleEvents = await getGoogleCalendarEvents(formateur.id)
+  } catch { /* Google non connecté */ }
+
+  const isGoogleConnected = googleEvents.length > 0 || false // sera mis à jour par la page
+
+  // Vérifier si Google est connecté
+  const { data: formateurFull } = await supabase
+    .from('formateurs')
+    .select('google_calendar_connected')
+    .eq('id', formateur.id)
+    .single()
+
   // Générer le token de sync calendrier
   const calendarToken = Buffer.from((formateur.email || '') + formateur.id).toString('base64url').substring(0, 20)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
@@ -47,11 +63,13 @@ export default async function PlanningFormateurPage() {
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mon planning</h1>
           <p className="text-surface-500 mt-1 text-sm">Gérez vos disponibilités et consultez vos sessions</p>
         </div>
-        <CalendarSync calendarUrl={calendarUrl} />
+        <CalendarSync calendarUrl={calendarUrl} isGoogleConnected={formateurFull?.google_calendar_connected || false} />
       </div>
       <PlanningCalendar
         disponibilites={(dispos || []) as any[]}
         sessions={(sessions || []) as any[]}
+        googleEvents={googleEvents as any[]}
+        isGoogleConnected={formateurFull?.google_calendar_connected || false}
       />
     </div>
   )

@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils'
 
 interface CalendarSyncProps {
   calendarUrl: string
+  isGoogleConnected?: boolean
 }
 
-export function CalendarSync({ calendarUrl }: CalendarSyncProps) {
+export function CalendarSync({ calendarUrl, isGoogleConnected }: CalendarSyncProps) {
   const [showModal, setShowModal] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -44,8 +45,38 @@ export function CalendarSync({ calendarUrl }: CalendarSyncProps) {
               </p>
             </div>
 
-            {/* Options */}
+            {/* Importer depuis Google */}
             <div className="space-y-2">
+              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Importer vos disponibilités</div>
+              <a
+                href="/api/auth/google"
+                className={cn(
+                  'flex items-center gap-3 p-3.5 rounded-xl border transition-colors',
+                  isGoogleConnected
+                    ? 'border-emerald-200 bg-emerald-50/50'
+                    : 'border-surface-200 hover:bg-surface-50'
+                )}
+              >
+                <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                  <span className="text-lg font-bold text-red-600">G</span>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-surface-900">
+                    {isGoogleConnected ? 'Google Agenda connecté' : 'Connecter Google Agenda'}
+                  </div>
+                  <div className="text-xs text-surface-500">
+                    {isGoogleConnected
+                      ? 'Vos événements sont synchronisés dans le planning'
+                      : 'Importez vos RDV et indisponibilités automatiquement'}
+                  </div>
+                </div>
+                {isGoogleConnected && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              </a>
+            </div>
+
+            {/* Exporter vers un calendrier */}
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mt-4">Exporter vos sessions</div>
               <a
                 href={googleUrl}
                 target="_blank"
@@ -57,7 +88,7 @@ export function CalendarSync({ calendarUrl }: CalendarSyncProps) {
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-surface-900">Google Agenda</div>
-                  <div className="text-xs text-surface-500">S'abonner automatiquement</div>
+                  <div className="text-xs text-surface-500">Exporter les sessions vers votre agenda</div>
                 </div>
                 <ExternalLink className="h-4 w-4 text-surface-400" />
               </a>
