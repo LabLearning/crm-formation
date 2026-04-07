@@ -58,10 +58,10 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
-          Connexion
+          Bienvenue
         </h1>
         <p className="text-surface-500 text-sm">
-          Connectez-vous à votre espace Lab Learning
+          Connectez-vous pour accéder à votre espace
         </p>
       </div>
 
