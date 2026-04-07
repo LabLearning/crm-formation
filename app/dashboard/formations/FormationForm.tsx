@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Save, ChevronDown, ChevronRight } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Save, ChevronDown, ChevronRight, Sparkles, Loader2 } from 'lucide-react'
 import { Button, Input, Select } from '@/components/ui'
 import { createFormationAction, updateFormationAction } from './actions'
 import { MODALITE_LABELS } from '@/lib/types/formation'
@@ -19,9 +19,57 @@ export function FormationForm({ formation, onSuccess, onCancel }: FormationFormP
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const [sections, setSections] = useState({
     programme: true, pedagogie: false, tarifs: false, certification: false,
   })
+
+  async function handleAIGenerate() {
+    const form = formRef.current
+    if (!form) return
+    const intitule = (form.querySelector('#intitule') as HTMLInputElement)?.value
+    const categorie = (form.querySelector('#categorie') as HTMLInputElement)?.value
+    const dureeStr = (form.querySelector('#duree_heures') as HTMLInputElement)?.value
+    const modalite = (form.querySelector('#modalite') as HTMLSelectElement)?.value
+
+    if (!intitule) { setError('Renseignez l\'intitulé avant de générer'); return }
+
+    setAiLoading(true); setError(null)
+    try {
+      const res = await fetch('/api/ai/generate-programme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intitule, categorie, duree_heures: parseInt(dureeStr) || 14, modalite }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Erreur IA'); return }
+
+      const p = data.programme
+      // Remplir les champs du formulaire
+      const setField = (id: string, value: string) => {
+        const el = form.querySelector('#' + id) as HTMLTextAreaElement | HTMLInputElement
+        if (el) { el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })) }
+      }
+
+      setField('objectifs_pedagogiques', (p.modules || []).flatMap((m: any) => m.objectifs || []).join('\n'))
+      setField('prerequis', p.prerequis || '')
+      setField('public_vise', p.public_cible || '')
+      setField('programme_detaille', (p.modules || []).map((m: any) =>
+        `${m.titre} (${m.duree})\n${(m.contenu || []).map((c: string) => `  - ${c}`).join('\n')}`
+      ).join('\n\n'))
+      setField('competences_visees', (p.modules || []).flatMap((m: any) => m.objectifs || []).slice(0, 6).join('\n'))
+      setField('modalites_evaluation', (p.modalites_evaluation || []).join(', '))
+      setField('methodes_pedagogiques', (p.moyens_pedagogiques || []).join(', '))
+
+      // Ouvrir les sections
+      setSections({ programme: true, pedagogie: true, tarifs: false, certification: false })
+    } catch {
+      setError('Erreur de génération')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   function toggle(key: keyof typeof sections) {
     setSections((s) => ({ ...s, [key]: !s[key] }))
@@ -50,7 +98,7 @@ export function FormationForm({ formation, onSuccess, onCancel }: FormationFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
       {error && <div className="rounded-xl bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">{error}</div>}
 
       {/* Identification */}
@@ -69,6 +117,17 @@ export function FormationForm({ formation, onSuccess, onCancel }: FormationFormP
         <Input id="duree_heures" name="duree_heures" type="number" label="Durée (heures) *" defaultValue={formation?.duree_heures?.toString() || ''} error={errors.duree_heures?.[0]} />
         <Input id="duree_jours" name="duree_jours" type="number" label="Durée (jours)" defaultValue={formation?.duree_jours?.toString() || ''} />
       </div>
+
+      {/* Bouton IA */}
+      <button
+        type="button"
+        onClick={handleAIGenerate}
+        disabled={aiLoading}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 disabled:opacity-50 transition-all"
+      >
+        {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+        {aiLoading ? 'Génération du programme en cours...' : 'Générer le programme avec l\'IA'}
+      </button>
 
       {/* Programme (Qualiopi) */}
       <SectionHeader label="Programme & objectifs (Qualiopi C2)" sectionKey="programme" />

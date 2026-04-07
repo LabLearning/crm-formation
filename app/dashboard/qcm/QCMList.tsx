@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, MoreHorizontal, Pencil, Trash2, Copy, Eye,
   ListChecks, CheckCircle2, Circle, X, Send, Save,
-  GraduationCap, ChevronDown, ChevronRight,
+  GraduationCap, ChevronDown, ChevronRight, Sparkles, Loader2,
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import {
@@ -227,6 +227,11 @@ function QCMBuilder({ qcm }: { qcm: QCM }) {
   const [expandedQ, setExpandedQ] = useState<string | null>(null)
   const [newChoixText, setNewChoixText] = useState('')
   const [newChoixCorrect, setNewChoixCorrect] = useState(false)
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiTheme, setAiTheme] = useState('')
+  const [aiNiveau, setAiNiveau] = useState('intermediaire')
+  const [aiNb, setAiNb] = useState(5)
+  const [showAiForm, setShowAiForm] = useState(false)
 
   const questions = qcm.questions || []
   const sections = [...new Set(questions.map((q) => q.section).filter(Boolean))]
@@ -264,16 +269,113 @@ function QCMBuilder({ qcm }: { qcm: QCM }) {
     if (!result.success) toast('error', result.error || 'Erreur')
   }
 
+  async function handleAIGenerate() {
+    if (!aiTheme.trim()) { toast('error', 'Veuillez saisir un thème'); return }
+    setAiGenerating(true)
+    try {
+      const res = await fetch('/api/ai/generate-qcm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formationTitle: qcm.titre,
+          theme: aiTheme,
+          niveau: aiNiveau,
+          nbQuestions: aiNb,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast('error', data.error || 'Erreur IA'); return }
+
+      // Ajouter chaque question générée
+      let added = 0
+      for (const q of data.questions) {
+        const fd = new FormData()
+        fd.set('qcm_id', qcm.id)
+        fd.set('texte', q.question)
+        fd.set('type', 'choix_unique')
+        fd.set('points', '1')
+        fd.set('explication', q.explication || '')
+        fd.set('section', aiTheme)
+        const result = await addQuestionAction(fd)
+        if (result.success) {
+          const questionId = (result.data as QCMQuestion).id
+          for (const r of q.reponses) {
+            await addChoixAction(questionId, r.texte, r.est_correcte)
+          }
+          added++
+        }
+      }
+      toast('success', `${added} questions générées par l'IA`)
+      setShowAiForm(false)
+      setAiTheme('')
+    } catch {
+      toast('error', 'Erreur de génération')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
+
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="text-sm text-surface-500">
           {questions.length} question{questions.length > 1 ? 's' : ''} · {QCM_TYPE_LABELS[qcm.type]}
         </div>
-        <Button size="sm" onClick={() => setAddingQuestion(true)} icon={<Plus className="h-3.5 w-3.5" />}>
-          Ajouter une question
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAiForm(!showAiForm)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 transition-all"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Générer avec l'IA
+          </button>
+          <Button size="sm" onClick={() => setAddingQuestion(true)} icon={<Plus className="h-3.5 w-3.5" />}>
+            Ajouter manuellement
+          </Button>
+        </div>
       </div>
+
+      {/* Formulaire IA */}
+      {showAiForm && (
+        <div className="card p-4 space-y-3 border-violet-200 border bg-violet-50/30">
+          <div className="flex items-center gap-2 text-sm font-semibold text-violet-700">
+            <Sparkles className="h-4 w-4" /> Génération automatique par IA
+          </div>
+          <input
+            type="text"
+            value={aiTheme}
+            onChange={e => setAiTheme(e.target.value)}
+            placeholder="Thème des questions (ex: Hygiène HACCP, Sécurité incendie...)"
+            className="input-base text-sm"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-surface-500 mb-1 block">Niveau</label>
+              <select value={aiNiveau} onChange={e => setAiNiveau(e.target.value)} className="input-base text-sm">
+                <option value="debutant">Débutant</option>
+                <option value="intermediaire">Intermédiaire</option>
+                <option value="avance">Avancé</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-surface-500 mb-1 block">Nombre de questions</label>
+              <select value={aiNb} onChange={e => setAiNb(Number(e.target.value))} className="input-base text-sm">
+                {[3, 5, 10, 15, 20].map(n => <option key={n} value={n}>{n} questions</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="secondary" onClick={() => setShowAiForm(false)}>Annuler</Button>
+            <button
+              onClick={handleAIGenerate}
+              disabled={aiGenerating || !aiTheme.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 disabled:opacity-50"
+            >
+              {aiGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {aiGenerating ? 'Génération en cours...' : 'Générer'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add question form */}
       {addingQuestion && (
