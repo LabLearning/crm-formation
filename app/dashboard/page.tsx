@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getDashboardData } from './reporting/data'
 import Link from 'next/link'
 import {
@@ -7,7 +8,9 @@ import {
   CreditCard, Clock, AlertTriangle, FileText, Receipt,
   UserPlus, ShieldCheck, Star, MessageSquareWarning,
   ArrowRight, CheckCircle2, BarChart3, Zap, ArrowUpRight,
+  MapPin, ChevronRight,
 } from 'lucide-react'
+import { Badge } from '@/components/ui'
 import { formatDateTime } from '@/lib/utils'
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -30,6 +33,32 @@ export default async function DashboardPage() {
     data = await getDashboardData()
   } catch {
     data = null
+  }
+
+  // Sessions pour l'agenda
+  const supabase = await createServiceRoleClient()
+  const today = new Date().toISOString().split('T')[0]
+  const inThreeMonths = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]
+
+  const { data: upcomingSessions } = await supabase
+    .from('sessions')
+    .select('id, reference, status, date_debut, date_fin, lieu, formation:formations(intitule), formateur:formateurs(prenom, nom)')
+    .eq('organization_id', organization.id)
+    .gte('date_fin', today)
+    .lte('date_debut', inThreeMonths)
+    .not('status', 'eq', 'annulee')
+    .order('date_debut', { ascending: true })
+    .limit(15)
+
+  const allSessions = upcomingSessions || []
+  const sessionsEnCours = allSessions.filter(s => s.status === 'en_cours' || (s.date_debut <= today && s.date_fin >= today))
+  const sessionsAVenir = allSessions.filter(s => s.date_debut > today)
+
+  const SESSION_STATUS: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' }> = {
+    planifiee: { label: 'Planifiée', variant: 'default' },
+    confirmee: { label: 'Confirmée', variant: 'info' },
+    en_cours: { label: 'En cours', variant: 'success' },
+    terminee: { label: 'Terminée', variant: 'default' },
   }
 
   const getGreeting = () => {
@@ -64,6 +93,79 @@ export default async function DashboardPage() {
               <span className="hidden sm:inline">{link.label}</span>
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* ── Agenda des sessions ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sessions en cours */}
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between" style={{ backgroundColor: 'rgba(25,82,69,0.04)' }}>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-success-500 animate-pulse" />
+              <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">En cours</span>
+            </div>
+            <span className="text-xs text-surface-400">{sessionsEnCours.length}</span>
+          </div>
+          {sessionsEnCours.length > 0 ? (
+            <div className="divide-y divide-surface-100">
+              {sessionsEnCours.map((s: any) => (
+                <Link key={s.id} href={`/dashboard/sessions/${s.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
+                  <div className="h-9 w-9 rounded-xl bg-success-50 flex items-center justify-center shrink-0">
+                    <Calendar className="h-4 w-4 text-success-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-surface-900 truncate">{(s.formation as any)?.intitule || s.reference}</div>
+                    <div className="text-xs text-surface-500 flex items-center gap-2">
+                      {s.lieu && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{s.lieu}</span>}
+                      {s.formateur && <span>{(s.formateur as any).prenom} {(s.formateur as any).nom}</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-surface-400">Aucune session en cours</div>
+          )}
+        </div>
+
+        {/* Sessions à venir */}
+        <div className="lg:col-span-2 card overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Sessions à venir</span>
+            <Link href="/dashboard/sessions" className="text-xs text-brand-500 font-medium flex items-center gap-1 hover:text-brand-600">
+              Toutes les sessions <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          {sessionsAVenir.length > 0 ? (
+            <div className="divide-y divide-surface-100">
+              {sessionsAVenir.slice(0, 6).map((s: any) => {
+                const st = SESSION_STATUS[s.status] || SESSION_STATUS.planifiee
+                const daysUntil = Math.ceil((new Date(s.date_debut).getTime() - Date.now()) / 86400000)
+                return (
+                  <Link key={s.id} href={`/dashboard/sessions/${s.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
+                    <div className="text-center shrink-0 w-12">
+                      <div className="text-lg font-heading font-bold text-surface-900">{new Date(s.date_debut).getDate()}</div>
+                      <div className="text-[10px] text-surface-400 uppercase">{new Date(s.date_debut).toLocaleDateString('fr-FR', { month: 'short' })}</div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-surface-900 truncate">{(s.formation as any)?.intitule || s.reference}</div>
+                      <div className="text-xs text-surface-500 flex items-center gap-2">
+                        {s.lieu && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{s.lieu}</span>}
+                        {s.formateur && <span>{(s.formateur as any).prenom} {(s.formateur as any).nom}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={st.variant}>{st.label}</Badge>
+                      <span className="text-[10px] text-surface-400">J-{daysUntil}</span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-surface-400">Aucune session programmée</div>
+          )}
         </div>
       </div>
 
