@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PlanningCalendar } from './PlanningCalendar'
+import { CalendarSync } from './CalendarSync'
 
 export default async function PlanningFormateurPage() {
   const session = await getSession()
@@ -9,7 +10,7 @@ export default async function PlanningFormateurPage() {
 
   const { data: formateur } = await supabase
     .from('formateurs')
-    .select('id')
+    .select('id, email')
     .eq('user_id', session.user.id)
     .single()
 
@@ -34,11 +35,19 @@ export default async function PlanningFormateurPage() {
     .not('status', 'eq', 'annulee')
     .gte('date_fin', now.toISOString().split('T')[0])
 
+  // Générer le token de sync calendrier
+  const calendarToken = Buffer.from((formateur.email || '') + formateur.id).toString('base64url').substring(0, 20)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+  const calendarUrl = `${appUrl}/api/calendar/${formateur.id}?token=${calendarToken}`
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mon planning</h1>
-        <p className="text-surface-500 mt-1 text-sm">Gérez vos disponibilités et consultez vos sessions</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Mon planning</h1>
+          <p className="text-surface-500 mt-1 text-sm">Gérez vos disponibilités et consultez vos sessions</p>
+        </div>
+        <CalendarSync calendarUrl={calendarUrl} />
       </div>
       <PlanningCalendar
         disponibilites={(dispos || []) as any[]}
