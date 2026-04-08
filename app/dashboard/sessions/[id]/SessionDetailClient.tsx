@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
-  GraduationCap, Mail, Phone, Building2, Camera, PenTool,
+  GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
@@ -199,6 +199,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                   {formateur.telephone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{formateur.telephone}</span>}
                 </div>
               </div>
+              {!isFormateur && formateur.id && (
+                <a href={`/api/pdf/contrat-formateur/${formateur.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-500 text-xs font-medium hover:bg-brand-100 transition-colors shrink-0">
+                  <Download className="h-3.5 w-3.5" /> Contrat prestation
+                </a>
+              )}
             </div>
           )}
 
@@ -479,6 +485,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}
                       </Badge>
                     </div>
+                    {/* Boutons PDF */}
+                    {!isFormateur && (
+                      <div className="flex items-center gap-1 mt-2 sm:mt-0">
+                        <a href={`/api/pdf/attestation/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[10px] font-medium hover:bg-surface-100 transition-colors">
+                          <Download className="h-3 w-3" /> Attestation
+                        </a>
+                        <a href={`/api/pdf/certificat-realisation/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[10px] font-medium hover:bg-surface-100 transition-colors">
+                          <Download className="h-3 w-3" /> Certificat
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )
               })}

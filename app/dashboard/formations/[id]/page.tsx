@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Clock, Users, GraduationCap, MapPin, Calendar, Tag,
-  CheckCircle2, FileText, ListChecks, Euro,
+  CheckCircle2, FileText, ListChecks, Euro, Download,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
@@ -65,6 +65,10 @@ export default async function FormationDetailPage({ params }: { params: { id: st
             <Badge variant={formation.is_active ? 'success' : 'default'}>{formation.is_active ? 'Active' : 'Inactive'}</Badge>
           </div>
         </div>
+        <a href={`/api/pdf/programme/${params.id}`} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shrink-0 transition-colors" style={{ backgroundColor: '#195245' }}>
+          <Download className="h-4 w-4" /> Programme PDF
+        </a>
       </div>
 
       {/* KPIs */}
