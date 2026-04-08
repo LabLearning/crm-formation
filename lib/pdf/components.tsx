@@ -1,5 +1,5 @@
 import {
-  Document, Page, View, Text, StyleSheet, Font,
+  Document, Page, View, Text, Image, StyleSheet, Font,
 } from '@react-pdf/renderer'
 
 // ─── Branding ────────────────────────────────────────────────────────────────
@@ -199,7 +199,16 @@ export function PdfDocHeader({
   return (
     <View style={shared.header}>
       <View>
-        <Text style={shared.orgName}>Lab Learning</Text>
+        {/* Logo Lab Learning */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+          <View style={{ width: 28, height: 28, backgroundColor: BRAND_GREEN, borderRadius: 6, justifyContent: 'center', alignItems: 'center', marginRight: 8 }}>
+            <Text style={{ color: '#6BC291', fontSize: 12, fontFamily: 'Helvetica-Bold' }}>LL</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: BRAND_GREEN, letterSpacing: 0.5 }}>LAB</Text>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: BRAND_GREEN, letterSpacing: 0.5, marginTop: -2 }}>LEARNING</Text>
+          </View>
+        </View>
         <Text style={shared.orgTagline}>Organisme de formation professionnelle</Text>
         <Text style={shared.qualiopiTag}>Certifié Qualiopi</Text>
       </View>
