@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   Plus, MoreHorizontal, Pencil, Trash2, Euro, Percent,
-  CheckCircle2, XCircle, Save, Handshake,
+  CheckCircle2, XCircle, Save, Handshake, Download,
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast } from '@/components/ui'
 import { createApporteurAction, updateApporteurAction, deleteApporteurAction, toggleApporteurAction } from './actions'
@@ -161,6 +161,13 @@ export function ApporteursList({ apporteurs }: ApporteursListProps) {
             <div className="text-xs text-surface-500 space-y-0.5">
               {a.email && <div>{a.email}</div>}
               {a.telephone && <div>{a.telephone}</div>}
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-surface-100">
+              <a href={`/api/pdf/contrat-apporteur/${a.id}`} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium text-brand-500 hover:text-brand-600 transition-colors">
+                <Download className="h-3.5 w-3.5" /> Télécharger le contrat
+              </a>
             </div>
           </div>
         ))}
