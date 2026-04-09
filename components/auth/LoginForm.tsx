@@ -45,6 +45,7 @@ export function LoginForm() {
       return
     }
 
+    // Le /dashboard redirigera automatiquement vers le bon espace selon le rôle
     router.push('/dashboard')
     router.refresh()
   }

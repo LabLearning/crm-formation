@@ -16,9 +16,10 @@ import { formatDateTime } from '@/lib/utils'
 const ROLE_REDIRECTS: Record<string, string> = {
   directeur_commercial: '/dashboard/dirco-home',
   commercial: '/dashboard/commercial',
-  apporteur_affaires: '/dashboard/apporteur-home',
-  formateur: '/dashboard/formateur-home',
-  apprenant: '/dashboard/apprenant-home',
+  // Les rôles ci-dessous ont une interface portail dédiée (pas de dashboard admin)
+  apporteur_affaires: '/mon-espace',
+  formateur: '/mon-espace',
+  apprenant: '/mon-espace',
 }
 
 export default async function DashboardPage() {
