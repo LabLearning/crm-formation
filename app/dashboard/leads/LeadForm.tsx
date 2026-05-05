@@ -52,8 +52,20 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
   const [isLoading, setIsLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
-  const [selectedFormation, setSelectedFormation] = useState('')
-  const [isCustomFormation, setIsCustomFormation] = useState(false)
+
+  // Si on édite un lead avec une formation_souhaitee qui matche le catalogue, on présélectionne
+  const initialMatchedFormation = lead?.formation_souhaitee
+    ? formations.find(f => f.intitule === lead.formation_souhaitee)
+    : null
+  const [selectedFormation, setSelectedFormation] = useState(
+    initialMatchedFormation ? initialMatchedFormation.id : (lead?.formation_souhaitee ? '__custom' : '')
+  )
+  const [isCustomFormation, setIsCustomFormation] = useState(
+    !!lead?.formation_souhaitee && !initialMatchedFormation
+  )
+  const [customFormationText, setCustomFormationText] = useState(
+    initialMatchedFormation ? '' : (lead?.formation_souhaitee || '')
+  )
 
   const [type, setType] = useState<ClientType>(lead?.type || 'entreprise')
 
@@ -142,13 +154,21 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
     formData.set('est_qualiopi', estQualiopi ? 'true' : 'false')
     formData.set('est_organisme_formation', estOrgFormation ? 'true' : 'false')
 
-    if (isApporteur && selectedFormation && selectedFormation !== '__custom') {
+    // Formation souhaitée : depuis le catalogue ou champ libre
+    if (selectedFormation && selectedFormation !== '__custom') {
       const formation = formations.find(f => f.id === selectedFormation)
-      if (formation?.prix_ht) {
-        const nbStagiaires = parseInt(formData.get('nombre_stagiaires') as string) || 1
-        formData.set('montant_estime', String(formation.prix_ht * nbStagiaires))
+      if (formation) {
+        formData.set('formation_souhaitee', formation.intitule)
+        // Pour l'apporteur, calculer le montant depuis la formation × nb stagiaires
+        if (isApporteur && formation.prix_ht) {
+          const nbStagiaires = parseInt(formData.get('nombre_stagiaires') as string) || 1
+          formData.set('montant_estime', String(formation.prix_ht * nbStagiaires))
+        }
       }
-      formData.set('formation_souhaitee', formation?.intitule || '')
+    } else if (selectedFormation === '__custom') {
+      formData.set('formation_souhaitee', customFormationText)
+    } else {
+      formData.set('formation_souhaitee', '')
     }
 
     const result = lead
@@ -279,38 +299,47 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
       {/* ── Recueil du besoin ── */}
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Recueil du besoin</div>
 
-      {isApporteur ? (
-        <>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="formation_id" className="text-sm font-medium text-surface-700">Formation souhaitée *</label>
-            <select id="formation_id" name="formation_id" value={selectedFormation} onChange={handleFormationChange} className="input-base">
-              <option value="">Sélectionner une formation</option>
-              {formationOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-            </select>
-          </div>
-          {isCustomFormation && (
-            <div className="space-y-3">
-              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Cette demande sera transmise au directeur commercial pour validation.</span>
-              </div>
-              <Input id="formation_souhaitee" name="formation_souhaitee" label="Décrivez la formation souhaitée *" defaultValue="" />
+      <div className="flex flex-col gap-1">
+        <label htmlFor="formation_id" className="text-sm font-medium text-surface-700">
+          Formation souhaitée{isApporteur ? ' *' : ''}
+        </label>
+        <select
+          id="formation_id"
+          name="formation_id"
+          value={selectedFormation}
+          onChange={handleFormationChange}
+          className="input-base"
+        >
+          <option value="">Sélectionner une formation du catalogue</option>
+          {formations.map(f => (
+            <option key={f.id} value={f.id}>{f.intitule}</option>
+          ))}
+          <option value="__custom">— Autre formation (saisie libre) —</option>
+        </select>
+      </div>
+
+      {isCustomFormation && (
+        <div className="space-y-3">
+          {isApporteur && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>Cette demande hors catalogue sera transmise au directeur commercial pour validation.</span>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <Input id="nombre_stagiaires" name="nombre_stagiaires" type="number" label="Nombre de participants" defaultValue={lead?.nombre_stagiaires?.toString() || ''} placeholder="1" />
-            <Input id="date_souhaitee" name="date_souhaitee" type="date" label="Date souhaitée" defaultValue={lead?.date_souhaitee || ''} />
-          </div>
-        </>
-      ) : (
-        <>
-          <Input id="formation_souhaitee" name="formation_souhaitee" label="Formation souhaitée" defaultValue={lead?.formation_souhaitee || ''} />
-          <div className="grid grid-cols-2 gap-4">
-            <Input id="nombre_stagiaires" name="nombre_stagiaires" type="number" label="Nombre de participants" defaultValue={lead?.nombre_stagiaires?.toString() || ''} />
-            <Input id="date_souhaitee" name="date_souhaitee" type="date" label="Date souhaitée" defaultValue={lead?.date_souhaitee || ''} />
-          </div>
-        </>
+          <Input
+            id="formation_souhaitee_custom"
+            label={isApporteur ? 'Décrivez la formation souhaitée *' : 'Formation souhaitée (saisie libre)'}
+            value={customFormationText}
+            onChange={(e) => setCustomFormationText(e.target.value)}
+            placeholder="Ex: Formation spécifique en pâtisserie vegan..."
+          />
+        </div>
       )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <Input id="nombre_stagiaires" name="nombre_stagiaires" type="number" label="Nombre de participants" defaultValue={lead?.nombre_stagiaires?.toString() || ''} placeholder="1" />
+        <Input id="date_souhaitee" name="date_souhaitee" type="date" label="Date souhaitée" defaultValue={lead?.date_souhaitee || ''} />
+      </div>
 
       <div>
         <label htmlFor="commentaire" className="text-sm font-medium text-surface-700">Commentaire</label>
