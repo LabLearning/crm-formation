@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { Save, AlertCircle } from 'lucide-react'
-import { Button, Input, Select } from '@/components/ui'
+import { Button, Input, Select, CompanySearchInput } from '@/components/ui'
 import { createLeadAction, updateLeadAction } from './actions'
 import { LEAD_SOURCE_LABELS } from '@/lib/types/crm'
 import type { Lead } from '@/lib/types/crm'
 import type { User } from '@/lib/types'
+import type { SireneCompany } from '@/lib/sirene'
 
 interface Formation {
   id: string
@@ -32,6 +33,15 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
   const [error, setError] = useState<string | null>(null)
   const [selectedFormation, setSelectedFormation] = useState('')
   const [isCustomFormation, setIsCustomFormation] = useState(false)
+
+  // Champs entreprise contrôlés pour autocomplete data.gouv
+  const [entreprise, setEntreprise] = useState(lead?.entreprise || '')
+  const [siret, setSiret] = useState(lead?.siret || '')
+
+  function handleCompanySelect(c: SireneCompany) {
+    setEntreprise(c.raison_sociale)
+    if (c.siret) setSiret(c.siret)
+  }
 
   const userOptions = users.map((u) => ({
     value: u.id,
@@ -108,10 +118,14 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
       {/* ── Entreprise ── */}
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Entreprise</div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Input id="entreprise" name="entreprise" label="Nom de l'entreprise" defaultValue={lead?.entreprise || ''} />
-        <Input id="siret" name="siret" label="SIRET" defaultValue={lead?.siret || ''} />
-      </div>
+      <CompanySearchInput
+        id="entreprise"
+        name="entreprise"
+        label="Nom de l'entreprise"
+        defaultValue={entreprise}
+        onSelect={handleCompanySelect}
+      />
+      <Input id="siret" name="siret" label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="14 chiffres" />
 
       {/* ── Formation (apporteur) ── */}
       {isApporteur ? (

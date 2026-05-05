@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Save } from 'lucide-react'
-import { Button, Input, Select } from '@/components/ui'
+import { Button, Input, Select, CompanySearchInput } from '@/components/ui'
 import { createClientAction, updateClientAction } from './actions'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
 import type { Client } from '@/lib/types/crm'
+import type { SireneCompany } from '@/lib/sirene'
 
 interface ClientFormProps {
   client?: Client
@@ -28,6 +29,25 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
   const [clientType, setClientType] = useState(client?.type || 'entreprise')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
+
+  // Champs entreprise contrôlés pour pouvoir être remplis par l'autocomplete data.gouv
+  const [raisonSociale, setRaisonSociale] = useState(client?.raison_sociale || '')
+  const [siret, setSiret] = useState(client?.siret || '')
+  const [codeNaf, setCodeNaf] = useState(client?.code_naf || '')
+  const [tailleEntreprise, setTailleEntreprise] = useState(client?.taille_entreprise || '')
+  const [adresse, setAdresse] = useState(client?.adresse || '')
+  const [codePostal, setCodePostal] = useState(client?.code_postal || '')
+  const [ville, setVille] = useState(client?.ville || '')
+
+  function handleCompanySelect(c: SireneCompany) {
+    setRaisonSociale(c.raison_sociale)
+    if (c.siret) setSiret(c.siret)
+    if (c.code_naf) setCodeNaf(c.code_naf)
+    if (c.taille_entreprise) setTailleEntreprise(c.taille_entreprise)
+    if (c.adresse) setAdresse(c.adresse)
+    if (c.code_postal) setCodePostal(c.code_postal)
+    if (c.ville) setVille(c.ville)
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -72,14 +92,21 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
 
       {clientType === 'entreprise' ? (
         <>
-          <Input id="raison_sociale" name="raison_sociale" label="Raison sociale *" defaultValue={client?.raison_sociale || ''} error={fieldErrors.raison_sociale?.[0]} />
+          <CompanySearchInput
+            id="raison_sociale"
+            name="raison_sociale"
+            label="Raison sociale *"
+            defaultValue={raisonSociale}
+            error={fieldErrors.raison_sociale?.[0]}
+            onSelect={handleCompanySelect}
+          />
           <div className="grid grid-cols-2 gap-4">
-            <Input id="siret" name="siret" label="SIRET" defaultValue={client?.siret || ''} error={fieldErrors.siret?.[0]} placeholder="14 chiffres" />
-            <Input id="code_naf" name="code_naf" label="Code NAF" defaultValue={client?.code_naf || ''} />
+            <Input id="siret" name="siret" label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} error={fieldErrors.siret?.[0]} placeholder="14 chiffres" />
+            <Input id="code_naf" name="code_naf" label="Code NAF" value={codeNaf} onChange={(e) => setCodeNaf(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" defaultValue={client?.secteur_activite || ''} />
-            <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} defaultValue={client?.taille_entreprise || ''} />
+            <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
           </div>
         </>
       ) : (
@@ -99,10 +126,10 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
         <Input id="telephone" name="telephone" label="Téléphone" defaultValue={client?.telephone || ''} />
       </div>
 
-      <Input id="adresse" name="adresse" label="Adresse" defaultValue={client?.adresse || ''} />
+      <Input id="adresse" name="adresse" label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
       <div className="grid grid-cols-2 gap-4">
-        <Input id="code_postal" name="code_postal" label="Code postal" defaultValue={client?.code_postal || ''} />
-        <Input id="ville" name="ville" label="Ville" defaultValue={client?.ville || ''} />
+        <Input id="code_postal" name="code_postal" label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} />
+        <Input id="ville" name="ville" label="Ville" value={ville} onChange={(e) => setVille(e.target.value)} />
       </div>
 
       <Input id="site_web" name="site_web" label="Site web" defaultValue={client?.site_web || ''} placeholder="https://" error={fieldErrors.site_web?.[0]} />

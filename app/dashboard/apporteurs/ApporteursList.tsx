@@ -5,9 +5,10 @@ import {
   Plus, MoreHorizontal, Pencil, Trash2, Euro, Percent,
   CheckCircle2, XCircle, Save, Handshake, Download,
 } from 'lucide-react'
-import { Button, Badge, Input, Select, Modal, useToast } from '@/components/ui'
+import { Button, Badge, Input, Select, Modal, useToast, CompanySearchInput } from '@/components/ui'
 import { createApporteurAction, updateApporteurAction, deleteApporteurAction, toggleApporteurAction } from './actions'
 import type { ApporteurAffaires } from '@/lib/types/crm'
+import type { SireneCompany } from '@/lib/sirene'
 
 interface ApporteursListProps {
   apporteurs: ApporteurAffaires[]
@@ -18,6 +19,11 @@ function ApporteurForm({ apporteur, onDone }: { apporteur?: ApporteurAffaires; o
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [modeCalc, setModeCalc] = useState(apporteur?.mode_calcul || 'pourcentage')
+  const [raisonSociale, setRaisonSociale] = useState(apporteur?.raison_sociale || '')
+
+  function handleCompanySelect(c: SireneCompany) {
+    setRaisonSociale(c.raison_sociale)
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,7 +47,13 @@ function ApporteurForm({ apporteur, onDone }: { apporteur?: ApporteurAffaires; o
         <Input id="nom" name="nom" label="Nom *" defaultValue={apporteur?.nom || ''} error={errors.nom?.[0]} />
         <Input id="prenom" name="prenom" label="Prénom" defaultValue={apporteur?.prenom || ''} />
       </div>
-      <Input id="raison_sociale" name="raison_sociale" label="Raison sociale" defaultValue={apporteur?.raison_sociale || ''} />
+      <CompanySearchInput
+        id="raison_sociale"
+        name="raison_sociale"
+        label="Raison sociale"
+        defaultValue={raisonSociale}
+        onSelect={handleCompanySelect}
+      />
       <div className="grid grid-cols-2 gap-3">
         <Input id="email" name="email" type="email" label="Email" defaultValue={apporteur?.email || ''} error={errors.email?.[0]} />
         <Input id="telephone" name="telephone" label="Téléphone" defaultValue={apporteur?.telephone || ''} />
