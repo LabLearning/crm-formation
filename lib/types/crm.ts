@@ -101,6 +101,10 @@ export interface Client {
   site_web: string | null
   financeur_type: FinanceurType | null
   numero_opco: string | null
+  opco_id: string | null
+  opco_compte_status: 'aucun' | 'courrier_envoye' | 'en_attente_validation' | 'actif' | 'inactif' | null
+  code_idcc: string | null
+  convention_collective: string | null
   civilite: string | null
   nom: string | null
   prenom: string | null

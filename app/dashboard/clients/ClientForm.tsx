@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Save } from 'lucide-react'
-import { Button, Input, Select, CompanySearchInput } from '@/components/ui'
+import { Button, Input, Select, CompanySearchInput, OpcoSelector } from '@/components/ui'
 import { createClientAction, updateClientAction } from './actions'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
 import type { Client } from '@/lib/types/crm'
@@ -136,10 +136,20 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
 
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Financement</div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Select id="financeur_type" name="financeur_type" label="Type de financeur" options={financeurOptions} defaultValue={client?.financeur_type || ''} />
-        <Input id="numero_opco" name="numero_opco" label="N° OPCO" defaultValue={client?.numero_opco || ''} />
-      </div>
+      <Select id="financeur_type" name="financeur_type" label="Type de financeur" options={financeurOptions} defaultValue={client?.financeur_type || ''} />
+
+      {clientType === 'entreprise' && (
+        <>
+          <Input id="code_idcc" name="code_idcc" label="Code IDCC (convention collective)" defaultValue={client?.code_idcc || ''} placeholder="Ex: 1979 pour HCR" hint="Si renseigné, la convention collective prime sur le code NAF pour la détection OPCO" />
+          <OpcoSelector
+            codeNaf={codeNaf}
+            codeIdcc={client?.code_idcc || undefined}
+            defaultOpcoId={client?.opco_id || undefined}
+            defaultStatus={client?.opco_compte_status || 'aucun'}
+            defaultNumeroOpco={client?.numero_opco || undefined}
+          />
+        </>
+      )}
 
       <textarea id="notes" name="notes" rows={3} className="input-base resize-none" placeholder="Notes internes..." defaultValue={client?.notes || ''} />
 

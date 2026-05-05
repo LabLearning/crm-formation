@@ -47,6 +47,10 @@ export async function createClientAction(formData: FormData): Promise<ActionResu
     site_web: parsed.data.site_web || null,
     financeur_type: parsed.data.financeur_type || null,
     numero_opco: parsed.data.numero_opco || null,
+    opco_id: parsed.data.opco_id || null,
+    opco_compte_status: parsed.data.opco_compte_status || 'aucun',
+    code_idcc: parsed.data.code_idcc || null,
+    convention_collective: parsed.data.convention_collective || null,
     notes: parsed.data.notes || null,
     created_by: session.user.id,
   }
@@ -101,6 +105,10 @@ export async function updateClientAction(id: string, formData: FormData): Promis
     site_web: parsed.data.site_web || null,
     financeur_type: parsed.data.financeur_type || null,
     numero_opco: parsed.data.numero_opco || null,
+    opco_id: parsed.data.opco_id || null,
+    opco_compte_status: parsed.data.opco_compte_status || 'aucun',
+    code_idcc: parsed.data.code_idcc || null,
+    convention_collective: parsed.data.convention_collective || null,
     notes: parsed.data.notes || null,
   }
 

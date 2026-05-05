@@ -66,6 +66,10 @@ export const createClientSchema = z.object({
   site_web: z.string().url('URL invalide').optional().or(z.literal('')),
   financeur_type: z.enum(['opco', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
   numero_opco: z.string().optional(),
+  opco_id: z.string().uuid().optional().or(z.literal('')),
+  opco_compte_status: z.enum(['aucun', 'courrier_envoye', 'en_attente_validation', 'actif', 'inactif']).optional().or(z.literal('')),
+  code_idcc: z.string().optional(),
+  convention_collective: z.string().optional(),
   notes: z.string().optional(),
 }).refine((data) => {
   if (data.type === 'entreprise' && !data.raison_sociale) {
