@@ -310,7 +310,11 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
           onChange={handleFormationChange}
           className="input-base"
         >
-          <option value="">Sélectionner une formation du catalogue</option>
+          <option value="">
+            {formations.length === 0
+              ? 'Aucune formation dans le catalogue — saisie libre uniquement'
+              : `Sélectionner une formation (${formations.length} disponible${formations.length > 1 ? 's' : ''})`}
+          </option>
           {formations.map(f => (
             <option key={f.id} value={f.id}>{f.intitule}</option>
           ))}
