@@ -12,7 +12,8 @@ import type { SireneCompany } from '@/lib/sirene'
 interface Formation {
   id: string
   intitule: string
-  prix_ht: number | null
+  tarif_inter_ht: number | null
+  tarif_intra_ht: number | null
 }
 
 interface LeadFormProps {
@@ -159,10 +160,11 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
       const formation = formations.find(f => f.id === selectedFormation)
       if (formation) {
         formData.set('formation_souhaitee', formation.intitule)
-        // Pour l'apporteur, calculer le montant depuis la formation × nb stagiaires
-        if (isApporteur && formation.prix_ht) {
+        // Pour l'apporteur, calculer un montant indicatif (tarif intra OU inter × nb)
+        const tarif = formation.tarif_intra_ht || formation.tarif_inter_ht
+        if (isApporteur && tarif) {
           const nbStagiaires = parseInt(formData.get('nombre_stagiaires') as string) || 1
-          formData.set('montant_estime', String(formation.prix_ht * nbStagiaires))
+          formData.set('montant_estime', String(tarif * nbStagiaires))
         }
       }
     } else if (selectedFormation === '__custom') {
@@ -297,12 +299,7 @@ export function LeadForm({ lead, users, formations = [], isApporteur, hideAssign
       )}
 
       {/* ── Recueil du besoin ── */}
-      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">
-        Recueil du besoin
-        <span className="ml-2 text-[10px] font-mono normal-case text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-          DEBUG: formations.length={formations.length}
-        </span>
-      </div>
+      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Recueil du besoin</div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="formation_id" className="text-sm font-medium text-surface-700">

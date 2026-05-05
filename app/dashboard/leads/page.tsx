@@ -59,10 +59,10 @@ export default async function LeadsPage() {
     .eq('status', 'active')
     .in('role', ['gestionnaire', 'super_admin'])
 
-  // Formations pour le sélecteur (apporteur)
-  const { data: formations, error: formationsError } = await supabase
+  // Formations pour le sélecteur du recueil de besoin
+  const { data: formations } = await supabase
     .from('formations')
-    .select('id, intitule, prix_ht')
+    .select('id, intitule, tarif_inter_ht, tarif_intra_ht')
     .eq('organization_id', session.organization.id)
     .eq('is_active', true)
     .order('intitule')
@@ -71,11 +71,6 @@ export default async function LeadsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="bg-yellow-100 border-2 border-yellow-400 px-4 py-2 mb-4 text-xs font-mono whitespace-pre-wrap">
-        DEBUG SERVER : formations.data = {formations === null ? 'null' : `array(${formations.length})`}
-        {'\n'}error = {formationsError ? JSON.stringify(formationsError) : 'no error'}
-        {'\n'}org = {session.organization.id} | role = {session.user.role}
-      </div>
       <LeadsPipeline
         leads={(leads || []) as Lead[]}
         users={users || []}
