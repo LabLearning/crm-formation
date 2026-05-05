@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from 'react'
 import {
   UserPlus, MoreHorizontal, Phone, Mail, Building2,
-  ArrowRight, Trash2, Eye, Euro, List, LayoutGrid, Columns3,
+  ArrowRight, Trash2, Eye, Edit3, Euro, List, LayoutGrid, Columns3,
   Search, Upload, Download, Filter, X, Star,
 } from 'lucide-react'
 import { Button, Badge, Modal, useToast } from '@/components/ui'
@@ -78,6 +78,7 @@ export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, cu
   const { toast } = useToast()
   const [view, setView] = useState<ViewMode>('kanban')
   const [createOpen, setCreateOpen] = useState(false)
+  const [editLead, setEditLead] = useState<Lead | null>(null)
   const [detailLead, setDetailLead] = useState<Lead | null>(null)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [draggedId, setDraggedId] = useState<string | null>(null)
@@ -236,6 +237,7 @@ export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, cu
               {activeMenu === lead.id && (
                 <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-surface-200 shadow-elevated py-1 z-20">
                   <button onClick={() => { setDetailLead(lead); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50"><Eye className="h-4 w-4 text-surface-400" /> Voir le detail</button>
+                  <button onClick={() => { setEditLead(lead); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50"><Edit3 className="h-4 w-4 text-surface-400" /> Modifier</button>
                   {!['gagne', 'perdu'].includes(lead.status) && (
                     <button onClick={() => handleConvert(lead.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-success-600 hover:bg-success-50"><ArrowRight className="h-4 w-4" /> Convertir en client</button>
                   )}
@@ -387,6 +389,21 @@ export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, cu
       {/* Create Modal */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau lead" description={isApporteur ? 'Soumettez un prospect à Lab Learning' : 'Ajoutez un nouveau prospect'} size="lg">
         <LeadForm users={users} formations={formations} isApporteur={isApporteur} hideAssign={isApporteur || users.length === 0} onSuccess={() => { setCreateOpen(false); toast('success', 'Lead créé') }} onCancel={() => setCreateOpen(false)} />
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={!!editLead} onClose={() => setEditLead(null)} title="Modifier le lead" size="lg">
+        {editLead && (
+          <LeadForm
+            lead={editLead}
+            users={users}
+            formations={formations}
+            isApporteur={isApporteur}
+            hideAssign={isApporteur || users.length === 0}
+            onSuccess={() => { setEditLead(null); toast('success', 'Lead mis à jour') }}
+            onCancel={() => setEditLead(null)}
+          />
+        )}
       </Modal>
 
       {/* Detail Modal */}
