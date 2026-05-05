@@ -3,6 +3,8 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { LeadsPipeline } from './LeadsPipeline'
 import type { Lead } from '@/lib/types/crm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LeadsPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
@@ -69,6 +71,9 @@ export default async function LeadsPage() {
 
   return (
     <div className="animate-fade-in">
+      <div className="bg-yellow-100 border-2 border-yellow-400 px-4 py-2 mb-4 text-xs font-mono">
+        DEBUG SERVER : formations fetched = {formations?.length ?? 'null'} | org={session.organization.id.slice(0, 8)} | role={session.user.role}
+      </div>
       <LeadsPipeline
         leads={(leads || []) as Lead[]}
         users={users || []}
