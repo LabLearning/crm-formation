@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save } from 'lucide-react'
+import { Save, Award, GraduationCap, UserCircle } from 'lucide-react'
 import { Button, Input, Select, CompanySearchInput, OpcoSelector } from '@/components/ui'
 import { createClientAction, updateClientAction } from './actions'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
@@ -30,7 +30,7 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
 
-  // Champs entreprise contrôlés pour pouvoir être remplis par l'autocomplete data.gouv
+  // Champs entreprise contrôlés
   const [raisonSociale, setRaisonSociale] = useState(client?.raison_sociale || '')
   const [siret, setSiret] = useState(client?.siret || '')
   const [codeNaf, setCodeNaf] = useState(client?.code_naf || '')
@@ -40,6 +40,18 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
   const [adresse, setAdresse] = useState(client?.adresse || '')
   const [codePostal, setCodePostal] = useState(client?.code_postal || '')
   const [ville, setVille] = useState(client?.ville || '')
+  // Nouveaux champs enrichis
+  const [sigle, setSigle] = useState(client?.sigle || '')
+  const [formeJuridique, setFormeJuridique] = useState(client?.forme_juridique || '')
+  const [dateCreation, setDateCreation] = useState(client?.date_creation_entreprise || '')
+  const [effectifLibelle, setEffectifLibelle] = useState(client?.effectif_libelle || '')
+  const [tvaIntra, setTvaIntra] = useState(client?.tva_intra || '')
+  const [estQualiopi, setEstQualiopi] = useState(client?.est_qualiopi || false)
+  const [estOrgFormation, setEstOrgFormation] = useState(client?.est_organisme_formation || false)
+  // Dirigeant (suggéré, créé comme contact à la sauvegarde)
+  const [dirigeantPrenom, setDirigeantPrenom] = useState('')
+  const [dirigeantNom, setDirigeantNom] = useState('')
+  const [dirigeantQualite, setDirigeantQualite] = useState('')
 
   function handleCompanySelect(c: SireneCompany) {
     setRaisonSociale(c.raison_sociale)
@@ -51,6 +63,18 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
     if (c.adresse) setAdresse(c.adresse)
     if (c.code_postal) setCodePostal(c.code_postal)
     if (c.ville) setVille(c.ville)
+    setSigle(c.sigle || '')
+    setFormeJuridique(c.forme_juridique || '')
+    setDateCreation(c.date_creation || '')
+    setEffectifLibelle(c.effectif_libelle || '')
+    setTvaIntra(c.tva_intra || '')
+    setEstQualiopi(c.est_qualiopi)
+    setEstOrgFormation(c.est_organisme_formation)
+    if (c.dirigeant) {
+      setDirigeantPrenom(c.dirigeant.prenom)
+      setDirigeantNom(c.dirigeant.nom)
+      setDirigeantQualite(c.dirigeant.qualite)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -61,6 +85,8 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
 
     const formData = new FormData(e.currentTarget)
     formData.set('type', clientType)
+    formData.set('est_qualiopi', estQualiopi ? 'true' : 'false')
+    formData.set('est_organisme_formation', estOrgFormation ? 'true' : 'false')
 
     const result = client
       ? await updateClientAction(client.id, formData)
@@ -76,6 +102,9 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
     }
     setIsLoading(false)
   }
+
+  const isNewClient = !client
+  const showDirigeantSection = isNewClient && clientType === 'entreprise' && (dirigeantNom || dirigeantPrenom)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -104,13 +133,42 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
             error={fieldErrors.raison_sociale?.[0]}
             onSelect={handleCompanySelect}
           />
+
+          {/* Badges Qualiopi / Organisme formation */}
+          {(estQualiopi || estOrgFormation) && (
+            <div className="flex flex-wrap gap-2">
+              {estQualiopi && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <Award className="h-3 w-3" /> Certifié Qualiopi
+                </span>
+              )}
+              {estOrgFormation && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-medium text-brand-700">
+                  <GraduationCap className="h-3 w-3" /> Organisme de formation
+                </span>
+              )}
+            </div>
+          )}
+
+          <input type="hidden" name="est_qualiopi" value={estQualiopi ? 'true' : 'false'} />
+          <input type="hidden" name="est_organisme_formation" value={estOrgFormation ? 'true' : 'false'} />
+
           <div className="grid grid-cols-2 gap-4">
             <Input id="siret" name="siret" label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} error={fieldErrors.siret?.[0]} placeholder="14 chiffres" />
-            <Input id="code_naf" name="code_naf" label="Code NAF" value={codeNaf} onChange={(e) => setCodeNaf(e.target.value)} />
+            <Input id="sigle" name="sigle" label="Sigle" value={sigle} onChange={(e) => setSigle(e.target.value)} placeholder="Ex: SNCF" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+            <Input id="forme_juridique" name="forme_juridique" label="Forme juridique" value={formeJuridique} onChange={(e) => setFormeJuridique(e.target.value)} placeholder="SAS, SARL, SCI..." />
+            <Input id="date_creation_entreprise" name="date_creation_entreprise" type="date" label="Date de création" value={dateCreation} onChange={(e) => setDateCreation(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input id="code_naf" name="code_naf" label="Code NAF" value={codeNaf} onChange={(e) => setCodeNaf(e.target.value)} />
+            <Input id="tva_intra" name="tva_intra" label="N° TVA intracommunautaire" value={tvaIntra} onChange={(e) => setTvaIntra(e.target.value)} />
+          </div>
+          <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+          <div className="grid grid-cols-2 gap-4">
             <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
+            <Input id="effectif_libelle" name="effectif_libelle" label="Effectif" value={effectifLibelle} onChange={(e) => setEffectifLibelle(e.target.value)} placeholder="Ex: 10 à 19 salariés" />
           </div>
         </>
       ) : (
@@ -137,6 +195,22 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
       </div>
 
       <Input id="site_web" name="site_web" label="Site web" defaultValue={client?.site_web || ''} placeholder="https://" error={fieldErrors.site_web?.[0]} />
+
+      {/* Section dirigeant — uniquement à la création, si l'API a retourné un dirigeant */}
+      {showDirigeantSection && (
+        <div className="rounded-xl bg-brand-50/50 border border-brand-200 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <UserCircle className="h-4 w-4 text-brand-600" />
+            <div className="text-sm font-medium text-brand-900">Contact gérant (créé automatiquement)</div>
+          </div>
+          <div className="text-xs text-brand-700">Récupéré depuis Sirene. Tu peux modifier avant de sauvegarder ou laisser vide pour ne pas créer de contact.</div>
+          <div className="grid grid-cols-3 gap-3">
+            <Input id="dirigeant_prenom" name="dirigeant_prenom" label="Prénom" value={dirigeantPrenom} onChange={(e) => setDirigeantPrenom(e.target.value)} />
+            <Input id="dirigeant_nom" name="dirigeant_nom" label="Nom" value={dirigeantNom} onChange={(e) => setDirigeantNom(e.target.value)} />
+            <Input id="dirigeant_qualite" name="dirigeant_qualite" label="Qualité" value={dirigeantQualite} onChange={(e) => setDirigeantQualite(e.target.value)} placeholder="Gérant, Président..." />
+          </div>
+        </div>
+      )}
 
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Financement</div>
 

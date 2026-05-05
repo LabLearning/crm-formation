@@ -70,6 +70,17 @@ export const createClientSchema = z.object({
   opco_compte_status: z.enum(['aucun', 'courrier_envoye', 'en_attente_validation', 'actif', 'inactif']).optional().or(z.literal('')),
   code_idcc: z.string().optional(),
   convention_collective: z.string().optional(),
+  sigle: z.string().optional(),
+  forme_juridique: z.string().optional(),
+  date_creation_entreprise: z.string().optional().or(z.literal('')),
+  effectif_libelle: z.string().optional(),
+  tva_intra: z.string().optional(),
+  est_qualiopi: z.coerce.boolean().optional(),
+  est_organisme_formation: z.coerce.boolean().optional(),
+  // Dirigeant pour créer un contact lié automatiquement
+  dirigeant_prenom: z.string().optional(),
+  dirigeant_nom: z.string().optional(),
+  dirigeant_qualite: z.string().optional(),
   notes: z.string().optional(),
 }).refine((data) => {
   if (data.type === 'entreprise' && !data.raison_sociale) {

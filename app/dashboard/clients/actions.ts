@@ -51,6 +51,13 @@ export async function createClientAction(formData: FormData): Promise<ActionResu
     opco_compte_status: parsed.data.opco_compte_status || 'aucun',
     code_idcc: parsed.data.code_idcc || null,
     convention_collective: parsed.data.convention_collective || null,
+    sigle: parsed.data.sigle || null,
+    forme_juridique: parsed.data.forme_juridique || null,
+    date_creation_entreprise: parsed.data.date_creation_entreprise || null,
+    effectif_libelle: parsed.data.effectif_libelle || null,
+    tva_intra: parsed.data.tva_intra || null,
+    est_qualiopi: parsed.data.est_qualiopi === true,
+    est_organisme_formation: parsed.data.est_organisme_formation === true,
     notes: parsed.data.notes || null,
     created_by: session.user.id,
   }
@@ -64,6 +71,20 @@ export async function createClientAction(formData: FormData): Promise<ActionResu
   if (error) {
     console.error('[Create Client]', error)
     return { success: false, error: 'Erreur lors de la création du client' }
+  }
+
+  // Si on a un dirigeant pré-rempli depuis l'autocomplete data.gouv,
+  // créer automatiquement un contact principal lié à ce client
+  if (parsed.data.dirigeant_nom && parsed.data.dirigeant_prenom) {
+    await supabase.from('contacts').insert({
+      organization_id: session.organization.id,
+      client_id: data.id,
+      prenom: parsed.data.dirigeant_prenom,
+      nom: parsed.data.dirigeant_nom,
+      poste: parsed.data.dirigeant_qualite || null,
+      est_principal: true,
+      created_by: session.user.id,
+    })
   }
 
   await logAudit({ action: 'create', entity_type: 'client', entity_id: data.id })
@@ -109,6 +130,13 @@ export async function updateClientAction(id: string, formData: FormData): Promis
     opco_compte_status: parsed.data.opco_compte_status || 'aucun',
     code_idcc: parsed.data.code_idcc || null,
     convention_collective: parsed.data.convention_collective || null,
+    sigle: parsed.data.sigle || null,
+    forme_juridique: parsed.data.forme_juridique || null,
+    date_creation_entreprise: parsed.data.date_creation_entreprise || null,
+    effectif_libelle: parsed.data.effectif_libelle || null,
+    tva_intra: parsed.data.tva_intra || null,
+    est_qualiopi: parsed.data.est_qualiopi === true,
+    est_organisme_formation: parsed.data.est_organisme_formation === true,
     notes: parsed.data.notes || null,
   }
 

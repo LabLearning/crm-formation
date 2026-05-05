@@ -105,6 +105,13 @@ export interface Client {
   opco_compte_status: 'aucun' | 'courrier_envoye' | 'en_attente_validation' | 'actif' | 'inactif' | null
   code_idcc: string | null
   convention_collective: string | null
+  sigle: string | null
+  forme_juridique: string | null
+  date_creation_entreprise: string | null
+  effectif_libelle: string | null
+  tva_intra: string | null
+  est_qualiopi: boolean
+  est_organisme_formation: boolean
   civilite: string | null
   nom: string | null
   prenom: string | null
