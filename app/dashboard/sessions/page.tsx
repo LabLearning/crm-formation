@@ -3,6 +3,8 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { SessionsList } from './SessionsList'
 import type { Session, Formation, Formateur } from '@/lib/types/formation'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SessionsPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
