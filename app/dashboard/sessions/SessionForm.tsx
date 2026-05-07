@@ -145,17 +145,13 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
   ]
 
   /**
-   * Règle métier : tous les apprenants d'une session doivent appartenir
-   * à la même entreprise. Le "client de référence" est déterminé par :
-   *  1. Le client_id choisi (en intra)
-   *  2. Sinon, le client du premier apprenant déjà sélectionné
+   * Règle métier :
+   *  - Intra : tous les apprenants doivent appartenir au client commanditaire
+   *  - Inter : pas de restriction, des apprenants de différentes entreprises
+   *    peuvent être inscrits ensemble (c'est le principe de l'inter)
    */
-  const referenceClientId = clientId
-    || apprenants.find(a => selectedApprenants.includes(a.id))?.client_id
-    || ''
-
-  const filteredApprenants = referenceClientId
-    ? apprenants.filter(a => a.client_id === referenceClientId)
+  const filteredApprenants = (typeSession === 'intra' && clientId)
+    ? apprenants.filter(a => a.client_id === clientId)
     : apprenants
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -295,16 +291,24 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
         Apprenants ({selectedApprenants.length} sélectionné{selectedApprenants.length > 1 ? 's' : ''})
       </div>
       <div className="text-[11px] text-surface-500 -mt-1">
-        Tous les apprenants d'une session doivent appartenir à la même entreprise.
-        {referenceClientId && clients.find(c => c.id === referenceClientId) && (
-          <span className="ml-1 font-medium text-brand-700">
-            Filtré sur : {clients.find(c => c.id === referenceClientId)?.raison_sociale}
-          </span>
+        {typeSession === 'intra' && clientId ? (
+          <>
+            Session intra — apprenants filtrés sur :{' '}
+            <span className="font-medium text-brand-700">
+              {clients.find(c => c.id === clientId)?.raison_sociale}
+            </span>
+          </>
+        ) : typeSession === 'inter' ? (
+          <>Session inter — vous pouvez sélectionner des apprenants de différentes entreprises.</>
+        ) : (
+          <>Sélectionnez d'abord un client pour voir les apprenants.</>
         )}
       </div>
       {filteredApprenants.length === 0 ? (
         <div className="rounded-xl bg-surface-50 border border-surface-200 px-4 py-3 text-xs text-surface-500">
-          Aucun apprenant disponible{referenceClientId ? ' pour cette entreprise' : ''}. Créez-les depuis la page Apprenants en les liant à l'entreprise.
+          {typeSession === 'intra' && clientId
+            ? 'Aucun apprenant lié à ce client. Créez-les depuis la page Apprenants en les liant à l\'entreprise.'
+            : 'Aucun apprenant disponible. Créez-les depuis la page Apprenants.'}
         </div>
       ) : (
         <div className="rounded-xl border border-surface-200 max-h-48 overflow-y-auto divide-y divide-surface-100">
