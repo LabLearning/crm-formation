@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Save, Building2, Users, X, Plus } from 'lucide-react'
+import { Save, Building2, Users, X, Plus, CalendarDays, Clock } from 'lucide-react'
 import { Button, Input, Select, FormateurDispoBadge } from '@/components/ui'
 import { createSessionAction, updateSessionAction } from './actions'
 import { SESSION_STATUS_LABELS } from '@/lib/types/formation'
@@ -29,7 +29,7 @@ interface FormateurExt extends Pick<Formateur, 'id' | 'prenom' | 'nom'> {
 
 interface SessionFormProps {
   session?: Session
-  formations: Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures'>[]
+  formations: Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures' | 'duree_jours'>[]
   formateurs: FormateurExt[]
   clients?: ClientLite[]
   apprenants?: ApprenantLite[]
@@ -50,41 +50,52 @@ const modaliteOptions = [
   { value: 'mixte', label: 'Mixte (présentiel + distanciel)' },
 ]
 
-/** Génère un tableau de jours (YYYY-MM-DD) entre 2 dates incluses */
-function generateDateRange(start: string, end: string): string[] {
-  if (!start || !end) return []
-  const startDate = new Date(start)
-  const endDate = new Date(end)
-  if (startDate > endDate) return []
-  const days: string[] = []
-  const current = new Date(startDate)
-  while (current <= endDate) {
-    days.push(current.toISOString().split('T')[0])
-    current.setDate(current.getDate() + 1)
-  }
-  return days.slice(0, 30)  // safety cap
-}
-
 const DEFAULT_HORAIRES = { matin_debut: '09:00', matin_fin: '12:30', aprem_debut: '13:30', aprem_fin: '17:00' }
+
+/** Calcule les heures totales d'un jour à partir des horaires matin/aprem */
+function heuresJour(h: HoraireJour): number {
+  const diff = (debut: string, fin: string) => {
+    if (!debut || !fin) return 0
+    const [hd, md] = debut.split(':').map(Number)
+    const [hf, mf] = fin.split(':').map(Number)
+    return Math.max(0, (hf * 60 + mf) - (hd * 60 + md)) / 60
+  }
+  return diff(h.matin_debut, h.matin_fin) + diff(h.aprem_debut, h.aprem_fin)
+}
 
 export function SessionForm({ session, formations, formateurs, clients = [], apprenants = [], initialInscrits = [], onSuccess, onCancel }: SessionFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
 
+  const [formationId, setFormationId] = useState(session?.formation_id || '')
   const [typeSession, setTypeSession] = useState<'inter' | 'intra'>(session?.type_session || 'inter')
   const [modalite, setModalite] = useState<'presentiel' | 'distanciel' | 'mixte'>(session?.modalite || 'presentiel')
   const [clientId, setClientId] = useState(session?.client_id || '')
   const [formateurId, setFormateurId] = useState(session?.formateur_id || '')
-  const [dateDebut, setDateDebut] = useState(session?.date_debut || '')
-  const [dateFin, setDateFin] = useState(session?.date_fin || '')
   const [horairesJours, setHorairesJours] = useState<HoraireJour[]>(session?.horaires_jours || [])
+  const [newDayInput, setNewDayInput] = useState('')
   const [adresse, setAdresse] = useState(session?.adresse || '')
   const [codePostal, setCodePostal] = useState(session?.code_postal || '')
   const [ville, setVille] = useState(session?.ville || '')
   const [lieu, setLieu] = useState(session?.lieu || '')
   const [coutFormateur, setCoutFormateur] = useState<string>(session?.cout_formateur?.toString() || '')
   const [selectedApprenants, setSelectedApprenants] = useState<string[]>(initialInscrits)
+
+  // Formation choisie → récupère sa durée
+  const formationChoisie = formations.find(f => f.id === formationId)
+  const dureeJoursRequis = formationChoisie?.duree_jours || 0
+  const dureeHeuresRequis = formationChoisie?.duree_heures || 0
+
+  // Dates min/max dérivées des jours planifiés
+  const sortedJours = useMemo(
+    () => [...horairesJours].sort((a, b) => a.date.localeCompare(b.date)),
+    [horairesJours]
+  )
+  const dateDebut = sortedJours[0]?.date || ''
+  const dateFin = sortedJours[sortedJours.length - 1]?.date || ''
+  const totalHeures = horairesJours.reduce((s, h) => s + heuresJour(h), 0)
+  const nbJours = horairesJours.length
 
   // ── Auto-fill : adresse client quand intra ──
   useEffect(() => {
@@ -100,7 +111,6 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
   }, [typeSession, clientId])
 
   // ── Auto-fill : coût formateur (tarif journalier × nb jours) ──
-  const nbJours = useMemo(() => generateDateRange(dateDebut, dateFin).length, [dateDebut, dateFin])
   useEffect(() => {
     if (formateurId && nbJours > 0) {
       const f = formateurs.find(x => x.id === formateurId)
@@ -110,13 +120,18 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
     }
   }, [formateurId, nbJours])
 
-  // ── Auto-update horaires_jours quand les dates changent ──
-  useEffect(() => {
-    const days = generateDateRange(dateDebut, dateFin)
-    if (days.length === 0) { setHorairesJours([]); return }
-    // Conserve les horaires existants si la date est toujours dans la plage
-    setHorairesJours(prev => days.map(d => prev.find(p => p.date === d) || { date: d, ...DEFAULT_HORAIRES }))
-  }, [dateDebut, dateFin])
+  function addJour() {
+    if (!newDayInput) return
+    if (horairesJours.some(h => h.date === newDayInput)) {
+      setNewDayInput(''); return  // Déjà ajouté
+    }
+    setHorairesJours(prev => [...prev, { date: newDayInput, ...DEFAULT_HORAIRES }])
+    setNewDayInput('')
+  }
+
+  function removeJour(date: string) {
+    setHorairesJours(prev => prev.filter(h => h.date !== date))
+  }
 
   function updateHoraire(date: string, field: keyof Omit<HoraireJour, 'date'>, value: string) {
     setHorairesJours(prev => prev.map(h => h.date === date ? { ...h, [field]: value } : h))
@@ -156,13 +171,21 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (horairesJours.length === 0) {
+      setError('Ajoutez au moins un jour de planning')
+      return
+    }
     setIsLoading(true); setErrors({}); setError(null)
     const fd = new FormData(e.currentTarget)
+    fd.set('formation_id', formationId)
     fd.set('type_session', typeSession)
     fd.set('modalite', modalite)
     fd.set('client_id', clientId)
     fd.set('formateur_id', formateurId)
-    fd.set('horaires_jours', JSON.stringify(horairesJours))
+    // date_debut / date_fin dérivés du planning (min / max)
+    fd.set('date_debut', dateDebut)
+    fd.set('date_fin', dateFin)
+    fd.set('horaires_jours', JSON.stringify(sortedJours))
     fd.set('apprenant_ids', selectedApprenants.join(','))
     const result = session ? await updateSessionAction(session.id, fd) : await createSessionAction(fd)
     if (result.success) onSuccess()
@@ -182,7 +205,21 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
         </div>
       )}
 
-      <Select id="formation_id" name="formation_id" label="Formation *" options={formationOptions} defaultValue={session?.formation_id || ''} placeholder="Sélectionner une formation" error={errors.formation_id?.[0]} />
+      <Select
+        id="formation_id_select"
+        label="Formation *"
+        options={formationOptions}
+        value={formationId}
+        onChange={(e) => setFormationId(e.target.value)}
+        placeholder="Sélectionner une formation"
+        error={errors.formation_id?.[0]}
+      />
+      {formationChoisie && (
+        <div className="rounded-xl bg-brand-50/50 border border-brand-200 px-4 py-2 text-xs text-brand-800 flex flex-wrap gap-x-4 gap-y-1">
+          <span>📅 <strong>{dureeJoursRequis || '?'}</strong> jour{dureeJoursRequis > 1 ? 's' : ''} à planifier</span>
+          <span>⏰ <strong>{dureeHeuresRequis}h</strong> au total</span>
+        </div>
+      )}
 
       {session && (
         <div className="grid grid-cols-2 gap-3">
@@ -211,25 +248,57 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
         </div>
       )}
 
-      {/* ── Planning ── */}
-      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Planning</div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Input id="date_debut" name="date_debut" type="date" label="Date de début *" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} error={errors.date_debut?.[0]} />
-        <Input id="date_fin" name="date_fin" type="date" label="Date de fin *" value={dateFin} onChange={(e) => setDateFin(e.target.value)} error={errors.date_fin?.[0]} />
+      {/* ── Planning : ajout de jours individuels ── */}
+      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2 flex items-center gap-2">
+        <CalendarDays className="h-3.5 w-3.5" />
+        Planning des jours
       </div>
 
-      {/* Horaires détaillés par demi-journée */}
-      {horairesJours.length > 0 && (
-        <div className="rounded-xl border border-surface-200 overflow-hidden">
-          <div className="px-3 py-2 bg-surface-50 text-xs font-semibold text-surface-600 uppercase">
-            Horaires détaillés ({horairesJours.length} jour{horairesJours.length > 1 ? 's' : ''})
+      {/* Compteur de progression */}
+      {dureeJoursRequis > 0 && (
+        <div className={`rounded-xl px-4 py-2.5 text-sm border ${
+          nbJours === dureeJoursRequis
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : nbJours > dureeJoursRequis
+            ? 'bg-amber-50 border-amber-200 text-amber-800'
+            : 'bg-surface-50 border-surface-200 text-surface-700'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span>
+              <strong>{nbJours}</strong> / {dureeJoursRequis} jour{dureeJoursRequis > 1 ? 's' : ''} planifié{nbJours > 1 ? 's' : ''}
+            </span>
+            <span className="text-xs">
+              {totalHeures.toFixed(1)}h{dureeHeuresRequis ? ` / ${dureeHeuresRequis}h` : ''}
+            </span>
           </div>
+        </div>
+      )}
+
+      {/* Ajouter un jour */}
+      <div className="flex gap-2">
+        <input
+          type="date"
+          value={newDayInput}
+          onChange={(e) => setNewDayInput(e.target.value)}
+          className="input-base flex-1"
+          placeholder="Choisir une date"
+        />
+        <Button type="button" onClick={addJour} disabled={!newDayInput} icon={<Plus className="h-3.5 w-3.5" />}>
+          Ajouter ce jour
+        </Button>
+      </div>
+
+      {/* Liste des jours planifiés avec horaires */}
+      {sortedJours.length > 0 && (
+        <div className="rounded-xl border border-surface-200 overflow-hidden">
           <div className="divide-y divide-surface-100">
-            {horairesJours.map((h) => (
+            {sortedJours.map((h) => (
               <div key={h.date} className="px-3 py-2.5 flex flex-wrap items-center gap-2 text-xs">
-                <div className="font-medium text-surface-900 w-32 shrink-0">
-                  {new Date(h.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                <button type="button" onClick={() => removeJour(h.date)} className="p-1 rounded text-danger-400 hover:bg-danger-50 hover:text-danger-600 transition-colors">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <div className="font-medium text-surface-900 w-36 shrink-0">
+                  {new Date(h.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-surface-500">Matin</span>
@@ -242,6 +311,10 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
                   <input type="time" value={h.aprem_debut} onChange={e => updateHoraire(h.date, 'aprem_debut', e.target.value)} className="rounded border border-surface-200 px-1.5 py-0.5 text-xs" />
                   <span className="text-surface-300">→</span>
                   <input type="time" value={h.aprem_fin} onChange={e => updateHoraire(h.date, 'aprem_fin', e.target.value)} className="rounded border border-surface-200 px-1.5 py-0.5 text-xs" />
+                </div>
+                <div className="text-surface-400 ml-auto">
+                  <Clock className="h-3 w-3 inline mr-0.5" />
+                  {heuresJour(h).toFixed(1)}h
                 </div>
               </div>
             ))}

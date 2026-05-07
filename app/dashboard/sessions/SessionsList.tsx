@@ -33,7 +33,7 @@ interface ApprenantLite {
 
 interface SessionsListProps {
   sessions: Session[]
-  formations: Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures'>[]
+  formations: Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures' | 'duree_jours'>[]
   formateurs: (Pick<Formateur, 'id' | 'prenom' | 'nom'> & { tarif_journalier?: number | null })[]
   clients?: ClientLite[]
   apprenants?: ApprenantLite[]

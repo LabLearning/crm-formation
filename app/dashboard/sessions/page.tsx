@@ -35,7 +35,7 @@ export default async function SessionsPage() {
 
   const { data: formations } = await supabase
     .from('formations')
-    .select('id, intitule, reference, modalite, duree_heures')
+    .select('id, intitule, reference, modalite, duree_heures, duree_jours')
     .eq('organization_id', session.organization.id)
     .eq('is_active', true)
     .order('intitule')
