@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const { data: sess } = await supabase
     .from('sessions')
-    .select('id, organization_id, reference, date_debut, date_fin, formation:formations(intitule)')
+    .select('id, organization_id, reference, date_debut, date_fin, formation:formation_id(intitule)')
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()

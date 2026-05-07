@@ -13,7 +13,7 @@ export default async function RapportsFormateurPage() {
   // Sessions du formateur (pour savoir lesquelles ont besoin d'un rapport)
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, status, date_debut, date_fin, lieu, formation:formations(intitule)')
+    .select('id, reference, status, date_debut, date_fin, lieu, formation:formation_id(intitule)')
     .eq('formateur_id', formateur.id)
     .in('status', ['en_cours', 'terminee'])
     .order('date_debut', { ascending: false })

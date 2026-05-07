@@ -15,7 +15,7 @@ export default async function ConventionSignaturePage({ params }: { params: { to
       signature_token_expires_at, signature_client_date, signature_client_nom,
       organization:organizations(name, logo_url),
       client:clients(raison_sociale, adresse, code_postal, ville, siret),
-      formation:formations(intitule)
+      formation:formation_id(intitule)
     `)
     .eq('signature_token', params.token)
     .maybeSingle()

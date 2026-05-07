@@ -93,7 +93,7 @@ export default async function PortalEvaluationsPage({ params }: { params: { toke
   if (sessionIds.length > 0) {
     const { data } = await supabase
       .from('evaluations_satisfaction')
-      .select('*, session:sessions(reference, formation:formations(intitule))')
+      .select('*, session:sessions(reference, formation:formation_id(intitule))')
       .in('session_id', sessionIds)
       .order('created_at', { ascending: false })
     satisfactions = data || []

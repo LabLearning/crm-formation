@@ -13,7 +13,7 @@ export default async function SessionsPage() {
     .from('sessions')
     .select(`
       *,
-      formation:formations(intitule, reference, modalite, duree_heures),
+      formation:formation_id(intitule, reference, modalite, duree_heures),
       formateur:formateurs(prenom, nom)
     `)
     .eq('organization_id', session.organization.id)

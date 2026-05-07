@@ -10,7 +10,7 @@ export default async function PointagePage() {
 
   const { data: pointages } = await supabase
     .from('pointages_formateur')
-    .select('*, formateur:formateurs(prenom, nom), session:sessions(reference, lieu, formation:formations(intitule))')
+    .select('*, formateur:formateurs(prenom, nom), session:sessions(reference, lieu, formation:formation_id(intitule))')
     .eq('organization_id', session.organization.id)
     .order('date', { ascending: false })
     .order('heure_arrivee', { ascending: false })

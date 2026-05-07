@@ -31,7 +31,7 @@ export default async function PlanningFormateurPage() {
   // Sessions planifiées
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, date_debut, date_fin, lieu, status, formation:formations(intitule)')
+    .select('id, reference, date_debut, date_fin, lieu, status, formation:formation_id(intitule)')
     .eq('formateur_id', formateur.id)
     .not('status', 'eq', 'annulee')
     .gte('date_fin', now.toISOString().split('T')[0])

@@ -18,7 +18,7 @@ export default async function ClientFormationsPage({ params }: { params: { token
       id, status,
       session:sessions(
         id, reference, date_debut, date_fin, horaires, lieu, status,
-        formation:formations(intitule, duree_heures, modalite)
+        formation:formation_id(intitule, duree_heures, modalite)
       )
     `)
     .eq('client_id', context.client.id)

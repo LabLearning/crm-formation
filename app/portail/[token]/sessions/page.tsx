@@ -17,7 +17,7 @@ export default async function PortalSessionsPage({ params }: { params: { token: 
     .from('sessions')
     .select(`
       *,
-      formation:formations(intitule, duree_heures, modalite)
+      formation:formation_id(intitule, duree_heures, modalite)
     `)
     .eq('formateur_id', context.formateur.id)
     .order('date_debut', { ascending: false })

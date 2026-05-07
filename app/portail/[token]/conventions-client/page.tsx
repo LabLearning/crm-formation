@@ -13,7 +13,7 @@ export default async function ClientConventionsPage({ params }: { params: { toke
     .from('conventions')
     .select(`
       id, numero, type, status, montant_ht, created_at, signature_client_date,
-      formation:formations(intitule, duree_heures),
+      formation:formation_id(intitule, duree_heures),
       session:sessions(date_debut, date_fin, lieu)
     `)
     .eq('client_id', context.client.id)

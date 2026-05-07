@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
   const { data: upcomingSessions } = await supabase
     .from('sessions')
-    .select('id, reference, status, date_debut, date_fin, lieu, formation:formations(intitule), formateur:formateurs(prenom, nom)')
+    .select('id, reference, status, date_debut, date_fin, lieu, formation:formation_id(intitule), formateur:formateurs(prenom, nom)')
     .eq('organization_id', organization.id)
     .gte('date_fin', today)
     .lte('date_debut', inThreeMonths)

@@ -23,7 +23,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
       .select(`
         *,
         session:sessions(reference, date_debut, date_fin, horaires, lieu, status,
-          formation:formations(intitule, duree_heures, modalite)
+          formation:formation_id(intitule, duree_heures, modalite)
         )
       `)
       .eq('apprenant_id', context.apprenant.id)
@@ -291,7 +291,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
   if (context.type === 'client') {
     const { data: conventions } = await supabase
       .from('conventions')
-      .select('id, numero, status, formation:formations(intitule)')
+      .select('id, numero, status, formation:formation_id(intitule)')
       .eq('client_id', context.client.id)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -305,7 +305,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
 
     const { data: dossiers } = await supabase
       .from('dossiers_formation')
-      .select('id, status, session:sessions(date_debut, formation:formations(intitule))')
+      .select('id, status, session:sessions(date_debut, formation:formation_id(intitule))')
       .eq('client_id', context.client.id)
       .limit(5)
 
@@ -394,7 +394,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
     .from('sessions')
     .select(`
       *,
-      formation:formations(intitule, duree_heures, modalite)
+      formation:formation_id(intitule, duree_heures, modalite)
     `)
     .eq('formateur_id', context.formateur.id)
     .order('date_debut', { ascending: true })

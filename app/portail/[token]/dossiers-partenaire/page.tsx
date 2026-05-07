@@ -36,7 +36,7 @@ export default async function PartenaireDossiersPage({ params }: { params: { tok
         id, numero, status, montant_total_ht, montant_total_ttc, date_creation,
         financeur_nom, financeur_type,
         client:clients(raison_sociale),
-        formation:formations(intitule, duree_heures),
+        formation:formation_id(intitule, duree_heures),
         session:sessions(date_debut, date_fin, lieu, status)
       `)
       .in('client_id', clientIds)
@@ -51,7 +51,7 @@ export default async function PartenaireDossiersPage({ params }: { params: { tok
       id, numero, status, montant_total_ht, montant_total_ttc, date_creation,
       financeur_nom,
       client:clients(raison_sociale),
-      formation:formations(intitule, duree_heures),
+      formation:formation_id(intitule, duree_heures),
       session:sessions(date_debut, date_fin, lieu)
     `)
     .eq('organization_id', context.organization.id)

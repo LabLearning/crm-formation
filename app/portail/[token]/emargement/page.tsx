@@ -12,7 +12,7 @@ export default async function PortalEmargementPage({ params }: { params: { token
   // Active sessions for this formateur
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, date_debut, date_fin, formation:formations(intitule)')
+    .select('id, reference, date_debut, date_fin, formation:formation_id(intitule)')
     .eq('formateur_id', context.formateur.id)
     .in('status', ['confirmee', 'en_cours'])
     .order('date_debut', { ascending: true })

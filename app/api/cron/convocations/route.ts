@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     .select(`
       id, organization_id, reference, date_debut, date_fin, lieu, horaires,
       formateur_id,
-      formation:formations(intitule),
+      formation:formation_id(intitule),
       formateur:formateurs(prenom, nom, email, user_id)
     `)
     .eq('date_debut', targetDate)

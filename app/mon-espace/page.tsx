@@ -42,7 +42,7 @@ export default async function MonEspacePage() {
       .from('sessions')
       .select(`
         id, reference, date_debut, date_fin, lieu, horaires, mission_proposed_at,
-        formation:formations(intitule),
+        formation:formation_id(intitule),
         proposer:users!sessions_mission_proposed_by_fkey(first_name, last_name)
       `)
       .eq('formateur_id', formateur.id)
@@ -51,7 +51,7 @@ export default async function MonEspacePage() {
 
     const { data: sessions } = await supabase
       .from('sessions')
-      .select('id, reference, status, date_debut, date_fin, lieu, formation:formations(intitule)')
+      .select('id, reference, status, date_debut, date_fin, lieu, formation:formation_id(intitule)')
       .eq('formateur_id', formateur.id)
       .eq('mission_status', 'accepted')
       .in('status', ['planifiee', 'confirmee', 'en_cours'])
@@ -242,7 +242,7 @@ export default async function MonEspacePage() {
 
     const { data: inscriptions } = await supabase
       .from('inscriptions')
-      .select('id, status, session:sessions(id, reference, date_debut, date_fin, lieu, status, formation:formations(intitule, duree_heures))')
+      .select('id, status, session:sessions(id, reference, date_debut, date_fin, lieu, status, formation:formation_id(intitule, duree_heures))')
       .eq('apprenant_id', apprenant.id)
       .not('status', 'in', '("annule","abandonne")')
 

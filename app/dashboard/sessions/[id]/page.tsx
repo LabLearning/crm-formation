@@ -11,7 +11,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Session avec formation et formateur
   const { data: sessionData } = await supabase
     .from('sessions')
-    .select('*, formation:formations(intitule, reference, duree_heures, categorie, modalite), formateur:formateurs(id, prenom, nom, email, telephone, user_id)')
+    .select('*, formation:formation_id(intitule, reference, duree_heures, categorie, modalite), formateur:formateurs(id, prenom, nom, email, telephone, user_id)')
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()

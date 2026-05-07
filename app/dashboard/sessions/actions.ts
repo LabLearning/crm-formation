@@ -116,7 +116,7 @@ async function notifyFormateurOfMission(formateurId: string, sessionId: string, 
 
   const { data: sessionData } = await supabase
     .from('sessions')
-    .select('reference, date_debut, date_fin, formation:formations(intitule)')
+    .select('reference, date_debut, date_fin, formation:formation_id(intitule)')
     .eq('id', sessionId).single()
 
   await createNotification({
@@ -143,7 +143,7 @@ export async function acceptMissionAction(sessionId: string): Promise<ActionResu
   // Vérifier que le user est bien le formateur de la session
   const { data: sess } = await supabase
     .from('sessions')
-    .select('id, formateur_id, mission_status, organization_id, mission_proposed_by, formation_id, client_id, type_session, date_debut, date_fin, lieu, formation:formations(intitule, duree_heures, tarif_inter_ht, tarif_intra_ht)')
+    .select('id, formateur_id, mission_status, organization_id, mission_proposed_by, formation_id, client_id, type_session, date_debut, date_fin, lieu, formation:formation_id(intitule, duree_heures, tarif_inter_ht, tarif_intra_ht)')
     .eq('id', sessionId).single()
   if (!sess) return { success: false, error: 'Session introuvable' }
 
@@ -230,7 +230,7 @@ export async function refuseMissionAction(sessionId: string, comment: string): P
 
   const { data: sess } = await supabase
     .from('sessions')
-    .select('formateur_id, mission_status, organization_id, mission_proposed_by, formation:formations(intitule)')
+    .select('formateur_id, mission_status, organization_id, mission_proposed_by, formation:formation_id(intitule)')
     .eq('id', sessionId).single()
   if (!sess) return { success: false, error: 'Session introuvable' }
 

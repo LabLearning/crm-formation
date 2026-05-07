@@ -15,7 +15,7 @@ export default async function PortalApprenantsPage({ params }: { params: { token
   // Get all sessions for this formateur
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, date_debut, date_fin, formation:formations(intitule)')
+    .select('id, reference, date_debut, date_fin, formation:formation_id(intitule)')
     .eq('formateur_id', context.formateur.id)
     .in('status', ['confirmee', 'en_cours', 'planifiee'])
     .order('date_debut', { ascending: true })
@@ -29,7 +29,7 @@ export default async function PortalApprenantsPage({ params }: { params: { token
       .select(`
         *,
         apprenant:apprenants(prenom, nom, email, entreprise, situation_handicap, type_handicap, besoins_adaptation),
-        session:sessions(reference, formation:formations(intitule))
+        session:sessions(reference, formation:formation_id(intitule))
       `)
       .in('session_id', sessionIds)
       .not('status', 'in', '("annule")')

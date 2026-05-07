@@ -33,7 +33,7 @@ export default async function FormateurHomePage() {
   // Sessions du formateur (toutes sauf annulées)
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, status, date_debut, date_fin, lieu, formation:formations(intitule, duree_heures)')
+    .select('id, reference, status, date_debut, date_fin, lieu, formation:formation_id(intitule, duree_heures)')
     .eq('formateur_id', formateur.id)
     .not('status', 'eq', 'annulee')
     .order('date_debut', { ascending: true })
@@ -69,14 +69,14 @@ export default async function FormateurHomePage() {
   // Pointages du jour
   const { data: todayPointages } = await supabase
     .from('pointages_formateur')
-    .select('id, heure_arrivee, heure_depart, photo_arrivee_url, photo_depart_url, session_id, session:sessions(reference, formation:formations(intitule))')
+    .select('id, heure_arrivee, heure_depart, photo_arrivee_url, photo_depart_url, session_id, session:sessions(reference, formation:formation_id(intitule))')
     .eq('formateur_id', formateur.id)
     .eq('date', today)
 
   // Tous les pointages (historique récent)
   const { data: allPointages } = await supabase
     .from('pointages_formateur')
-    .select('id, date, heure_arrivee, heure_depart, session:sessions(reference, formation:formations(intitule))')
+    .select('id, date, heure_arrivee, heure_depart, session:sessions(reference, formation:formation_id(intitule))')
     .eq('formateur_id', formateur.id)
     .order('date', { ascending: false })
     .limit(20)

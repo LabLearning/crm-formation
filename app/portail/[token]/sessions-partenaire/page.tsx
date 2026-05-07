@@ -32,7 +32,7 @@ export default async function PartenaireSessionsPage({ params }: { params: { tok
         .from('sessions')
         .select(`
           id, reference, date_debut, date_fin, horaires, lieu, ville, status, places_max,
-          formation:formations(intitule, duree_heures, modalite),
+          formation:formation_id(intitule, duree_heures, modalite),
           formateur:formateurs(prenom, nom)
         `)
         .in('id', sessionIds)
@@ -46,7 +46,7 @@ export default async function PartenaireSessionsPage({ params }: { params: { tok
     .from('sessions')
     .select(`
       id, reference, date_debut, date_fin, horaires, lieu, ville, status, places_max,
-      formation:formations(intitule, duree_heures, modalite),
+      formation:formation_id(intitule, duree_heures, modalite),
       formateur:formateurs(prenom, nom)
     `)
     .eq('organization_id', context.organization.id)
