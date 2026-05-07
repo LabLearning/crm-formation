@@ -289,8 +289,6 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
         </div>
       )}
 
-      <Input id="intitule" name="intitule" label="Intitulé personnalisé" placeholder="Optionnel — surcharge le nom de la formation" defaultValue={session?.intitule || ''} />
-
       {/* ── Type & Modalité ── */}
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Type et modalité</div>
       <div className="grid grid-cols-2 gap-3">
