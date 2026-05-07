@@ -6,6 +6,16 @@ import type { BadgeVariant } from '@/lib/types'
 
 export type ModaliteFormation = 'presentiel' | 'distanciel' | 'mixte'
 export type SessionStatus = 'planifiee' | 'confirmee' | 'en_cours' | 'terminee' | 'annulee'
+export type SessionType = 'inter' | 'intra'
+export type SessionModalite = 'presentiel' | 'distanciel' | 'mixte'
+
+export interface HoraireJour {
+  date: string
+  matin_debut: string
+  matin_fin: string
+  aprem_debut: string
+  aprem_fin: string
+}
 export type InscriptionStatus = 'pre_inscrit' | 'inscrit' | 'confirme' | 'en_cours' | 'complete' | 'abandonne' | 'annule'
 
 export interface Formation {
@@ -110,6 +120,10 @@ export interface Session {
   id: string
   organization_id: string
   formation_id: string
+  type_session: SessionType
+  modalite: SessionModalite
+  client_id: string | null
+  horaires_jours: HoraireJour[]
   reference: string | null
   intitule: string | null
   date_debut: string

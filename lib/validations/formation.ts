@@ -31,11 +31,15 @@ export const createFormationSchema = z.object({
 
 export const createSessionSchema = z.object({
   formation_id: z.string().uuid('Formation requise'),
+  type_session: z.enum(['inter', 'intra']).optional().default('inter'),
+  modalite: z.enum(['presentiel', 'distanciel', 'mixte']).optional().default('presentiel'),
+  client_id: z.string().uuid().optional().or(z.literal('')),
   reference: z.string().optional(),
   intitule: z.string().optional(),
   date_debut: z.string().min(1, 'Date de début requise'),
   date_fin: z.string().min(1, 'Date de fin requise'),
   horaires: z.string().optional(),
+  horaires_jours: z.string().optional(),  // JSON stringifié de l'array HoraireJour
   lieu: z.string().optional(),
   adresse: z.string().optional(),
   code_postal: z.string().optional(),
@@ -44,6 +48,7 @@ export const createSessionSchema = z.object({
   places_min: z.coerce.number().int().min(1).default(1),
   places_max: z.coerce.number().int().min(1).default(12),
   formateur_id: z.string().uuid().optional().or(z.literal('')),
+  apprenant_ids: z.string().optional(),  // CSV des apprenants à inscrire
   status: z.enum(['planifiee', 'confirmee', 'en_cours', 'terminee', 'annulee']).optional(),
   cout_formateur: z.coerce.number().min(0).optional(),
   cout_salle: z.coerce.number().min(0).optional(),

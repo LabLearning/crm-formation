@@ -29,17 +29,23 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
   const ref = parsed.data.reference || `SES-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(3, '0')}`
 
   const hasFormateur = !!parsed.data.formateur_id
+  const horairesJours = parsed.data.horaires_jours ? safeParseJson(parsed.data.horaires_jours) : []
+  const apprenantIds = (parsed.data.apprenant_ids || '').split(',').filter(Boolean)
 
   const { data, error } = await supabase
     .from('sessions')
     .insert({
       organization_id: session.organization.id,
       formation_id: parsed.data.formation_id,
+      type_session: parsed.data.type_session || 'inter',
+      modalite: parsed.data.modalite || 'presentiel',
+      client_id: parsed.data.client_id || null,
       reference: ref,
       intitule: parsed.data.intitule || null,
       date_debut: parsed.data.date_debut,
       date_fin: parsed.data.date_fin,
       horaires: parsed.data.horaires || null,
+      horaires_jours: horairesJours,
       lieu: parsed.data.lieu || null,
       adresse: parsed.data.adresse || null,
       code_postal: parsed.data.code_postal || null,
@@ -55,7 +61,6 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
       notes_internes: parsed.data.notes_internes || null,
       notes_logistiques: parsed.data.notes_logistiques || null,
       created_by: session.user.id,
-      // Workflow mission : si formateur attribué → mission en attente de réponse
       mission_status: hasFormateur ? 'pending' : 'not_required',
       mission_proposed_at: hasFormateur ? new Date().toISOString() : null,
       mission_proposed_by: hasFormateur ? session.user.id : null,
@@ -68,7 +73,18 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
     return { success: false, error: 'Erreur lors de la création' }
   }
 
-  // Notifier le formateur si une mission lui est proposée
+  // Inscrire les apprenants sélectionnés
+  if (apprenantIds.length > 0) {
+    await supabase.from('inscriptions').insert(
+      apprenantIds.map(aid => ({
+        organization_id: session.organization.id,
+        session_id: data.id,
+        apprenant_id: aid,
+        status: 'inscrit',
+      }))
+    )
+  }
+
   if (hasFormateur && parsed.data.formateur_id) {
     await notifyFormateurOfMission(parsed.data.formateur_id, data.id, supabase, session)
   }
@@ -76,6 +92,10 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
   await logAudit({ action: 'create', entity_type: 'session', entity_id: data.id })
   revalidatePath('/dashboard/sessions')
   return { success: true, data }
+}
+
+function safeParseJson(s: string): any[] {
+  try { const v = JSON.parse(s); return Array.isArray(v) ? v : [] } catch { return [] }
 }
 
 /** Helper : créer la notif "mission proposée" pour le formateur */
@@ -219,15 +239,21 @@ export async function updateSessionAction(id: string, formData: FormData): Promi
 
   const supabase = await createServiceRoleClient()
 
+  const horairesJours = parsed.data.horaires_jours ? safeParseJson(parsed.data.horaires_jours) : []
+
   const { error } = await supabase
     .from('sessions')
     .update({
       formation_id: parsed.data.formation_id,
+      type_session: parsed.data.type_session || 'inter',
+      modalite: parsed.data.modalite || 'presentiel',
+      client_id: parsed.data.client_id || null,
       reference: parsed.data.reference || undefined,
       intitule: parsed.data.intitule || null,
       date_debut: parsed.data.date_debut,
       date_fin: parsed.data.date_fin,
       horaires: parsed.data.horaires || null,
+      horaires_jours: horairesJours,
       lieu: parsed.data.lieu || null,
       adresse: parsed.data.adresse || null,
       code_postal: parsed.data.code_postal || null,
@@ -247,6 +273,25 @@ export async function updateSessionAction(id: string, formData: FormData): Promi
     .eq('organization_id', session.organization.id)
 
   if (error) return { success: false, error: 'Erreur lors de la mise à jour' }
+
+  // Synchroniser les inscriptions apprenants : ajoute les nouveaux, garde les existants
+  const newApprenantIds = (parsed.data.apprenant_ids || '').split(',').filter(Boolean)
+  if (newApprenantIds.length > 0) {
+    const { data: existing } = await supabase
+      .from('inscriptions').select('apprenant_id').eq('session_id', id)
+    const existingIds = new Set((existing || []).map(e => e.apprenant_id))
+    const toInsert = newApprenantIds.filter(aid => !existingIds.has(aid))
+    if (toInsert.length > 0) {
+      await supabase.from('inscriptions').insert(
+        toInsert.map(aid => ({
+          organization_id: session.organization.id,
+          session_id: id,
+          apprenant_id: aid,
+          status: 'inscrit',
+        }))
+      )
+    }
+  }
 
   await logAudit({ action: 'update', entity_type: 'session', entity_id: id })
   revalidatePath('/dashboard/sessions')

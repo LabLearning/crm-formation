@@ -17,15 +17,19 @@ export default async function SessionsPage() {
     .eq('organization_id', session.organization.id)
     .order('date_debut', { ascending: false })
 
-  // Count inscriptions per session
+  // Count + IDs des inscriptions par session (pour pré-cocher en édition)
   const sessionsWithCounts = await Promise.all(
     (sessions || []).map(async (s) => {
-      const { count } = await supabase
+      const { data: inscrits, count } = await supabase
         .from('inscriptions')
-        .select('*', { count: 'exact', head: true })
+        .select('apprenant_id', { count: 'exact' })
         .eq('session_id', s.id)
         .not('status', 'in', '("annule","abandonne")')
-      return { ...s, _nb_inscrits: count || 0 }
+      return {
+        ...s,
+        _nb_inscrits: count || 0,
+        _inscrits_ids: (inscrits || []).map(i => i.apprenant_id),
+      }
     })
   )
 
@@ -38,9 +42,22 @@ export default async function SessionsPage() {
 
   const { data: formateurs } = await supabase
     .from('formateurs')
-    .select('id, prenom, nom')
+    .select('id, prenom, nom, tarif_journalier')
     .eq('organization_id', session.organization.id)
     .eq('is_active', true)
+    .order('nom')
+
+  const { data: clients } = await supabase
+    .from('clients')
+    .select('id, raison_sociale, adresse, code_postal, ville')
+    .eq('organization_id', session.organization.id)
+    .eq('type', 'entreprise')
+    .order('raison_sociale')
+
+  const { data: apprenants } = await supabase
+    .from('apprenants')
+    .select('id, prenom, nom, email, client_id')
+    .eq('organization_id', session.organization.id)
     .order('nom')
 
   return (
@@ -49,6 +66,8 @@ export default async function SessionsPage() {
         sessions={sessionsWithCounts as Session[]}
         formations={(formations || []) as any[]}
         formateurs={(formateurs || []) as any[]}
+        clients={(clients || []) as any[]}
+        apprenants={(apprenants || []) as any[]}
       />
     </div>
   )

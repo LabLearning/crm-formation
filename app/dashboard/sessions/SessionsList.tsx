@@ -15,13 +15,31 @@ import {
 import { formatDate } from '@/lib/utils'
 import type { Session, SessionStatus, Formation, Formateur } from '@/lib/types/formation'
 
+interface ClientLite {
+  id: string
+  raison_sociale: string | null
+  adresse: string | null
+  code_postal: string | null
+  ville: string | null
+}
+
+interface ApprenantLite {
+  id: string
+  prenom: string
+  nom: string
+  email: string | null
+  client_id: string | null
+}
+
 interface SessionsListProps {
   sessions: Session[]
   formations: Pick<Formation, 'id' | 'intitule' | 'reference' | 'modalite' | 'duree_heures'>[]
-  formateurs: Pick<Formateur, 'id' | 'prenom' | 'nom'>[]
+  formateurs: (Pick<Formateur, 'id' | 'prenom' | 'nom'> & { tarif_journalier?: number | null })[]
+  clients?: ClientLite[]
+  apprenants?: ApprenantLite[]
 }
 
-export function SessionsList({ sessions, formations, formateurs }: SessionsListProps) {
+export function SessionsList({ sessions, formations, formateurs, clients = [], apprenants = [] }: SessionsListProps) {
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -205,10 +223,10 @@ export function SessionsList({ sessions, formations, formateurs }: SessionsListP
       )}
 
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle session" size="lg">
-        <SessionForm formations={formations} formateurs={formateurs} onSuccess={() => { setCreateOpen(false); toast('success', 'Session créée') }} onCancel={() => setCreateOpen(false)} />
+        <SessionForm formations={formations} formateurs={formateurs} clients={clients} apprenants={apprenants} onSuccess={() => { setCreateOpen(false); toast('success', 'Session créée') }} onCancel={() => setCreateOpen(false)} />
       </Modal>
       <Modal isOpen={!!editSession} onClose={() => setEditSession(null)} title="Modifier la session" size="lg">
-        {editSession && <SessionForm session={editSession} formations={formations} formateurs={formateurs} onSuccess={() => { setEditSession(null); toast('success', 'Session mise à jour') }} onCancel={() => setEditSession(null)} />}
+        {editSession && <SessionForm session={editSession} formations={formations} formateurs={formateurs} clients={clients} apprenants={apprenants} initialInscrits={(editSession as any)._inscrits_ids || []} onSuccess={() => { setEditSession(null); toast('success', 'Session mise à jour') }} onCancel={() => setEditSession(null)} />}
       </Modal>
     </div>
   )
