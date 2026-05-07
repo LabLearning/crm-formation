@@ -17,18 +17,18 @@ export default async function SessionsPage() {
     .eq('organization_id', session.organization.id)
     .order('date_debut', { ascending: false })
 
-  // Count + IDs des inscriptions par session (pour pré-cocher en édition)
+  // Count + IDs des inscriptions + formations liées (pour pré-cocher en édition)
   const sessionsWithCounts = await Promise.all(
     (sessions || []).map(async (s) => {
-      const { data: inscrits, count } = await supabase
-        .from('inscriptions')
-        .select('apprenant_id', { count: 'exact' })
-        .eq('session_id', s.id)
-        .not('status', 'in', '("annule","abandonne")')
+      const [{ data: inscrits, count }, { data: linkedFormations }] = await Promise.all([
+        supabase.from('inscriptions').select('apprenant_id', { count: 'exact' }).eq('session_id', s.id).not('status', 'in', '("annule","abandonne")'),
+        supabase.from('session_formations').select('formation_id, ordre').eq('session_id', s.id).order('ordre'),
+      ])
       return {
         ...s,
         _nb_inscrits: count || 0,
         _inscrits_ids: (inscrits || []).map(i => i.apprenant_id),
+        _formation_ids: (linkedFormations || []).map(f => f.formation_id),
       }
     })
   )

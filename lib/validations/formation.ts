@@ -31,6 +31,7 @@ export const createFormationSchema = z.object({
 
 export const createSessionSchema = z.object({
   formation_id: z.string().uuid('Formation requise'),
+  formation_ids: z.string().optional(),  // CSV des UUID (multi-formations)
   type_session: z.enum(['inter', 'intra']).optional().default('inter'),
   modalite: z.enum(['presentiel', 'distanciel', 'mixte']).optional().default('presentiel'),
   client_id: z.string().uuid().optional().or(z.literal('')),

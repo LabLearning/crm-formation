@@ -85,6 +85,14 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
     )
   }
 
+  // Lier les formations multiples (table de jonction session_formations)
+  const formationIds = (parsed.data.formation_ids || parsed.data.formation_id || '').split(',').filter(Boolean)
+  if (formationIds.length > 0) {
+    await supabase.from('session_formations').insert(
+      formationIds.map((fid, i) => ({ session_id: data.id, formation_id: fid, ordre: i }))
+    )
+  }
+
   if (hasFormateur && parsed.data.formateur_id) {
     await notifyFormateurOfMission(parsed.data.formateur_id, data.id, supabase, session)
   }
@@ -273,6 +281,15 @@ export async function updateSessionAction(id: string, formData: FormData): Promi
     .eq('organization_id', session.organization.id)
 
   if (error) return { success: false, error: 'Erreur lors de la mise à jour' }
+
+  // Synchroniser les formations liées : remplace tout
+  const newFormationIds = (parsed.data.formation_ids || parsed.data.formation_id || '').split(',').filter(Boolean)
+  await supabase.from('session_formations').delete().eq('session_id', id)
+  if (newFormationIds.length > 0) {
+    await supabase.from('session_formations').insert(
+      newFormationIds.map((fid, i) => ({ session_id: id, formation_id: fid, ordre: i }))
+    )
+  }
 
   // Synchroniser les inscriptions apprenants : ajoute les nouveaux, garde les existants
   const newApprenantIds = (parsed.data.apprenant_ids || '').split(',').filter(Boolean)

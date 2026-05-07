@@ -68,7 +68,13 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
 
-  const [formationId, setFormationId] = useState(session?.formation_id || '')
+  // Multi-formations : la 1ère est la principale (sessions.formation_id)
+  const [formationIds, setFormationIds] = useState<string[]>(
+    (session as any)?._formation_ids?.length > 0
+      ? (session as any)._formation_ids
+      : (session?.formation_id ? [session.formation_id] : [])
+  )
+  const formationId = formationIds[0] || ''
   const [typeSession, setTypeSession] = useState<'inter' | 'intra'>(session?.type_session || 'inter')
   const [modalite, setModalite] = useState<'presentiel' | 'distanciel' | 'mixte'>(session?.modalite || 'presentiel')
   const [clientId, setClientId] = useState(session?.client_id || '')
@@ -81,10 +87,14 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
   const [coutFormateur, setCoutFormateur] = useState<string>(session?.cout_formateur?.toString() || '')
   const [selectedApprenants, setSelectedApprenants] = useState<string[]>(initialInscrits)
 
-  // Formation choisie → récupère sa durée
-  const formationChoisie = formations.find(f => f.id === formationId)
-  const dureeJoursRequis = formationChoisie?.duree_jours || 0
-  const dureeHeuresRequis = formationChoisie?.duree_heures || 0
+  // Formations choisies (multi) → somme des durées
+  const formationsChoisies = formationIds.map(id => formations.find(f => f.id === id)).filter((f): f is NonNullable<typeof f> => !!f)
+  const dureeJoursRequis = formationsChoisies.reduce((s, f) => s + (f.duree_jours || 0), 0)
+  const dureeHeuresRequis = formationsChoisies.reduce((s, f) => s + (f.duree_heures || 0), 0)
+
+  function toggleFormation(id: string) {
+    setFormationIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
 
   // Dates min/max dérivées des jours planifiés
   const sortedJours = useMemo(
@@ -140,11 +150,6 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
     setSelectedApprenants(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
-  const formationOptions = formations.map((f) => ({
-    value: f.id,
-    label: `${f.reference ? f.reference + ' — ' : ''}${f.intitule}`,
-  }))
-
   const formateurOptions = [
     { value: '', label: 'Non assigné' },
     ...formateurs.map((f) => ({
@@ -177,6 +182,7 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
     setIsLoading(true); setErrors({}); setError(null)
     const fd = new FormData(e.currentTarget)
     fd.set('formation_id', formationId)
+    fd.set('formation_ids', formationIds.join(','))
     fd.set('type_session', typeSession)
     fd.set('modalite', modalite)
     fd.set('client_id', clientId)
@@ -204,16 +210,39 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
         </div>
       )}
 
-      <Select
-        id="formation_id_select"
-        label="Formation *"
-        options={formationOptions}
-        value={formationId}
-        onChange={(e) => setFormationId(e.target.value)}
-        placeholder="Sélectionner une formation"
-        error={errors.formation_id?.[0]}
-      />
-      {formationChoisie && (
+      <div>
+        <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          Formation{formationIds.length > 1 ? 's' : ''} *
+        </label>
+        <div className="rounded-xl border border-surface-200 max-h-44 overflow-y-auto divide-y divide-surface-100">
+          {formations.length === 0 ? (
+            <div className="px-3 py-3 text-xs text-surface-500">Aucune formation disponible.</div>
+          ) : (
+            formations.map(f => {
+              const checked = formationIds.includes(f.id)
+              return (
+                <label key={f.id} className="flex items-center gap-3 px-3 py-2 hover:bg-surface-50 cursor-pointer">
+                  <input type="checkbox" checked={checked} onChange={() => toggleFormation(f.id)} className="h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-surface-900 truncate">
+                      {f.reference && <span className="text-surface-500">{f.reference} — </span>}
+                      {f.intitule}
+                    </div>
+                    <div className="text-[11px] text-surface-500">
+                      {f.duree_jours ? `${f.duree_jours} jour${f.duree_jours > 1 ? 's' : ''}` : ''}
+                      {f.duree_jours && f.duree_heures ? ' · ' : ''}
+                      {f.duree_heures ? `${f.duree_heures}h` : ''}
+                    </div>
+                  </div>
+                </label>
+              )
+            })
+          )}
+        </div>
+        {errors.formation_id?.[0] && <p className="text-xs text-danger-600 mt-1">{errors.formation_id[0]}</p>}
+      </div>
+
+      {formationsChoisies.length > 0 && (
         <div className="rounded-xl bg-brand-50/50 border border-brand-200 px-4 py-2 text-xs text-brand-800 flex flex-wrap gap-x-4 gap-y-1">
           <span className="flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" />
@@ -222,6 +251,7 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
           <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
             <strong>{dureeHeuresRequis}h</strong> au total
+            {formationsChoisies.length > 1 && <span className="text-brand-600">({formationsChoisies.length} formations cumulées)</span>}
           </span>
         </div>
       )}
