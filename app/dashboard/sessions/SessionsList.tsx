@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import {
-  Plus, Search, MoreHorizontal, Pencil, Trash2, Users,
+  Plus, Search, MoreHorizontal, Pencil, Trash2, Users, QrCode,
   Calendar, MapPin, Video, Clock, User as UserIcon,
 } from 'lucide-react'
 import { Button, Badge, Modal, useToast } from '@/components/ui'
@@ -187,6 +187,9 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                     <button onClick={() => { setEditSession(s); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
                       <Pencil className="h-4 w-4 text-surface-400" /> Modifier
                     </button>
+                    <a href={`/api/sessions/${s.id}/qr-codes`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
+                      <QrCode className="h-4 w-4 text-surface-400" /> QR codes apprenants
+                    </a>
                     {s.status === 'planifiee' && (
                       <button onClick={() => { handleStatusChange(s.id, 'confirmee'); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
                         Confirmer la session

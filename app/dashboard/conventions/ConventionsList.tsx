@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, MoreHorizontal, Send, Check, Trash2,
-  FileSignature, Building2, Euro, Clock, PenTool, Download,
+  FileSignature, Building2, Euro, Clock, PenTool, Download, Link2, Copy,
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
@@ -59,6 +59,21 @@ export function ConventionsList({ conventions, clients, formations }: Convention
     const result = await updateConventionStatusAction(id, status)
     if (result.success) toast('success', `Statut mis à jour : ${CONVENTION_STATUS_LABELS[status]}`)
     else toast('error', result.error || 'Erreur')
+    setActiveMenu(null)
+  }
+
+  async function handleGenerateSignatureLink(id: string) {
+    const { generateSignatureLinkAction } = await import('./signature-actions')
+    const r = await generateSignatureLinkAction(id)
+    if (r.success && (r.data as any)?.url) {
+      const url = (r.data as any).url
+      try {
+        await navigator.clipboard.writeText(url)
+        toast('success', 'Lien copié dans le presse-papier — envoyez-le au client')
+      } catch {
+        toast('success', 'Lien généré : ' + url)
+      }
+    } else toast('error', r.error || 'Erreur')
     setActiveMenu(null)
   }
 
@@ -124,6 +139,9 @@ export function ConventionsList({ conventions, clients, formations }: Convention
                     <a href={`/api/pdf/convention/${c.id}`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
                       <Download className="h-4 w-4 text-surface-400" /> Télécharger PDF
                     </a>
+                    <button onClick={() => handleGenerateSignatureLink(c.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
+                      <Link2 className="h-4 w-4" /> Lien de signature électronique
+                    </button>
                     {c.status === 'brouillon' && (
                       <button onClick={() => handleStatus(c.id, 'envoyee')} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
                         <Send className="h-4 w-4" /> Marquer envoyée
