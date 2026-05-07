@@ -216,8 +216,14 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
       />
       {formationChoisie && (
         <div className="rounded-xl bg-brand-50/50 border border-brand-200 px-4 py-2 text-xs text-brand-800 flex flex-wrap gap-x-4 gap-y-1">
-          <span>📅 <strong>{dureeJoursRequis || '?'}</strong> jour{dureeJoursRequis > 1 ? 's' : ''} à planifier</span>
-          <span>⏰ <strong>{dureeHeuresRequis}h</strong> au total</span>
+          <span className="flex items-center gap-1.5">
+            <CalendarDays className="h-3.5 w-3.5" />
+            <strong>{dureeJoursRequis || '?'}</strong> jour{dureeJoursRequis > 1 ? 's' : ''} à planifier
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            <strong>{dureeHeuresRequis}h</strong> au total
+          </span>
         </div>
       )}
 

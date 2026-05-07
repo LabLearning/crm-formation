@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Calendar, MapPin, AlertCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, Calendar, MapPin, AlertCircle, Clock } from 'lucide-react'
 import { Button, useToast } from '@/components/ui'
 import { acceptMissionAction, refuseMissionAction } from '@/app/dashboard/sessions/actions'
 
@@ -61,7 +61,10 @@ export function MissionPendingCard({ mission }: { mission: PendingMission }) {
           Du {new Date(mission.date_debut).toLocaleDateString('fr-FR')} au {new Date(mission.date_fin).toLocaleDateString('fr-FR')}
         </div>
         {mission.horaires && (
-          <div className="flex items-center gap-1.5">⏰ {mission.horaires}</div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            {mission.horaires}
+          </div>
         )}
         {mission.lieu && (
           <div className="flex items-center gap-1.5">
