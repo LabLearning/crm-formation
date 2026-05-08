@@ -85,6 +85,12 @@ export async function signConventionPublicAction(
     })
     .eq('id', conv.id)
 
+  // Si la convention est liée à une session → bascule en 'validee' si contrat formateur OK
+  if (conv.session_id) {
+    const { maybeValidateSession } = await import('@/app/dashboard/sessions/confirm-actions')
+    await maybeValidateSession(supabase, conv.session_id, conv.organization_id)
+  }
+
   // Notifier le créateur de la convention
   const { createNotification } = await import('@/lib/email')
   const { data: createdBy } = await supabase

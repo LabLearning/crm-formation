@@ -78,6 +78,14 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
     else toast('error', result.error || 'Erreur')
   }
 
+  async function handleConfirmSession(id: string) {
+    const { confirmSessionAction } = await import('./confirm-actions')
+    const r = await confirmSessionAction(id)
+    if (r.success) toast('success', 'Session confirmée — convention et contrat envoyés pour signature')
+    else toast('error', r.error || 'Erreur')
+    setActiveMenu(null)
+  }
+
   function getSessionTitle(s: Session): string {
     return s.intitule || s.formation?.intitule || 'Session sans titre'
   }
@@ -190,9 +198,24 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                     <a href={`/api/sessions/${s.id}/qr-codes`} target="_blank" rel="noopener noreferrer" onClick={() => setActiveMenu(null)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-surface-700 hover:bg-surface-50">
                       <QrCode className="h-4 w-4 text-surface-400" /> QR codes apprenants
                     </a>
-                    {s.status === 'planifiee' && (
-                      <button onClick={() => { handleStatusChange(s.id, 'confirmee'); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
-                        Confirmer la session
+                    {s.status === 'planifiee' && (s as any).mission_status === 'accepted' && (
+                      <button onClick={() => handleConfirmSession(s.id)} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-brand-600 hover:bg-brand-50">
+                        Confirmer & envoyer signatures
+                      </button>
+                    )}
+                    {s.status === 'planifiee' && (s as any).mission_status !== 'accepted' && (
+                      <div className="px-3 py-1.5 text-xs text-surface-400">
+                        Formateur doit d'abord accepter la mission
+                      </div>
+                    )}
+                    {s.status === 'en_attente_signatures' && (
+                      <div className="px-3 py-1.5 text-xs text-amber-600">
+                        En attente des signatures
+                      </div>
+                    )}
+                    {s.status === 'validee' && (
+                      <button onClick={() => { handleStatusChange(s.id, 'en_cours'); setActiveMenu(null) }} className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-success-600 hover:bg-success-50">
+                        Démarrer la session
                       </button>
                     )}
                     {s.status === 'confirmee' && (
