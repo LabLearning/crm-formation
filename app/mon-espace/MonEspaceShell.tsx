@@ -9,6 +9,7 @@ import {
   LogOut, ChevronDown, Menu, X,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
+import { ToastProvider } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
@@ -93,6 +94,7 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
   }
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-surface-50">
       {/* Mobile header */}
       <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
@@ -209,5 +211,6 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
         </div>
       </nav>
     </div>
+    </ToastProvider>
   )
 }
