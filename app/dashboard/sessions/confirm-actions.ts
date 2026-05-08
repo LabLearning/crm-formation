@@ -294,7 +294,7 @@ export async function signContratFormateurPublicAction(
   return { success: true, data: { contratId: contrat.id } }
 }
 
-/** Si convention signee_client ET contrat signe_formateur → session 'validee' */
+/** Si convention signee_client ET contrat signe_formateur → session 'validee' + dossier OPCO auto */
 export async function maybeValidateSession(supabase: any, sessionId: string, organizationId: string) {
   const { data: conv } = await supabase
     .from('conventions').select('status').eq('session_id', sessionId).maybeSingle()
@@ -304,11 +304,81 @@ export async function maybeValidateSession(supabase: any, sessionId: string, org
   const convOK = conv && ['signee_client', 'signee_complete'].includes(conv.status)
   const contratOK = contrat && ['signe_formateur', 'signe_complete'].includes(contrat.status)
 
-  if (convOK && contratOK) {
-    await supabase
-      .from('sessions')
-      .update({ status: 'validee', validated_at: new Date().toISOString() })
-      .eq('id', sessionId)
-      .eq('organization_id', organizationId)
-  }
+  if (!convOK || !contratOK) return
+
+  await supabase
+    .from('sessions')
+    .update({ status: 'validee', validated_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .eq('organization_id', organizationId)
+
+  // ── Création auto du dossier de financement OPCO si client + financeur OPCO ──
+  await maybeCreateDossierOpco(supabase, sessionId, organizationId)
+}
+
+/**
+ * Crée un dossier_formation avec workflow OPCO si :
+ *   - La session est liée à un client
+ *   - Ce client a un opco_id et financeur_type = 'opco'
+ *   - Aucun dossier n'existe déjà pour cette session
+ */
+async function maybeCreateDossierOpco(supabase: any, sessionId: string, organizationId: string) {
+  // Vérifier qu'il n'y a pas déjà un dossier pour cette session
+  const { data: existing } = await supabase
+    .from('dossiers_formation').select('id').eq('session_id', sessionId).maybeSingle()
+  if (existing) return
+
+  // Récupérer la session avec son client
+  const { data: sess } = await supabase
+    .from('sessions')
+    .select(`
+      id, client_id, formation_id, formateur_id,
+      date_debut, date_fin, cout_formateur,
+      client:clients(raison_sociale, opco_id, financeur_type, opco_compte_status, numero_opco),
+      formation:formation_id(intitule, tarif_inter_ht, tarif_intra_ht, taux_tva)
+    `)
+    .eq('id', sessionId)
+    .maybeSingle()
+  if (!sess) return
+
+  const client = (sess as any).client
+  if (!client?.opco_id || client.financeur_type !== 'opco') return  // Pas un dossier OPCO
+
+  // Compter inscriptions actives pour montant
+  const { count: nbApprenants } = await supabase
+    .from('inscriptions').select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+
+  const formation = (sess as any).formation
+  const tarif = formation?.tarif_intra_ht || formation?.tarif_inter_ht || 0
+  const montantHt = tarif * (nbApprenants || 1)
+  const tauxTva = formation?.taux_tva || 20
+  const montantTtc = montantHt * (1 + tauxTva / 100)
+
+  const { count: dossierCount } = await supabase
+    .from('dossiers_formation').select('*', { count: 'exact', head: true })
+    .eq('organization_id', organizationId)
+  const numero = `DOSS-${new Date().getFullYear()}-${String((dossierCount || 0) + 1).padStart(3, '0')}`
+
+  // Le statut OPCO dépend du statut compte client
+  const opcoStatus = client.opco_compte_status === 'actif' ? 'pret_a_envoyer' : 'a_constituer'
+
+  await supabase.from('dossiers_formation').insert({
+    organization_id: organizationId,
+    numero,
+    session_id: sessionId,
+    formation_id: sess.formation_id,
+    client_id: sess.client_id,
+    status: 'convention_signee',
+    opco_id: client.opco_id,
+    opco_workflow_status: opcoStatus,
+    financeur_type: 'opco',
+    financeur_nom: client.numero_opco || null,
+    montant_total_ht: montantHt,
+    montant_total_ttc: montantTtc,
+    date_creation: new Date().toISOString().split('T')[0],
+    date_convention: new Date().toISOString().split('T')[0],
+    date_debut_formation: sess.date_debut,
+    date_fin_formation: sess.date_fin,
+  })
 }
