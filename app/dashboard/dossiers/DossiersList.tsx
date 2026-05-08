@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { createDossierAction, updateDossierStatusAction, toggleChecklistItemAction, deleteDossierAction } from './actions'
+import { DossierOpcoCard } from './DossierOpcoCard'
 import { DOSSIER_STATUS_LABELS, DOSSIER_STATUS_COLORS, DOSSIER_WORKFLOW } from '@/lib/types/dossier'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
 import { formatDate, formatDateTime } from '@/lib/utils'
@@ -166,6 +167,17 @@ export function DossiersList({ dossiers, clients, formations, sessions }: Dossie
                       <AlertTriangle className="h-3 w-3 text-warning-500" />
                     )}
                   </div>
+
+                  {/* Workflow OPCO (si dossier OPCO) */}
+                  {(d as any).opco_workflow_status && (d as any).opco_id && (
+                    <DossierOpcoCard
+                      dossierId={d.id}
+                      status={(d as any).opco_workflow_status}
+                      opcoNom={(d as any).opco?.nom}
+                      numeroDossier={(d as any).opco_numero_dossier}
+                      motifRefus={(d as any).opco_motif_refus}
+                    />
+                  )}
                 </div>
 
                 {/* Actions */}

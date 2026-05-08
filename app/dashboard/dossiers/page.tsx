@@ -14,6 +14,7 @@ export default async function DossiersPage() {
       client:clients(raison_sociale, type),
       formation:formations(intitule, reference),
       session:sessions(reference, date_debut, date_fin),
+      opco:opco(code, nom),
       checklist:dossier_checklist(*),
       timeline:dossier_timeline(*, user:users(first_name, last_name))
     `)
