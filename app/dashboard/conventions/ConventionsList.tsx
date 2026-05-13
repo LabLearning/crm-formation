@@ -116,10 +116,10 @@ export function ConventionsList({ conventions, clients, formations }: Convention
       </div>
 
       {/* Onglets de filtre */}
-      <div className="inline-flex items-center gap-1 bg-surface-100 rounded-lg p-0.5 mb-4">
+      <div className="inline-flex items-center gap-1 bg-surface-100 rounded-lg p-0.5 mb-4 max-w-full overflow-x-auto">
         {([
           { id: 'all' as const, label: 'Toutes', count: conventions.length },
-          { id: 'pending' as const, label: 'En attente de signature', count: pendingCount },
+          { id: 'pending' as const, label: 'À signer', count: pendingCount },
           { id: 'signed' as const, label: 'Signées', count: signedCount },
         ]).map((t) => (
           <button
