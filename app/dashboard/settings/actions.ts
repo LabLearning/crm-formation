@@ -2,66 +2,66 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { updateOrganizationSchema } from '@/lib/validations/auth'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
 import type { ActionResult } from '@/lib/types'
 
 export async function updateOrganizationAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession()
-
   if (session.user.role !== 'super_admin') {
     return { success: false, error: 'Accès non autorisé' }
   }
 
-  const raw = {
-    name: formData.get('name') as string,
-    legal_name: formData.get('legal_name') as string || undefined,
-    siret: formData.get('siret') as string || undefined,
-    address: formData.get('address') as string || undefined,
-    postal_code: formData.get('postal_code') as string || undefined,
-    city: formData.get('city') as string || undefined,
-    phone: formData.get('phone') as string || undefined,
-    email: formData.get('email') as string || undefined,
-    website: formData.get('website') as string || undefined,
-    numero_da: formData.get('numero_da') as string || undefined,
-    is_qualiopi: formData.get('is_qualiopi') === 'true',
+  const get = (key: string) => {
+    const v = formData.get(key)
+    if (v === null || v === '') return null
+    return String(v)
   }
 
-  const parsed = updateOrganizationSchema.safeParse(raw)
-  if (!parsed.success) {
-    return { success: false, errors: parsed.error.flatten().fieldErrors }
+  const updates = {
+    name: get('name') || session.organization.name,
+    legal_name: get('legal_name'),
+    siret: get('siret'),
+    address: get('address'),
+    postal_code: get('postal_code'),
+    city: get('city'),
+    phone: get('phone') || get('telephone_contact'),
+    email: get('email') || get('email_contact'),
+    website: get('website'),
+    numero_da: get('numero_da'),
+    is_qualiopi: formData.get('is_qualiopi') === 'true',
+    // Étendus
+    forme_juridique: get('forme_juridique'),
+    capital_social: formData.get('capital_social') ? Number(formData.get('capital_social')) : null,
+    code_ape: get('code_ape'),
+    code_naf: get('code_ape'),  // souvent identique
+    numero_tva_intra: get('numero_tva_intra'),
+    rcs: get('rcs'),
+    representant_legal_civilite: get('representant_legal_civilite'),
+    representant_legal_prenom: get('representant_legal_prenom'),
+    representant_legal_nom: get('representant_legal_nom'),
+    representant_legal_fonction: get('representant_legal_fonction'),
+    qualiopi_certificateur: get('qualiopi_certificateur'),
+    qualiopi_certificat_numero: get('qualiopi_certificat_numero'),
+    qualiopi_date_obtention: get('qualiopi_date_obtention'),
+    qualiopi_date_expiration: get('qualiopi_date_expiration'),
+    numero_datadock: get('numero_datadock'),
+    banque_nom: get('banque_nom'),
+    banque_iban: get('banque_iban'),
+    banque_bic: get('banque_bic'),
+    banque_titulaire: get('banque_titulaire'),
+    email_contact: get('email_contact'),
+    telephone_contact: get('telephone_contact'),
   }
 
   const supabase = await createServiceRoleClient()
-
   const { error } = await supabase
     .from('organizations')
-    .update({
-      ...parsed.data,
-      legal_name: parsed.data.legal_name || null,
-      siret: parsed.data.siret || null,
-      address: parsed.data.address || null,
-      postal_code: parsed.data.postal_code || null,
-      city: parsed.data.city || null,
-      phone: parsed.data.phone || null,
-      email: parsed.data.email || null,
-      website: parsed.data.website || null,
-      numero_da: parsed.data.numero_da || null,
-    })
+    .update(updates)
     .eq('id', session.organization.id)
+  if (error) return { success: false, error: error.message }
 
-  if (error) {
-    return { success: false, error: 'Erreur lors de la mise à jour' }
-  }
-
-  await logAudit({
-    action: 'update',
-    entity_type: 'organization',
-    entity_id: session.organization.id,
-    details: { fields: Object.keys(parsed.data) },
-  })
-
+  await logAudit({ action: 'update', entity_type: 'organization', entity_id: session.organization.id })
   revalidatePath('/dashboard/settings')
   revalidatePath('/dashboard')
   return { success: true }

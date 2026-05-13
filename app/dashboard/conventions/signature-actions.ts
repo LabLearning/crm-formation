@@ -71,15 +71,34 @@ export async function signConventionPublicAction(
   }
 
   const now = new Date().toISOString()
+  // ── Auto-apposition du tampon OF comme signature ──
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('tampon_signature_url, representant_legal_prenom, representant_legal_nom, representant_legal_fonction')
+    .eq('id', conv.organization_id)
+    .single()
+
+  const ofSignatureData = org?.tampon_signature_url || null
+  const ofSignatureNom = org
+    ? [org.representant_legal_prenom, org.representant_legal_nom].filter(Boolean).join(' ')
+        + (org.representant_legal_fonction ? `, ${org.representant_legal_fonction}` : '')
+    : null
+
+  // Statut final : signee_complete si OF auto-signé via tampon, sinon signee_client
+  const newStatus = ofSignatureData ? 'signee_complete' : 'signee_client'
+
   await supabase
     .from('conventions')
     .update({
-      status: 'signee_client',
+      status: newStatus,
       signature_client_date: now,
       signature_client_nom: data.nom.trim(),
       signature_client_signature_data: data.signatureDataUrl,
       signature_client_ip: meta.ip || null,
       signature_client_user_agent: meta.userAgent || null,
+      // Auto-signature OF si tampon configuré
+      signature_of_date: ofSignatureData ? now : null,
+      signature_of_nom: ofSignatureData ? ofSignatureNom : null,
       // À la signature client → la demande AKTO peut être envoyée
       akto_dossier_status: conv.client_id ? 'pret_a_envoyer' : 'non_envoye',
     })
