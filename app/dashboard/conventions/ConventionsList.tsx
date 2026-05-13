@@ -30,19 +30,37 @@ export function ConventionsList({ conventions, clients, formations }: Convention
   const [isCreating, setIsCreating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [tab, setTab] = useState<'all' | 'pending' | 'signed'>('all')
 
   const clientOptions = clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id }))
   const formationOptions = formations.map((f) => ({ value: f.id, label: f.intitule }))
 
+  // Compteurs par onglet
+  const pendingCount = conventions.filter(c => ['brouillon', 'envoyee'].includes(c.status)).length
+  const signedCount = conventions.filter(c => ['signee_client', 'signee_of', 'signee_complete'].includes(c.status)).length
+
   const filtered = useMemo(() => {
-    if (!search) return conventions
-    const s = search.toLowerCase()
-    return conventions.filter((c) =>
-      c.numero.toLowerCase().includes(s) ||
-      (c.client?.raison_sociale || '').toLowerCase().includes(s) ||
-      (c.objet || '').toLowerCase().includes(s)
-    )
-  }, [conventions, search])
+    let result = conventions
+
+    // Filtre par onglet
+    if (tab === 'pending') {
+      result = result.filter(c => ['brouillon', 'envoyee'].includes(c.status))
+    } else if (tab === 'signed') {
+      result = result.filter(c => ['signee_client', 'signee_of', 'signee_complete'].includes(c.status))
+    }
+
+    // Filtre recherche texte
+    if (search) {
+      const s = search.toLowerCase()
+      result = result.filter((c) =>
+        c.numero.toLowerCase().includes(s) ||
+        (c.client?.raison_sociale || '').toLowerCase().includes(s) ||
+        (c.objet || '').toLowerCase().includes(s)
+      )
+    }
+
+    return result
+  }, [conventions, search, tab])
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -95,6 +113,28 @@ export function ConventionsList({ conventions, clients, formations }: Convention
         <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Nouvelle convention</Button>
       </div>
 
+      {/* Onglets de filtre */}
+      <div className="flex items-center gap-1 bg-surface-100 rounded-lg p-0.5 max-w-md mb-4">
+        {([
+          { id: 'all' as const, label: 'Toutes', count: conventions.length },
+          { id: 'pending' as const, label: 'En attente de signature', count: pendingCount },
+          { id: 'signed' as const, label: 'Signées', count: signedCount },
+        ]).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${
+              tab === t.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-800'
+            }`}
+          >
+            {t.label}
+            <span className={`text-2xs px-1.5 py-0.5 rounded-full ${tab === t.id ? 'bg-brand-100 text-brand-700' : 'bg-surface-200 text-surface-500'}`}>
+              {t.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-surface-200/60 max-w-md mb-5">
         <Search className="h-4 w-4 text-surface-400" />
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher..." className="bg-transparent text-sm placeholder:text-surface-400 focus:outline-none flex-1" />
@@ -130,6 +170,18 @@ export function ConventionsList({ conventions, clients, formations }: Convention
                   </div>
                 </div>
               </div>
+              {/* Bouton direct "Renvoyer en signature" si convention pas encore signée */}
+              {['brouillon', 'envoyee'].includes(c.status) && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleGenerateSignatureLink(c.id)}
+                  icon={<Send className="h-3.5 w-3.5" />}
+                  className="ml-3 shrink-0"
+                >
+                  Renvoyer en signature
+                </Button>
+              )}
               <div className="relative ml-3">
                 <button onClick={() => setActiveMenu(activeMenu === c.id ? null : c.id)} className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-100">
                   <MoreHorizontal className="h-4 w-4" />
