@@ -6,6 +6,7 @@ import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
+  Star, ListChecks,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
@@ -18,6 +19,8 @@ interface Props {
   emargements: any[]
   pointages: any[]
   rapport: any
+  evaluations?: any[]
+  qcmSessions?: any[]
   isFormateur: boolean
   userRole: string
 }
@@ -38,9 +41,9 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, isFormateur, userRole }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], isFormateur, userRole }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'rapport'>('session')
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({})
   const [createDate, setCreateDate] = useState('')
@@ -168,13 +171,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5 overflow-x-auto">
         {[
           { id: 'session' as const, label: 'Session', icon: Calendar },
-          { id: 'presences' as const, label: 'Présences', icon: UserCheck },
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
+          { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
+          { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
+          { id: 'evaluations' as const, label: `Évaluations (${evaluations.length})`, icon: Star },
+          { id: 'qcm' as const, label: `QCM (${qcmSessions.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={cn('flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-              tab === t.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500')}>
+            className={cn('flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0',
+              tab === t.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-800')}>
             <t.icon className="h-4 w-4" />
             {t.label}
           </button>
@@ -555,6 +561,138 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           )}
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════
+          ONGLET POINTAGES (formateur)
+          ═══════════════════════════════════════════════ */}
+      {tab === 'pointages' && (
+        <div className="space-y-3">
+          {pointages.length === 0 ? (
+            <div className="card p-8 text-center">
+              <Clock className="h-8 w-8 text-surface-300 mx-auto mb-2" />
+              <div className="text-sm text-surface-500">Aucun pointage enregistré pour cette session</div>
+              {isFormateur && <div className="text-xs text-surface-400 mt-1">Le formateur peut pointer son arrivée/départ chaque jour depuis son espace.</div>}
+            </div>
+          ) : (
+            <div className="card overflow-hidden">
+              <div className="divide-y divide-surface-100">
+                {pointages.map((p: any) => (
+                  <div key={p.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+                    <Calendar className="h-4 w-4 text-surface-400 shrink-0" />
+                    <div className="font-medium text-surface-900 w-32">
+                      {new Date(p.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </div>
+                    {p.heure_arrivee && (
+                      <div className="flex items-center gap-1.5 text-xs text-surface-700">
+                        <LogIn className="h-3 w-3 text-emerald-600" /> {p.heure_arrivee}
+                      </div>
+                    )}
+                    {p.heure_depart && (
+                      <div className="flex items-center gap-1.5 text-xs text-surface-700">
+                        <LogOut className="h-3 w-3 text-red-500" /> {p.heure_depart}
+                      </div>
+                    )}
+                    {(p.photo_arrivee_url || p.photo_depart_url) && (
+                      <div className="ml-auto flex gap-2">
+                        {p.photo_arrivee_url && (
+                          <a href={p.photo_arrivee_url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
+                            <Camera className="h-3 w-3" /> arrivée
+                          </a>
+                        )}
+                        {p.photo_depart_url && (
+                          <a href={p.photo_depart_url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
+                            <Camera className="h-3 w-3" /> départ
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          ONGLET ÉVALUATIONS
+          ═══════════════════════════════════════════════ */}
+      {tab === 'evaluations' && (
+        <div className="space-y-3">
+          {evaluations.length === 0 ? (
+            <div className="card p-8 text-center">
+              <Star className="h-8 w-8 text-surface-300 mx-auto mb-2" />
+              <div className="text-sm text-surface-500">Aucune évaluation de satisfaction enregistrée</div>
+              <div className="text-xs text-surface-400 mt-1">Les apprenants peuvent évaluer la formation à chaud (fin) ou à froid (3 mois après).</div>
+            </div>
+          ) : (
+            <div className="card overflow-hidden">
+              <div className="divide-y divide-surface-100">
+                {evaluations.map((e: any) => (
+                  <div key={e.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+                    <Star className="h-4 w-4 text-amber-400 shrink-0" fill={e.note_globale && e.note_globale >= 4 ? 'currentColor' : 'none'} />
+                    <div className="font-medium text-surface-900">
+                      {e.type === 'a_chaud' ? 'Satisfaction à chaud' : e.type === 'a_froid' ? 'Satisfaction à froid' : e.type}
+                    </div>
+                    {e.note_globale && (
+                      <div className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                        {e.note_globale}/10
+                      </div>
+                    )}
+                    {e.completee_at && (
+                      <div className="ml-auto text-xs text-surface-500">
+                        Le {new Date(e.completee_at).toLocaleDateString('fr-FR')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          ONGLET QCM
+          ═══════════════════════════════════════════════ */}
+      {tab === 'qcm' && (
+        <div className="space-y-3">
+          {qcmSessions.length === 0 ? (
+            <div className="card p-8 text-center">
+              <ListChecks className="h-8 w-8 text-surface-300 mx-auto mb-2" />
+              <div className="text-sm text-surface-500">Aucun QCM passé pour cette session</div>
+              <div className="text-xs text-surface-400 mt-1">Les QCM (test de positionnement, milieu de formation, etc.) seront listés ici.</div>
+            </div>
+          ) : (
+            <div className="card overflow-hidden">
+              <div className="divide-y divide-surface-100">
+                {qcmSessions.map((q: any) => (
+                  <div key={q.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+                    <ListChecks className="h-4 w-4 text-brand-500 shrink-0" />
+                    <div className="font-medium text-surface-900 flex-1 min-w-0 truncate">
+                      {q.qcm?.titre || 'QCM'}
+                    </div>
+                    {q.score !== null && q.score !== undefined && (
+                      <div className={`text-xs px-2 py-0.5 rounded-full ${
+                        q.score >= 70 ? 'bg-emerald-50 text-emerald-700' : q.score >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                      }`}>
+                        {q.score}%
+                      </div>
+                    )}
+                    <span className="text-xs text-surface-500 capitalize">{q.status}</span>
+                    {q.completed_at && (
+                      <span className="text-xs text-surface-500">
+                        {new Date(q.completed_at).toLocaleDateString('fr-FR')}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Modal signature */}
       {signingEmargement && (
         <SignaturePad
