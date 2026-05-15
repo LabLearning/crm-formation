@@ -12,10 +12,17 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  // Auth simple par secret query param (pour Vercel Cron)
+  // Auth : Vercel Cron envoie Authorization: Bearer <CRON_SECRET>
+  // Aussi accepté : ?secret=... pour test manuel
+  const authHeader = req.headers.get('authorization')
   const { searchParams } = new URL(req.url)
-  const secret = searchParams.get('secret')
-  if (secret !== process.env.CRON_SECRET && secret !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const querySecret = searchParams.get('secret')
+  const expected = process.env.CRON_SECRET
+
+  const headerOk = authHeader === `Bearer ${expected}`
+  const queryOk = querySecret === expected || querySecret === process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!headerOk && !queryOk) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
