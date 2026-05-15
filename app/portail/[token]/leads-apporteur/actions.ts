@@ -103,7 +103,7 @@ export async function submitLeadFromPortalAction(
     'digital@lab-learning.fr'
 
   if (org) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm-formation-five.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
     await sendNewLeadFromApporteurEmail({
       adminEmail,
       orgName: (org as any).name || context.organization.name,
