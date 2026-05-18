@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import {
   CalendarDays, ChevronLeft, ChevronRight, List, LayoutGrid,
   Calendar as CalIcon, Clock, MapPin, Phone, Mail,
-  FileText, Bell, Clipboard, CheckCircle2, Circle,
+  FileText, Bell, Clipboard, GraduationCap, CheckSquare,
+  AlertCircle, Sparkles,
 } from 'lucide-react'
-import { Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 interface Task {
@@ -16,6 +17,20 @@ interface Task {
 interface Session {
   id: string; titre: string; dateDebut: string; dateFin: string
   horaires: string; lieu: string; status: string
+}
+interface User {
+  id: string; first_name: string | null; last_name: string | null; email: string
+}
+interface Tache {
+  id: string
+  titre: string
+  status: 'a_faire' | 'en_cours' | 'en_revue' | 'terminee'
+  priorite: 'basse' | 'moyenne' | 'haute' | 'urgente'
+  dueDate: string
+  assigneeId: string | null
+  assigneeName: string | null
+  entityType: string | null
+  entityLabel: string | null
 }
 
 const TASK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -34,6 +49,21 @@ const TASK_ICONS: Record<string, React.ReactNode> = {
   devis: <FileText className="h-3 w-3" />,
   note: <Clipboard className="h-3 w-3" />,
 }
+
+const PRIORITE_DOT: Record<Tache['priorite'], string> = {
+  basse: 'bg-slate-400',
+  moyenne: 'bg-blue-500',
+  haute: 'bg-amber-500',
+  urgente: 'bg-rose-500',
+}
+
+const STATUS_BG: Record<Tache['status'], { bg: string; text: string; border: string; label: string }> = {
+  a_faire: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', label: 'À faire' },
+  en_cours: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'En cours' },
+  en_revue: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'En revue' },
+  terminee: { bg: 'bg-emerald-50/60', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Terminé' },
+}
+
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 const HEURES = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`)
@@ -51,11 +81,22 @@ function getMonthGrid(year: number, month: number): string[] {
   return Array.from({ length: 42 }, (_, i) => { const d = new Date(year, month, 1 + offset + i); return toDateStr(d) })
 }
 
-interface AgendaClientProps { interactions: Task[]; sessions: Session[] }
+interface AgendaClientProps {
+  interactions: Task[]
+  sessions: Session[]
+  taches: Tache[]
+  users: User[]
+  currentUserId: string
+}
 
-export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
+type Tab = 'formations' | 'taches'
+
+export function AgendaClient({ interactions, sessions, taches, users, currentUserId }: AgendaClientProps) {
+  const [tab, setTab] = useState<Tab>('formations')
   const [view, setView] = useState<'semaine' | 'mois' | 'liste'>('semaine')
   const [refDate, setRefDate] = useState(new Date())
+  // 'all' = tout · 'me' = moi · userId = un membre
+  const [tacheFilter, setTacheFilter] = useState<string>('all')
   const today = toDateStr(new Date())
 
   const weekDates = useMemo(() => getWeekDates(refDate), [refDate])
@@ -68,37 +109,50 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
     setRefDate(d)
   }
 
-  function getTasksForDate(date: string) {
-    return interactions.filter(t => t.date === date)
-  }
+  // ────── DATA HELPERS ──────
   function getSessionsForDate(date: string) {
     return sessions.filter(s => s.dateDebut <= date && s.dateFin >= date)
   }
 
-  // List view: upcoming tasks
-  const listItems = useMemo(() => {
-    const all: (Task & { isSession?: boolean })[] = [
-      ...interactions.filter(t => t.date >= today).sort((a, b) => a.date.localeCompare(b.date) || a.heure.localeCompare(b.heure)),
-    ]
-    return all.slice(0, 30)
-  }, [interactions, today])
+  const filteredTaches = useMemo(() => {
+    return taches.filter(t => {
+      if (tacheFilter === 'me') return t.assigneeId === currentUserId
+      if (tacheFilter !== 'all') return t.assigneeId === tacheFilter
+      return true
+    })
+  }, [taches, tacheFilter, currentUserId])
 
-  const overdue = interactions.filter(t => !t.done && t.date < today).length
-  const todayCount = interactions.filter(t => t.date === today).length
-  const upcoming = interactions.filter(t => t.date > today).length
+  function getTachesForDate(date: string) {
+    return filteredTaches.filter(t => t.dueDate === date)
+  }
+
+  // ────── STATS HEADER ──────
+  const sessionsCount = sessions.length
+  const tachesActives = taches.filter(t => t.status !== 'terminee').length
+  const tachesEnRetard = taches.filter(t => t.status !== 'terminee' && t.dueDate < today).length
+
+  const periodLabel = view === 'semaine' && weekDates.length > 0
+    ? <>Semaine du {new Date(weekDates[0]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} au {new Date(weekDates[6]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</>
+    : view === 'mois'
+    ? `${MOIS[refDate.getMonth()]} ${refDate.getFullYear()}`
+    : 'Prochains événements'
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Agenda</h1>
           <p className="text-surface-500 mt-1 text-sm">
-            {overdue > 0 && <span className="text-danger-600 font-medium">{overdue} en retard</span>}
-            {overdue > 0 && todayCount > 0 && ' · '}
-            {todayCount > 0 && <span>{todayCount} aujourd'hui</span>}
-            {(overdue > 0 || todayCount > 0) && upcoming > 0 && ' · '}
-            {upcoming > 0 && <span>{upcoming} à venir</span>}
-            {overdue === 0 && todayCount === 0 && upcoming === 0 && 'Aucune tâche planifiée'}
+            {tab === 'formations' ? (
+              <span>{sessionsCount} session{sessionsCount > 1 ? 's' : ''} planifiée{sessionsCount > 1 ? 's' : ''}</span>
+            ) : (
+              <>
+                {tachesEnRetard > 0 && <span className="text-rose-600 font-medium">{tachesEnRetard} en retard</span>}
+                {tachesEnRetard > 0 && tachesActives > 0 && ' · '}
+                <span>{tachesActives} active{tachesActives > 1 ? 's' : ''}</span>
+              </>
+            )}
           </p>
         </div>
 
@@ -132,19 +186,138 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
         </div>
       </div>
 
-      {/* Current period label */}
-      <div className="text-sm font-heading font-semibold text-surface-900 tracking-tight mb-4">
-        {view === 'semaine' && weekDates.length > 0 && (
-          <>Semaine du {new Date(weekDates[0]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} au {new Date(weekDates[6]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</>
-        )}
-        {view === 'mois' && `${MOIS[refDate.getMonth()]} ${refDate.getFullYear()}`}
-        {view === 'liste' && 'Prochaines tâches'}
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-4 border-b border-surface-200">
+        {([
+          { id: 'formations' as Tab, label: 'Formations', icon: GraduationCap, count: sessions.length },
+          { id: 'taches' as Tab, label: 'Tâches', icon: CheckSquare, count: tachesActives },
+        ]).map(t => {
+          const Icon = t.icon
+          const active = tab === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all relative -mb-px border-b-2',
+                active
+                  ? 'text-surface-900 border-surface-900'
+                  : 'text-surface-500 border-transparent hover:text-surface-700',
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {t.label}
+              {t.count > 0 && (
+                <span className={cn(
+                  'text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md',
+                  active ? 'bg-surface-900 text-white' : 'bg-surface-100 text-surface-500',
+                )}>
+                  {t.count}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
-      {/* ─── SEMAINE ─── */}
+      {/* Period label + tâches filter (only on Tâches tab) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="text-sm font-heading font-semibold text-surface-900 tracking-tight">
+          {periodLabel}
+        </div>
+
+        {tab === 'taches' && users.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <button
+              onClick={() => setTacheFilter('all')}
+              className={cn(
+                'shrink-0 h-7 px-2.5 rounded-full text-xs font-semibold transition-all',
+                tacheFilter === 'all' ? 'bg-surface-900 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200',
+              )}
+            >
+              Tous
+            </button>
+            <button
+              onClick={() => setTacheFilter('me')}
+              className={cn(
+                'shrink-0 h-7 px-2.5 rounded-full text-xs font-semibold transition-all',
+                tacheFilter === 'me' ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-700 hover:bg-brand-100',
+              )}
+            >
+              Moi
+            </button>
+            <div className="shrink-0 h-5 w-px bg-surface-200 mx-1" />
+            {users
+              .filter(u => u.id !== currentUserId)
+              .slice(0, 8)
+              .map(u => {
+                const initials = ((u.first_name?.[0] || u.email[0]) + (u.last_name?.[0] || '')).toUpperCase()
+                const active = tacheFilter === u.id
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => setTacheFilter(u.id)}
+                    title={[u.first_name, u.last_name].filter(Boolean).join(' ') || u.email}
+                    className={cn(
+                      'shrink-0 h-7 w-7 rounded-full text-[10px] font-bold flex items-center justify-center transition-all',
+                      active
+                        ? 'bg-surface-900 text-white ring-2 ring-surface-900 ring-offset-1'
+                        : 'bg-surface-100 text-surface-600 hover:bg-surface-200',
+                    )}
+                  >
+                    {initials}
+                  </button>
+                )
+              })}
+          </div>
+        )}
+      </div>
+
+      {/* ─────────── CONTENU SELON ONGLET ─────────── */}
+      {tab === 'formations' ? (
+        <FormationsView
+          view={view}
+          weekDates={weekDates}
+          monthGrid={monthGrid}
+          refDate={refDate}
+          today={today}
+          sessions={sessions}
+          getSessionsForDate={getSessionsForDate}
+        />
+      ) : (
+        <TachesView
+          view={view}
+          weekDates={weekDates}
+          monthGrid={monthGrid}
+          refDate={refDate}
+          today={today}
+          taches={filteredTaches}
+          getTachesForDate={getTachesForDate}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// VUE FORMATIONS
+// ─────────────────────────────────────────
+function FormationsView({
+  view, weekDates, monthGrid, refDate, today, sessions, getSessionsForDate,
+}: {
+  view: 'semaine' | 'mois' | 'liste'
+  weekDates: string[]
+  monthGrid: string[]
+  refDate: Date
+  today: string
+  sessions: Session[]
+  getSessionsForDate: (d: string) => Session[]
+}) {
+  return (
+    <>
+      {/* SEMAINE */}
       {view === 'semaine' && (
         <div className="card overflow-hidden">
-          {/* Header */}
           <div className="grid grid-cols-8 border-b border-surface-100">
             <div className="p-3 text-xs text-surface-400" />
             {weekDates.map((d, i) => {
@@ -160,33 +333,19 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
               )
             })}
           </div>
-
-          {/* Time grid */}
           {HEURES.map(h => (
             <div key={h} className="grid grid-cols-8 border-b border-surface-100 last:border-0 min-h-[48px]">
               <div className="p-2 text-[11px] text-surface-400 font-mono text-right pr-3 pt-1">{h}</div>
               {weekDates.map(d => {
-                const tasks = getTasksForDate(d).filter(t => t.heure.startsWith(h.split(':')[0]))
                 const sess = getSessionsForDate(d)
                 const isToday = d === today
                 return (
                   <div key={d} className={cn('border-l border-surface-100 p-0.5 min-h-[48px]', isToday && 'bg-brand-50/10')}>
-                    {tasks.map(t => {
-                      const colors = TASK_COLORS[t.type] || TASK_COLORS.note
-                      return (
-                        <div key={t.id} className={cn('px-1.5 py-1 rounded text-[10px] mb-0.5 border', colors.bg, colors.text, colors.border)}>
-                          <div className="flex items-center gap-1 font-medium truncate">
-                            {TASK_ICONS[t.type] || TASK_ICONS.note}
-                            {t.titre.substring(0, 20)}
-                          </div>
-                          {t.leadName && <div className="truncate text-[9px] opacity-70">{t.leadName}</div>}
-                        </div>
-                      )
-                    })}
                     {sess.length > 0 && h === '09:00' && sess.map(s => (
-                      <div key={s.id} className="px-1.5 py-1 rounded text-[10px] mb-0.5 bg-brand-50 text-brand-700 border border-brand-200 font-medium truncate">
-                        {s.titre.substring(0, 20)}
-                      </div>
+                      <Link key={s.id} href={`/dashboard/sessions/${s.id}`}
+                        className="block px-1.5 py-1 rounded text-[10px] mb-0.5 bg-brand-50 text-brand-700 border border-brand-200 font-medium truncate hover:bg-brand-100">
+                        {s.titre}
+                      </Link>
                     ))}
                   </div>
                 )
@@ -196,7 +355,7 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
         </div>
       )}
 
-      {/* ─── MOIS ─── */}
+      {/* MOIS */}
       {view === 'mois' && (
         <div className="card overflow-hidden">
           <div className="grid grid-cols-7">
@@ -207,7 +366,6 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
               const date = new Date(d)
               const isCurrentMonth = date.getMonth() === refDate.getMonth()
               const isToday = d === today
-              const tasks = getTasksForDate(d)
               const sess = getSessionsForDate(d)
               return (
                 <div key={i} className={cn(
@@ -221,20 +379,13 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
                   )}>
                     {date.getDate()}
                   </div>
-                  {tasks.slice(0, 3).map(t => {
-                    const colors = TASK_COLORS[t.type] || TASK_COLORS.note
-                    return (
-                      <div key={t.id} className={cn('px-1 py-0.5 rounded text-[9px] mb-0.5 truncate font-medium', colors.bg, colors.text)}>
-                        {t.heure} {t.titre.substring(0, 15)}
-                      </div>
-                    )
-                  })}
-                  {tasks.length > 3 && <div className="text-[9px] text-surface-400 px-1">+{tasks.length - 3}</div>}
-                  {sess.map(s => (
-                    <div key={s.id} className="px-1 py-0.5 rounded text-[9px] mb-0.5 truncate font-medium bg-brand-50 text-brand-700">
-                      {s.titre.substring(0, 15)}
-                    </div>
+                  {sess.slice(0, 3).map(s => (
+                    <Link key={s.id} href={`/dashboard/sessions/${s.id}`}
+                      className="block px-1 py-0.5 rounded text-[9px] mb-0.5 truncate font-medium bg-brand-50 text-brand-700 hover:bg-brand-100">
+                      {s.titre}
+                    </Link>
                   ))}
+                  {sess.length > 3 && <div className="text-[9px] text-surface-400 px-1">+{sess.length - 3}</div>}
                 </div>
               )
             })}
@@ -242,69 +393,223 @@ export function AgendaClient({ interactions, sessions }: AgendaClientProps) {
         </div>
       )}
 
-      {/* ─── LISTE ─── */}
+      {/* LISTE */}
       {view === 'liste' && (
         <div className="space-y-2">
-          {/* Overdue */}
-          {interactions.filter(t => !t.done && t.date < today).length > 0 && (
-            <div className="mb-4">
-              <div className="text-xs font-semibold text-danger-600 mb-2">En retard</div>
-              {interactions.filter(t => !t.done && t.date < today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 10).map(t => (
-                <TaskRow key={t.id} task={t} isOverdue />
-              ))}
-            </div>
-          )}
-
-          {/* Today */}
-          {interactions.filter(t => t.date === today).length > 0 && (
-            <div className="mb-4">
-              <div className="text-xs font-semibold text-brand-600 mb-2">Aujourd'hui</div>
-              {interactions.filter(t => t.date === today).sort((a, b) => a.heure.localeCompare(b.heure)).map(t => (
-                <TaskRow key={t.id} task={t} />
-              ))}
-            </div>
-          )}
-
-          {/* Upcoming */}
-          <div>
-            <div className="text-xs font-semibold text-surface-500 mb-2">A venir</div>
-            {listItems.filter(t => t.date > today).map(t => (
-              <TaskRow key={t.id} task={t} />
-            ))}
-          </div>
-
-          {listItems.length === 0 && (
+          {sessions.length === 0 ? (
             <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
-              <CalendarDays className="h-6 w-6 text-surface-400 mb-3" />
-              <p className="text-sm text-surface-500">Aucune tâche planifiée</p>
+              <GraduationCap className="h-6 w-6 text-surface-400 mb-3" />
+              <p className="text-sm text-surface-500">Aucune session planifiée</p>
             </div>
+          ) : (
+            sessions
+              .slice()
+              .sort((a, b) => a.dateDebut.localeCompare(b.dateDebut))
+              .map(s => (
+                <Link key={s.id} href={`/dashboard/sessions/${s.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-surface-200/80 bg-white hover:border-brand-300 transition-colors">
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 bg-brand-50">
+                    <GraduationCap className="h-5 w-5 text-brand-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-surface-900 truncate">{s.titre}</div>
+                    <div className="text-xs text-surface-500 mt-0.5 flex items-center gap-3">
+                      {s.horaires && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{s.horaires}</span>}
+                      {s.lieu && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{s.lieu}</span>}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-medium text-surface-700">
+                      {new Date(s.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {s.dateFin !== s.dateDebut && (
+                        <> → {new Date(s.dateFin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-surface-400 capitalize">{s.status}</div>
+                  </div>
+                </Link>
+              ))
           )}
         </div>
       )}
-    </div>
+    </>
   )
 }
 
-function TaskRow({ task, isOverdue }: { task: Task; isOverdue?: boolean }) {
-  const colors = TASK_COLORS[task.type] || TASK_COLORS.note
+// ─────────────────────────────────────────
+// VUE TÂCHES
+// ─────────────────────────────────────────
+function TacheChip({ t }: { t: Tache }) {
+  const st = STATUS_BG[t.status]
   return (
-    <div className={cn('flex items-center gap-3 p-3 rounded-xl mb-1.5 border', isOverdue ? 'bg-danger-50/50 border-danger-100' : 'bg-white border-surface-200/80')}>
-      <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center shrink-0', colors.bg)}>
-        <span className={colors.text}>{TASK_ICONS[task.type] || TASK_ICONS.note}</span>
+    <Link href="/dashboard/taches"
+      className={cn(
+        'block px-1.5 py-1 rounded text-[10px] mb-0.5 border truncate hover:opacity-80 transition-opacity',
+        st.bg, st.text, st.border,
+      )}
+    >
+      <div className="flex items-center gap-1 font-medium">
+        <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', PRIORITE_DOT[t.priorite])} />
+        <span className="truncate">{t.titre}</span>
       </div>
+    </Link>
+  )
+}
+
+function TachesView({
+  view, weekDates, monthGrid, refDate, today, taches, getTachesForDate,
+}: {
+  view: 'semaine' | 'mois' | 'liste'
+  weekDates: string[]
+  monthGrid: string[]
+  refDate: Date
+  today: string
+  taches: Tache[]
+  getTachesForDate: (d: string) => Tache[]
+}) {
+  const overdue = taches.filter(t => t.status !== 'terminee' && t.dueDate < today)
+  const todayList = taches.filter(t => t.dueDate === today)
+  const upcoming = taches.filter(t => t.dueDate > today).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+
+  return (
+    <>
+      {/* SEMAINE — vue par jour, tâches positionnées sur leur due_date */}
+      {view === 'semaine' && (
+        <div className="card overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-surface-100">
+            {weekDates.map((d, i) => {
+              const isToday = d === today
+              const date = new Date(d)
+              return (
+                <div key={d} className={cn('p-3 text-center border-l first:border-l-0 border-surface-100', isToday && 'bg-brand-50/30')}>
+                  <div className="text-[11px] text-surface-400 font-medium">{JOURS[i]}</div>
+                  <div className={cn('text-lg font-heading font-bold mt-0.5', isToday ? 'text-brand-600' : 'text-surface-800')}>
+                    {date.getDate()}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="grid grid-cols-7 min-h-[420px]">
+            {weekDates.map(d => {
+              const dayTaches = getTachesForDate(d)
+              const isToday = d === today
+              return (
+                <div key={d} className={cn('border-l first:border-l-0 border-surface-100 p-2 space-y-1', isToday && 'bg-brand-50/10')}>
+                  {dayTaches.length === 0 ? (
+                    <div className="text-[10px] text-surface-300 text-center py-4">—</div>
+                  ) : (
+                    dayTaches.map(t => <TacheChip key={t.id} t={t} />)
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* MOIS */}
+      {view === 'mois' && (
+        <div className="card overflow-hidden">
+          <div className="grid grid-cols-7">
+            {JOURS.map(j => (
+              <div key={j} className="p-2 text-center text-[11px] font-semibold text-surface-400 border-b border-surface-100">{j}</div>
+            ))}
+            {monthGrid.map((d, i) => {
+              const date = new Date(d)
+              const isCurrentMonth = date.getMonth() === refDate.getMonth()
+              const isToday = d === today
+              const dayTaches = getTachesForDate(d)
+              return (
+                <div key={i} className={cn(
+                  'border-b border-r border-surface-100 p-1.5 min-h-[110px] transition-colors',
+                  !isCurrentMonth && 'bg-surface-50/50',
+                  isToday && 'bg-brand-50/20',
+                )}>
+                  <div className={cn(
+                    'text-xs mb-1',
+                    isToday ? 'font-bold text-brand-600' : isCurrentMonth ? 'text-surface-700' : 'text-surface-300',
+                  )}>
+                    {date.getDate()}
+                  </div>
+                  {dayTaches.slice(0, 4).map(t => <TacheChip key={t.id} t={t} />)}
+                  {dayTaches.length > 4 && <div className="text-[9px] text-surface-400 px-1">+{dayTaches.length - 4}</div>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* LISTE */}
+      {view === 'liste' && (
+        <div className="space-y-4">
+          {overdue.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-rose-600 mb-2 flex items-center gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5" /> En retard ({overdue.length})
+              </div>
+              <div className="space-y-1.5">
+                {overdue.map(t => <TacheRow key={t.id} t={t} overdue />)}
+              </div>
+            </div>
+          )}
+          {todayList.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-brand-600 mb-2">Aujourd'hui ({todayList.length})</div>
+              <div className="space-y-1.5">
+                {todayList.map(t => <TacheRow key={t.id} t={t} />)}
+              </div>
+            </div>
+          )}
+          <div>
+            <div className="text-xs font-semibold text-surface-500 mb-2">À venir</div>
+            {upcoming.length === 0 ? (
+              <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
+                <CheckSquare className="h-6 w-6 text-surface-400 mb-3" />
+                <p className="text-sm text-surface-500">Aucune tâche planifiée à venir</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {upcoming.map(t => <TacheRow key={t.id} t={t} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function TacheRow({ t, overdue }: { t: Tache; overdue?: boolean }) {
+  const st = STATUS_BG[t.status]
+  return (
+    <Link href="/dashboard/taches"
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-xl border bg-white hover:border-surface-300 transition-colors',
+        overdue ? 'border-rose-200 bg-rose-50/30' : 'border-surface-200/80',
+      )}
+    >
+      <div className={cn('h-2 w-2 rounded-full shrink-0', PRIORITE_DOT[t.priorite])} />
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-surface-800 truncate">{task.titre}</div>
-        <div className="text-xs text-surface-500 mt-0.5">
-          {task.leadName && `${task.leadName} `}
-          {task.leadEntreprise && `· ${task.leadEntreprise}`}
+        <div className="text-sm font-medium text-surface-900 truncate">{t.titre}</div>
+        <div className="text-xs text-surface-500 mt-0.5 flex items-center gap-2 flex-wrap">
+          <span className={cn('inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border', st.bg, st.text, st.border)}>
+            {st.label}
+          </span>
+          {t.assigneeName && (
+            <span className="text-surface-500">· {t.assigneeName}</span>
+          )}
+          {t.entityLabel && (
+            <span className="text-brand-600 truncate">· {t.entityLabel}</span>
+          )}
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className={cn('text-xs font-medium', isOverdue ? 'text-danger-600' : 'text-surface-700')}>
-          {new Date(task.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+        <div className={cn('text-xs font-medium', overdue ? 'text-rose-600' : 'text-surface-700')}>
+          {new Date(t.dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
         </div>
-        <div className="text-[11px] text-surface-400">{task.heure}</div>
       </div>
-    </div>
+    </Link>
   )
 }

@@ -2,29 +2,44 @@ import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { AgendaClient } from './AgendaClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AgendaPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
   const orgId = session.organization.id
 
-  // Fetch lead interactions (as tasks)
-  const { data: interactions } = await supabase
-    .from('lead_interactions')
-    .select('*, lead:leads(contact_nom, contact_prenom, entreprise)')
-    .eq('organization_id', orgId)
-    .order('date', { ascending: true })
-
-  // Fetch sessions
-  const { data: sessions } = await supabase
-    .from('sessions')
-    .select('id, reference, date_debut, date_fin, horaires, lieu, status, formation:formations(intitule)')
-    .eq('organization_id', orgId)
-    .in('status', ['planifiee', 'confirmee', 'en_cours'])
+  const [interactionsRes, sessionsRes, tachesRes, usersRes] = await Promise.all([
+    supabase
+      .from('lead_interactions')
+      .select('*, lead:leads(contact_nom, contact_prenom, entreprise)')
+      .eq('organization_id', orgId)
+      .order('date', { ascending: true }),
+    supabase
+      .from('sessions')
+      .select('id, reference, date_debut, date_fin, horaires, lieu, status, formation:formations(intitule)')
+      .eq('organization_id', orgId)
+      .in('status', ['planifiee', 'confirmee', 'en_cours']),
+    supabase
+      .from('crm_taches')
+      .select(
+        `id, titre, status, priorite, due_date, assignee_id, entity_type, entity_label,
+         assignee:users!crm_taches_assignee_id_fkey(id, first_name, last_name, email)`,
+      )
+      .eq('organization_id', orgId)
+      .is('archived_at', null)
+      .not('due_date', 'is', null),
+    supabase
+      .from('users')
+      .select('id, first_name, last_name, email')
+      .eq('organization_id', orgId)
+      .eq('status', 'active'),
+  ])
 
   return (
     <div className="animate-fade-in">
       <AgendaClient
-        interactions={(interactions || []).map((i: any) => ({
+        interactions={(interactionsRes.data || []).map((i: any) => ({
           id: i.id,
           type: i.type || 'note',
           titre: i.contenu ? i.contenu.substring(0, 60) : i.type || 'Interaction',
@@ -34,7 +49,7 @@ export default async function AgendaPage() {
           leadEntreprise: i.lead?.entreprise || '',
           done: false,
         }))}
-        sessions={(sessions || []).map((s: any) => ({
+        sessions={(sessionsRes.data || []).map((s: any) => ({
           id: s.id,
           titre: s.formation?.intitule || s.reference || 'Session',
           dateDebut: s.date_debut,
@@ -43,6 +58,21 @@ export default async function AgendaPage() {
           lieu: s.lieu || '',
           status: s.status,
         }))}
+        taches={(tachesRes.data || []).map((t: any) => ({
+          id: t.id,
+          titre: t.titre,
+          status: t.status,
+          priorite: t.priorite,
+          dueDate: t.due_date,
+          assigneeId: t.assignee_id,
+          assigneeName: t.assignee
+            ? [t.assignee.first_name, t.assignee.last_name].filter(Boolean).join(' ') || t.assignee.email
+            : null,
+          entityType: t.entity_type,
+          entityLabel: t.entity_label,
+        }))}
+        users={(usersRes.data || []) as any[]}
+        currentUserId={session.user.id}
       />
     </div>
   )
