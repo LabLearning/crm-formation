@@ -6,6 +6,7 @@ export const navigation: NavSection[] = [
     title: 'Général',
     items: [
       { label: 'Tableau de bord', href: '/dashboard', icon: 'LayoutDashboard' },
+      { label: 'Tâches', href: '/dashboard/taches', icon: 'CheckSquare' },
       { label: 'Agenda', href: '/dashboard/agenda', icon: 'CalendarDays', module: 'leads' },
     ],
   },
