@@ -6,6 +6,7 @@ import {
   Plus,
   Search,
   User,
+  Users,
   CheckSquare,
   Clock,
   Eye,
@@ -139,7 +140,8 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [query, setQuery] = useState('')
-  const [filterMine, setFilterMine] = useState(false)
+  // 'all' = tout le monde · 'me' = mes tâches · 'unassigned' = non assignées · userId = un membre précis
+  const [filterAssignee, setFilterAssignee] = useState<string>('all')
   const [filterPriorite, setFilterPriorite] = useState<Priorite | 'all'>('all')
   const [editingTache, setEditingTache] = useState<Tache | null>(null)
   const [creatingInColumn, setCreatingInColumn] = useState<Status | null>(null)
@@ -153,7 +155,16 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return optimisticTaches.filter((t) => {
-      if (filterMine && t.assignee_id !== currentUserId) return false
+      // Filtre assignee
+      if (filterAssignee === 'me' && t.assignee_id !== currentUserId) return false
+      if (filterAssignee === 'unassigned' && t.assignee_id !== null) return false
+      if (
+        filterAssignee !== 'all' &&
+        filterAssignee !== 'me' &&
+        filterAssignee !== 'unassigned' &&
+        t.assignee_id !== filterAssignee
+      )
+        return false
       if (filterPriorite !== 'all' && t.priorite !== filterPriorite) return false
       if (q) {
         const hay = `${t.titre} ${t.description || ''} ${t.entity_label || ''} ${(t.labels || []).join(' ')}`.toLowerCase()
@@ -161,7 +172,18 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
       }
       return true
     })
-  }, [optimisticTaches, query, filterMine, filterPriorite, currentUserId])
+  }, [optimisticTaches, query, filterAssignee, filterPriorite, currentUserId])
+
+  // Compteur de tâches actives par utilisateur (pour badge sur avatar)
+  const countByUser = useMemo(() => {
+    const m: Record<string, number> = { unassigned: 0 }
+    optimisticTaches.forEach((t) => {
+      if (t.status === 'terminee') return
+      if (!t.assignee_id) m.unassigned += 1
+      else m[t.assignee_id] = (m[t.assignee_id] || 0) + 1
+    })
+    return m
+  }, [optimisticTaches])
 
   const byColumn = useMemo(() => {
     const m: Record<Status, Tache[]> = {
@@ -322,40 +344,137 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
       </div>
 
       {/* Filters */}
-      <div className="card p-3 flex flex-col sm:flex-row gap-3 sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher une tâche…"
-            className="input-base pl-9 w-full text-sm"
-          />
+      <div className="card p-3 space-y-3">
+        {/* Recherche + priorité */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher une tâche…"
+              className="input-base pl-9 w-full text-sm"
+            />
+          </div>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400 pointer-events-none" />
+            <select
+              value={filterPriorite}
+              onChange={(e) => setFilterPriorite(e.target.value as any)}
+              className="input-base pl-9 pr-8 text-sm appearance-none"
+            >
+              <option value="all">Toutes priorités</option>
+              <option value="urgente">Urgente</option>
+              <option value="haute">Haute</option>
+              <option value="moyenne">Moyenne</option>
+              <option value="basse">Basse</option>
+            </select>
+          </div>
         </div>
-        <button
-          onClick={() => setFilterMine((v) => !v)}
-          className={cn(
-            'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-            filterMine
-              ? 'bg-brand-50 text-brand-700 border border-brand-200'
-              : 'bg-surface-50 text-surface-600 border border-surface-200 hover:bg-surface-100',
-          )}
-        >
-          <User className="h-4 w-4" /> Mes tâches
-        </button>
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400 pointer-events-none" />
-          <select
-            value={filterPriorite}
-            onChange={(e) => setFilterPriorite(e.target.value as any)}
-            className="input-base pl-9 pr-8 text-sm appearance-none"
+
+        {/* Sélecteur d'assignee — avatars cliquables */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+          {/* Tous */}
+          <button
+            onClick={() => setFilterAssignee('all')}
+            className={cn(
+              'inline-flex items-center gap-1.5 shrink-0 h-8 px-3 rounded-full text-xs font-semibold transition-all',
+              filterAssignee === 'all'
+                ? 'bg-surface-900 text-white'
+                : 'bg-surface-100 text-surface-600 hover:bg-surface-200',
+            )}
           >
-            <option value="all">Toutes priorités</option>
-            <option value="urgente">Urgente</option>
-            <option value="haute">Haute</option>
-            <option value="moyenne">Moyenne</option>
-            <option value="basse">Basse</option>
-          </select>
+            <Users className="h-3.5 w-3.5" /> Toute l'équipe
+            <span className={cn(
+              'tabular-nums text-[10px] px-1 rounded',
+              filterAssignee === 'all' ? 'bg-white/20' : 'bg-white text-surface-500',
+            )}>
+              {optimisticTaches.filter((t) => t.status !== 'terminee').length}
+            </span>
+          </button>
+
+          {/* Moi */}
+          <button
+            onClick={() => setFilterAssignee('me')}
+            className={cn(
+              'inline-flex items-center gap-1.5 shrink-0 h-8 px-3 rounded-full text-xs font-semibold transition-all',
+              filterAssignee === 'me'
+                ? 'bg-brand-600 text-white'
+                : 'bg-brand-50 text-brand-700 hover:bg-brand-100',
+            )}
+          >
+            <User className="h-3.5 w-3.5" /> Moi
+            <span className={cn(
+              'tabular-nums text-[10px] px-1 rounded',
+              filterAssignee === 'me' ? 'bg-white/20' : 'bg-white text-brand-700',
+            )}>
+              {countByUser[currentUserId] || 0}
+            </span>
+          </button>
+
+          {/* Non assignées */}
+          {(countByUser.unassigned || 0) > 0 && (
+            <button
+              onClick={() => setFilterAssignee('unassigned')}
+              className={cn(
+                'inline-flex items-center gap-1.5 shrink-0 h-8 px-3 rounded-full text-xs font-semibold transition-all',
+                filterAssignee === 'unassigned'
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+              )}
+            >
+              <AlertCircle className="h-3.5 w-3.5" /> Non assignées
+              <span className={cn(
+                'tabular-nums text-[10px] px-1 rounded',
+                filterAssignee === 'unassigned' ? 'bg-white/20' : 'bg-white text-amber-700',
+              )}>
+                {countByUser.unassigned}
+              </span>
+            </button>
+          )}
+
+          {/* Séparateur visuel */}
+          <div className="shrink-0 h-6 w-px bg-surface-200 mx-1" />
+
+          {/* Un avatar par membre de l'équipe (exclu moi) */}
+          {users
+            .filter((u) => u.id !== currentUserId)
+            .map((u) => {
+              const count = countByUser[u.id] || 0
+              const active = filterAssignee === u.id
+              const initials = userInitials(u)
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => setFilterAssignee(u.id)}
+                  title={userName(u)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 shrink-0 h-8 pl-1 pr-3 rounded-full transition-all',
+                    active
+                      ? 'bg-surface-900 text-white'
+                      : 'bg-surface-50 text-surface-700 border border-surface-200 hover:bg-surface-100',
+                  )}
+                >
+                  <span className={cn(
+                    'h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold',
+                    active ? 'bg-white/20' : 'bg-surface-200 text-surface-700',
+                  )}>
+                    {initials}
+                  </span>
+                  <span className="text-xs font-medium max-w-[100px] truncate">
+                    {u.first_name || u.email.split('@')[0]}
+                  </span>
+                  {count > 0 && (
+                    <span className={cn(
+                      'tabular-nums text-[10px] font-bold px-1 rounded',
+                      active ? 'bg-white/20' : 'bg-white text-surface-600 border border-surface-200',
+                    )}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
         </div>
       </div>
 
