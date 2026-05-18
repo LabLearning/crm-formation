@@ -56,11 +56,51 @@ interface Props {
   currentUserId: string
 }
 
-const COLUMNS: { key: Status; label: string; icon: any }[] = [
-  { key: 'a_faire', label: 'À faire', icon: CheckSquare },
-  { key: 'en_cours', label: 'En cours', icon: Clock },
-  { key: 'en_revue', label: 'En revue', icon: Eye },
-  { key: 'terminee', label: 'Terminé', icon: Sparkles },
+const COLUMNS: {
+  key: Status
+  label: string
+  icon: any
+  iconBg: string
+  iconText: string
+  countBg: string
+  countText: string
+}[] = [
+  {
+    key: 'a_faire',
+    label: 'À faire',
+    icon: CheckSquare,
+    iconBg: 'bg-slate-100',
+    iconText: 'text-slate-600',
+    countBg: 'bg-slate-100',
+    countText: 'text-slate-600',
+  },
+  {
+    key: 'en_cours',
+    label: 'En cours',
+    icon: Clock,
+    iconBg: 'bg-blue-100',
+    iconText: 'text-blue-600',
+    countBg: 'bg-blue-100',
+    countText: 'text-blue-700',
+  },
+  {
+    key: 'en_revue',
+    label: 'En revue',
+    icon: Eye,
+    iconBg: 'bg-amber-100',
+    iconText: 'text-amber-700',
+    countBg: 'bg-amber-100',
+    countText: 'text-amber-700',
+  },
+  {
+    key: 'terminee',
+    label: 'Terminé',
+    icon: Sparkles,
+    iconBg: 'bg-emerald-100',
+    iconText: 'text-emerald-700',
+    countBg: 'bg-emerald-100',
+    countText: 'text-emerald-700',
+  },
 ]
 
 const PRIORITE_STYLES: Record<Priorite, { dot: string; text: string; label: string }> = {
@@ -333,26 +373,34 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
               onDragLeave={() => setDragOverColumn(null)}
               onDrop={(e) => onDropColumn(e, col.key)}
               className={cn(
-                'rounded-xl flex flex-col min-h-[200px] transition-all',
+                'rounded-xl flex flex-col min-h-[200px] transition-all border',
                 isOver
-                  ? 'bg-surface-100 ring-1 ring-surface-300'
-                  : 'bg-surface-50/60',
+                  ? 'bg-white ring-2 ring-surface-300 border-transparent shadow-sm'
+                  : 'bg-surface-50/70 border-surface-200/60',
               )}
             >
-              {/* Column header — sober, no color accent */}
-              <div className="px-4 pt-4 pb-3 flex items-center justify-between group/header">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Icon className="h-3.5 w-3.5 text-surface-400 shrink-0" strokeWidth={2} />
+              {/* Column header — icône en pastille teintée, count assorti */}
+              <div className="px-3 pt-3 pb-3 flex items-center justify-between group/header">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={cn('h-6 w-6 rounded-md flex items-center justify-center shrink-0', col.iconBg)}>
+                    <Icon className={cn('h-3.5 w-3.5', col.iconText)} strokeWidth={2.2} />
+                  </div>
                   <span className="text-[13px] font-semibold text-surface-900 tracking-tight">
                     {col.label}
                   </span>
-                  <span className="text-[11px] font-medium text-surface-400 tabular-nums">
+                  <span
+                    className={cn(
+                      'text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md min-w-[20px] text-center',
+                      col.countBg,
+                      col.countText,
+                    )}
+                  >
                     {tasks.length}
                   </span>
                 </div>
                 <button
                   onClick={() => setCreatingInColumn(col.key)}
-                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-surface-400 hover:text-surface-700 hover:bg-white opacity-0 group-hover/header:opacity-100 transition-all"
+                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-surface-400 hover:text-surface-700 hover:bg-white transition-all"
                   title="Ajouter une tâche"
                 >
                   <Plus className="h-3.5 w-3.5" />
