@@ -56,11 +56,11 @@ interface Props {
   currentUserId: string
 }
 
-const COLUMNS: { key: Status; label: string; icon: any; accent: string }[] = [
-  { key: 'a_faire', label: 'À faire', icon: CheckSquare, accent: 'border-t-surface-400' },
-  { key: 'en_cours', label: 'En cours', icon: Clock, accent: 'border-t-blue-500' },
-  { key: 'en_revue', label: 'En revue', icon: Eye, accent: 'border-t-amber-500' },
-  { key: 'terminee', label: 'Terminé', icon: Sparkles, accent: 'border-t-emerald-500' },
+const COLUMNS: { key: Status; label: string; icon: any }[] = [
+  { key: 'a_faire', label: 'À faire', icon: CheckSquare },
+  { key: 'en_cours', label: 'En cours', icon: Clock },
+  { key: 'en_revue', label: 'En revue', icon: Eye },
+  { key: 'terminee', label: 'Terminé', icon: Sparkles },
 ]
 
 const PRIORITE_STYLES: Record<Priorite, { dot: string; text: string; label: string }> = {
@@ -333,34 +333,42 @@ export default function TachesBoard({ taches, users, currentUserId }: Props) {
               onDragLeave={() => setDragOverColumn(null)}
               onDrop={(e) => onDropColumn(e, col.key)}
               className={cn(
-                'rounded-xl border-t-4 bg-surface-50/80 flex flex-col min-h-[200px] transition-all',
-                col.accent,
-                isOver ? 'ring-2 ring-brand-300 bg-brand-50/40' : '',
+                'rounded-xl flex flex-col min-h-[200px] transition-all',
+                isOver
+                  ? 'bg-surface-100 ring-1 ring-surface-300'
+                  : 'bg-surface-50/60',
               )}
             >
-              {/* Column header */}
-              <div className="px-3 pt-3 pb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-surface-500" />
-                  <span className="text-sm font-semibold text-surface-700">{col.label}</span>
-                  <span className="text-xs text-surface-400 bg-white border border-surface-200 px-1.5 py-0.5 rounded">
+              {/* Column header — sober, no color accent */}
+              <div className="px-4 pt-4 pb-3 flex items-center justify-between group/header">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="h-3.5 w-3.5 text-surface-400 shrink-0" strokeWidth={2} />
+                  <span className="text-[13px] font-semibold text-surface-900 tracking-tight">
+                    {col.label}
+                  </span>
+                  <span className="text-[11px] font-medium text-surface-400 tabular-nums">
                     {tasks.length}
                   </span>
                 </div>
                 <button
                   onClick={() => setCreatingInColumn(col.key)}
-                  className="text-surface-400 hover:text-brand-600 transition-colors"
+                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-surface-400 hover:text-surface-700 hover:bg-white opacity-0 group-hover/header:opacity-100 transition-all"
                   title="Ajouter une tâche"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
 
               {/* Cards */}
               <div className="px-2 pb-3 space-y-2 flex-1">
                 {tasks.length === 0 && (
-                  <div className="text-xs text-surface-400 text-center py-6 italic">
-                    Glissez une tâche ici
+                  <div className={cn(
+                    'mx-1 h-20 rounded-lg border border-dashed flex items-center justify-center text-[11px] transition-colors',
+                    isOver
+                      ? 'border-surface-400 text-surface-600 bg-white'
+                      : 'border-surface-200 text-surface-300',
+                  )}>
+                    {isOver ? 'Déposer ici' : '—'}
                   </div>
                 )}
                 {tasks.map((t) => {
