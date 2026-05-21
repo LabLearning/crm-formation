@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createDossierSchema } from '@/lib/validations/dossier'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
+import { recalcDossierCommission } from '@/lib/commission'
 import type { ActionResult } from '@/lib/types'
 
 export async function createDossierAction(formData: FormData): Promise<ActionResult> {
@@ -53,9 +54,45 @@ export async function createDossierAction(formData: FormData): Promise<ActionRes
     user_id: session.user.id,
   })
 
+  // Calcul commission franchise (si l'établissement est rattaché à une franchise)
+  await recalcDossierCommission(supabase, data.id, session.organization.id)
+
   await logAudit({ action: 'create', entity_type: 'dossier', entity_id: data.id })
   revalidatePath('/dashboard/dossiers')
   return { success: true, data }
+}
+
+/**
+ * Met à jour les montants financiers d'un dossier (PEC, total HT/TTC)
+ * et recalcule la commission franchise.
+ */
+export async function updateDossierFinancialsAction(
+  dossierId: string,
+  data: { montant_prise_en_charge?: number; montant_total_ht?: number; montant_total_ttc?: number },
+): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+
+  const updates: Record<string, unknown> = {}
+  if (data.montant_prise_en_charge != null) updates.montant_prise_en_charge = data.montant_prise_en_charge
+  if (data.montant_total_ht != null) updates.montant_total_ht = data.montant_total_ht
+  if (data.montant_total_ttc != null) updates.montant_total_ttc = data.montant_total_ttc
+
+  if (Object.keys(updates).length > 0) {
+    const { error } = await supabase
+      .from('dossiers_formation')
+      .update(updates)
+      .eq('id', dossierId)
+      .eq('organization_id', session.organization.id)
+    if (error) return { success: false, error: error.message }
+  }
+
+  await recalcDossierCommission(supabase, dossierId, session.organization.id)
+
+  revalidatePath('/dashboard/dossiers')
+  revalidatePath(`/dashboard/dossiers/${dossierId}`)
+  revalidatePath('/dashboard/franchises')
+  return { success: true }
 }
 
 export async function updateDossierStatusAction(id: string, status: string): Promise<ActionResult> {

@@ -31,6 +31,7 @@ export const navigation: NavSection[] = [
     title: 'Mon équipe',
     items: [
       { label: 'Apporteurs', href: '/dashboard/apporteurs', icon: 'Handshake', module: 'apporteurs' },
+      { label: 'Franchises', href: '/dashboard/franchises', icon: 'Store', module: 'apporteurs' },
       { label: 'Formateurs', href: '/dashboard/formateurs', icon: 'Presentation', module: 'formateurs' },
       { label: 'Commerciaux', href: '/dashboard/users?role=commercial', icon: 'Briefcase', module: 'users' },
       { label: 'Gestionnaires', href: '/dashboard/users?role=gestionnaire', icon: 'UserCog', module: 'users' },

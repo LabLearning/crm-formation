@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
+import { recalcDossierCommission } from '@/lib/commission'
 import type { ActionResult } from '@/lib/types'
 
 export type OpcoWorkflowStatus =
@@ -79,6 +80,9 @@ export async function updateDossierOpcoStatusAction(
     await maybeCreateInvoiceFromDossier(supabase, dossierId, session.organization.id, session.user.id)
   }
 
+  // Recalcul commission franchise (PEC / coût formateur ont pu évoluer)
+  await recalcDossierCommission(supabase, dossierId, session.organization.id)
+
   await logAudit({
     action: `dossier_opco_${newStatus}`,
     entity_type: 'dossier_formation',
@@ -86,6 +90,7 @@ export async function updateDossierOpcoStatusAction(
     details: data,
   })
   revalidatePath('/dashboard/dossiers')
+  revalidatePath('/dashboard/franchises')
   return { success: true }
 }
 
