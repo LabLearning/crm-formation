@@ -26,6 +26,12 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
     return { success: false, errors: parsed.error.flatten().fieldErrors }
   }
 
+  // Pour un compte franchise, une franchise (apporteur partenaire) doit être sélectionnée
+  const franchiseId = (formData.get('franchise_id') as string) || ''
+  if (parsed.data.role === 'franchise' && !franchiseId) {
+    return { success: false, errors: { franchise_id: ['Sélectionnez la franchise à rattacher'] } }
+  }
+
   const supabase = await createServiceRoleClient()
 
   // Check if user already exists in organization
@@ -103,6 +109,7 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
       first_name: '',
       last_name: '',
       role: parsed.data.role,
+      franchise_id: parsed.data.role === 'franchise' ? franchiseId : null,
       status: 'invited',
     }, { onConflict: 'id' })
 

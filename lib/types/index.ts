@@ -10,6 +10,7 @@ export type UserRole =
   | 'apporteur_affaires'
   | 'formateur'
   | 'apprenant'
+  | 'franchise'
 
 export type UserStatus = 'active' | 'inactive' | 'invited' | 'suspended'
 
@@ -142,6 +143,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   apporteur_affaires: 'Apporteur d\'affaires',
   formateur: 'Formateur',
   apprenant: 'Apprenant',
+  franchise: 'Franchise',
 }
 
 export const ROLE_COLORS: Record<UserRole, BadgeVariant> = {
@@ -152,6 +154,7 @@ export const ROLE_COLORS: Record<UserRole, BadgeVariant> = {
   apporteur_affaires: 'success',
   formateur: 'default',
   apprenant: 'default',
+  franchise: 'warning',
 }
 
 export const STATUS_LABELS: Record<UserStatus, string> = {

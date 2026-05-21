@@ -17,9 +17,16 @@ interface Invitation {
   accepted_at: string | null
 }
 
+interface Franchise {
+  id: string
+  nom_enseigne: string | null
+  raison_sociale: string | null
+}
+
 interface UsersListProps {
   users: User[]
   invitations: Invitation[]
+  franchises?: Franchise[]
   currentUserId: string
   isAdmin: boolean
   isSuperAdmin: boolean
@@ -27,12 +34,18 @@ interface UsersListProps {
 
 const roleOptions = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))
 
-export function UsersList({ users, invitations, currentUserId, isAdmin, isSuperAdmin }: UsersListProps) {
+export function UsersList({ users, invitations, franchises = [], currentUserId, isAdmin, isSuperAdmin }: UsersListProps) {
   const { toast } = useToast()
   const [inviteOpen, setInviteOpen] = useState(false)
   const [isInviting, setIsInviting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [inviteRole, setInviteRole] = useState('gestionnaire')
+
+  const franchiseOptions = franchises.map((f) => ({
+    value: f.id,
+    label: f.nom_enseigne || f.raison_sociale || 'Franchise',
+  }))
 
   async function handleInvite(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -45,6 +58,7 @@ export function UsersList({ users, invitations, currentUserId, isAdmin, isSuperA
     if (result.success) {
       toast('success', `Invitation envoyée à ${(result.data as { email: string })?.email}`)
       setInviteOpen(false)
+      setInviteRole('gestionnaire')
       ;(e.target as HTMLFormElement).reset()
     } else if (result.errors) {
       setFieldErrors(result.errors)
@@ -378,9 +392,27 @@ export function UsersList({ users, invitations, currentUserId, isAdmin, isSuperA
             label="Rôle"
             placeholder="Sélectionner un rôle"
             options={roleOptions}
-            defaultValue="gestionnaire"
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value)}
             error={fieldErrors.role?.[0]}
           />
+
+          {inviteRole === 'franchise' && (
+            franchiseOptions.length > 0 ? (
+              <Select
+                id="invite-franchise"
+                name="franchise_id"
+                label="Franchise à rattacher"
+                placeholder="Sélectionner la franchise"
+                options={franchiseOptions}
+                error={fieldErrors.franchise_id?.[0]}
+              />
+            ) : (
+              <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Aucune franchise active. Créez d&apos;abord une franchise dans Mon équipe → Franchises (apporteur catégorie « partenaire »).
+              </p>
+            )
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
