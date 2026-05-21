@@ -4,9 +4,122 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
+import { sendInvitationEmail } from '@/lib/email'
 import { recalcDossierCommission, type CommissionType } from '@/lib/commission'
 
 type Result<T = unknown> = { success: true; data?: T } | { success: false; error: string }
+
+/**
+ * Invite un utilisateur franchise (compte avec login, rôle 'franchise').
+ * Crée l'auth user + la ligne users (role=franchise, franchise_id) + invitation + email brandé.
+ */
+export async function inviteFranchiseUserAction(franchiseId: string, emailRaw: string): Promise<Result> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const email = (emailRaw || '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, error: 'Adresse email invalide' }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  // Vérifier que la franchise existe
+  const { data: franchise } = await supabase
+    .from('apporteurs_affaires')
+    .select('id, nom_enseigne, raison_sociale')
+    .eq('id', franchiseId)
+    .eq('organization_id', session.organization.id)
+    .eq('categorie', 'partenaire')
+    .single()
+  if (!franchise) return { success: false, error: 'Franchise introuvable' }
+
+  // Déjà membre ?
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('organization_id', session.organization.id)
+    .eq('email', email)
+    .maybeSingle()
+  if (existingUser) return { success: false, error: 'Cet email a déjà un compte dans l\'organisme' }
+
+  // Invitation
+  const { data: invitation, error: inviteError } = await supabase
+    .from('invitations')
+    .insert({
+      organization_id: session.organization.id,
+      email,
+      role: 'franchise',
+      invited_by: session.user.id,
+    })
+    .select()
+    .single()
+  if (inviteError) return { success: false, error: 'Erreur lors de la création de l\'invitation' }
+
+  // Auth user
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    email_confirm: false,
+    user_metadata: { invitation_token: invitation.token },
+  })
+  if (authError && !authError.message.includes('already')) {
+    console.error('[invite franchise]', authError)
+  }
+  let authUserId = authData?.user?.id || ''
+  if (!authUserId) {
+    const { data: { users: allUsers } } = await supabase.auth.admin.listUsers()
+    authUserId = (allUsers || []).find((u: any) => u.email === email)?.id || ''
+  }
+  if (!authUserId) return { success: false, error: 'Impossible de créer le compte utilisateur' }
+
+  // Ligne users avec rôle franchise + rattachement franchise
+  await supabase.from('users').upsert({
+    id: authUserId,
+    organization_id: session.organization.id,
+    email,
+    first_name: '',
+    last_name: '',
+    role: 'franchise',
+    franchise_id: franchiseId,
+    status: 'invited',
+  }, { onConflict: 'id' })
+
+  // Email brandé
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+  const inviteUrl = `${appUrl}/setup-account?token=${invitation.token}&uid=${authUserId}`
+  const inviterName = `${session.user.first_name} ${session.user.last_name}`.trim() || session.user.email
+  await sendInvitationEmail({
+    toEmail: email,
+    role: 'franchise',
+    orgName: session.organization.name,
+    orgEmail: 'noreply@lab-learning.fr',
+    invitedByName: inviterName,
+    inviteUrl,
+  })
+
+  await logAudit({ action: 'invite_franchise', entity_type: 'franchise', entity_id: franchiseId, details: { email } })
+  revalidatePath(`/dashboard/franchises/${franchiseId}`)
+  return { success: true, data: { email } }
+}
+
+/** Révoque l'accès d'un utilisateur franchise (status suspended). */
+export async function revokeFranchiseUserAction(userId: string): Promise<Result> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('users')
+    .update({ status: 'suspended' })
+    .eq('id', userId)
+    .eq('organization_id', session.organization.id)
+    .eq('role', 'franchise')
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/dashboard/franchises')
+  return { success: true }
+}
 
 /**
  * Met à jour la config commission d'une franchise (mode + taux),

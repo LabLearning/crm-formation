@@ -27,6 +27,7 @@ export const inviteUserSchema = z.object({
     'apporteur_affaires',
     'formateur',
     'apprenant',
+    'franchise',
   ], { message: 'Rôle invalide' }),
 })
 

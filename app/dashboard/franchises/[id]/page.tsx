@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { ArrowLeft, Store, Building2, Banknote, Target, ClipboardCheck, Star } from 'lucide-react'
 import { commissionTypeLabel } from '@/lib/commission'
 import FranchiseDetailClient from './FranchiseDetailClient'
+import FranchiseAccessClient from './FranchiseAccessClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,6 +55,15 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
         : `franchise_id.eq.${params.id}`,
     )
     .order('date_creation', { ascending: false })
+
+  // Utilisateurs franchise (comptes d'accès)
+  const { data: franchiseUsers } = await supabase
+    .from('users')
+    .select('id, email, first_name, last_name, status')
+    .eq('organization_id', orgId)
+    .eq('role', 'franchise')
+    .eq('franchise_id', params.id)
+    .order('created_at', { ascending: true })
 
   // Audits de la franchise (récents)
   const { data: audits } = await supabase
@@ -111,6 +121,9 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
         <FinCard label="Coût formateurs" value={fmtEuro(coutFormateurTotal)} />
         <FinCard label="Commissions totales" value={fmtEuro(commAVenir + commValidee + commPayee)} accent />
       </div>
+
+      {/* Accès portail franchise */}
+      <FranchiseAccessClient franchiseId={franchise.id} users={(franchiseUsers || []) as any[]} />
 
       {/* Bloc config + commission breakdown (client) */}
       <FranchiseDetailClient

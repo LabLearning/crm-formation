@@ -20,6 +20,7 @@ const ROLE_REDIRECTS: Record<string, string> = {
   apporteur_affaires: '/mon-espace',
   formateur: '/mon-espace',
   apprenant: '/mon-espace',
+  franchise: '/franchise',
 }
 
 export default async function DashboardPage() {

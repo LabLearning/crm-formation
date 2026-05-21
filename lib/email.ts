@@ -159,6 +159,7 @@ const ROLE_LABELS: Record<string, string> = {
   apporteur_affaires: 'Apporteur d\'affaires',
   formateur: 'Formateur',
   apprenant: 'Apprenant',
+  franchise: 'Franchise',
 }
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -169,6 +170,7 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   apporteur_affaires: 'Soumission de leads, suivi de vos commissions et dossiers',
   formateur: 'Gestion de vos sessions, emargement et suivi des apprenants',
   apprenant: 'Acces a vos formations, documents et questionnaires',
+  franchise: 'Tableau de bord de votre reseau : etablissements, audits, formations et commissions',
 }
 
 const ROLE_ICONS: Record<string, string> = {
@@ -179,6 +181,7 @@ const ROLE_ICONS: Record<string, string> = {
   apporteur_affaires: '&#10070;',
   formateur: '&#9998;',
   apprenant: '&#9734;',
+  franchise: '&#9750;',
 }
 
 // ── Shared email shell ──────────────────────────────────────
