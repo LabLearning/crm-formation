@@ -82,6 +82,7 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Qualiopi', href: '/dashboard/qualiopi', icon: 'ShieldCheck', module: 'qualiopi' },
       { label: 'Réclamations', href: '/dashboard/reclamations', icon: 'MessageSquareWarning', module: 'reclamations' },
+      { label: 'Incidents', href: '/dashboard/incidents', icon: 'AlertTriangle', module: 'sessions' },
     ],
   },
   // ── SYSTÈME ──────────────────────────────────────────────

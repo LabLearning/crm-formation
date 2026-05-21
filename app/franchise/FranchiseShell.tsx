@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
-import { LayoutDashboard, Building2, ClipboardCheck, Banknote, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, LogOut, ChevronDown } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
@@ -16,6 +16,7 @@ const nav: NavItem[] = [
   { label: 'Tableau de bord', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Établissements', short: 'Établis.', href: '/etablissements', icon: Building2 },
   { label: 'Audits', short: 'Audits', href: '/audits', icon: ClipboardCheck },
+  { label: 'Incidents', short: 'Incidents', href: '/incidents', icon: AlertTriangle },
   { label: 'Financier', short: 'Financier', href: '/financier', icon: Banknote },
 ]
 
@@ -135,7 +136,7 @@ export function FranchiseShell({
         <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/97 backdrop-blur-md border-t border-surface-200/80"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
-          <div className="grid grid-cols-4">
+          <div className="grid grid-cols-5">
             {nav.map((item) => {
               const active = isActive(item.href)
               return (
