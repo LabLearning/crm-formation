@@ -77,7 +77,7 @@ function SetupForm() {
     <div className="min-h-screen bg-surface-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-10 mb-4" />
+          <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-10 mb-4 mx-auto block" />
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
             Bienvenue chez Lab Learning
           </h1>

@@ -96,7 +96,7 @@ export function FranchiseShell({
 
         {/* Desktop header */}
         <header className="hidden md:block sticky top-0 z-30 bg-white border-b border-surface-200/60">
-          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="max-w-screen-2xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-9 shrink-0" />
               <div className="border-l border-surface-200 pl-3">
@@ -109,7 +109,7 @@ export function FranchiseShell({
 
           {/* Desktop tab nav */}
           <div className="border-t border-surface-100">
-            <div className="max-w-6xl mx-auto px-6">
+            <div className="max-w-screen-2xl mx-auto px-6 lg:px-10">
               <nav className="flex gap-1 -mb-px overflow-x-auto">
                 {nav.map((item) => (
                   <Link key={item.href} href={basePath + item.href}
@@ -127,7 +127,7 @@ export function FranchiseShell({
         </header>
 
         {/* Main */}
-        <main className="max-w-6xl mx-auto px-4 sm:px-5 md:px-6 py-5 md:py-8 pb-28 md:pb-10">
+        <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-5 md:py-8 pb-28 md:pb-10">
           {children}
         </main>
 
