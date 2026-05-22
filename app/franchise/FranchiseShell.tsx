@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
-import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, TrendingUp, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, TrendingUp, LogOut, ChevronDown, UserCog, X } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
 import { NotificationsBell } from '@/components/layout/NotificationsBell'
+import { stopImpersonationAction } from '@/app/dashboard/users/actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
@@ -25,8 +26,8 @@ const nav: NavItem[] = [
 const PORTAL_GREEN = '#195245'
 
 export function FranchiseShell({
-  user, franchiseName, franchiseLogo, orgName, children,
-}: { user: User; franchiseName: string; franchiseLogo?: string | null; orgName: string; children: React.ReactNode }) {
+  user, franchiseName, franchiseLogo, orgName, children, isImpersonating,
+}: { user: User; franchiseName: string; franchiseLogo?: string | null; orgName: string; children: React.ReactNode; isImpersonating?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -55,6 +56,12 @@ export function FranchiseShell({
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
+    router.refresh()
+  }
+
+  async function handleStopImpersonation() {
+    await stopImpersonationAction()
+    router.push('/dashboard/franchises')
     router.refresh()
   }
 
@@ -89,6 +96,21 @@ export function FranchiseShell({
   return (
     <ToastProvider>
       <div className="min-h-screen bg-surface-50">
+        {/* Bannière impersonation */}
+        {isImpersonating && (
+          <div className="sticky top-0 z-40 bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <UserCog className="h-4 w-4 shrink-0" />
+              <span className="text-sm font-medium truncate">
+                Mode aperçu — Vous voyez l'espace de <strong>{franchiseName}</strong> ({fullName})
+              </span>
+            </div>
+            <button onClick={handleStopImpersonation}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors shrink-0">
+              <X className="h-3.5 w-3.5" /> Retour à mon compte
+            </button>
+          </div>
+        )}
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
           <div className="h-14 px-4 flex items-center justify-between">

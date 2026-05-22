@@ -155,7 +155,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
       />
 
       {/* Accès portail franchise */}
-      <FranchiseAccessClient franchiseId={franchise.id} users={(franchiseUsers || []) as any[]} />
+      <FranchiseAccessClient franchiseId={franchise.id} users={(franchiseUsers || []) as any[]} canImpersonate={session.user.role === 'super_admin'} />
 
       {/* Bloc config + commission breakdown (client) */}
       <FranchiseDetailClient

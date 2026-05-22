@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { User, Organization } from '@/lib/types'
 
@@ -19,11 +20,14 @@ export interface FranchiseSession {
   user: User
   organization: Organization
   franchise: Franchise
+  impersonatedBy?: User
 }
 
 /**
  * Contexte d'un utilisateur franchise (role='franchise', users.franchise_id).
  * Redirige vers /login si non connecté, /dashboard si pas le bon rôle.
+ * Respecte l'impersonation (cookie ll_impersonate) : un super_admin peut
+ * naviguer dans l'espace franchise en tant qu'un compte franchise.
  */
 export async function getFranchiseSession(): Promise<FranchiseSession> {
   const anonClient = await createServerSupabaseClient()
@@ -32,13 +36,31 @@ export async function getFranchiseSession(): Promise<FranchiseSession> {
 
   const supabase = await createServiceRoleClient()
 
-  const { data: user } = await supabase
+  const { data: realUser } = await supabase
     .from('users')
     .select('*')
     .eq('id', authUser.id)
     .single()
 
-  if (!user) redirect('/login')
+  if (!realUser) redirect('/login')
+
+  // Impersonation : super_admin → compte franchise
+  let user = realUser
+  let impersonatedBy: User | undefined
+  const impersonateCookie = (cookies() as any).get('ll_impersonate')
+  if (impersonateCookie?.value && realUser.role === 'super_admin') {
+    const { data: target } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', impersonateCookie.value)
+      .eq('organization_id', realUser.organization_id)
+      .single()
+    if (target?.role === 'franchise') {
+      user = target
+      impersonatedBy = realUser as User
+    }
+  }
+
   if (user.role !== 'franchise') redirect('/dashboard')
   if (!user.franchise_id) redirect('/login')
 
@@ -57,6 +79,7 @@ export async function getFranchiseSession(): Promise<FranchiseSession> {
     user: user as User,
     organization: organization as Organization,
     franchise: franchise as Franchise,
+    impersonatedBy,
   }
 }
 

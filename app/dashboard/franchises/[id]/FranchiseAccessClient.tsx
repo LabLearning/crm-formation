@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Mail, Loader2, Check, ShieldOff, KeyRound } from 'lucide-react'
+import { UserPlus, Mail, Loader2, Check, ShieldOff, KeyRound, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { inviteFranchiseUserAction, revokeFranchiseUserAction } from '../actions'
+import { startImpersonationAction } from '@/app/dashboard/users/actions'
 
 interface FranchiseUser {
   id: string
@@ -22,14 +23,22 @@ const STATUS_META: Record<string, { label: string; bg: string; text: string }> =
 }
 
 export default function FranchiseAccessClient({
-  franchiseId, users,
-}: { franchiseId: string; users: FranchiseUser[] }) {
+  franchiseId, users, canImpersonate,
+}: { franchiseId: string; users: FranchiseUser[]; canImpersonate?: boolean }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const handleImpersonate = (userId: string) => {
+    startTransition(async () => {
+      const r = await startImpersonationAction(userId)
+      if (r.success) { router.push('/franchise'); router.refresh() }
+      else alert((r as any).error || 'Erreur')
+    })
+  }
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,6 +97,12 @@ export default function FranchiseAccessClient({
                 <span className={cn('text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0', meta.bg, meta.text)}>
                   {meta.label}
                 </span>
+                {canImpersonate && u.status === 'active' && (
+                  <button onClick={() => handleImpersonate(u.id)}
+                    className="shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-1.5 rounded-md text-brand-600 hover:bg-brand-50" title="Voir son espace">
+                    <Eye className="h-3.5 w-3.5" /> Aperçu
+                  </button>
+                )}
                 {u.status !== 'suspended' && (
                   <button onClick={() => handleRevoke(u.id)}
                     className="shrink-0 p-1.5 rounded-md text-surface-400 hover:text-rose-600 hover:bg-rose-50" title="Révoquer l'accès">
