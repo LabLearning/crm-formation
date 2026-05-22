@@ -57,6 +57,25 @@ export async function createDossierAction(formData: FormData): Promise<ActionRes
   // Calcul commission franchise (si l'établissement est rattaché à une franchise)
   await recalcDossierCommission(supabase, data.id, session.organization.id)
 
+  // Notifier la franchise si l'établissement y est rattaché
+  const { data: cl } = await supabase
+    .from('clients')
+    .select('franchise_id, raison_sociale')
+    .eq('id', parsed.data.client_id)
+    .single()
+  if (cl?.franchise_id) {
+    const { notifyFranchiseUsers } = await import('@/lib/franchise-notify')
+    await notifyFranchiseUsers(supabase, cl.franchise_id, session.organization.id, {
+      titre: 'Nouveau dossier de formation',
+      message: `Un dossier de formation a été ouvert pour ${cl.raison_sociale}.`,
+      type: 'info',
+      lienUrl: '/franchise/etablissements',
+      lienLabel: 'Voir mes établissements',
+      entityType: 'dossier_formation',
+      entityId: data.id,
+    })
+  }
+
   await logAudit({ action: 'create', entity_type: 'dossier', entity_id: data.id })
   revalidatePath('/dashboard/dossiers')
   return { success: true, data }

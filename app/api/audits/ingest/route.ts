@@ -178,6 +178,20 @@ export async function POST(req: Request) {
     console.error('[audit ingest notify]', e)
   }
 
+  // 8. Notifier la franchise rattachée
+  if (client.franchise_id) {
+    const { notifyFranchiseUsers } = await import('@/lib/franchise-notify')
+    await notifyFranchiseUsers(supabase, client.franchise_id, orgId, {
+      titre: 'Nouvel audit',
+      message: `Un audit ${body.type_audit || 'hygiène'} a été enregistré pour ${client.raison_sociale}${noteGlobale != null ? ` — note ${noteGlobale}/${noteSur}` : ''}.`,
+      type: 'info',
+      lienUrl: '/franchise/audits',
+      lienLabel: 'Voir l\'audit',
+      entityType: 'audit_etablissement',
+      entityId: audit.id,
+    })
+  }
+
   return NextResponse.json({
     success: true,
     audit_id: audit.id,

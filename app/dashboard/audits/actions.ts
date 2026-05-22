@@ -22,7 +22,7 @@ export async function createAuditAction(formData: FormData): Promise<Result> {
   // Récupérer la franchise du client
   const { data: client } = await supabase
     .from('clients')
-    .select('franchise_id')
+    .select('franchise_id, raison_sociale')
     .eq('id', clientId)
     .eq('organization_id', session.organization.id)
     .single()
@@ -53,6 +53,20 @@ export async function createAuditAction(formData: FormData): Promise<Result> {
     .single()
 
   if (error) return { success: false, error: error.message }
+
+  // Notifier la franchise rattachée
+  if (client.franchise_id) {
+    const { notifyFranchiseUsers } = await import('@/lib/franchise-notify')
+    await notifyFranchiseUsers(supabase, client.franchise_id, session.organization.id, {
+      titre: 'Nouvel audit',
+      message: `Un audit ${(formData.get('type_audit') as string) || 'hygiène'} a été enregistré pour ${client.raison_sociale}${noteGlobale != null ? ` — note ${noteGlobale}/${noteSur}` : ''}.`,
+      type: 'info',
+      lienUrl: '/franchise/audits',
+      lienLabel: 'Voir l\'audit',
+      entityType: 'audit_etablissement',
+      entityId: data.id,
+    })
+  }
 
   await logAudit({ action: 'create', entity_type: 'audit_etablissement', entity_id: data.id })
   revalidatePath('/dashboard/audits')

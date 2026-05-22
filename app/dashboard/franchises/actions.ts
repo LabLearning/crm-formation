@@ -6,6 +6,10 @@ import { getSession } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import { sendInvitationEmail } from '@/lib/email'
 import { recalcDossierCommission, type CommissionType } from '@/lib/commission'
+import { notifyFranchiseUsers } from '@/lib/franchise-notify'
+
+const fmtEuro = (n: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0)
 
 type Result<T = unknown> = { success: true; data?: T } | { success: false; error: string }
 
@@ -311,6 +315,30 @@ export async function updateCommissionStatusAction(
     .eq('organization_id', session.organization.id)
   if (error) return { success: false, error: error.message }
 
+  // Notifier la franchise quand sa commission est validée ou payée
+  if (status === 'validee' || status === 'payee') {
+    const { data: d } = await supabase
+      .from('dossiers_formation')
+      .select('franchise_id, commission_montant, client:clients(raison_sociale)')
+      .eq('id', dossierId)
+      .single()
+    if (d?.franchise_id) {
+      const montant = fmtEuro(Number(d.commission_montant || 0))
+      const etab = (d.client as any)?.raison_sociale || 'un établissement'
+      await notifyFranchiseUsers(supabase, d.franchise_id, session.organization.id, {
+        titre: status === 'payee' ? 'Commission versée' : 'Commission validée',
+        message: status === 'payee'
+          ? `Votre commission de ${montant} (${etab}) a été versée.`
+          : `Votre commission de ${montant} (${etab}) a été validée et sera bientôt versée.`,
+        type: status === 'payee' ? 'success' : 'info',
+        lienUrl: '/franchise/financier',
+        lienLabel: 'Voir mes commissions',
+        entityType: 'dossier_formation',
+        entityId: dossierId,
+      })
+    }
+  }
+
   await logAudit({ action: `commission_${status}`, entity_type: 'dossier_formation', entity_id: dossierId })
   revalidatePath('/dashboard/franchises')
   revalidatePath(`/dashboard/dossiers/${dossierId}`)
@@ -351,6 +379,15 @@ export async function payAllValidatedAction(franchiseId: string): Promise<Result
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
+  // Total avant bascule (pour la notification)
+  const { data: aPayer } = await supabase
+    .from('dossiers_formation')
+    .select('commission_montant')
+    .eq('organization_id', session.organization.id)
+    .eq('franchise_id', franchiseId)
+    .eq('commission_status', 'validee')
+  const total = (aPayer || []).reduce((s: number, d: any) => s + Number(d.commission_montant || 0), 0)
+
   const { error } = await supabase
     .from('dossiers_formation')
     .update({ commission_status: 'payee', commission_payee_at: new Date().toISOString() })
@@ -358,6 +395,16 @@ export async function payAllValidatedAction(franchiseId: string): Promise<Result
     .eq('franchise_id', franchiseId)
     .eq('commission_status', 'validee')
   if (error) return { success: false, error: error.message }
+
+  if (total > 0) {
+    await notifyFranchiseUsers(supabase, franchiseId, session.organization.id, {
+      titre: 'Commissions versées',
+      message: `Un versement de ${fmtEuro(total)} de commissions a été effectué.`,
+      type: 'success',
+      lienUrl: '/franchise/financier',
+      lienLabel: 'Voir mes commissions',
+    })
+  }
 
   await logAudit({ action: 'commission_pay_all', entity_type: 'franchise', entity_id: franchiseId })
   revalidatePath('/dashboard/franchises')
