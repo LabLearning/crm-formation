@@ -1,6 +1,7 @@
+import Link from 'next/link'
 import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { Building2, MapPin, GraduationCap } from 'lucide-react'
+import { Building2, MapPin, GraduationCap, ChevronRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ export default async function FranchiseEtablissementsPage() {
           {(etablissements || []).map((c) => {
             const cnt = countFor(c.id)
             return (
-              <div key={c.id} className="card p-4">
+              <Link key={c.id} href={`/franchise/etablissements/${c.id}`} className="card p-4 hover:border-brand-300 transition-colors group">
                 <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                     <Building2 className="h-5 w-5 text-blue-600" />
@@ -65,6 +66,7 @@ export default async function FranchiseEtablissementsPage() {
                     )}
                     {c.secteur_activite && <div className="text-xs text-surface-400 mt-0.5">{c.secteur_activite}</div>}
                   </div>
+                  <ChevronRight className="h-4 w-4 text-surface-300 group-hover:text-brand-500 transition-colors shrink-0" />
                 </div>
                 <div className="mt-3 pt-3 border-t border-surface-100 flex items-center gap-4 text-xs">
                   <span className="inline-flex items-center gap-1.5 text-surface-600">
@@ -75,7 +77,7 @@ export default async function FranchiseEtablissementsPage() {
                     <span className="text-surface-400">{cnt.total - cnt.realises} en cours</span>
                   )}
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>

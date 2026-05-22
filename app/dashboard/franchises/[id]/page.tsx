@@ -6,6 +6,7 @@ import { ArrowLeft, Store, Building2, Banknote, Target, ClipboardCheck, Star } f
 import { commissionTypeLabel } from '@/lib/commission'
 import FranchiseDetailClient from './FranchiseDetailClient'
 import FranchiseAccessClient from './FranchiseAccessClient'
+import FranchiseCoverageClient from './FranchiseCoverageClient'
 import LinkEtablissementClient, { UnlinkButton } from './LinkEtablissementClient'
 
 export const dynamic = 'force-dynamic'
@@ -94,6 +95,8 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
   const caTotal = ds.reduce((s, d) => s + Number(d.montant_total_ttc || 0), 0)
   const pecTotal = ds.reduce((s, d) => s + Number(d.montant_prise_en_charge || 0), 0)
   const coutFormateurTotal = ds.reduce((s, d) => s + Number(d.cout_formateur || 0), 0)
+  // Couverture : établissements formés = ceux qui ont au moins un dossier
+  const nbFormes = new Set(ds.map((d) => (d.client as any)?.id).filter(Boolean)).size
   const commAVenir = ds.filter((d) => d.commission_status === 'a_venir').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
   const commValidee = ds.filter((d) => d.commission_status === 'validee').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
   const commPayee = ds.filter((d) => d.commission_status === 'payee').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
@@ -128,6 +131,18 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
         <FinCard label="Coût formateurs" value={fmtEuro(coutFormateurTotal)} />
         <FinCard label="Commissions totales" value={fmtEuro(commAVenir + commValidee + commPayee)} accent />
       </div>
+
+      {/* Couverture réseau + prévisionnel */}
+      <FranchiseCoverageClient
+        franchiseId={franchise.id}
+        totalDeclares={Number(franchise.nombre_etablissements || 0)}
+        nbFormes={nbFormes}
+        nbRattaches={(etablissements || []).length}
+        caTotal={caTotal}
+        pecTotal={pecTotal}
+        commTotal={commAVenir + commValidee + commPayee}
+        taux={Number(franchise.taux_commission || 10)}
+      />
 
       {/* Accès portail franchise */}
       <FranchiseAccessClient franchiseId={franchise.id} users={(franchiseUsers || []) as any[]} />
