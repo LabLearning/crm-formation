@@ -12,6 +12,7 @@ export interface Franchise {
   objectif_annuel_dossiers: number | null
   commission_type: string | null
   taux_commission: number | null
+  logo_url: string | null
 }
 
 export interface FranchiseSession {
@@ -45,7 +46,7 @@ export async function getFranchiseSession(): Promise<FranchiseSession> {
     supabase.from('organizations').select('*').eq('id', user.organization_id).single(),
     supabase
       .from('franchises')
-      .select('id, nom, raison_sociale, secteur, nombre_etablissements, objectif_annuel_ca, objectif_annuel_dossiers, commission_type, taux_commission')
+      .select('id, nom, raison_sociale, secteur, nombre_etablissements, objectif_annuel_ca, objectif_annuel_dossiers, commission_type, taux_commission, logo_url')
       .eq('id', user.franchise_id)
       .single(),
   ])

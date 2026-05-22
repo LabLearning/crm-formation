@@ -7,6 +7,7 @@ import { commissionTypeLabel } from '@/lib/commission'
 import FranchiseDetailClient from './FranchiseDetailClient'
 import FranchiseAccessClient from './FranchiseAccessClient'
 import FranchiseCoverageClient from './FranchiseCoverageClient'
+import FranchiseLogoClient from './FranchiseLogoClient'
 import LinkEtablissementClient, { UnlinkButton } from './LinkEtablissementClient'
 
 export const dynamic = 'force-dynamic'
@@ -110,8 +111,12 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center shrink-0">
-            <Store className="h-6 w-6 text-brand-600" />
+          <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center shrink-0 overflow-hidden">
+            {franchise.logo_url ? (
+              <img src={franchise.logo_url} alt={name} className="h-full w-full object-contain p-1" />
+            ) : (
+              <Store className="h-6 w-6 text-brand-600" />
+            )}
           </div>
           <div>
             <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">{name}</h1>
@@ -122,6 +127,11 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Logo co-branding */}
+      <div className="card p-4">
+        <FranchiseLogoClient franchiseId={franchise.id} logoUrl={franchise.logo_url} />
       </div>
 
       {/* Financier global */}

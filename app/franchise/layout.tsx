@@ -10,6 +10,7 @@ export default async function FranchiseLayout({ children }: { children: React.Re
     <FranchiseShell
       user={user}
       franchiseName={franchiseDisplayName(franchise)}
+      franchiseLogo={franchise.logo_url}
       orgName={organization.name}
     >
       {children}

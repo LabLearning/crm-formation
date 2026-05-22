@@ -25,8 +25,8 @@ const nav: NavItem[] = [
 const PORTAL_GREEN = '#195245'
 
 export function FranchiseShell({
-  user, franchiseName, orgName, children,
-}: { user: User; franchiseName: string; orgName: string; children: React.ReactNode }) {
+  user, franchiseName, franchiseLogo, orgName, children,
+}: { user: User; franchiseName: string; franchiseLogo?: string | null; orgName: string; children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -92,7 +92,15 @@ export function FranchiseShell({
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
           <div className="h-14 px-4 flex items-center justify-between">
-            <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-7 shrink-0" />
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-6 shrink-0" />
+              {franchiseLogo && (
+                <>
+                  <span className="text-surface-300 text-sm shrink-0">×</span>
+                  <img src={franchiseLogo} alt={franchiseName} className="h-6 max-w-[90px] object-contain shrink-0" />
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               <NotificationsBell userId={user.id} allHref="/franchise/notifications" />
               {UserMenu}
@@ -103,8 +111,14 @@ export function FranchiseShell({
         {/* Desktop header */}
         <header className="hidden md:block sticky top-0 z-30 bg-white border-b border-surface-200/60">
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-9 shrink-0" />
+              {franchiseLogo && (
+                <>
+                  <span className="text-surface-300 text-lg font-light shrink-0">×</span>
+                  <img src={franchiseLogo} alt={franchiseName} className="h-9 max-w-[140px] object-contain shrink-0" />
+                </>
+              )}
               <div className="border-l border-surface-200 pl-3">
                 <div className="text-sm font-heading font-semibold text-surface-900 leading-none">{franchiseName}</div>
                 <div className="text-[10px] text-surface-400 mt-1">Espace franchise · {orgName}</div>
