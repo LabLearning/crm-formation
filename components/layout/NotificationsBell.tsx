@@ -34,7 +34,7 @@ interface ToastNotif {
   lien_url: string | null
 }
 
-export function NotificationsBell({ userId }: { userId: string }) {
+export function NotificationsBell({ userId, allHref = '/dashboard/notifications' }: { userId: string; allHref?: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -177,7 +177,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
                   </button>
                 )}
                 <Link
-                  href="/dashboard/notifications"
+                  href={allHref}
                   onClick={() => setIsOpen(false)}
                   className="text-xs text-surface-500 hover:text-surface-700"
                 >

@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, TrendingUp, LogOut, ChevronDown } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
+import { NotificationsBell } from '@/components/layout/NotificationsBell'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
@@ -92,7 +93,10 @@ export function FranchiseShell({
         <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
           <div className="h-14 px-4 flex items-center justify-between">
             <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-7 shrink-0" />
-            {UserMenu}
+            <div className="flex items-center gap-1">
+              <NotificationsBell userId={user.id} allHref="/franchise/notifications" />
+              {UserMenu}
+            </div>
           </div>
         </header>
 
@@ -106,7 +110,10 @@ export function FranchiseShell({
                 <div className="text-[10px] text-surface-400 mt-1">Espace franchise · {orgName}</div>
               </div>
             </div>
-            {UserMenu}
+            <div className="flex items-center gap-2">
+              <NotificationsBell userId={user.id} allHref="/franchise/notifications" />
+              {UserMenu}
+            </div>
           </div>
 
           {/* Desktop tab nav */}
