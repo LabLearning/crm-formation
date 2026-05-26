@@ -146,6 +146,8 @@ export interface Client {
   ville: string | null
   pays: string
   telephone: string | null
+  whatsapp: string | null
+  whatsapp_opt_in: boolean
   email: string | null
   site_web: string | null
   financeur_type: FinanceurType | null

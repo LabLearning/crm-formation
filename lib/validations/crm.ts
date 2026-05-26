@@ -91,6 +91,8 @@ export const createClientSchema = z.object({
   code_postal: z.string().optional(),
   ville: z.string().optional(),
   telephone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  whatsapp_opt_in: z.coerce.boolean().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   site_web: z.string().url('URL invalide').optional().or(z.literal('')),
   financeur_type: z.enum(['opco', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),

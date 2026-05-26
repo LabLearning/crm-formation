@@ -199,6 +199,23 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
         <Input id="telephone" name="telephone" label="Téléphone" defaultValue={client?.telephone || ''} />
       </div>
 
+      {/* WhatsApp */}
+      <div className="rounded-xl border border-surface-200 p-3 bg-surface-50/40">
+        <div className="flex items-center gap-2 mb-2">
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-emerald-600" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.07z"/></svg>
+          <span className="text-sm font-medium text-surface-800">WhatsApp</span>
+        </div>
+        <div className="grid grid-cols-2 gap-4 items-end">
+          <Input id="whatsapp" name="whatsapp" label="Numéro WhatsApp" placeholder="06 12 34 56 78" defaultValue={client?.whatsapp || ''} />
+          <label className="flex items-center gap-2 text-sm text-surface-700 pb-2.5 cursor-pointer">
+            <input type="checkbox" name="whatsapp_opt_in" value="true" defaultChecked={client?.whatsapp_opt_in || false}
+              className="h-4 w-4 rounded border-surface-300 text-emerald-600 focus:ring-emerald-500" />
+            Accepte les rappels par WhatsApp
+          </label>
+        </div>
+        <p className="text-[11px] text-surface-400 mt-1.5">Consentement requis (RGPD + Meta). Les rappels (convocation J-3, etc.) partiront aussi par WhatsApp si activé.</p>
+      </div>
+
       <Input id="adresse" name="adresse" label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
       <div className="grid grid-cols-2 gap-4">
         <Input id="code_postal" name="code_postal" label="Code postal" value={codePostal} onChange={(e) => setCodePostal(e.target.value)} />

@@ -46,17 +46,22 @@ export async function GET(req: Request) {
     .neq('status', 'annulee')
     .neq('status', 'terminee')
 
+  const { createNotification } = await import('@/lib/email')
+  const { sendWhatsAppTemplate } = await import('@/lib/whatsapp')
+
   let processed = 0
   let totalApprenants = 0
+  let totalWhatsApp = 0
 
   for (const sess of sessions || []) {
     const { data: inscriptions } = await supabase
       .from('inscriptions')
-      .select('apprenant:apprenants(id, prenom, nom, email, user_id)')
+      .select('apprenant:apprenants(id, prenom, nom, email, user_id, whatsapp, whatsapp_opt_in)')
       .eq('session_id', sess.id)
       .not('status', 'in', '("annule","abandonne")')
 
-    const { createNotification } = await import('@/lib/email')
+    const formationNom = (sess as any).formation?.intitule || 'Formation'
+    const dateStr = new Date(sess.date_debut).toLocaleDateString('fr-FR')
 
     // Notifier chaque apprenant qui a un user_id
     for (const ins of inscriptions || []) {
@@ -66,7 +71,7 @@ export async function GET(req: Request) {
           organizationId: sess.organization_id,
           userId: a.user_id,
           titre: 'Convocation à votre formation',
-          message: `Votre formation "${(sess as any).formation?.intitule || 'Formation'}" commence le ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} ${sess.lieu ? `à ${sess.lieu}` : ''}.`,
+          message: `Votre formation "${formationNom}" commence le ${dateStr} ${sess.lieu ? `à ${sess.lieu}` : ''}.`,
           type: 'session',
           lienUrl: `/mon-espace`,
           lienLabel: 'Voir ma formation',
@@ -74,6 +79,26 @@ export async function GET(req: Request) {
           entityId: sess.id,
         })
         totalApprenants++
+      }
+
+      // WhatsApp (si opt-in + numéro) — template "convocation_j3"
+      if (a?.whatsapp_opt_in && a?.whatsapp) {
+        const r = await sendWhatsAppTemplate({
+          organizationId: sess.organization_id,
+          to: a.whatsapp,
+          toName: `${a.prenom || ''} ${a.nom || ''}`.trim(),
+          template: 'convocation_j3',
+          languageCode: 'fr',
+          bodyParams: [
+            `${a.prenom || ''}`.trim() || 'Bonjour',
+            formationNom,
+            dateStr,
+            sess.lieu || 'sur le lieu prévu',
+          ],
+          entityType: 'session',
+          entityId: sess.id,
+        })
+        if (r.ok) totalWhatsApp++
       }
     }
 
@@ -106,5 +131,6 @@ export async function GET(req: Request) {
     targetDate,
     sessions_processed: processed,
     apprenants_notifies: totalApprenants,
+    whatsapp_envoyes: totalWhatsApp,
   })
 }
