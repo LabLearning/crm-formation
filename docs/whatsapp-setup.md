@@ -12,14 +12,13 @@ ne sont pas configurés, il tourne en **mode DEV** : les messages sont journalis
 4. **Créer les templates** (Message Templates) et les faire approuver (~24-48 h) :
 
 ### Template `convocation_j3` (catégorie : Utility, langue : fr)
-Corps avec 4 variables positionnelles :
+Corps avec 5 variables positionnelles :
 ```
-Bonjour {{1}}, votre formation "{{2}}" débute le {{3}} à {{4}}.
-À bientôt — Lab Learning.
+Bonjour {{1}}, votre formation « {{2}} » se déroulera du {{3}} au {{4}}, à l'adresse suivante : {{5}}. À bientôt, l'équipe Lab Learning.
 ```
-- {{1}} = prénom · {{2}} = formation · {{3}} = date · {{4}} = lieu
+- {{1}} = civilité + nom · {{2}} = formation · {{3}} = date début · {{4}} = date fin · {{5}} = adresse/lieu
 
-(D'autres templates pourront être ajoutés au fil des rappels : satisfaction, relance…)
+(D'autres templates pourront être ajoutés au fil des rappels : satisfaction, relance, lien de signature…)
 
 ## Étapes côté CRM
 

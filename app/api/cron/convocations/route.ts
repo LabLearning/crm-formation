@@ -53,15 +53,21 @@ export async function GET(req: Request) {
   let totalApprenants = 0
   let totalWhatsApp = 0
 
+  const fmtDateLong = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+
   for (const sess of sessions || []) {
     const { data: inscriptions } = await supabase
       .from('inscriptions')
-      .select('apprenant:apprenants(id, prenom, nom, email, user_id, whatsapp, whatsapp_opt_in)')
+      .select('apprenant:apprenants(id, civilite, prenom, nom, email, user_id, whatsapp, whatsapp_opt_in)')
       .eq('session_id', sess.id)
       .not('status', 'in', '("annule","abandonne")')
 
     const formationNom = (sess as any).formation?.intitule || 'Formation'
     const dateStr = new Date(sess.date_debut).toLocaleDateString('fr-FR')
+    const dateDebutLong = fmtDateLong(sess.date_debut)
+    const dateFinLong = fmtDateLong(sess.date_fin || sess.date_debut)
+    const lieuStr = sess.lieu || 'le lieu indiqué dans votre convocation'
 
     // Notifier chaque apprenant qui a un user_id
     for (const ins of inscriptions || []) {
@@ -81,8 +87,11 @@ export async function GET(req: Request) {
         totalApprenants++
       }
 
-      // WhatsApp (si opt-in + numéro) — template "convocation_j3"
+      // WhatsApp (si opt-in + numéro) — template "convocation_j3" (5 variables)
       if (a?.whatsapp_opt_in && a?.whatsapp) {
+        const nomComplet = [a.civilite, a.nom].filter(Boolean).join(' ').trim()
+          || `${a.prenom || ''} ${a.nom || ''}`.trim()
+          || 'Madame, Monsieur'
         const r = await sendWhatsAppTemplate({
           organizationId: sess.organization_id,
           to: a.whatsapp,
@@ -90,10 +99,11 @@ export async function GET(req: Request) {
           template: 'convocation_j3',
           languageCode: 'fr',
           bodyParams: [
-            `${a.prenom || ''}`.trim() || 'Bonjour',
-            formationNom,
-            dateStr,
-            sess.lieu || 'sur le lieu prévu',
+            nomComplet,        // {{1}} civilité + nom
+            formationNom,      // {{2}} formation
+            dateDebutLong,     // {{3}} date de début
+            dateFinLong,       // {{4}} date de fin
+            lieuStr,           // {{5}} adresse / lieu
           ],
           entityType: 'session',
           entityId: sess.id,
