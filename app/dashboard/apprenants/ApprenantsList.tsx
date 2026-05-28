@@ -68,6 +68,14 @@ function ApprenantForm({
         <Input id="email" name="email" type="email" label="Email" defaultValue={apprenant?.email || ''} error={errors.email?.[0]} />
         <Input id="telephone" name="telephone" label="Téléphone" defaultValue={apprenant?.telephone || ''} />
       </div>
+      <div className="grid grid-cols-2 gap-3 items-end">
+        <Input id="whatsapp" name="whatsapp" label="WhatsApp" placeholder="06 12 34 56 78" defaultValue={(apprenant as any)?.whatsapp || ''} />
+        <label className="flex items-center gap-2 text-sm text-surface-700 pb-2.5 cursor-pointer">
+          <input type="checkbox" name="whatsapp_opt_in" value="true" defaultChecked={(apprenant as any)?.whatsapp_opt_in || false}
+            className="h-4 w-4 rounded border-surface-300 text-emerald-600 focus:ring-emerald-500" />
+          Accepte les rappels WhatsApp
+        </label>
+      </div>
       <div className="grid grid-cols-3 gap-3">
         <Input id="date_naissance" name="date_naissance" type="date" label="Date de naissance" defaultValue={apprenant?.date_naissance || ''} />
         <Input id="entreprise" name="entreprise" label="Entreprise" defaultValue={apprenant?.entreprise || ''} />
