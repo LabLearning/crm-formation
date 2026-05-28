@@ -95,24 +95,55 @@ export async function notifyApprenantsForQcm(
 
   const { data: inscriptions } = await supabase
     .from('inscriptions')
-    .select('apprenant:apprenants(id, user_id)')
+    .select('apprenant:apprenants(id, user_id, prenom, email, whatsapp, whatsapp_opt_in)')
     .eq('session_id', sessionId)
     .not('status', 'in', '("annule","abandonne")')
 
   const formationName = (sess as any).formation?.intitule || 'Formation'
+
+  // QCM type → template WhatsApp (les types sans template restent en notif seule)
+  const waTemplate: Partial<Record<QcmType, string>> = {
+    positionnement: 'questionnaire_positionnement',
+    sortie: 'evaluation_sortie',
+    satisfaction_chaud: 'satisfaction_chaud',
+    satisfaction_froid: 'satisfaction_froid',
+  }
+  const { sendWhatsAppTemplate } = await import('@/lib/whatsapp')
+  const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
+
   for (const ins of inscriptions || []) {
-    const userId = (ins as any).apprenant?.user_id
-    if (!userId) continue
-    await createNotification({
-      organizationId: sess.organization_id,
-      userId,
-      titre: labels[qcmType],
-      message: `Un nouveau questionnaire est disponible pour la formation "${formationName}".`,
-      type: 'qcm',
-      lienUrl: '/mon-espace',
-      lienLabel: 'Compléter le questionnaire',
-      entityType: 'session',
-      entityId: sessionId,
-    })
+    const a = (ins as any).apprenant
+    if (a?.user_id) {
+      await createNotification({
+        organizationId: sess.organization_id,
+        userId: a.user_id,
+        titre: labels[qcmType],
+        message: `Un nouveau questionnaire est disponible pour la formation "${formationName}".`,
+        type: 'qcm',
+        lienUrl: '/mon-espace',
+        lienLabel: 'Compléter le questionnaire',
+        entityType: 'session',
+        entityId: sessionId,
+      })
+    }
+
+    // WhatsApp si opt-in + numéro + template existant pour ce type
+    const tpl = waTemplate[qcmType]
+    if (tpl && a?.whatsapp_opt_in && a?.whatsapp && a?.id) {
+      const token = await getOrCreateApprenantToken(supabase, a.id, sess.organization_id, a.email)
+      if (token) {
+        await sendWhatsAppTemplate({
+          organizationId: sess.organization_id,
+          to: a.whatsapp,
+          toName: a.prenom || '',
+          template: tpl,
+          languageCode: 'fr',
+          bodyParams: [a.prenom || 'Bonjour', formationName],
+          buttonUrlParam: token,
+          entityType: 'session',
+          entityId: sessionId,
+        })
+      }
+    }
   }
 }

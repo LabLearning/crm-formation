@@ -143,6 +143,30 @@ export async function updateFactureStatusAction(id: string, status: string): Pro
 
   if (error) return { success: false, error: 'Erreur' }
 
+  // WhatsApp "facture émise" au client quand la facture est envoyée
+  if (status === 'envoyee') {
+    const { data: f } = await supabase
+      .from('factures')
+      .select('numero, montant_ttc, client:clients(raison_sociale, whatsapp, whatsapp_opt_in)')
+      .eq('id', id)
+      .single()
+    const cli = (f as any)?.client
+    if (cli?.whatsapp_opt_in && cli?.whatsapp) {
+      const { sendWhatsAppTemplate } = await import('@/lib/whatsapp')
+      const montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(f!.montant_ttc || 0))
+      await sendWhatsAppTemplate({
+        organizationId: session.organization.id,
+        to: cli.whatsapp,
+        toName: cli.raison_sociale || '',
+        template: 'facture_emise',
+        languageCode: 'fr',
+        bodyParams: [f!.numero || '', montant],
+        entityType: 'facture',
+        entityId: id,
+      })
+    }
+  }
+
   // Si manuel "marquée payée" → propager au dossier OPCO si lié
   if (status === 'payee') {
     const { data: facture } = await supabase
