@@ -141,6 +141,8 @@ export const createContactSchema = z.object({
   est_signataire: z.coerce.boolean().optional(),
   est_referent_formation: z.coerce.boolean().optional(),
   notes: z.string().optional(),
+  whatsapp: z.string().optional(),
+  whatsapp_opt_in: z.coerce.boolean().optional(),
 })
 
 // ---- Apporteurs ----

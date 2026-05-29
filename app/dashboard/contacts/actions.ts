@@ -35,6 +35,8 @@ export async function createContactAction(formData: FormData): Promise<ActionRes
       est_signataire: parsed.data.est_signataire || false,
       est_referent_formation: parsed.data.est_referent_formation || false,
       notes: parsed.data.notes || null,
+      whatsapp: parsed.data.whatsapp || null,
+      whatsapp_opt_in: parsed.data.whatsapp_opt_in || false,
     })
     .select()
     .single()
@@ -71,6 +73,8 @@ export async function updateContactAction(id: string, formData: FormData): Promi
       est_signataire: parsed.data.est_signataire || false,
       est_referent_formation: parsed.data.est_referent_formation || false,
       notes: parsed.data.notes || null,
+      whatsapp: parsed.data.whatsapp || null,
+      whatsapp_opt_in: parsed.data.whatsapp_opt_in || false,
     })
     .eq('id', id)
     .eq('organization_id', session.organization.id)
