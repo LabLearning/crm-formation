@@ -38,10 +38,10 @@ export function ContratApporteurPDF({ apporteur, org }: ContratApporteurProps) {
           <Text style={shared.sectionTitle}>Article 2 — Obligations de l'apporteur</Text>
           <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
             L'Apporteur s'engage à :{'\n'}
-            - Identifier et présenter des prospects qualifiés via la plateforme Lab Learning{'\n'}
+            - Identifier et présenter des prospects qualifiés via la plateforme de l'Organisme{'\n'}
             - Fournir des informations exactes sur les prospects présentés{'\n'}
             - Respecter l'image et les valeurs de l'Organisme{'\n'}
-            - Ne pas prendre d'engagements au nom de l'Organisme{'\n'}
+            - Ne pas prendre d'engagements au nom de l'Organisme, ne pas négocier ni signer en son nom{'\n'}
             - Respecter la confidentialité des informations communiquées
           </Text>
         </View>
@@ -72,7 +72,29 @@ export function ContratApporteurPDF({ apporteur, org }: ContratApporteurProps) {
         <View style={shared.section}>
           <Text style={shared.sectionTitle}>Article 6 — Statut</Text>
           <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
-            L'Apporteur exerce son activité en toute indépendance. Le présent contrat ne crée aucun lien de subordination entre les parties. L'Apporteur est seul responsable de ses obligations fiscales et sociales.
+            L'Apporteur exerce son activité en toute indépendance. Le présent contrat ne crée aucun lien de subordination entre les parties. L'Apporteur est seul responsable de ses obligations fiscales et sociales.{'\n'}
+            Les parties conviennent expressément que l'Apporteur n'est pas un agent commercial au sens des articles L.134-1 et suivants du Code de commerce : il n'a ni mandat de représentation permanente, ni pouvoir de négocier ou de conclure des contrats au nom et pour le compte de l'Organisme. Son intervention se limite à la mise en relation.
+          </Text>
+        </View>
+
+        <View style={shared.section}>
+          <Text style={shared.sectionTitle}>Article 7 — Non-sollicitation</Text>
+          <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
+            Pendant la durée du contrat et pendant une période de 12 mois suivant sa cessation, l'Apporteur s'interdit de solliciter, directement ou indirectement, les clients qu'il a apportés à l'Organisme pour leur proposer des prestations équivalentes pour son propre compte ou pour celui d'un tiers concurrent.
+          </Text>
+        </View>
+
+        <View style={shared.section}>
+          <Text style={shared.sectionTitle}>Article 8 — Protection des données (RGPD)</Text>
+          <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
+            Chacune des parties s'engage à traiter les données personnelles auxquelles elle a accès dans le respect du Règlement (UE) 2016/679 (RGPD) et de la loi Informatique et Libertés. L'Apporteur garantit avoir recueilli, auprès des prospects qu'il transmet, les consentements et informations nécessaires à la communication de leurs données à l'Organisme et au traitement à des fins de prospection commerciale.
+          </Text>
+        </View>
+
+        <View style={shared.section}>
+          <Text style={shared.sectionTitle}>Article 9 — Litiges</Text>
+          <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
+            Le présent contrat est régi par le droit français. En cas de différend, et après tentative de règlement amiable, les juridictions du ressort du siège de l'Organisme seront seules compétentes.
           </Text>
         </View>
 
