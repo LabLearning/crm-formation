@@ -9,6 +9,8 @@ import {
 import { Avatar, Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
+import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
+import { Download } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +38,22 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
   const now = new Date().toISOString().slice(0, 10)
   const upcoming = list.filter((s) => (s.date_fin || s.date_debut) >= now)
   const past = list.filter((s) => (s.date_fin || s.date_debut) < now)
+
+  // Pièces administratives déposées par le formateur (URSSAF, Kbis, NDA, RC…)
+  const { data: docsRaw } = await supabase
+    .from('documents')
+    .select('id, nom, type, file_url, created_at')
+    .eq('formateur_id', params.id)
+    .in('type', DOCUMENT_TYPES_FORMATEUR)
+    .order('created_at', { ascending: false })
+  const docs = (docsRaw || []) as any[]
+  const docUrls: Record<string, string> = {}
+  const paths = docs.map((d) => d.file_url).filter((u) => u && !/^https?:\/\//.test(u)) as string[]
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage.from('dossiers').createSignedUrls(paths, 3600)
+    ;(signed || []).forEach((s, i) => { if (s?.signedUrl && !s.error) docUrls[paths[i]] = s.signedUrl })
+  }
+  for (const d of docs) if (d.file_url && /^https?:\/\//.test(d.file_url)) docUrls[d.file_url] = d.file_url
 
   const SessionRow = (s: any) => (
     <Link key={s.id} href={`/dashboard/sessions/${s.id}`}
@@ -129,6 +147,38 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
               </>
             )}
           </>
+        )}
+      </div>
+
+      {/* Pièces administratives déposées par le formateur */}
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-brand-500" />
+          <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Pièces administratives ({docs.length})</span>
+        </div>
+        {docs.length === 0 ? (
+          <div className="text-center py-10 text-sm text-surface-400">Aucune pièce déposée par le formateur (URSSAF, Kbis, NDA, responsabilité civile, régularité fiscale…)</div>
+        ) : (
+          <div className="divide-y divide-surface-100">
+            {docs.map((d) => (
+              <div key={d.id} className="flex items-center gap-3 px-4 py-3">
+                <FileText className="h-4 w-4 text-surface-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-surface-900 truncate">{d.nom}</div>
+                  <div className="text-xs text-surface-500 flex items-center gap-2 flex-wrap">
+                    <Badge variant="default">{(DOCUMENT_TYPE_LABELS as any)[d.type] || d.type}</Badge>
+                    <span>{formatDate(d.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                </div>
+                {docUrls[d.file_url] && (
+                  <a href={docUrls[d.file_url]} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 transition-colors shrink-0">
+                    <Download className="h-3.5 w-3.5" /> Télécharger
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
