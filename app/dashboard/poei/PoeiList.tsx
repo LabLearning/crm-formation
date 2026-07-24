@@ -14,6 +14,7 @@ import { formatDate, cn } from '@/lib/utils'
 import type { Poei, PoeiPrevision } from '@/lib/types/poei'
 import { PoeiPrevisions } from './PoeiPrevisions'
 import { DocumentationDrive } from './DocumentationDrive'
+import { VivierList } from '../vivier/VivierList'
 
 interface Props {
   poei: Poei[]
@@ -21,6 +22,7 @@ interface Props {
   clients: { id: string; raison_sociale: string | null }[]
   formations: { id: string; intitule: string; duree_heures?: number | null }[]
   hasPoeiCatalog: boolean
+  vivierCandidats?: any[]
 }
 
 
@@ -40,10 +42,10 @@ function PaiementBadge({ p }: { p: any }) {
 
 const statusOptions = Object.entries(POEI_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }))
 
-export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog }: Props) {
+export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog, vivierCandidats = [] }: Props) {
   const { toast } = useToast()
   const router = useRouter()
-  const [tab, setTab] = useState<'projets' | 'planifier' | 'documentation'>('projets')
+  const [tab, setTab] = useState<'projets' | 'vivier' | 'planifier' | 'documentation'>('projets')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [createOpen, setCreateOpen] = useState(false)
@@ -123,6 +125,7 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
       <div className="flex items-center gap-1 border-b border-surface-200">
         {([
           { id: 'projets' as const, label: 'Projets', icon: Briefcase, count: poei.length },
+          { id: 'vivier' as const, label: 'Vivier candidats', icon: Users, count: vivierCandidats.filter((c: any) => c.statut !== 'valide').length },
           { id: 'planifier' as const, label: 'À planifier', icon: CalendarClock, count: previsions.filter((p) => !['transforme', 'abandonne'].includes(p.statut)).length },
           { id: 'documentation' as const, label: 'Documentation', icon: FolderTree, count: 0 },
         ]).map((t) => {
@@ -145,6 +148,12 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
           )
         })}
       </div>
+
+      {tab === 'vivier' && (
+        <div className="mt-5">
+          <VivierList candidats={vivierCandidats} clients={clients} poeis={poei as any[]} embedded />
+        </div>
+      )}
 
       {tab === 'planifier' && <PoeiPrevisions previsions={previsions} clients={clients} />}
 

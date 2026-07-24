@@ -9,7 +9,7 @@ export default async function PoeiPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const [{ data: poeiRaw }, { data: clients }, { data: formationsPoei }, { data: previsions }] = await Promise.all([
+  const [{ data: poeiRaw }, { data: clients }, { data: formationsPoei }, { data: previsions }, { data: vivierCandidats }] = await Promise.all([
     supabase
       .from('poei')
       .select(`
@@ -39,6 +39,11 @@ export default async function PoeiPage() {
       .select('*, client:clients(raison_sociale)')
       .eq('organization_id', session.organization.id)
       .order('date_debut_formation_prevue', { ascending: true, nullsFirst: false }),
+    supabase
+      .from('candidats_vivier')
+      .select('*, client:clients(raison_sociale), poei:poei(numero, formation:formations(intitule))')
+      .eq('organization_id', session.organization.id)
+      .order('created_at', { ascending: false }),
   ])
 
   const poei = (poeiRaw || []).map((p: any) => ({ ...p, candidats_count: (p.candidats || []).length })) as Poei[]
@@ -54,6 +59,7 @@ export default async function PoeiPage() {
         clients={clients || []}
         formations={formations}
         hasPoeiCatalog={onlyPoei.length > 0}
+        vivierCandidats={(vivierCandidats || []) as any[]}
       />
     </div>
   )

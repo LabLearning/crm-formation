@@ -68,7 +68,6 @@ export const navigation: NavSection[] = [
       { label: 'Conventions', href: '/dashboard/conventions', icon: 'FileSignature', module: 'conventions' },
       { label: 'Contrats formateurs', href: '/dashboard/contrats', icon: 'FilePen', module: 'conventions' },
       { label: 'POEI', href: '/dashboard/poei', icon: 'Briefcase', module: 'conventions', accent: 'sky' },
-      { label: 'Vivier candidats', href: '/dashboard/vivier', icon: 'Users', module: 'conventions', accent: 'sky' },
     ],
   },
   // ── FINANCES ─────────────────────────────────────────────

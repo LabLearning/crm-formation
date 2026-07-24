@@ -35,7 +35,7 @@ interface Candidat {
 interface ClientLite { id: string; raison_sociale: string | null }
 interface PoeiLite { id: string; numero: string | null; formation?: { intitule: string | null } | null; client?: { raison_sociale: string | null } | null }
 
-export function VivierList({ candidats, clients, poeis }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[] }) {
+export function VivierList({ candidats, clients, poeis, embedded }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[]; embedded?: boolean }) {
   const { toast } = useToast()
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -99,10 +99,10 @@ export function VivierList({ candidats, clients, poeis }: { candidats: Candidat[
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${embedded ? 'mb-4' : 'mb-6'}`}>
         <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Vivier de candidats</h1>
-          <p className="text-surface-500 mt-1 text-sm">{candidats.length} candidat{candidats.length > 1 ? 's' : ''} sourcé{candidats.length > 1 ? 's' : ''} · alimente les projets POEI</p>
+          {!embedded && <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Vivier de candidats</h1>}
+          <p className={`text-surface-500 text-sm ${embedded ? '' : 'mt-1'}`}>{candidats.length} candidat{candidats.length > 1 ? 's' : ''} sourcé{candidats.length > 1 ? 's' : ''} · alimente les projets POEI</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} icon={<UserPlus className="h-4 w-4" />}>Nouveau candidat</Button>
       </div>
