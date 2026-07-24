@@ -8,7 +8,7 @@ import {
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
   Star, ListChecks, FileSignature, Award, Euro, BookOpen,
-  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2,
+  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
