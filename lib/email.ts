@@ -680,37 +680,15 @@ export async function sendFormateurWelcomeEmail(params: {
   auditUrl?: string | null
   portalUrl?: string | null
 }): Promise<{ success: boolean; error?: string }> {
-  const portalSection = params.portalUrl ? `
-    <div style="border-top:1px solid #e4e4e7;margin:26px 0 0;padding-top:22px;">
-      <h2 style="margin:0 0 6px;color:#18181b;font-size:16px;font-weight:700;">Votre espace formateur</h2>
-      <p style="margin:0 0 16px;color:#71717a;font-size:14px;line-height:1.6;">
-        Retrouvez vos sessions, vos apprenants et les feuilles d émargement numériques dans votre
-        espace personnel — accessible directement, sans mot de passe, via ce lien qui vous est propre :
-      </p>
-      ${ctaButton(params.portalUrl, 'Accéder à mon espace formateur')}
-    </div>` : ''
-  const auditSection = params.auditUrl ? `
-    <div style="border-top:1px solid #e4e4e7;margin:26px 0 0;padding-top:22px;">
-      <h2 style="margin:0 0 6px;color:#18181b;font-size:16px;font-weight:700;">Outil Audit Hygiène &amp; DUERP</h2>
-      <p style="margin:0 0 16px;color:#71717a;font-size:14px;line-height:1.6;">
-        Vous intervenez sur les audits d hygiène et la prévention des risques : un accès à notre outil de
-        rapports d audit (hygiène &amp; DUERP) a été créé pour vous. Activez-le ici :
-      </p>
-      ${ctaButton(params.auditUrl, "Activer mon accès à l outil d audit")}
-    </div>` : ''
   const body = `
     <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">Bienvenue chez ${params.orgName} !</h1>
-    <p style="margin:0 0 18px;color:#71717a;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 20px;color:#71717a;font-size:15px;line-height:1.7;">
       Bonjour <strong style="color:#18181b;">${params.prenom}</strong>,<br>
-      Nous sommes ravis de vous compter parmi nos formateurs. Votre espace personnel vous permet de
-      consulter vos sessions, gérer les émargements, vos apprenants et vos documents.
+      Votre compte formateur a été créé. Cliquez ci-dessous pour créer votre mot de passe et accéder à votre espace.
     </p>
-    <p style="margin:0 0 16px;color:#71717a;font-size:14px;">Commencez par créer votre mot de passe :</p>
     ${ctaButton(params.inviteUrl, "Créer mon compte")}
-    ${portalSection}
-    ${auditSection}
     <p style="margin:24px 0 0;color:#a1a1aa;font-size:12px;line-height:1.6;">
-      Ces liens vous sont personnels. En cas de question, répondez simplement à cet email.
+      Ce lien vous est personnel. En cas de question, répondez simplement à cet email.
     </p>`
   const html = emailShell({
     body,
