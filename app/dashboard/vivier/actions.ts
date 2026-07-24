@@ -14,7 +14,8 @@ function str(fd: FormData, key: string): string | null {
   return v.trim() || null
 }
 
-export const VIVIER_STATUTS = ['nouveau', 'qualifie', 'presente', 'retenu', 'valide', 'refuse', 'vivier'] as const
+// Statuts du vivier (const locale : un fichier 'use server' n'exporte que des fonctions async)
+const VIVIER_STATUTS = ['nouveau', 'qualifie', 'presente', 'retenu', 'valide', 'refuse', 'vivier'] as const
 
 // Champs identité + sourcing repris du FormData (création / mise à jour)
 function candidatFields(fd: FormData) {
