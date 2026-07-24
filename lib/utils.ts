@@ -36,3 +36,21 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 }
+
+/**
+ * Domaines « placeholder » utilisés comme faux emails (imports, saisies de test).
+ * Syntaxiquement valides mais non délivrables → bounce puis suppression Resend.
+ * On exclut volontairement les vrais webmails (mail.com, gmail.com…).
+ */
+const PLACEHOLDER_EMAIL_DOMAINS = new Set([
+  'email.com', 'example.com', 'example.org', 'example.net',
+  'test.com', 'test.fr', 'exemple.com', 'exemple.fr',
+  'domain.com', 'placeholder.com', 'localhost', 'none.com', 'xxx.com',
+])
+
+/** true si l'email a un domaine placeholder (ex. maria@email.com) */
+export function isPlaceholderEmail(email?: string | null): boolean {
+  if (!email) return false
+  const domain = email.trim().toLowerCase().split('@')[1]
+  return !!domain && PLACEHOLDER_EMAIL_DOMAINS.has(domain)
+}

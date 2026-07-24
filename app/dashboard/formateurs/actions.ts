@@ -5,7 +5,10 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createFormateurSchema } from '@/lib/validations/formation'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
+import { isPlaceholderEmail } from '@/lib/utils'
 import type { ActionResult } from '@/lib/types'
+
+const PLACEHOLDER_EMAIL_ERROR = 'Cette adresse email a un domaine de test (ex. @email.com) et ne recevra aucun message. Renseignez la vraie adresse du formateur.'
 
 function splitComma(text: string | undefined): string[] {
   if (!text) return []
@@ -186,6 +189,7 @@ export async function createFormateurAction(formData: FormData): Promise<ActionR
 
   const parsed = createFormateurSchema.safeParse(raw)
   if (!parsed.success) return { success: false, errors: parsed.error.flatten().fieldErrors }
+  if (isPlaceholderEmail(parsed.data.email)) return { success: false, errors: { email: [PLACEHOLDER_EMAIL_ERROR] } }
 
   const supabase = await createServiceRoleClient()
 
@@ -242,6 +246,7 @@ export async function updateFormateurAction(id: string, formData: FormData): Pro
 
   const parsed = createFormateurSchema.safeParse(raw)
   if (!parsed.success) return { success: false, errors: parsed.error.flatten().fieldErrors }
+  if (isPlaceholderEmail(parsed.data.email)) return { success: false, errors: { email: [PLACEHOLDER_EMAIL_ERROR] } }
 
   const supabase = await createServiceRoleClient()
 
