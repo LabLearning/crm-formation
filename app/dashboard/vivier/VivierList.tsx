@@ -27,7 +27,7 @@ interface Candidat {
   email: string | null; telephone: string | null; date_naissance: string | null
   lieu_naissance: string | null; numero_securite_sociale: string | null
   adresse: string | null; code_postal: string | null; ville: string | null; type_contrat: string | null
-  source: string | null; disponibilite: string | null; statut: string; notes: string | null
+  source: string | null; disponibilite: string | null; permis: boolean | null; statut: string; notes: string | null
   client_id: string | null; poei_id: string | null; poei_prevision_id: string | null; poste_vise: string | null; identifiant_ft: string | null
   apprenant_id: string | null
   client?: { raison_sociale: string | null } | null
@@ -171,10 +171,11 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
                   <tr key={c.id} className="border-b border-surface-100 last:border-0 hover:bg-surface-50/60 transition-colors">
                     <td className="py-2.5 pl-4 pr-3">
                       <div className="font-medium text-surface-900">{c.prenom} {c.nom}</div>
-                      <div className="text-xs text-surface-500 flex flex-wrap gap-x-3">
+                      <div className="text-xs text-surface-500 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                         {c.email && <span className="truncate">{c.email}</span>}
                         {c.telephone && <span>{c.telephone}</span>}
                         {c.source && <span className="text-surface-400">via {c.source}</span>}
+                        {c.permis && <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-1.5 py-0.5 text-[10px] font-medium">Permis</span>}
                       </div>
                     </td>
                     <td className="py-2.5 px-3 text-surface-700">{c.client?.raison_sociale || <span className="text-surface-300">—</span>}</td>
@@ -281,10 +282,15 @@ function CandidatForm({ candidat, clients, poeis, previsions, onDone }: { candid
         <Input id="source" name="source" label="Source" placeholder="LinkedIn, France Travail, cooptation…" defaultValue={candidat?.source || ''} />
         <Input id="disponibilite" name="disponibilite" label="Disponibilité" placeholder="Immédiate, sous 1 mois…" defaultValue={candidat?.disponibilite || ''} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 items-end">
         <Input id="poste_vise" name="poste_vise" label="Poste visé" defaultValue={candidat?.poste_vise || ''} />
         <Input id="identifiant_ft" name="identifiant_ft" label="Identifiant France Travail" defaultValue={candidat?.identifiant_ft || ''} />
       </div>
+      <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
+        <input type="checkbox" name="permis" value="true" defaultChecked={!!candidat?.permis}
+          className="h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
+        Titulaire du permis de conduire
+      </label>
 
       {/* Rattachements */}
       <div className="grid grid-cols-2 gap-3">

@@ -42,6 +42,7 @@ function candidatFields(fd: FormData) {
     type_contrat: str(fd, 'type_contrat'),
     source: str(fd, 'source'),
     disponibilite: str(fd, 'disponibilite'),
+    permis: fd.get('permis') === 'true',
     notes: str(fd, 'notes'),
     client_id: str(fd, 'client_id'),
     ...parseTarget(str(fd, 'poei_target')),
