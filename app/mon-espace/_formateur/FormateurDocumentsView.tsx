@@ -1,9 +1,10 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { FileText, Download } from 'lucide-react'
 import { Badge } from '@/components/ui'
-import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_SUPPORT } from '@/lib/types/document'
+import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_SUPPORT, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
 import { formatDate } from '@/lib/utils'
 import { PendingSignatures } from '@/app/portail/[token]/documents/PendingSignatures'
+import { FormateurDocUpload, FormateurDocDelete } from './FormateurDocUpload'
 
 /**
  * Documents du formateur (branche formateur de la page portail /documents),
@@ -72,6 +73,9 @@ export async function FormateurDocumentsView({
         <p className="text-surface-500 mt-1">Documents et attestations</p>
       </div>
 
+      {/* Dépôt des pièces administratives du formateur */}
+      <FormateurDocUpload token={token} />
+
       {/* Pending signatures — signature dessinée en ligne */}
       <PendingSignatures token={token} signatures={pendingSignatures} />
 
@@ -99,12 +103,15 @@ export async function FormateurDocumentsView({
                   <td className="px-6 py-3.5"><Badge variant="default">{(DOCUMENT_TYPE_LABELS as any)[doc.type || 'autre']}</Badge></td>
                   <td className="px-6 py-3.5 hidden md:table-cell text-sm text-surface-500">{formatDate(doc.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-3.5 text-right">
-                    {downloadUrls[doc.id] && (
-                      <a href={downloadUrls[doc.id]} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 transition-colors">
-                        <Download className="h-3.5 w-3.5" /> Télécharger
-                      </a>
-                    )}
+                    <div className="inline-flex items-center gap-1.5 justify-end">
+                      {downloadUrls[doc.id] && (
+                        <a href={downloadUrls[doc.id]} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 transition-colors">
+                          <Download className="h-3.5 w-3.5" /> Télécharger
+                        </a>
+                      )}
+                      {DOCUMENT_TYPES_FORMATEUR.includes(doc.type) && <FormateurDocDelete docId={doc.id} token={token} />}
+                    </div>
                   </td>
                 </tr>
               ))}

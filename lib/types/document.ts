@@ -4,7 +4,7 @@
 
 import type { BadgeVariant } from '@/lib/types'
 
-export type DocumentType = 'devis' | 'convention' | 'contrat' | 'convocation' | 'programme' | 'reglement_interieur' | 'emargement' | 'attestation_fin' | 'attestation_assiduite' | 'certificat_realisation' | 'facture' | 'avoir' | 'kbis' | 'courrier_opco' | 'attestation_urssaf' | 'rib' | 'piece_identite' | 'assurance' | 'statuts' | 'support_pedagogique' | 'diaporama' | 'exercice' | 'ressource' | 'autre'
+export type DocumentType = 'devis' | 'convention' | 'contrat' | 'convocation' | 'programme' | 'reglement_interieur' | 'emargement' | 'attestation_fin' | 'attestation_assiduite' | 'certificat_realisation' | 'facture' | 'avoir' | 'kbis' | 'courrier_opco' | 'attestation_urssaf' | 'rib' | 'piece_identite' | 'assurance' | 'statuts' | 'nda' | 'responsabilite_civile' | 'attestation_fiscale' | 'support_pedagogique' | 'diaporama' | 'exercice' | 'ressource' | 'autre'
 export type SignatureStatus = 'en_attente' | 'signe' | 'refuse' | 'expire'
 
 /** Qui peut consulter un document rattaché à une session */
@@ -59,7 +59,9 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   certificat_realisation: 'Certificat de réalisation', facture: 'Facture', avoir: 'Avoir',
   kbis: 'Kbis', courrier_opco: 'Courrier OPCO / AKTO', attestation_urssaf: 'Attestation URSSAF',
   rib: 'RIB', piece_identite: 'Pièce d\'identité', assurance: 'Attestation d\'assurance',
-  statuts: 'Statuts', support_pedagogique: 'Support de cours', diaporama: 'Diaporama',
+  statuts: 'Statuts', nda: 'NDA (numéro de déclaration d\'activité)', responsabilite_civile: 'Responsabilité civile',
+  attestation_fiscale: 'Attestation de régularité fiscale',
+  support_pedagogique: 'Support de cours', diaporama: 'Diaporama',
   exercice: 'Exercice', ressource: 'Ressource complémentaire', autre: 'Autre',
 }
 
@@ -81,6 +83,11 @@ export const DOCUMENT_VISIBILITE_SHORT: Record<DocumentVisibilite, string> = {
 /** Types pertinents pour les pièces administratives d'une société (fiche client) */
 export const DOCUMENT_TYPES_ENTREPRISE: DocumentType[] = [
   'kbis', 'courrier_opco', 'attestation_urssaf', 'rib', 'assurance', 'statuts', 'contrat', 'autre',
+]
+
+/** Pièces administratives que le formateur dépose lui-même (sous-traitance Qualiopi) */
+export const DOCUMENT_TYPES_FORMATEUR: DocumentType[] = [
+  'attestation_urssaf', 'kbis', 'nda', 'responsabilite_civile', 'attestation_fiscale', 'rib', 'piece_identite', 'autre',
 ]
 
 export const SIGNATURE_STATUS_LABELS: Record<SignatureStatus, string> = {
