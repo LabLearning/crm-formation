@@ -36,11 +36,18 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
 
   if (!client) redirect('/dashboard/clients')
 
-  // Contrôle d'accès : un commercial ne peut voir que ses clients assignés
+  // Contrôle d'accès : un commercial ne voit que ses clients — assignés à lui
+  // OU rattachés à un lead qui lui est assigné.
   const role = session.user.role
   const canAssign = ['super_admin', 'gestionnaire', 'directeur_commercial', 'comptable'].includes(role)
   if (role === 'commercial' && (client as any).assigned_to !== session.user.id) {
-    redirect('/dashboard/clients')
+    const { count } = await supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('client_id', params.id)
+      .eq('assigned_to', session.user.id)
+      .eq('organization_id', session.organization.id)
+    if (!count) redirect('/dashboard/clients')
   }
 
   // Données liées — toutes indépendantes (ne dépendent que de l'id client) → en parallèle

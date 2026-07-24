@@ -45,13 +45,15 @@ interface Props {
   commissions?: any[]
   apporteurInfo?: { taux_commission: number } | null
   apporteurClients?: any[]
+  clients?: any[]
 }
 
-export function CommercialClient({ userName, userRole, leads, interactionsToday, devisEnCours, commissions = [], apporteurInfo, apporteurClients = [] }: Props) {
+export function CommercialClient({ userName, userRole, leads, interactionsToday, devisEnCours, commissions = [], apporteurInfo, apporteurClients = [], clients = [] }: Props) {
   const isDirecteur = userRole === 'directeur_commercial'
   const isApporteur = userRole === 'apporteur_affaires'
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [clientSearch, setClientSearch] = useState('')
 
   const tabs = isApporteur
     ? [
@@ -63,8 +65,20 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
     : [
         { id: 'accueil', label: 'Accueil' },
         { id: 'leads', label: 'Mes leads (' + leads.length + ')' },
+        { id: 'clients', label: 'Clients (' + clients.length + ')' },
         { id: 'outils', label: 'Outils' },
       ]
+
+  const filteredClients = useMemo(() => {
+    const q = clientSearch.trim().toLowerCase()
+    if (!q) return clients
+    return clients.filter((c: any) =>
+      (c.raison_sociale || '').toLowerCase().includes(q) ||
+      (c.ville || '').toLowerCase().includes(q) ||
+      (c.secteur_activite || '').toLowerCase().includes(q) ||
+      (c.email || '').toLowerCase().includes(q),
+    )
+  }, [clients, clientSearch])
 
   const [tab, setTab] = useState('accueil')
 
@@ -415,6 +429,52 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
               <div className="text-center py-12 text-sm text-surface-400">Aucun lead trouvé</div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════
+          CLIENTS — recherche par société
+          ════════════════════════════════════════════════════════ */}
+      {tab === 'clients' && !isApporteur && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3.5 py-2.5 border border-surface-200/70">
+            <Search className="h-4 w-4 text-surface-400 shrink-0" />
+            <input
+              value={clientSearch}
+              onChange={(e) => setClientSearch(e.target.value)}
+              placeholder="Tapez le nom de la société…"
+              className="bg-transparent text-sm text-surface-700 placeholder:text-surface-400 focus:outline-none flex-1"
+            />
+          </div>
+
+          {filteredClients.length === 0 ? (
+            <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
+              <Building2 className="h-6 w-6 text-surface-400 mb-2" />
+              <p className="text-sm text-surface-500">
+                {clientSearch ? `Aucune société ne correspond à « ${clientSearch} ».` : 'Aucun client pour le moment.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredClients.map((c: any) => (
+                <Link key={c.id} href={`/dashboard/clients/${c.id}`}
+                  className="card p-4 flex items-center gap-3 hover:shadow-card transition-all">
+                  <div className="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                    <Building2 className="h-5 w-5 text-brand-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-surface-900 truncate">{c.raison_sociale || 'Client'}</div>
+                    <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap mt-0.5">
+                      {(c.ville || c.code_postal) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{[c.code_postal, c.ville].filter(Boolean).join(' ')}</span>}
+                      {c.secteur_activite && <span className="flex items-center gap-1"><Briefcase className="h-3 w-3 shrink-0" />{c.secteur_activite}</span>}
+                      {c.telephone && <span className="flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{c.telephone}</span>}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-surface-300 shrink-0" />
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

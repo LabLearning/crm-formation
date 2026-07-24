@@ -36,7 +36,7 @@ export default async function CommercialPage() {
   // Leads — directeur sees all, apporteur sees sourced, commercial sees assigned
   let leadsQuery = supabase
     .from('leads')
-    .select('id, contact_nom, contact_prenom, entreprise, contact_telephone, contact_email, status, montant_estime, source, created_at, updated_at, assigned_to, assigned_user:users!leads_assigned_to_fkey(first_name, last_name)')
+    .select('id, contact_nom, contact_prenom, entreprise, contact_telephone, contact_email, status, montant_estime, source, created_at, updated_at, assigned_to, client_id, assigned_user:users!leads_assigned_to_fkey(first_name, last_name)')
     .eq('organization_id', orgId)
     .order('updated_at', { ascending: false })
     .limit(100)
@@ -75,6 +75,26 @@ export default async function CommercialPage() {
     interactionsQuery,
     devisQuery,
   ])
+
+  // Clients du commercial : ceux qui lui sont assignés OU issus de ses leads.
+  // Le directeur voit tous les clients de l'organisation.
+  let clientsList: any[] = []
+  if (!isApporteur) {
+    const leadClientIds = [...new Set((leads || []).map((l: any) => l.client_id).filter(Boolean))]
+    let cq = supabase
+      .from('clients')
+      .select('id, raison_sociale, ville, code_postal, secteur_activite, email, telephone')
+      .eq('organization_id', orgId)
+      .order('raison_sociale', { ascending: true })
+      .limit(500)
+    if (!isDirecteur) {
+      const orParts = [`assigned_to.eq.${userId}`]
+      if (leadClientIds.length) orParts.push(`id.in.(${leadClientIds.join(',')})`)
+      cq = cq.or(orParts.join(','))
+    }
+    const { data } = await cq
+    clientsList = data || []
+  }
 
   // Données spécifiques apporteur
   let commissions: any[] = []
@@ -124,6 +144,7 @@ export default async function CommercialPage() {
         commissions={commissions}
         apporteurInfo={apporteurInfo}
         apporteurClients={apporteurClients}
+        clients={clientsList}
       />
     </div>
   )
