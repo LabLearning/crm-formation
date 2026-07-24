@@ -8,10 +8,10 @@ export default async function VivierPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const [{ data: candidats }, { data: clients }, { data: poeis }] = await Promise.all([
+  const [{ data: candidats }, { data: clients }, { data: poeis }, { data: previsions }] = await Promise.all([
     supabase
       .from('candidats_vivier')
-      .select('*, client:clients(raison_sociale), poei:poei(numero, formation:formations(intitule))')
+      .select('*, client:clients(raison_sociale), poei:poei(numero, formation:formations(intitule)), poei_prevision:poei_previsions(entreprise, date_debut_formation_prevue, client:clients(raison_sociale))')
       .eq('organization_id', session.organization.id)
       .order('created_at', { ascending: false }),
     supabase
@@ -24,7 +24,13 @@ export default async function VivierPage() {
       .select('id, numero, formation:formations(intitule), client:clients(raison_sociale)')
       .eq('organization_id', session.organization.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('poei_previsions')
+      .select('id, entreprise, date_debut_formation_prevue, statut, client:clients(raison_sociale)')
+      .eq('organization_id', session.organization.id)
+      .not('statut', 'in', '("transforme","abandonne")')
+      .order('date_debut_formation_prevue', { ascending: true, nullsFirst: false }),
   ])
 
-  return <VivierList candidats={(candidats || []) as any[]} clients={(clients || []) as any[]} poeis={(poeis || []) as any[]} />
+  return <VivierList candidats={(candidats || []) as any[]} clients={(clients || []) as any[]} poeis={(poeis || []) as any[]} previsions={(previsions || []) as any[]} />
 }

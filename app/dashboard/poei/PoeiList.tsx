@@ -151,7 +151,8 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
 
       {tab === 'vivier' && (
         <div className="mt-5">
-          <VivierList candidats={vivierCandidats} clients={clients} poeis={poei as any[]} embedded />
+          <VivierList candidats={vivierCandidats} clients={clients} poeis={poei as any[]}
+            previsions={previsions.filter((p) => !['transforme', 'abandonne'].includes(p.statut)) as any[]} embedded />
         </div>
       )}
 

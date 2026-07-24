@@ -17,6 +17,13 @@ function str(fd: FormData, key: string): string | null {
 // Statuts du vivier (const locale : un fichier 'use server' n'exporte que des fonctions async)
 const VIVIER_STATUTS = ['nouveau', 'qualifie', 'presente', 'retenu', 'valide', 'refuse', 'vivier'] as const
 
+// Cible de rattachement : "poei:<id>" (projet créé) ou "prev:<id>" (à planifier)
+function parseTarget(v: string | null): { poei_id: string | null; poei_prevision_id: string | null } {
+  if (v && v.startsWith('poei:')) return { poei_id: v.slice(5), poei_prevision_id: null }
+  if (v && v.startsWith('prev:')) return { poei_id: null, poei_prevision_id: v.slice(5) }
+  return { poei_id: null, poei_prevision_id: null }
+}
+
 // Champs identité + sourcing repris du FormData (création / mise à jour)
 function candidatFields(fd: FormData) {
   return {
@@ -37,7 +44,7 @@ function candidatFields(fd: FormData) {
     disponibilite: str(fd, 'disponibilite'),
     notes: str(fd, 'notes'),
     client_id: str(fd, 'client_id'),
-    poei_id: str(fd, 'poei_id'),
+    ...parseTarget(str(fd, 'poei_target')),
     poste_vise: str(fd, 'poste_vise'),
     identifiant_ft: str(fd, 'identifiant_ft'),
   }
@@ -103,24 +110,31 @@ export async function updateCandidatVivierStatutAction(id: string, statut: strin
   return { success: true }
 }
 
-export async function assignCandidatToPoeiAction(id: string, poeiId: string | null): Promise<ActionResult> {
+export async function assignCandidatToPoeiAction(id: string, target: string | null): Promise<ActionResult> {
   const session = await getSession()
   if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
   const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
 
-  // Si un projet est fourni, il doit appartenir à l'organisation
-  if (poeiId) {
-    const { data: poei } = await supabase.from('poei').select('id').eq('id', poeiId).eq('organization_id', session.organization.id).maybeSingle()
-    if (!poei) return { success: false, error: 'Projet POEI introuvable' }
+  const { poei_id, poei_prevision_id } = parseTarget(target)
+  // La cible doit appartenir à l'organisation
+  if (poei_id) {
+    const { data } = await supabase.from('poei').select('id').eq('id', poei_id).eq('organization_id', orgId).maybeSingle()
+    if (!data) return { success: false, error: 'Projet POEI introuvable' }
+  }
+  if (poei_prevision_id) {
+    const { data } = await supabase.from('poei_previsions').select('id').eq('id', poei_prevision_id).eq('organization_id', orgId).maybeSingle()
+    if (!data) return { success: false, error: 'Prévision introuvable' }
   }
 
   const { error } = await supabase
     .from('candidats_vivier')
-    .update({ poei_id: poeiId, updated_at: new Date().toISOString() })
+    .update({ poei_id, poei_prevision_id, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .eq('organization_id', session.organization.id)
+    .eq('organization_id', orgId)
   if (error) return { success: false, error: 'Erreur' }
   revalidatePath('/dashboard/vivier')
+  revalidatePath('/dashboard/poei')
   return { success: true }
 }
 
@@ -154,7 +168,14 @@ export async function validerCandidatVivierAction(id: string): Promise<ActionRes
     .from('candidats_vivier').select('*').eq('id', id).eq('organization_id', orgId).single()
   if (!cand) return { success: false, error: 'Candidat introuvable' }
   if (cand.apprenant_id) return { success: false, error: 'Candidat déjà validé' }
-  if (!cand.poei_id) return { success: false, error: 'Rattachez d\'abord le candidat à un projet POEI' }
+  if (!cand.poei_id) {
+    return {
+      success: false,
+      error: cand.poei_prevision_id
+        ? 'Ce POEI est encore « à planifier ». Transformez d\'abord la prévision en projet POEI, puis validez le candidat.'
+        : 'Rattachez d\'abord le candidat à un projet POEI.',
+    }
+  }
 
   const { data: poei } = await supabase
     .from('poei').select('id, session_id, client_id, duree_heures, montant_horaire, client:clients(raison_sociale)')

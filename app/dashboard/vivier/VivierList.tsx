@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
+import { formatDate } from '@/lib/utils'
 import {
   createCandidatVivierAction, updateCandidatVivierAction, updateCandidatVivierStatutAction,
   assignCandidatToPoeiAction, deleteCandidatVivierAction, validerCandidatVivierAction,
@@ -27,15 +28,47 @@ interface Candidat {
   lieu_naissance: string | null; numero_securite_sociale: string | null
   adresse: string | null; code_postal: string | null; ville: string | null; type_contrat: string | null
   source: string | null; disponibilite: string | null; statut: string; notes: string | null
-  client_id: string | null; poei_id: string | null; poste_vise: string | null; identifiant_ft: string | null
+  client_id: string | null; poei_id: string | null; poei_prevision_id: string | null; poste_vise: string | null; identifiant_ft: string | null
   apprenant_id: string | null
   client?: { raison_sociale: string | null } | null
   poei?: { numero: string | null; formation?: { intitule: string | null } | null } | null
+  poei_prevision?: { entreprise: string | null; date_debut_formation_prevue: string | null; client?: { raison_sociale: string | null } | null } | null
 }
 interface ClientLite { id: string; raison_sociale: string | null }
 interface PoeiLite { id: string; numero: string | null; formation?: { intitule: string | null } | null; client?: { raison_sociale: string | null } | null }
+interface PrevisionLite { id: string; entreprise: string | null; date_debut_formation_prevue: string | null; statut?: string | null; client?: { raison_sociale: string | null } | null }
 
-export function VivierList({ candidats, clients, poeis, embedded }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[]; embedded?: boolean }) {
+const previsionLabel = (p: PrevisionLite) =>
+  `${p.entreprise || p.client?.raison_sociale || 'Prévision'}${p.date_debut_formation_prevue ? ' — ' + formatDate(p.date_debut_formation_prevue, { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}`
+
+// Valeur actuelle de rattachement d'un candidat ("poei:<id>" / "prev:<id>" / "")
+const currentTarget = (c: Candidat) => c.poei_id ? `poei:${c.poei_id}` : c.poei_prevision_id ? `prev:${c.poei_prevision_id}` : ''
+
+// Sélecteur de cible groupé : projets POEI créés + POEI à planifier (prévisions)
+function TargetSelect({ value, poeis, previsions, name, disabled, onChange, className }: {
+  value?: string; poeis: PoeiLite[]; previsions: PrevisionLite[]
+  name?: string; disabled?: boolean; onChange?: (v: string) => void; className?: string
+}) {
+  const opts = (
+    <>
+      <option value="">Aucun projet</option>
+      {poeis.length > 0 && (
+        <optgroup label="Projets POEI">
+          {poeis.map((p) => <option key={p.id} value={`poei:${p.id}`}>{`${p.numero || 'POEI'} — ${p.formation?.intitule || p.client?.raison_sociale || ''}`.trim()}</option>)}
+        </optgroup>
+      )}
+      {previsions.length > 0 && (
+        <optgroup label="À planifier">
+          {previsions.map((p) => <option key={p.id} value={`prev:${p.id}`}>{previsionLabel(p)}</option>)}
+        </optgroup>
+      )}
+    </>
+  )
+  if (onChange) return <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={className}>{opts}</select>
+  return <select name={name} defaultValue={value} className={className}>{opts}</select>
+}
+
+export function VivierList({ candidats, clients, poeis, previsions = [], embedded }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[]; previsions?: PrevisionLite[]; embedded?: boolean }) {
   const { toast } = useToast()
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -43,11 +76,6 @@ export function VivierList({ candidats, clients, poeis, embedded }: { candidats:
   const [createOpen, setCreateOpen] = useState(false)
   const [editCand, setEditCand] = useState<Candidat | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
-
-  const poeiOptions = [
-    { value: '', label: 'Aucun projet' },
-    ...poeis.map((p) => ({ value: p.id, label: `${p.numero || 'POEI'} — ${p.formation?.intitule || p.client?.raison_sociale || ''}`.trim() })),
-  ]
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -74,9 +102,9 @@ export function VivierList({ candidats, clients, poeis, embedded }: { candidats:
     if (r.success) router.refresh()
     else toast('error', r.error || 'Erreur')
   }
-  async function changePoei(id: string, poeiId: string) {
+  async function changeTarget(id: string, target: string) {
     setBusy(id)
-    const r = await assignCandidatToPoeiAction(id, poeiId || null)
+    const r = await assignCandidatToPoeiAction(id, target || null)
     setBusy(null)
     if (r.success) { toast('success', 'Rattachement mis à jour'); router.refresh() }
     else toast('error', r.error || 'Erreur')
@@ -154,10 +182,14 @@ export function VivierList({ candidats, clients, poeis, embedded }: { candidats:
                       {valide ? (
                         <span className="text-xs text-surface-600">{c.poei?.numero || '—'}</span>
                       ) : (
-                        <select value={c.poei_id || ''} disabled={busy === c.id} onChange={(e) => changePoei(c.id, e.target.value)}
-                          className="rounded-lg border border-surface-200 bg-white px-2 py-1.5 text-xs text-surface-600 max-w-[220px] focus:outline-none focus:border-surface-300">
-                          {poeiOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
+                        <div className="flex items-center gap-1.5">
+                          <TargetSelect
+                            value={currentTarget(c)} poeis={poeis} previsions={previsions}
+                            disabled={busy === c.id} onChange={(v) => changeTarget(c.id, v)}
+                            className="rounded-lg border border-surface-200 bg-white px-2 py-1.5 text-xs text-surface-600 max-w-[220px] focus:outline-none focus:border-surface-300"
+                          />
+                          {c.poei_prevision_id && !c.poei_id && <Badge variant="warning">à planifier</Badge>}
+                        </div>
                       )}
                     </td>
                     <td className="py-2.5 px-3">
@@ -192,22 +224,21 @@ export function VivierList({ candidats, clients, poeis, embedded }: { candidats:
       </div>
 
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau candidat (vivier)" size="lg">
-        <CandidatForm clients={clients} poeis={poeis} onDone={() => { setCreateOpen(false); toast('success', 'Candidat ajouté au vivier'); router.refresh() }} />
+        <CandidatForm clients={clients} poeis={poeis} previsions={previsions} onDone={() => { setCreateOpen(false); toast('success', 'Candidat ajouté au vivier'); router.refresh() }} />
       </Modal>
       <Modal isOpen={!!editCand} onClose={() => setEditCand(null)} title="Modifier le candidat" size="lg">
-        {editCand && <CandidatForm candidat={editCand} clients={clients} poeis={poeis} onDone={() => { setEditCand(null); toast('success', 'Candidat mis à jour'); router.refresh() }} />}
+        {editCand && <CandidatForm candidat={editCand} clients={clients} poeis={poeis} previsions={previsions} onDone={() => { setEditCand(null); toast('success', 'Candidat mis à jour'); router.refresh() }} />}
       </Modal>
     </div>
   )
 }
 
-function CandidatForm({ candidat, clients, poeis, onDone }: { candidat?: Candidat; clients: ClientLite[]; poeis: PoeiLite[]; onDone: () => void }) {
+function CandidatForm({ candidat, clients, poeis, previsions, onDone }: { candidat?: Candidat; clients: ClientLite[]; poeis: PoeiLite[]; previsions: PrevisionLite[]; onDone: () => void }) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
 
   const clientOptions = [{ value: '', label: 'Aucune entreprise' }, ...clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id }))]
-  const poeiOptions = [{ value: '', label: 'Aucun projet' }, ...poeis.map((p) => ({ value: p.id, label: `${p.numero || 'POEI'} — ${p.formation?.intitule || p.client?.raison_sociale || ''}`.trim() }))]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setIsLoading(true); setErrors({})
@@ -258,7 +289,10 @@ function CandidatForm({ candidat, clients, poeis, onDone }: { candidat?: Candida
       {/* Rattachements */}
       <div className="grid grid-cols-2 gap-3">
         <Select id="client_id" name="client_id" label="Entreprise pressentie" options={clientOptions} defaultValue={candidat?.client_id || ''} />
-        <Select id="poei_id" name="poei_id" label="Projet POEI cible" options={poeiOptions} defaultValue={candidat?.poei_id || ''} />
+        <div>
+          <label htmlFor="poei_target" className="block text-sm font-medium text-surface-700 mb-1.5">POEI cible (projet ou à planifier)</label>
+          <TargetSelect name="poei_target" value={candidat ? currentTarget(candidat) : ''} poeis={poeis} previsions={previsions} className="input-base w-full" />
+        </div>
       </div>
       <Select id="statut" name="statut" label="Statut" options={STATUTS.filter((s) => s.value !== 'valide').map((s) => ({ value: s.value, label: s.label }))} defaultValue={candidat?.statut && candidat.statut !== 'valide' ? candidat.statut : 'nouveau'} />
       <textarea id="notes" name="notes" rows={2} className="input-base resize-none" placeholder="Notes de sourcing…" defaultValue={candidat?.notes || ''} />
