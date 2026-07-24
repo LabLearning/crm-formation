@@ -6,6 +6,7 @@ import {
   Plus, Search, Pencil, Trash2, Save, Camera, Loader2,
   Presentation, Star, Award, Clock, Calendar, Euro,
   CheckCircle2, XCircle, ShieldCheck, AlertTriangle, MapPin, KeyRound,
+  ArrowUp, ArrowDown, ChevronsUpDown,
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu } from '@/components/ui'
 import {
@@ -192,6 +193,27 @@ function HabilitationModal({ formateur, onDone }: { formateur: Formateur; onDone
   )
 }
 
+type SortKey = 'nom' | 'contrat' | 'sessions' | 'tarif' | 'note'
+
+// En-tête de colonne triable (clic pour trier, flèche indiquant le sens)
+function SortHeader({ label, k, sort, onSort, className = '' }: {
+  label: string; k: SortKey
+  sort: { key: SortKey; dir: 'asc' | 'desc' }
+  onSort: (k: SortKey) => void
+  className?: string
+}) {
+  const active = sort.key === k
+  const alignRight = className.includes('text-right')
+  return (
+    <th className={`py-2.5 px-3 text-2xs font-semibold uppercase tracking-wider ${active ? 'text-surface-700' : 'text-surface-400'} ${className}`}>
+      <button type="button" onClick={() => onSort(k)} className={`inline-flex items-center gap-1 hover:text-surface-700 transition-colors ${alignRight ? 'flex-row-reverse' : ''}`}>
+        {label}
+        {active ? (sort.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ChevronsUpDown className="h-3 w-3 text-surface-300" />}
+      </button>
+    </th>
+  )
+}
+
 export function FormateursList({ formateurs, sessionCounts }: FormateursListProps) {
   const { toast } = useToast()
   const router = useRouter()
@@ -199,6 +221,11 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
   const [createOpen, setCreateOpen] = useState(false)
   const [editFormateur, setEditFormateur] = useState<Formateur | null>(null)
   const [habilitationFormateur, setHabilitationFormateur] = useState<Formateur | null>(null)
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'nom', dir: 'asc' })
+
+  function toggleSort(key: SortKey) {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }))
+  }
 
   const filtered = useMemo(() => {
     if (!search) return formateurs
@@ -209,6 +236,25 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
       (f.email || '').toLowerCase().includes(s)
     )
   }, [formateurs, search])
+
+  const sorted = useMemo(() => {
+    const mul = sort.dir === 'asc' ? 1 : -1
+    const val = (f: Formateur): string | number => {
+      switch (sort.key) {
+        case 'sessions': return sessionCounts[f.id] || 0
+        case 'tarif': return Number(f.tarif_journalier) || 0
+        case 'note': return Number(f.note_moyenne) || 0
+        case 'contrat': return (contratLabels[f.type_contrat] || f.type_contrat || '').toLowerCase()
+        default: return `${f.nom || ''} ${f.prenom || ''}`.toLowerCase()
+      }
+    }
+    return [...filtered].sort((a, b) => {
+      const va = val(a), vb = val(b)
+      if (va < vb) return -1 * mul
+      if (va > vb) return 1 * mul
+      return 0
+    })
+  }, [filtered, sort, sessionCounts])
 
   function needsRenewal(f: Formateur): boolean {
     if (!f.prochaine_mise_a_jour) return false
@@ -250,103 +296,88 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, expertise..." className="bg-transparent text-sm text-surface-700 placeholder:text-surface-400 focus:outline-none flex-1" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((f) => (
-          <div key={f.id} onClick={() => router.push(`/dashboard/formateurs/${f.id}`)}
-            className={`card p-5 hover:shadow-card hover:border-brand-200 transition-all cursor-pointer ${!f.is_active ? 'opacity-60' : ''}`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <Avatar firstName={f.prenom} lastName={f.nom} src={(f as any).photo_url} size="lg" />
-                <div>
-                  <div className="text-sm font-semibold text-surface-900">{f.civilite} {f.prenom} {f.nom}</div>
-                  <div className="text-xs text-surface-500">{contratLabels[f.type_contrat] || f.type_contrat}</div>
-                  {f.note_moyenne && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Star className="h-3 w-3 text-warning-500 fill-warning-500" />
-                      <span className="text-xs font-medium text-surface-700">{f.note_moyenne}/5</span>
-                      <span className="text-2xs text-surface-400">({f.nombre_evaluations})</span>
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-sm">
+            <thead>
+              <tr className="border-b border-surface-100 bg-surface-50/60">
+                <SortHeader label="Formateur" k="nom" sort={sort} onSort={toggleSort} className="text-left pl-4" />
+                <th className="py-2.5 px-3 text-left text-2xs font-semibold uppercase tracking-wider text-surface-400">Expertise</th>
+                <SortHeader label="Contrat" k="contrat" sort={sort} onSort={toggleSort} className="text-left" />
+                <SortHeader label="Sessions" k="sessions" sort={sort} onSort={toggleSort} className="text-right" />
+                <SortHeader label="Tarif / j" k="tarif" sort={sort} onSort={toggleSort} className="text-right" />
+                <SortHeader label="Note" k="note" sort={sort} onSort={toggleSort} className="text-right" />
+                <th className="py-2.5 px-3 text-left text-2xs font-semibold uppercase tracking-wider text-surface-400">État</th>
+                <th className="py-2.5 px-2 w-10" />
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((f) => (
+                <tr key={f.id} onClick={() => router.push(`/dashboard/formateurs/${f.id}`)}
+                  className={`border-b border-surface-100 last:border-0 hover:bg-surface-50/70 cursor-pointer transition-colors ${!f.is_active ? 'opacity-55' : ''}`}>
+                  <td className="py-2.5 pl-4 pr-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar firstName={f.prenom} lastName={f.nom} src={(f as any).photo_url} size="sm" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-surface-900 truncate">{f.civilite} {f.prenom} {f.nom}</div>
+                        <div className="text-xs text-surface-500 flex items-center gap-2 flex-wrap">
+                          {f.email && <span className="truncate">{f.email}</span>}
+                          {(f as any).zone_intervention && <span className="inline-flex items-center gap-0.5 text-brand-600"><MapPin className="h-3 w-3" />{(f as any).zone_intervention}</span>}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {(f as any).zone_intervention && (
-                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-2xs font-medium">
-                      <MapPin className="h-3 w-3" />
-                      {(f as any).zone_intervention}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div onClick={(e) => e.stopPropagation()}>
-                <RowMenu
-                  width={208}
-                  items={[
-                    { label: 'Modifier', icon: <Pencil className="h-4 w-4 text-surface-400" />, onClick: () => setEditFormateur(f) },
-                    { label: "Envoyer l'accès à son espace", icon: <KeyRound className="h-4 w-4 text-brand-600" />, onClick: () => handleSendAccess(f.id, `${f.prenom} ${f.nom}`), hidden: !f.email },
-                    { label: 'Habilitations', icon: <ShieldCheck className="h-4 w-4 text-brand-600" />, onClick: () => setHabilitationFormateur(f) },
-                    {
-                      label: f.is_active ? 'Désactiver' : 'Activer',
-                      icon: f.is_active ? <XCircle className="h-4 w-4 text-warning-600" /> : <CheckCircle2 className="h-4 w-4 text-success-600" />,
-                      onClick: () => handleToggle(f.id, f.is_active),
-                    },
-                    { label: 'Supprimer', icon: <Trash2 className="h-4 w-4" />, danger: true, onClick: () => handleDelete(f.id) },
-                  ]}
-                />
-              </div>
-            </div>
-
-            {/* Expertise tags */}
-            {(f.domaines_expertise || []).length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {(f.domaines_expertise || []).map((d) => (
-                  <Badge key={d} variant="info">{d}</Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Certifications */}
-            {(f.certifications || []).length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {(f.certifications || []).map((c) => (
-                  <Badge key={c} variant="success"><Award className="h-3 w-3 mr-0.5" />{c}</Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-surface-500 pt-3 border-t border-surface-100">
-              <span className="flex items-center gap-1">
-                <Presentation className="h-3.5 w-3.5" />
-                {sessionCounts[f.id] || 0} sessions
-              </span>
-              {f.tarif_journalier && (
-                <span className="flex items-center gap-1">
-                  <Euro className="h-3.5 w-3.5" />
-                  {Number(f.tarif_journalier).toLocaleString('fr-FR')} €/j
-                </span>
-              )}
-              {needsRenewal(f) && (
-                <span className="flex items-center gap-1 text-warning-600">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  Renouvellement
-                </span>
-              )}
-            </div>
-
-            {/* Habilitation status */}
-            {f.date_derniere_habilitation && (
-              <div className="text-2xs text-surface-400 mt-2">
-                Dernière habilitation : {formatDate(f.date_derniere_habilitation, { day: 'numeric', month: 'short', year: 'numeric' })}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
-          <Presentation className="h-6 w-6 text-surface-400" />
-          <p className="text-sm text-surface-500">Aucun formateur trouvé</p>
+                  </td>
+                  <td className="py-2.5 px-3 max-w-[220px]">
+                    <div className="flex flex-wrap gap-1">
+                      {(f.domaines_expertise || []).slice(0, 3).map((d) => <Badge key={d} variant="info">{d}</Badge>)}
+                      {(f.domaines_expertise || []).length > 3 && <span className="text-2xs text-surface-400">+{(f.domaines_expertise || []).length - 3}</span>}
+                      {(f.domaines_expertise || []).length === 0 && <span className="text-surface-300">—</span>}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-3 text-surface-700">{contratLabels[f.type_contrat] || f.type_contrat}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-surface-700">{sessionCounts[f.id] || 0}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums whitespace-nowrap">
+                    {f.tarif_journalier ? <span className="text-surface-800">{Number(f.tarif_journalier).toLocaleString('fr-FR')} €</span> : <span className="text-surface-300">—</span>}
+                  </td>
+                  <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                    {f.note_moyenne
+                      ? <span className="inline-flex items-center gap-1 font-medium text-surface-700"><Star className="h-3 w-3 text-warning-500 fill-warning-500" />{f.note_moyenne}</span>
+                      : <span className="text-surface-300">—</span>}
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-1.5">
+                      {f.is_active ? <Badge variant="success">Actif</Badge> : <Badge variant="default">Inactif</Badge>}
+                      {needsRenewal(f) && <span title="Habilitation à renouveler"><AlertTriangle className="h-3.5 w-3.5 text-warning-600" /></span>}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-2" onClick={(e) => e.stopPropagation()}>
+                    <RowMenu
+                      width={208}
+                      items={[
+                        { label: 'Modifier', icon: <Pencil className="h-4 w-4 text-surface-400" />, onClick: () => setEditFormateur(f) },
+                        { label: "Envoyer l'accès à son espace", icon: <KeyRound className="h-4 w-4 text-brand-600" />, onClick: () => handleSendAccess(f.id, `${f.prenom} ${f.nom}`), hidden: !f.email },
+                        { label: 'Habilitations', icon: <ShieldCheck className="h-4 w-4 text-brand-600" />, onClick: () => setHabilitationFormateur(f) },
+                        {
+                          label: f.is_active ? 'Désactiver' : 'Activer',
+                          icon: f.is_active ? <XCircle className="h-4 w-4 text-warning-600" /> : <CheckCircle2 className="h-4 w-4 text-success-600" />,
+                          onClick: () => handleToggle(f.id, f.is_active),
+                        },
+                        { label: 'Supprimer', icon: <Trash2 className="h-4 w-4" />, danger: true, onClick: () => handleDelete(f.id) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center justify-center text-center py-14 px-8">
+            <Presentation className="h-6 w-6 text-surface-400 mb-2" />
+            <p className="text-sm text-surface-500">Aucun formateur trouvé</p>
+          </div>
+        )}
+      </div>
 
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau formateur" size="lg">
         <FormateurForm onDone={() => setCreateOpen(false)} />
