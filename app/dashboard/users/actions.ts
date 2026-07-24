@@ -7,6 +7,7 @@ import { inviteUserSchema, updateUserSchema } from '@/lib/validations/auth'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
 import { sendInvitationEmail } from '@/lib/email'
+import { isPlaceholderEmail } from '@/lib/utils'
 import type { ActionResult } from '@/lib/types'
 
 export async function inviteUserAction(formData: FormData): Promise<ActionResult> {
@@ -24,6 +25,9 @@ export async function inviteUserAction(formData: FormData): Promise<ActionResult
   const parsed = inviteUserSchema.safeParse(raw)
   if (!parsed.success) {
     return { success: false, errors: parsed.error.flatten().fieldErrors }
+  }
+  if (isPlaceholderEmail(parsed.data.email)) {
+    return { success: false, errors: { email: ['Cette adresse email a un domaine de test (ex. @email.com) et ne recevra aucun message. Renseignez la vraie adresse.'] } }
   }
 
   // Pour un compte franchise, une franchise (apporteur partenaire) doit être sélectionnée

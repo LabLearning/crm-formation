@@ -5,8 +5,11 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createApprenantSchema } from '@/lib/validations/formation'
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
+import { isPlaceholderEmail } from '@/lib/utils'
 import type { ExtractedParticipant } from '@/lib/ai'
 import type { ActionResult } from '@/lib/types'
+
+const PLACEHOLDER_EMAIL_ERROR = 'Cette adresse email a un domaine de test (ex. @email.com) et ne recevra aucun message. Renseignez la vraie adresse (ou laissez vide).'
 
 export async function createApprenantAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession()
@@ -15,6 +18,7 @@ export async function createApprenantAction(formData: FormData): Promise<ActionR
 
   const parsed = createApprenantSchema.safeParse(raw)
   if (!parsed.success) return { success: false, errors: parsed.error.flatten().fieldErrors }
+  if (isPlaceholderEmail(parsed.data.email)) return { success: false, errors: { email: [PLACEHOLDER_EMAIL_ERROR] } }
 
   const supabase = await createServiceRoleClient()
 
@@ -82,6 +86,7 @@ export async function updateApprenantAction(id: string, formData: FormData): Pro
 
   const parsed = createApprenantSchema.safeParse(raw)
   if (!parsed.success) return { success: false, errors: parsed.error.flatten().fieldErrors }
+  if (isPlaceholderEmail(parsed.data.email)) return { success: false, errors: { email: [PLACEHOLDER_EMAIL_ERROR] } }
 
   const supabase = await createServiceRoleClient()
 
