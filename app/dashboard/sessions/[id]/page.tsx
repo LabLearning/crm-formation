@@ -31,7 +31,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Inscriptions avec apprenants
   const { data: inscriptions } = await supabase
     .from('inscriptions')
-    .select('id, status, date_inscription, apprenant:apprenants(id, prenom, nom, email, entreprise, telephone)')
+    .select('id, status, date_inscription, apprenant:apprenants(id, civilite, prenom, nom, sexe, email, entreprise, telephone, whatsapp, whatsapp_opt_in, date_naissance, lieu_naissance, numero_securite_sociale, adresse, code_postal, ville, type_contrat, poste, client_id, situation_handicap, type_handicap, besoins_adaptation, notes)')
     .eq('session_id', params.id)
     .not('status', 'in', '("annule","abandonne")')
     .order('date_inscription', { ascending: true })

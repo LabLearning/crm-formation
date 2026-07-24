@@ -10,7 +10,9 @@ import {
   Star, ListChecks, FileSignature, Award, Euro, BookOpen,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2,
 } from 'lucide-react'
-import { Badge, PoeiBadge, useToast } from '@/components/ui'
+import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
+import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
+import { sendDocumentToApprenantAction } from '../actions'
 import { cn, formatDate } from '@/lib/utils'
 import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
@@ -123,6 +125,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     if (montant !== null && !Number.isFinite(montant)) return
     setEditPrix(false)
     startTransition(async () => { await updateSessionPrixAction(session.id, montant); router.refresh() })
+  }
+
+  const [editApprenant, setEditApprenant] = useState<any | null>(null)
+
+  function handleSendDoc(apprenantId: string, docType: 'attestation' | 'certificat', label: string) {
+    startTransition(async () => {
+      const r = await sendDocumentToApprenantAction(session.id, apprenantId, docType)
+      if ((r as any)?.success) toast('success', `${label} envoyé${(r as any).data?.email ? ` à ${(r as any).data.email}` : ''}`)
+      else toast('error', (r as any)?.error || 'Erreur lors de l\'envoi')
+    })
   }
 
   function handleDesinscrire(apprenantId: string, nom: string) {
@@ -762,72 +774,54 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 const appTotal = appEmargements.length
                 const assiduity = appTotal > 0 ? Math.round((appPresent / appTotal) * 100) : null
 
+                const evalBadges = evaluationsAppr.filter((e) => e.apprenant_id === a?.id && e.note != null)
+                const base = `?session=${session.id}`
                 return (
-                  <div key={ins.id} className="px-4 py-3.5 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <div key={ins.id} className="px-4 py-3 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-blue-600">{(a?.prenom?.[0] || '')}{(a?.nom?.[0] || '')}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</div>
-                      <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</span>
+                        <Badge variant={ins.status === 'confirme' ? 'success' : ins.status === 'inscrit' ? 'info' : 'default'}>
+                          {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}
+                        </Badge>
+                        {evalBadges.map((e) => {
+                          const ratio = e.note_max ? e.note / e.note_max : null
+                          const color = ratio == null ? 'bg-surface-100 text-surface-600' : ratio >= 0.7 ? 'bg-emerald-50 text-emerald-700' : ratio >= 0.5 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                          return (
+                            <span key={e.id} title={e.intitule || ''} className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold', color)}>
+                              <Award className="h-3 w-3" />{Number(e.note)}{e.note_max ? `/${Number(e.note_max)}` : ''}
+                            </span>
+                          )
+                        })}
+                      </div>
+                      <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap mt-0.5">
                         {a?.email && <span className="flex items-center gap-1 truncate"><Mail className="h-3 w-3 shrink-0" />{a.email}</span>}
                         {a?.telephone && <span className="flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{a.telephone}</span>}
                         {a?.entreprise && <span className="flex items-center gap-1"><Building2 className="h-3 w-3 shrink-0" />{a.entreprise}</span>}
                       </div>
-                      {evaluationsAppr.filter((e) => e.apprenant_id === a?.id && e.note != null).length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                          {evaluationsAppr.filter((e) => e.apprenant_id === a?.id && e.note != null).map((e) => {
-                            const ratio = e.note_max ? e.note / e.note_max : null
-                            const color = ratio == null ? 'bg-surface-100 text-surface-600' : ratio >= 0.7 ? 'bg-emerald-50 text-emerald-700' : ratio >= 0.5 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                            return (
-                              <span key={e.id} title={e.intitule || ''} className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold', color)}>
-                                <Award className="h-3 w-3" />{Number(e.note)}{e.note_max ? `/${Number(e.note_max)}` : ''}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      )}
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {assiduity !== null && (
-                        <div className="text-right">
-                          <div className={cn('text-sm font-bold', assiduity >= 80 ? 'text-emerald-600' : assiduity >= 50 ? 'text-amber-600' : 'text-red-600')}>
-                            {assiduity}%
-                          </div>
-                          <div className="text-[10px] text-surface-400">assiduité</div>
-                        </div>
-                      )}
-                      <Badge variant={ins.status === 'confirme' ? 'success' : ins.status === 'inscrit' ? 'info' : 'default'}>
-                        {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}
-                      </Badge>
-                    </div>
-                    {/* Documents : télécharger (admin) + envoyer à l'apprenant */}
+                    {assiduity !== null && (
+                      <div className="text-right shrink-0">
+                        <div className={cn('text-sm font-bold leading-none', assiduity >= 80 ? 'text-emerald-600' : assiduity >= 50 ? 'text-amber-600' : 'text-red-600')}>{assiduity}%</div>
+                        <div className="text-[10px] text-surface-400 mt-0.5">assiduité</div>
+                      </div>
+                    )}
+                    {/* Un seul menu d'actions (modifier, documents, envoi, retrait) */}
                     {!isFormateur && (
-                      <div className="flex items-center gap-1 mt-2 sm:mt-0 flex-wrap justify-end">
-                        <a href={`/api/pdf/attestation-entree/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-medium hover:bg-emerald-100 transition-colors">
-                          <Download className="h-3 w-3" /> Attestation d&apos;entrée
-                        </a>
-                        <a href={`/api/pdf/convocation/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[10px] font-medium hover:bg-surface-100 transition-colors">
-                          <Download className="h-3 w-3" /> Convocation
-                        </a>
-                        <a href={`/api/pdf/attestation/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[10px] font-medium hover:bg-surface-100 transition-colors">
-                          <Download className="h-3 w-3" /> Attestation
-                        </a>
-                        <SendDocButton sessionId={session.id} apprenantId={a?.id} docType="attestation" label="Envoyer" />
-                        <a href={`/api/pdf/certificat-realisation/${a?.id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[10px] font-medium hover:bg-surface-100 transition-colors">
-                          <Download className="h-3 w-3" /> Certificat
-                        </a>
-                        <SendDocButton sessionId={session.id} apprenantId={a?.id} docType="certificat" label="Envoyer" />
-                        <button
-                          onClick={() => handleDesinscrire(a?.id, `${a?.prenom || ''} ${a?.nom || ''}`.trim())}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-medium hover:bg-red-100 transition-colors"
-                        >
-                          <Trash2 className="h-3 w-3" /> Retirer
-                        </button>
+                      <div className="shrink-0">
+                        <RowMenu items={[
+                          { label: 'Modifier l\'apprenant', icon: <Pencil className="h-4 w-4 text-surface-400" />, onClick: () => setEditApprenant(a) },
+                          { label: 'Attestation d\'entrée (PDF)', icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/attestation-entree/${a?.id}${base}`, '_blank') },
+                          { label: 'Convocation (PDF)', icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/convocation/${a?.id}${base}`, '_blank') },
+                          { label: 'Attestation (PDF)', icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/attestation/${a?.id}${base}`, '_blank') },
+                          { label: 'Envoyer l\'attestation par email', icon: <Mail className="h-4 w-4 text-surface-400" />, onClick: () => handleSendDoc(a?.id, 'attestation', 'Attestation') },
+                          { label: 'Certificat de réalisation (PDF)', icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/certificat-realisation/${a?.id}${base}`, '_blank') },
+                          { label: 'Envoyer le certificat par email', icon: <Mail className="h-4 w-4 text-surface-400" />, onClick: () => handleSendDoc(a?.id, 'certificat', 'Certificat') },
+                          { label: 'Retirer de la session', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDesinscrire(a?.id, `${a?.prenom || ''} ${a?.nom || ''}`.trim()), danger: true },
+                        ]} />
                       </div>
                     )}
                   </div>
@@ -838,6 +832,15 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <div className="text-center py-12 text-sm text-surface-400">Aucun apprenant inscrit</div>
           )}
         </div>
+        <Modal isOpen={!!editApprenant} onClose={() => setEditApprenant(null)} title="Modifier l'apprenant" size="lg">
+          {editApprenant && (
+            <ApprenantForm
+              apprenant={editApprenant as any}
+              clients={clientsRef as any}
+              onDone={() => { setEditApprenant(null); router.refresh() }}
+            />
+          )}
+        </Modal>
         </div>
       )}
 
