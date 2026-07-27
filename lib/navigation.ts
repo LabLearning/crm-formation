@@ -77,6 +77,7 @@ export const navigation: NavSection[] = [
       { label: 'Devis', href: '/dashboard/devis', icon: 'FileText', module: 'devis' },
       { label: 'Factures', href: '/dashboard/factures', icon: 'Receipt', module: 'factures' },
       { label: 'Paiements', href: '/dashboard/paiements', icon: 'CreditCard', module: 'paiements' },
+      { label: 'Factures formateurs', href: '/dashboard/factures-formateurs', icon: 'ReceiptText', module: 'factures' },
       { label: 'Affacturage', href: '/dashboard/affacturage', icon: 'Banknote', module: 'factures' },
     ],
   },
