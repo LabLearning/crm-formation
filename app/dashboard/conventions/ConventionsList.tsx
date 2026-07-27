@@ -6,7 +6,7 @@ import {
   Plus, Search, Send, Check, Trash2,
   FileSignature, Building2, Euro, Clock, PenTool, Download, Link2, Copy,
 } from 'lucide-react'
-import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
+import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMenu } from '@/components/ui'
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
 import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LABELS } from '@/lib/types/dossier'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
@@ -218,7 +218,7 @@ export function ConventionsList({ conventions, clients, formations, sessions = [
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle convention" size="lg">
         <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <Select id="type" name="type" label="Type *" options={typeOptions} defaultValue="inter_entreprise" />
-          <Select id="client_id" name="client_id" label="Client *" options={clientOptions} placeholder="Sélectionner" error={errors.client_id?.[0]} />
+          <SearchSelectField name="client_id" label="Client *" options={clientOptions} placeholder="Rechercher un client…" error={errors.client_id?.[0]} />
           <Select id="formation_id" name="formation_id" label="Formation *" options={formationOptions} placeholder="Sélectionner" error={errors.formation_id?.[0]} />
           {sessionOptions.length > 0 && (
             <Select id="session_id" name="session_id" label="Session liée (alimente planning + participants du PDF)" options={[{ value: '', label: 'Aucune' }, ...sessionOptions]} />

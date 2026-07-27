@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Save, Accessibility } from 'lucide-react'
-import { Button, Input, Select, useToast } from '@/components/ui'
+import { Button, Input, Select, SearchSelectField, useToast } from '@/components/ui'
 import { createApprenantAction, updateApprenantAction } from './actions'
 import type { Apprenant } from '@/lib/types/formation'
 import type { Client } from '@/lib/types/crm'
@@ -52,7 +52,7 @@ export function ApprenantForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-      <Select id="client_id" name="client_id" label="Entreprise rattachée" options={clientOptions} defaultValue={apprenant?.client_id || defaultClientId || ''} />
+      <SearchSelectField name="client_id" label="Entreprise rattachée" options={clientOptions.filter((o) => o.value)} defaultValue={apprenant?.client_id || defaultClientId || ''} placeholder="Rechercher une entreprise…" clearable />
       <div className="grid grid-cols-3 gap-3">
         <Select id="civilite" name="civilite" label="Civilité" options={[{ value: '', label: '—' }, { value: 'M.', label: 'M.' }, { value: 'Mme', label: 'Mme' }]} defaultValue={apprenant?.civilite || ''} />
         <Input id="prenom" name="prenom" label="Prénom *" defaultValue={apprenant?.prenom || ''} error={errors.prenom?.[0]} />

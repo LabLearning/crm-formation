@@ -7,7 +7,7 @@ import {
   Plus, Search, Briefcase, Building2, GraduationCap, Trash2,
   ChevronRight, CheckCircle2, Clock, Users, CalendarClock, FolderTree,
 } from 'lucide-react'
-import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
+import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast } from '@/components/ui'
 import { createPoeiAction, updatePoeiStatutAction, deletePoeiAction } from './actions'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
 import { formatDate, cn } from '@/lib/utils'
@@ -259,7 +259,7 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau projet POEI" size="lg">
         <form onSubmit={handleCreate} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Select id="client_id" name="client_id" label="Entreprise *" options={clientOptions} error={errors.client_id?.[0]} />
+            <SearchSelectField name="client_id" label="Entreprise *" options={clientOptions.filter((o) => o.value)} placeholder="Rechercher une entreprise…" error={errors.client_id?.[0]} />
             <Select id="formation_id" name="formation_id" label="Programme (formation POEI) *" options={formationOptions} error={errors.formation_id?.[0]} />
           </div>
 

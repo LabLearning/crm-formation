@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase } from 'lucide-react'
-import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
+import { Button, Badge, Input, Select, SearchSelectField, Modal, useToast, RowMenu } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import {
   createCandidatVivierAction, updateCandidatVivierAction, updateCandidatVivierStatutAction,
@@ -294,7 +294,7 @@ function CandidatForm({ candidat, clients, poeis, previsions, onDone }: { candid
 
       {/* Rattachements */}
       <div className="grid grid-cols-2 gap-3">
-        <Select id="client_id" name="client_id" label="Entreprise pressentie" options={clientOptions} defaultValue={candidat?.client_id || ''} />
+        <SearchSelectField name="client_id" label="Entreprise pressentie" options={clientOptions.filter((o) => o.value)} defaultValue={candidat?.client_id || ''} placeholder="Rechercher une entreprise…" clearable />
         <div>
           <label htmlFor="poei_target" className="block text-sm font-medium text-surface-700 mb-1.5">POEI cible (projet ou à planifier)</label>
           <TargetSelect name="poei_target" value={candidat ? currentTarget(candidat) : ''} poeis={poeis} previsions={previsions} className="input-base w-full" />

@@ -5,7 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, Send, Check,
   X, FileText, ArrowRight, Euro, Calendar, Building2, Eye, Download,
 } from 'lucide-react'
-import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
+import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMenu } from '@/components/ui'
 import {
   createDevisAction, updateDevisStatusAction, deleteDevisAction,
   convertDevisToConventionAction, addDevisLigneAction, removeDevisLigneAction,
@@ -204,7 +204,7 @@ export function DevisList({ devisList, clients, formations }: DevisListProps) {
       {/* Create Modal */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau devis" size="lg">
         <form onSubmit={handleCreate} className="space-y-4">
-          <Select id="client_id" name="client_id" label="Client *" options={clientOptions} placeholder="Sélectionner" error={createErrors.client_id?.[0]} />
+          <SearchSelectField name="client_id" label="Client *" options={clientOptions} placeholder="Rechercher un client…" error={createErrors.client_id?.[0]} />
           <Select id="formation_id" name="formation_id" label="Formation liée" options={formationOptions} />
           <Input id="objet" name="objet" label="Objet *" placeholder="Formation Management — 3 jours" error={createErrors.objet?.[0]} />
           <div className="grid grid-cols-2 gap-3">
