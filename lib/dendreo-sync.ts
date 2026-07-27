@@ -60,7 +60,7 @@ export interface SyncReport {
   formations: { new: number; existing: number }
   contacts: { new: number; existing: number; orphan: number }
   apprenants: { new: number; existing: number; orphan: number }
-  sessions: { new: number; existing: number; orphan_formation: number }
+  sessions: { new: number; existing: number; orphan_formation: number; formateur_backfill?: number }
 }
 
 const norm = (s: any) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' ')
@@ -103,10 +103,27 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
     return out
   }
 
-  const [entreprises, formateurs, modules, contacts, participants, actions] = await Promise.all([
+  const [entreprises, formateurs, modules, contacts, participants, actions, lams] = await Promise.all([
     dendreo('entreprises'), dendreo('formateurs'), dendreo('modules'),
     dendreo('contacts'), dendreo('participants'), dendreo('actions_de_formation'),
+    dendreo('lams'),
   ])
+
+  // Dendreo lie les formateurs aux actions via les LAM (lignes action-module),
+  // chaque LAM portant un tableau `formateurs`. On agrège par action de formation.
+  const actionFormateurDids = new Map<string, string[]>()
+  for (const l of (lams || [])) {
+    const aid = l && l.id_action_de_formation != null ? String(l.id_action_de_formation) : null
+    if (!aid) continue
+    const fs = Array.isArray(l.formateurs) ? l.formateurs : []
+    for (const f of fs) {
+      const fd = f && f.id_formateur != null ? String(f.id_formateur) : null
+      if (!fd) continue
+      const arr = actionFormateurDids.get(aid) || []
+      if (!arr.includes(fd)) arr.push(fd)
+      actionFormateurDids.set(aid, arr)
+    }
+  }
 
   const entrepriseIds = new Set(entreprises.map((e: any) => String(e.id_entreprise)))
   const report: any = {}
@@ -252,6 +269,12 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
       }
       return bestScore >= 0.5 ? best : null
     }
+    // Résout le formateur CRM d'une action Dendreo (1er formateur du/des LAM)
+    const resolveFormateurId = (actionDid: string): string | null => {
+      const dids = actionFormateurDids.get(actionDid) || []
+      for (const fd of dids) { const id = formateurMap.get(fd); if (id) return id }
+      return null
+    }
     const toInsert: any[] = []; let orphanForm = 0
     for (const a of actions) {
       const did = String(a.id_action_de_formation)
@@ -264,6 +287,7 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
         organization_id: ORG, dendreo_id: did,
         formation_id: formationId && formationId !== '__new__' ? formationId : null,
         client_id: clientId || null,
+        formateur_id: resolveFormateurId(did),
         reference: clean(a.numero_complet) || clean(a.numero),
         intitule: clean(a.intitule),
         date_debut: clean(a.date_debut) || clean(a.date_effective_debut),
@@ -275,9 +299,24 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
         notes_internes: '[Dendreo]',
       })
     }
-    const insertable = apply ? toInsert.filter((s) => s.formation_id) : toInsert
+    // On importe TOUTES les actions Dendreo, même sans formation rapprochée :
+    // la session garde son intitulé et son formateur, et sera rattachée plus tard.
+    const insertable = toInsert
     await insertBatch('sessions', insertable)
-    report.sessions = { new: insertable.length, existing: actions.length - toInsert.length, orphan_formation: orphanForm }
+
+    // Backfill : les sessions Dendreo déjà importées sans formateur récupèrent
+    // leur formateur (on ne touche jamais une session déjà attribuée manuellement).
+    let formateurBackfill = 0
+    if (apply) {
+      const existing: any[] = await sb('GET', `/sessions?organization_id=eq.${ORG}&dendreo_id=not.is.null&formateur_id=is.null&select=id,dendreo_id`)
+      for (const s of existing) {
+        const fid = resolveFormateurId(String(s.dendreo_id))
+        if (!fid) continue
+        await sb('PATCH', `/sessions?id=eq.${s.id}`, { formateur_id: fid })
+        formateurBackfill++
+      }
+    }
+    report.sessions = { new: insertable.length, existing: actions.length - toInsert.length, orphan_formation: orphanForm, formateur_backfill: formateurBackfill }
   }
 
   return report as SyncReport

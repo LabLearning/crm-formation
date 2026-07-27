@@ -70,11 +70,26 @@ log(`\n${DRY ? '🔍 DRY-RUN' : '🚀 APPLY'} — Sync Dendreo → CRM (org ${OR
 
 // ── Chargement source ──
 log('\n[1] Lecture Dendreo…')
-const [entreprises, formateurs, modules, contacts, participants, actions] = await Promise.all([
+const [entreprises, formateurs, modules, contacts, participants, actions, lams] = await Promise.all([
   dendreo('entreprises'), dendreo('formateurs'), dendreo('modules'),
   dendreo('contacts'), dendreo('participants'), dendreo('actions_de_formation'),
+  dendreo('lams'),
 ])
-log(`  entreprises=${entreprises.length} formateurs=${formateurs.length} modules=${modules.length} contacts=${contacts.length} participants=${participants.length} actions=${actions.length}`)
+log(`  entreprises=${entreprises.length} formateurs=${formateurs.length} modules=${modules.length} contacts=${contacts.length} participants=${participants.length} actions=${actions.length} lams=${lams.length}`)
+
+// Dendreo lie les formateurs aux actions via les LAM (chaque LAM porte `formateurs`)
+const actionFormateurDids = new Map()
+for (const l of (lams || [])) {
+  const aid = l && l.id_action_de_formation != null ? String(l.id_action_de_formation) : null
+  if (!aid) continue
+  for (const f of (Array.isArray(l.formateurs) ? l.formateurs : [])) {
+    const fd = f && f.id_formateur != null ? String(f.id_formateur) : null
+    if (!fd) continue
+    const arr = actionFormateurDids.get(aid) || []
+    if (!arr.includes(fd)) arr.push(fd)
+    actionFormateurDids.set(aid, arr)
+  }
+}
 
 // Ensembles source pour mesurer la couverture des liens (valide en dry-run ET apply)
 const entrepriseIds = new Set(entreprises.map((e) => String(e.id_entreprise)))
@@ -229,6 +244,13 @@ const formationByName = new Map()
     }
     return bestScore >= 0.5 ? best : null
   }
+  // Résout le formateur CRM d'une action Dendreo (1er formateur d'un LAM)
+  const resolveFormateurId = (actionDid) => {
+    for (const fd of (actionFormateurDids.get(actionDid) || [])) {
+      const id = formateurMap.get(fd); if (id) return id
+    }
+    return null
+  }
   const toInsert = []
   let orphanForm = 0
   for (const a of actions) {
@@ -242,6 +264,7 @@ const formationByName = new Map()
       organization_id: ORG, dendreo_id: did,
       formation_id: formationId && formationId !== '__new__' ? formationId : null,
       client_id: clientId || null,
+      formateur_id: resolveFormateurId(did),
       reference: clean(a.numero_complet) || clean(a.numero),
       intitule: clean(a.intitule),
       date_debut: clean(a.date_debut) || clean(a.date_effective_debut),
@@ -253,10 +276,24 @@ const formationByName = new Map()
       notes_internes: '[Dendreo]',
     })
   }
-  // En apply, on n'insère que celles avec formation_id résolu (NOT NULL probable)
-  const insertable = DRY ? toInsert : toInsert.filter((s) => s.formation_id)
+  // On importe TOUTES les actions (même sans formation rapprochée) — elles gardent
+  // leur intitulé et leur formateur.
+  const insertable = toInsert
   await insertBatch('sessions', insertable)
-  report.sessions = { new: insertable.length, existing: actions.length - toInsert.length, orphan_formation: orphanForm }
+
+  // Backfill : sessions Dendreo déjà importées sans formateur → on l'attribue
+  // (jamais d'écrasement d'une attribution manuelle existante)
+  let formateurBackfill = 0
+  if (!DRY) {
+    const existing = await sb('GET', `/sessions?organization_id=eq.${ORG}&dendreo_id=not.is.null&formateur_id=is.null&select=id,dendreo_id`)
+    for (const s of existing) {
+      const fid = resolveFormateurId(String(s.dendreo_id))
+      if (!fid) continue
+      await sb('PATCH', `/sessions?id=eq.${s.id}`, { formateur_id: fid })
+      formateurBackfill++
+    }
+  }
+  report.sessions = { new: insertable.length, existing: actions.length - toInsert.length, orphan_formation: orphanForm, formateur_backfill: formateurBackfill }
 }
 
 // ── Récap ──
