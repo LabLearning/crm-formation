@@ -116,11 +116,13 @@ export async function checkConventionData(
   }
 
   // ── 5. Modalités pédagogiques et encadrement ──
+  // Non bloquant : la convention imprime un texte standard par défaut pour ces
+  // trois champs quand ils ne sont pas personnalisés sur la formation.
   const S5 = 'Modalités pédagogiques'
   if (formation) {
-    if (!has(formation.methodes_pedagogiques)) miss(S5, 'Moyens / méthodes pédagogiques')
-    if (!has(formation.moyens_techniques)) miss(S5, 'Moyens techniques')
-    if (!has(formation.modalites_evaluation)) miss(S5, "Modalités d'évaluation")
+    if (!has(formation.methodes_pedagogiques)) warn(S5, 'Méthodes pédagogiques (un texte standard sera utilisé)')
+    if (!has(formation.moyens_techniques)) warn(S5, 'Moyens techniques (un texte standard sera utilisé)')
+    if (!has(formation.modalites_evaluation)) warn(S5, "Modalités d'évaluation (un texte standard sera utilisé)")
   }
   if (session && !session.formateur_id) miss(S5, 'Formateur désigné sur la session')
 
