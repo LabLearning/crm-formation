@@ -82,7 +82,11 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
                     {s.client?.raison_sociale && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{s.client.raison_sociale}</span>}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-surface-900 shrink-0">{fmtMontant(s.cout_formateur)}</div>
+                <div className="text-sm font-bold shrink-0 text-surface-900">
+                  {Number(s.cout_formateur) > 0
+                    ? fmtMontant(s.cout_formateur)
+                    : <span className="text-xs font-medium text-surface-400">Montant à définir</span>}
+                </div>
                 <Button size="sm" onClick={() => facturerSession(s)} icon={<ReceiptEuro className="h-4 w-4" />}>Facturer</Button>
               </div>
             ))}

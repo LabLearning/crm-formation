@@ -12,9 +12,8 @@ export async function FacturationView({ formateurId, token }: { formateurId: str
   const [{ data: sessions }, { data: factures }] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, reference, intitule, date_debut, date_fin, cout_formateur, formation:formation_id(intitule), client:client_id(raison_sociale)')
+      .select('id, reference, intitule, date_debut, date_fin, status, cout_formateur, formation:formation_id(intitule), client:client_id(raison_sociale)')
       .eq('formateur_id', formateurId)
-      .not('cout_formateur', 'is', null)
       .order('date_fin', { ascending: false }),
     supabase
       .from('factures_formateur')
@@ -25,8 +24,13 @@ export async function FacturationView({ formateurId, token }: { formateurId: str
 
   const facturesList = (factures || []) as any[]
   const invoiced = new Set(facturesList.map((f) => f.session_id).filter(Boolean))
+  // Facturable = session non encore facturée qui est soit terminée / passée,
+  // soit dont la rémunération est déjà fixée. Le montant peut être vide (venant
+  // de Dendreo) : le formateur le saisit alors lui-même.
+  const today = new Date().toISOString().slice(0, 10)
   const facturable = ((sessions || []) as any[])
-    .filter((s) => Number(s.cout_formateur) > 0 && !invoiced.has(s.id))
+    .filter((s) => !invoiced.has(s.id))
+    .filter((s) => Number(s.cout_formateur) > 0 || s.status === 'terminee' || (s.date_fin && s.date_fin <= today))
 
   // URLs signées pour les fichiers déposés (bucket privé)
   const paths = facturesList.map((f) => f.fichier_url).filter((u) => u && !/^https?:\/\//.test(u)) as string[]
