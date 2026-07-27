@@ -105,9 +105,7 @@ export function FacturesFormateursList({ factures, fileUrls }: { factures: any[]
                     </div>
                     <div className="text-sm font-bold text-surface-900 shrink-0">{fmt(f.montant_ttc)}</div>
                     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${st.cls}`}><st.Icon className="h-3 w-3" /> {st.label}</span>
-                    {f.fichier_url && fileUrls[f.fichier_url] && (
-                      <a href={fileUrls[f.fichier_url]} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[11px] font-medium hover:bg-surface-100 shrink-0"><Download className="h-3 w-3" /> PDF</a>
-                    )}
+                    <a href={(f.fichier_url && fileUrls[f.fichier_url]) ? fileUrls[f.fichier_url] : `/api/pdf/facture-formateur/${f.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-50 text-surface-500 text-[11px] font-medium hover:bg-surface-100 shrink-0"><Download className="h-3 w-3" /> PDF</a>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {f.status === 'envoyee' && (
                         <>

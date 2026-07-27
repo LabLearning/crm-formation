@@ -110,11 +110,12 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
                       <st.Icon className="h-3 w-3" /> {st.label}
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
-                      {f.fichier_url && fileUrls[f.fichier_url] && (
-                        <a href={fileUrls[f.fichier_url]} target="_blank" rel="noreferrer" title="Télécharger" className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-100">
-                          <Download className="h-4 w-4" />
-                        </a>
-                      )}
+                      <a
+                        href={(f.fichier_url && fileUrls[f.fichier_url]) ? fileUrls[f.fichier_url] : `/api/pdf/facture-formateur/${f.id}?token=${encodeURIComponent(token)}`}
+                        target="_blank" rel="noreferrer" title="Télécharger la facture"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-100">
+                        <Download className="h-4 w-4" />
+                      </a>
                       {!['validee', 'payee'].includes(f.status) && (
                         <button onClick={() => remove(f)} title="Supprimer" className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-400 hover:bg-danger-50 hover:text-danger-600">
                           <Trash2 className="h-4 w-4" />
