@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck, Calendar,
   ListChecks, Star, Users, CheckSquare, Receipt, UserPlus, Building2,
-  LogOut, ChevronDown, Menu, X, BookOpen,
+  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -73,9 +73,12 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
             : user.role === 'formateur' ? formateurNav
             : apporteurNav
 
-  // Toutes les entrées restent accessibles sur mobile : au-delà de 5, la grille
-  // passe sur deux lignes (grid-cols-4) plutôt que de masquer des onglets.
-  const mobileNav = nav
+  // Barre mobile : au-delà de 5 entrées, 4 items principaux + bouton « Plus »
+  // qui ouvre une feuille avec toutes les entrées (plutôt qu'une grille tassée).
+  const MOBILE_PRIMARY = 4
+  const hasOverflow = nav.length > 5
+  const primaryNav = hasOverflow ? nav.slice(0, MOBILE_PRIMARY) : nav
+  const mobileCols = primaryNav.length + (hasOverflow ? 1 : 0)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -188,17 +191,45 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
         {children}
       </main>
 
+      {/* Feuille « Plus » (mobile) */}
+      {mobileMenu && (
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-surface-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setMobileMenu(false)} />
+          <div className="absolute bottom-0 inset-x-0 bg-white rounded-t-2xl shadow-2xl animate-slide-up"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          >
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <span className="text-sm font-semibold text-surface-900">Menu</span>
+              <button onClick={() => setMobileMenu(false)} className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-400 hover:bg-surface-100" aria-label="Fermer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 px-4 pb-5 pt-1">
+              {nav.map((item) => {
+                const active = isActive(item.href)
+                return (
+                  <Link key={item.href} href={basePath + item.href} onClick={() => setMobileMenu(false)}
+                    className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border transition-colors active:scale-95"
+                    style={active ? { borderColor: PORTAL_GREEN, backgroundColor: '#1951440d' } : { borderColor: '#e7e5e4' }}
+                  >
+                    <item.icon className="h-5 w-5" style={{ color: active ? PORTAL_GREEN : '#78716c' }} />
+                    <span className="text-[11px] font-medium text-center leading-tight px-1" style={{ color: active ? PORTAL_GREEN : '#57534e' }}>
+                      {item.label}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile bottom tab bar */}
       <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/97 backdrop-blur-md border-t border-surface-200/80"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className={cn('grid',
-          mobileNav.length === 3 && 'grid-cols-3',
-          mobileNav.length === 4 && 'grid-cols-4',
-          mobileNav.length === 5 && 'grid-cols-5',
-          mobileNav.length > 5 && 'grid-cols-4',
-        )}>
-          {mobileNav.map((item) => {
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${mobileCols}, minmax(0, 1fr))` }}>
+          {primaryNav.map((item) => {
             const active = isActive(item.href)
             return (
               <Link key={item.href} href={basePath + item.href}
@@ -214,6 +245,20 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
               </Link>
             )
           })}
+          {hasOverflow && (() => {
+            const overflowActive = nav.slice(MOBILE_PRIMARY).some((i) => isActive(i.href))
+            return (
+              <button type="button" onClick={() => setMobileMenu(true)}
+                className="relative flex flex-col items-center justify-center gap-0.5 py-2.5 min-h-[56px] transition-all duration-200 active:scale-95"
+              >
+                {overflowActive && (
+                  <span className="absolute top-0 left-3 right-3 h-[2px] rounded-full" style={{ backgroundColor: PORTAL_GREEN }} />
+                )}
+                <MoreHorizontal className="h-[22px] w-[22px]" style={{ color: overflowActive ? PORTAL_GREEN : '#a8a29e' }} />
+                <span className="text-[10px] font-medium leading-none" style={{ color: overflowActive ? PORTAL_GREEN : '#a8a29e' }}>Plus</span>
+              </button>
+            )
+          })()}
         </div>
       </nav>
     </div>
