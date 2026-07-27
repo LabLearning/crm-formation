@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText } from 'lucide-react'
+import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText } from 'lucide-react'
 import { Modal, Button, Input, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { submitFactureFormateurAction, deleteFactureFormateurAction } from './facturation-actions'
@@ -83,7 +83,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
                   </div>
                 </div>
                 <div className="text-sm font-bold text-surface-900 shrink-0">{fmtMontant(s.cout_formateur)}</div>
-                <Button size="sm" onClick={() => facturerSession(s)} icon={<Receipt className="h-4 w-4" />}>Facturer</Button>
+                <Button size="sm" onClick={() => facturerSession(s)} icon={<ReceiptEuro className="h-4 w-4" />}>Facturer</Button>
               </div>
             ))}
           </div>
@@ -164,7 +164,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
           </label>
           <div className="flex justify-end gap-3 pt-2 border-t border-surface-100">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button type="submit" isLoading={loading} icon={<Receipt className="h-4 w-4" />}>Envoyer à Lab Learning</Button>
+            <Button type="submit" isLoading={loading} icon={<ReceiptEuro className="h-4 w-4" />}>Envoyer à Lab Learning</Button>
           </div>
         </form>
       </Modal>

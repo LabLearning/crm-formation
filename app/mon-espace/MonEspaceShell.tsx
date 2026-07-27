@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck, Calendar,
   ListChecks, Star, Users, CheckSquare, Receipt, UserPlus, Building2,
-  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal,
+  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -33,13 +33,13 @@ const formateurNav: NavItem[] = [
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
-  { label: 'Facturation', short: 'Factures', href: '/facturation', icon: Receipt },
+  { label: 'Facturation', short: 'Factures', href: '/facturation', icon: ReceiptEuro },
 ]
 
 const apporteurNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Mes leads', short: 'Leads', href: '/leads', icon: UserPlus },
-  { label: 'Commissions', short: 'Commissions', href: '/commissions', icon: Receipt },
+  { label: 'Commissions', short: 'Commissions', href: '/commissions', icon: ReceiptEuro },
   { label: 'Mes clients', short: 'Clients', href: '/clients', icon: Building2 },
 ]
 

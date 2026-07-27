@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck,
   Calendar, ListChecks, Star, Users, CheckSquare,
-  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X,
+  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
@@ -38,21 +38,21 @@ const formateurNav: NavItem[] = [
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
-  { label: 'Facturation', short: 'Factures', href: '/facturation', icon: Receipt },
+  { label: 'Facturation', short: 'Factures', href: '/facturation', icon: ReceiptEuro },
 ]
 
 const clientNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Formations', short: 'Formations', href: '/formations-client', icon: GraduationCap },
   { label: 'Conventions', short: 'Conventions', href: '/conventions-client', icon: FileSignature },
-  { label: 'Factures', short: 'Factures', href: '/factures-client', icon: Receipt },
+  { label: 'Factures', short: 'Factures', href: '/factures-client', icon: ReceiptEuro },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
 ]
 
 const apporteurNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Mes leads', short: 'Leads', href: '/leads-apporteur', icon: Users },
-  { label: 'Commissions', short: 'Commissions', href: '/commissions-apporteur', icon: Receipt },
+  { label: 'Commissions', short: 'Commissions', href: '/commissions-apporteur', icon: ReceiptEuro },
 ]
 
 const partenaireNav: NavItem[] = [
@@ -60,7 +60,7 @@ const partenaireNav: NavItem[] = [
   { label: 'Dossiers', short: 'Dossiers', href: '/dossiers-partenaire', icon: FileSignature },
   { label: 'Sessions', short: 'Sessions', href: '/sessions-partenaire', icon: Calendar },
   { label: 'Leads', short: 'Leads', href: '/leads-apporteur', icon: Users },
-  { label: 'Commissions', short: 'Commis.', href: '/commissions-apporteur', icon: Receipt },
+  { label: 'Commissions', short: 'Commis.', href: '/commissions-apporteur', icon: ReceiptEuro },
 ]
 
 function isPartenaire(ctx: PortalContext) {

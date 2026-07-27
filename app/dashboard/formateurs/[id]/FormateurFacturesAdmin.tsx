@@ -2,13 +2,13 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, Download, CheckCircle2, Clock, XCircle, BadgeEuro } from 'lucide-react'
+import { ReceiptEuro, Download, CheckCircle2, Clock, XCircle, BadgeEuro } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { updateFactureFormateurStatusAction } from '../actions'
 
 const STATUT: Record<string, { label: string; cls: string; Icon: any }> = {
-  brouillon: { label: 'Brouillon', cls: 'bg-surface-100 text-surface-600', Icon: Receipt },
+  brouillon: { label: 'Brouillon', cls: 'bg-surface-100 text-surface-600', Icon: ReceiptEuro },
   envoyee: { label: 'À valider', cls: 'bg-amber-50 text-amber-700', Icon: Clock },
   validee: { label: 'Validée', cls: 'bg-sky-50 text-sky-700', Icon: CheckCircle2 },
   payee: { label: 'Payée', cls: 'bg-emerald-50 text-emerald-700', Icon: CheckCircle2 },
