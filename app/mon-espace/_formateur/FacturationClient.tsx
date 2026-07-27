@@ -28,12 +28,18 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
   const [preset, setPreset] = useState<{ sessionId?: string; montant?: number; objet?: string } | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [montantHt, setMontantHt] = useState(0)
+  const [tauxTva, setTauxTva] = useState(0)
+
+  const montantTva = Math.round(montantHt * (tauxTva / 100) * 100) / 100
+  const montantTtc = Math.round((montantHt + montantTva) * 100) / 100
 
   function facturerSession(s: any) {
-    setPreset({ sessionId: s.id, montant: Number(s.cout_formateur) || 0, objet: `Prestation de formation — ${s.formation?.intitule || s.reference}` })
-    setFile(null); setOpen(true)
+    const m = Number(s.cout_formateur) || 0
+    setPreset({ sessionId: s.id, montant: m, objet: `Prestation de formation — ${s.formation?.intitule || s.reference}` })
+    setMontantHt(m); setTauxTva(0); setFile(null); setOpen(true)
   }
-  function factureLibre() { setPreset({}); setFile(null); setOpen(true) }
+  function factureLibre() { setPreset({}); setMontantHt(0); setTauxTva(0); setFile(null); setOpen(true) }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -138,8 +144,17 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
         <form onSubmit={submit} className="space-y-4">
           <Input id="objet" name="objet" label="Objet" defaultValue={preset?.objet || ''} placeholder="Prestation de formation…" />
           <div className="grid grid-cols-2 gap-3">
-            <Input id="montant_ht" name="montant_ht" type="number" step="0.01" label="Montant HT (€) *" defaultValue={preset?.montant ? String(preset.montant) : ''} />
-            <Input id="taux_tva" name="taux_tva" type="number" step="0.01" label="Taux TVA (%)" defaultValue="0" />
+            <Input id="montant_ht" name="montant_ht" type="number" step="0.01" label="Montant HT (€) *"
+              defaultValue={preset?.montant ? String(preset.montant) : ''}
+              onChange={(e) => setMontantHt(Number((e.target.value || '0').replace(',', '.')) || 0)} />
+            <Input id="taux_tva" name="taux_tva" type="number" step="0.01" label="Taux TVA (%)" defaultValue="0"
+              onChange={(e) => setTauxTva(Number((e.target.value || '0').replace(',', '.')) || 0)} />
+          </div>
+          {/* Récapitulatif en euros — mis à jour en direct */}
+          <div className="rounded-xl bg-surface-50 border border-surface-100 px-4 py-3 space-y-1.5">
+            <div className="flex items-center justify-between text-sm text-surface-600"><span>Total HT</span><span className="font-medium text-surface-800">{fmtMontant(montantHt)}</span></div>
+            <div className="flex items-center justify-between text-sm text-surface-600"><span>TVA ({tauxTva}%)</span><span className="font-medium text-surface-800">{fmtMontant(montantTva)}</span></div>
+            <div className="flex items-center justify-between text-base font-bold text-surface-900 pt-1.5 border-t border-surface-200"><span>Total TTC</span><span>{fmtMontant(montantTtc)}</span></div>
           </div>
           <Input id="reference_externe" name="reference_externe" label="Votre n° de facture" placeholder="Votre numérotation (optionnel)" />
           <label className="flex items-center gap-2 rounded-xl border border-dashed border-surface-300 bg-surface-50/60 px-3 py-2.5 text-sm text-surface-500 cursor-pointer hover:border-brand-300 transition-colors">
