@@ -423,37 +423,23 @@ export async function sendBrandedEmail(params: {
 }
 
 /**
- * Email "document disponible" : layout brandé standardisé pour tous les envois
- * de pièces (convocation, livret, attestation, certificat, facture, devis...).
- * - intro + tableau metadata (couples label/valeur)
- * - CTA optionnel (vers le portail)
- * - PDF attaché si pdfBuffer fourni
+ * Construit le HTML de l'email « document » (même rendu que sendDocumentEmail),
+ * pour l'aperçu avant envoi comme pour l'envoi réel.
  */
-export async function sendDocumentEmail(params: {
-  to: string | string[]
+export function buildDocumentEmailHtml(params: {
   orgName: string
   orgEmail?: string
   orgLogoUrl?: string | null
   qualiopiCertified?: boolean
-  fromAddress?: string
   recipientName: string
-  subject: string
-  docTitle: string            // "Votre convocation à la formation"
-  intro: string               // "Vous êtes attendu pour la formation suivante."
+  docTitle: string
+  intro: string
   metadata?: Array<[string, string]>
   ctaLabel?: string
   ctaUrl?: string
   footerNote?: string
-  pdfBuffer?: Buffer | Uint8Array
   pdfFilename?: string
-  attachmentContentType?: string  // défaut application/pdf
-  extraAttachments?: { filename: string; content: Buffer | Uint8Array; contentType?: string }[]
-  // Traçabilité optionnelle (email_logs) — voir sendBrandedEmail
-  organizationId?: string
-  entityType?: string
-  entityId?: string
-  triggeredBy?: string
-}): Promise<{ success: boolean; error?: string }> {
+}): string {
   const fileExt = (params.pdfFilename?.split('.').pop() || 'DOC').toUpperCase().slice(0, 4)
   const metaRows = (params.metadata || [])
     .map(([k, v]) => `<tr><td style="padding:6px 0;color:#71717a;font-size:12px;width:130px;text-transform:uppercase;letter-spacing:0.4px;font-weight:600;">${k}</td><td style="padding:6px 0;color:#18181b;font-size:14px;">${v}</td></tr>`)
@@ -485,13 +471,48 @@ export async function sendDocumentEmail(params: {
     ${params.ctaUrl && params.ctaLabel ? ctaButton(params.ctaUrl, params.ctaLabel) : ''}
     ${params.footerNote ? `<p style="margin:8px 0 0;color:#a1a1aa;font-size:12px;text-align:center;line-height:1.6;">${params.footerNote}</p>` : ''}`
 
-  const html = emailShell({
+  return emailShell({
     body,
     orgName: params.orgName,
     orgEmail: params.orgEmail,
     orgLogoUrl: params.orgLogoUrl || undefined,
     qualiopiCertified: params.qualiopiCertified,
   })
+}
+
+/**
+ * Email "document disponible" : layout brandé standardisé pour tous les envois
+ * de pièces (convocation, livret, attestation, certificat, facture, devis...).
+ * - intro + tableau metadata (couples label/valeur)
+ * - CTA optionnel (vers le portail)
+ * - PDF attaché si pdfBuffer fourni
+ */
+export async function sendDocumentEmail(params: {
+  to: string | string[]
+  orgName: string
+  orgEmail?: string
+  orgLogoUrl?: string | null
+  qualiopiCertified?: boolean
+  fromAddress?: string
+  recipientName: string
+  subject: string
+  docTitle: string            // "Votre convocation à la formation"
+  intro: string               // "Vous êtes attendu pour la formation suivante."
+  metadata?: Array<[string, string]>
+  ctaLabel?: string
+  ctaUrl?: string
+  footerNote?: string
+  pdfBuffer?: Buffer | Uint8Array
+  pdfFilename?: string
+  attachmentContentType?: string  // défaut application/pdf
+  extraAttachments?: { filename: string; content: Buffer | Uint8Array; contentType?: string }[]
+  // Traçabilité optionnelle (email_logs) — voir sendBrandedEmail
+  organizationId?: string
+  entityType?: string
+  entityId?: string
+  triggeredBy?: string
+}): Promise<{ success: boolean; error?: string }> {
+  const html = buildDocumentEmailHtml(params)
 
   const attachments = [
     ...(params.pdfBuffer && params.pdfFilename ? [{

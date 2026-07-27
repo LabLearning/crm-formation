@@ -758,7 +758,7 @@ export async function desinscrireApprenantAction(
  * formation, dates/horaires, lieu complet, établissement + contact sur place,
  * nombre de stagiaires, et le lien vers son espace formateur.
  */
-export async function sendSessionInfoToFormateurAction(sessionId: string): Promise<ActionResult & { data?: { email: string } }> {
+export async function sendSessionInfoToFormateurAction(sessionId: string, opts?: { preview?: boolean }): Promise<ActionResult & { data?: { email?: string; html?: string; subject?: string } }> {
   const session = await getSession()
   if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
     return { success: false, error: 'Accès non autorisé' }
@@ -809,9 +809,7 @@ export async function sendSessionInfoToFormateurAction(sessionId: string): Promi
   const fmtFr = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—'
   const formationNom = (sess as any).formation?.intitule || sess.intitule || 'Formation'
 
-  const { sendDocumentEmail } = await import('@/lib/email')
-  const r = await sendDocumentEmail({
-    to: formateur.email,
+  const emailParams = {
     orgName: org?.name || 'Lab Learning',
     orgEmail: (org as any)?.email_contact || org?.email,
     orgLogoUrl: (org as any)?.logo_url,
@@ -833,6 +831,18 @@ export async function sendSessionInfoToFormateurAction(sessionId: string): Promi
     ctaLabel: 'Accéder à mon espace formateur',
     ctaUrl: spaceUrl,
     footerNote: 'Merci de vérifier ces informations avant la session et de nous signaler tout changement.',
+  }
+
+  // Aperçu : renvoie le HTML sans envoyer
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    return { success: true, data: { html: buildDocumentEmailHtml(emailParams), subject: emailParams.subject, email: formateur.email } }
+  }
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    ...emailParams,
+    to: formateur.email,
     organizationId: session.organization.id,
     entityType: 'session',
     entityId: sessionId,
