@@ -219,7 +219,11 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
     : 0
 
   const lieuComplet = [session.lieu, session.adresse, [session.code_postal, session.ville].filter(Boolean).join(' ')]
-    .filter(Boolean).join(', ') || convention.lieu || '—'
+    .filter(Boolean).join(', ')
+    // À défaut d'adresse sur la session, on reprend l'adresse du client bénéficiaire
+    || [client.raison_sociale, client.adresse, [client.code_postal, client.ville].filter(Boolean).join(' ')]
+      .filter(Boolean).join(', ')
+    || convention.lieu || '—'
 
   const jours: any[] = Array.isArray(session.horaires_jours) ? session.horaires_jours : []
   const nbJours = jours.length || formation.duree_jours || (convention.duree_heures ? Math.max(1, Math.round(convention.duree_heures / 7)) : 1)
@@ -331,6 +335,7 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
           <InfoRow label="Date(s)" value={datesSession} />
           <InfoRow label="Durée totale" value={`${dureeHeures ? `${dureeHeures} heures` : '—'} sur ${nbJours} jour${nbJours > 1 ? 's' : ''}`} />
           <InfoRow label="Mode d'organisation" value={modalite} />
+          <InfoRow label="Lieu de réalisation" value={lieuComplet} />
           <InfoRow label="Taux d'enseignements à distance" value={`${tauxDistance} %`} />
           <InfoRow label="Délai d'accès" value={delaiAcces} />
         </View>
