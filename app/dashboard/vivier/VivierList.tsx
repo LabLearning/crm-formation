@@ -75,6 +75,7 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
   const [statutFilter, setStatutFilter] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [editCand, setEditCand] = useState<Candidat | null>(null)
+  const [detailCand, setDetailCand] = useState<Candidat | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
@@ -170,7 +171,9 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
                 return (
                   <tr key={c.id} className="border-b border-surface-100 last:border-0 hover:bg-surface-50/60 transition-colors">
                     <td className="py-2.5 pl-4 pr-3">
-                      <div className="font-medium text-surface-900">{c.prenom} {c.nom}</div>
+                      <button type="button" onClick={() => setDetailCand(c)} className="text-left font-medium text-surface-900 hover:text-brand-600 transition-colors">
+                        {c.prenom} {c.nom}
+                      </button>
                       <div className="text-xs text-surface-500 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                         {c.email && <span className="truncate">{c.email}</span>}
                         {c.telephone && <span>{c.telephone}</span>}
@@ -224,12 +227,96 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
         )}
       </div>
 
+      <Modal isOpen={!!detailCand} onClose={() => setDetailCand(null)} title={detailCand ? `${detailCand.prenom} ${detailCand.nom}` : ''} size="lg">
+        {detailCand && (
+          <CandidatDetail
+            c={detailCand}
+            onEdit={() => { const cc = detailCand; setDetailCand(null); setEditCand(cc) }}
+            onValider={!detailCand.apprenant_id && detailCand.statut !== 'valide' ? () => { const cc = detailCand; setDetailCand(null); valider(cc) } : undefined}
+          />
+        )}
+      </Modal>
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau candidat (vivier)" size="lg">
         <CandidatForm clients={clients} poeis={poeis} previsions={previsions} onDone={() => { setCreateOpen(false); toast('success', 'Candidat ajouté au vivier'); router.refresh() }} />
       </Modal>
       <Modal isOpen={!!editCand} onClose={() => setEditCand(null)} title="Modifier le candidat" size="lg">
         {editCand && <CandidatForm candidat={editCand} clients={clients} poeis={poeis} previsions={previsions} onDone={() => { setEditCand(null); toast('success', 'Candidat mis à jour'); router.refresh() }} />}
       </Modal>
+    </div>
+  )
+}
+
+function DRow({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value == null || value === '' || value === false) return null
+  return (
+    <div className="flex gap-3 py-1.5 border-b border-surface-100 last:border-0">
+      <div className="w-40 shrink-0 text-xs text-surface-400 uppercase tracking-wide">{label}</div>
+      <div className="text-sm text-surface-800 flex-1 min-w-0">{value}</div>
+    </div>
+  )
+}
+
+function DSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-1">{title}</div>
+      <div>{children}</div>
+    </div>
+  )
+}
+
+/** Vue complète (lecture seule) d'un candidat du vivier */
+function CandidatDetail({ c, onEdit, onValider }: { c: Candidat; onEdit: () => void; onValider?: () => void }) {
+  const sm = statutMeta(c.statut)
+  const adresse = [c.adresse, [c.code_postal, c.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  const cible = c.poei?.numero
+    ? `${c.poei.numero}${c.poei.formation?.intitule ? ' — ' + c.poei.formation.intitule : ''}`
+    : c.poei_prevision
+    ? `À planifier — ${c.poei_prevision.entreprise || c.poei_prevision.client?.raison_sociale || ''}`
+    : null
+  return (
+    <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge variant={sm.variant as any}>{sm.label}</Badge>
+        {c.permis && <Badge variant="success">Permis de conduire</Badge>}
+        {c.apprenant_id && <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-0.5" />Validé (apprenant créé)</Badge>}
+      </div>
+
+      <DSection title="Identité">
+        <DRow label="Civilité" value={c.civilite} />
+        <DRow label="Nom / Prénom" value={`${c.prenom} ${c.nom}`} />
+        <DRow label="Sexe" value={c.sexe === 'H' ? 'Homme' : c.sexe === 'F' ? 'Femme' : null} />
+        <DRow label="Email" value={c.email} />
+        <DRow label="Téléphone" value={c.telephone} />
+      </DSection>
+
+      <DSection title="État civil">
+        <DRow label="Date de naissance" value={c.date_naissance} />
+        <DRow label="Lieu de naissance" value={c.lieu_naissance} />
+        <DRow label="N° sécurité sociale" value={c.numero_securite_sociale} />
+        <DRow label="Adresse" value={adresse} />
+        <DRow label="Type de contrat" value={c.type_contrat} />
+        <DRow label="Permis de conduire" value={c.permis ? 'Oui' : 'Non'} />
+      </DSection>
+
+      <DSection title="Sourcing">
+        <DRow label="Source" value={c.source} />
+        <DRow label="Disponibilité" value={c.disponibilite} />
+        <DRow label="Poste visé" value={c.poste_vise} />
+        <DRow label="Identifiant France Travail" value={c.identifiant_ft} />
+      </DSection>
+
+      <DSection title="Rattachement">
+        <DRow label="Entreprise pressentie" value={c.client?.raison_sociale} />
+        <DRow label="POEI cible" value={cible} />
+      </DSection>
+
+      {c.notes && <DSection title="Notes"><p className="text-sm text-surface-700 whitespace-pre-line">{c.notes}</p></DSection>}
+
+      <div className="flex justify-end gap-3 pt-3 border-t border-surface-100">
+        {onValider && <Button variant="secondary" onClick={onValider} icon={<CheckCircle2 className="h-4 w-4" />}>Valider (→ apprenant)</Button>}
+        <Button onClick={onEdit} icon={<Pencil className="h-4 w-4" />}>Modifier</Button>
+      </div>
     </div>
   )
 }
