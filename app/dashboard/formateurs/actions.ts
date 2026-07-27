@@ -350,3 +350,48 @@ export async function deleteFormateurAction(id: string): Promise<ActionResult> {
   revalidatePath('/dashboard/formateurs')
   return { success: true }
 }
+
+/**
+ * (Re)envoie au formateur le lien d'activation de l'outil Audit Hygiène & DUERP.
+ * Réutilise le provisioning (crée le compte outil si besoin) et envoie un email
+ * brandé avec le lien d'activation.
+ */
+export async function sendAuditAccessAction(formateurId: string): Promise<ActionResult & { data?: { email: string } }> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: f } = await supabase
+    .from('formateurs').select('email, prenom, nom')
+    .eq('id', formateurId).eq('organization_id', session.organization.id).single()
+  if (!f) return { success: false, error: 'Formateur introuvable' }
+  if (!f.email) return { success: false, error: "Le formateur n'a pas d'adresse email renseignée" }
+
+  const link = await provisionAuditToolAccess(f.email, f.prenom, f.nom)
+  if (!link) return { success: false, error: "Outil d'audit non configuré (contactez l'administrateur)." }
+
+  const { data: org } = await supabase
+    .from('organizations').select('name, email, email_contact, logo_url, is_qualiopi').eq('id', session.organization.id).single()
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    to: f.email,
+    orgName: org?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || org?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: `${f.prenom} ${f.nom}`,
+    subject: `Votre accès à l'outil d'audit — ${org?.name || 'Lab Learning'}`,
+    docTitle: "Accès à l'outil Audit Hygiène & DUERP",
+    intro: "Un accès à notre outil de rapports d'audit (hygiène & DUERP) a été créé pour vous. Activez-le en cliquant ci-dessous, puis définissez votre mot de passe.",
+    ctaLabel: "Activer mon accès à l'outil d'audit",
+    ctaUrl: link,
+    footerNote: 'Ce lien est personnel et vous est réservé.',
+  })
+  if (!r.success) return { success: false, error: r.error }
+
+  await logAudit({ action: 'send_audit_access', entity_type: 'formateur', entity_id: formateurId, details: { email: f.email } })
+  return { success: true, data: { email: f.email } }
+}

@@ -11,7 +11,7 @@ import {
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu } from '@/components/ui'
 import {
   createFormateurAction, updateFormateurAction, deleteFormateurAction,
-  toggleFormateurAction, updateHabilitationAction, sendFormateurAccessAction,
+  toggleFormateurAction, updateHabilitationAction, sendFormateurAccessAction, sendAuditAccessAction,
 } from './actions'
 import { formatDate } from '@/lib/utils'
 import type { Formateur } from '@/lib/types/formation'
@@ -281,6 +281,13 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
     else toast('error', result.error || 'Erreur')
   }
 
+  async function handleSendAudit(id: string, nom: string) {
+    if (!confirm(`Envoyer le lien d'accès à l'outil d'audit à ${nom} par email ?`)) return
+    const result = await sendAuditAccessAction(id)
+    if (result.success) toast('success', `Accès outil d'audit envoyé à ${(result.data as any)?.email || nom}`)
+    else toast('error', result.error || 'Erreur')
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -356,6 +363,7 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
                       items={[
                         { label: 'Modifier', icon: <Pencil className="h-4 w-4 text-surface-400" />, onClick: () => setEditFormateur(f) },
                         { label: "Envoyer l'accès à son espace", icon: <KeyRound className="h-4 w-4 text-brand-600" />, onClick: () => handleSendAccess(f.id, `${f.prenom} ${f.nom}`), hidden: !f.email },
+                        { label: "Envoyer l'accès à l'outil d'audit", icon: <ShieldCheck className="h-4 w-4 text-sky-600" />, onClick: () => handleSendAudit(f.id, `${f.prenom} ${f.nom}`), hidden: !f.email },
                         { label: 'Habilitations', icon: <ShieldCheck className="h-4 w-4 text-brand-600" />, onClick: () => setHabilitationFormateur(f) },
                         {
                           label: f.is_active ? 'Désactiver' : 'Activer',

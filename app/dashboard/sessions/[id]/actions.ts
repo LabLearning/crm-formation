@@ -752,3 +752,90 @@ export async function desinscrireApprenantAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true }
 }
+
+/**
+ * Envoie au formateur, avant la formation, un email récapitulatif de la session :
+ * formation, dates/horaires, lieu complet, établissement + contact sur place,
+ * nombre de stagiaires, et le lien vers son espace formateur.
+ */
+export async function sendSessionInfoToFormateurAction(sessionId: string): Promise<ActionResult & { data?: { email: string } }> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: sess } = await supabase
+    .from('sessions')
+    .select('*, formation:formation_id(intitule, duree_heures), formateur:formateurs(id, prenom, nom, email, user_id), client:client_id(id, raison_sociale, adresse, code_postal, ville, telephone, email)')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).single()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+  const formateur = (sess as any).formateur
+  if (!formateur?.email) return { success: false, error: "Le formateur n'a pas d'adresse email renseignée" }
+
+  // Contact référent du client (fiche contact sur place)
+  let contactLine = ''
+  if (sess.client_id) {
+    const { data: contacts } = await supabase
+      .from('contacts').select('prenom, nom, poste, telephone, mobile, email, est_signataire, est_principal')
+      .eq('client_id', sess.client_id)
+    const list = (contacts || []) as any[]
+    const c = list.find((x) => x.est_signataire) || list.find((x) => x.est_principal) || list[0]
+    if (c) contactLine = [
+      `${c.prenom || ''} ${c.nom || ''}`.trim() + (c.poste ? ` (${c.poste})` : ''),
+      c.telephone || c.mobile, c.email,
+    ].filter(Boolean).join(' · ')
+  }
+
+  const cli = (sess as any).client
+  const lieu = [sess.lieu, sess.adresse, [sess.code_postal, sess.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    || [cli?.raison_sociale, cli?.adresse, [cli?.code_postal, cli?.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    || '—'
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+  let spaceUrl = `${appUrl}/mon-espace`
+  try {
+    const { getFormateurPortalToken } = await import('@/lib/formateur-portal')
+    const token = await getFormateurPortalToken(supabase, session.organization.id, formateur.user_id, formateur.email)
+    if (token) spaceUrl = `${appUrl}/portail/${token}`
+  } catch (e) { console.error('[infos session formateur — token]', e) }
+
+  const { count: nbApprenants } = await supabase
+    .from('inscriptions').select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+
+  const { data: org } = await supabase
+    .from('organizations').select('name, email, email_contact, logo_url, is_qualiopi').eq('id', session.organization.id).single()
+  const fmtFr = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—'
+  const formationNom = (sess as any).formation?.intitule || sess.intitule || 'Formation'
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    to: formateur.email,
+    orgName: org?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || org?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: `${formateur.prenom} ${formateur.nom}`,
+    subject: `Votre prochaine formation — ${formationNom}`,
+    docTitle: 'Informations de votre session de formation',
+    intro: "Voici les informations utiles pour la session que vous allez animer. Retrouvez le détail, l'émargement et le contenu pédagogique dans votre espace formateur.",
+    metadata: ([
+      ['Formation', formationNom],
+      ['Dates', `Du ${fmtFr(sess.date_debut)} au ${fmtFr(sess.date_fin)}`],
+      sess.horaires ? ['Horaires', String(sess.horaires)] : null,
+      ['Durée', (sess as any).formation?.duree_heures ? `${(sess as any).formation.duree_heures} h` : '—'],
+      ['Lieu', lieu],
+      cli?.raison_sociale ? ['Établissement', String(cli.raison_sociale)] : null,
+      contactLine ? ['Contact sur place', contactLine] : null,
+      ['Stagiaires', String(nbApprenants || 0)],
+    ].filter(Boolean)) as [string, string][],
+    ctaLabel: 'Accéder à mon espace formateur',
+    ctaUrl: spaceUrl,
+    footerNote: 'Merci de vérifier ces informations avant la session et de nous signaler tout changement.',
+  })
+  if (!r.success) return { success: false, error: r.error }
+
+  await logAudit({ action: 'send_session_info_formateur', entity_type: 'session', entity_id: sessionId, details: { email: formateur.email } })
+  return { success: true, data: { email: formateur.email } }
+}
