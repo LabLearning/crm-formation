@@ -14,7 +14,7 @@ import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
 import { cn, formatDate } from '@/lib/utils'
-import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction, sendSessionInfoToFormateurAction } from './actions'
+import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
 import { SignaturePad } from './SignaturePad'
 import { SendDocButton } from './SendDocButton'
@@ -137,15 +137,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       const r = await sendDocumentToApprenantAction(session.id, apprenantId, docType)
       if ((r as any)?.success) toast('success', `${label} envoyé${(r as any).data?.email ? ` à ${(r as any).data.email}` : ''}`)
       else toast('error', (r as any)?.error || 'Erreur lors de l\'envoi')
-    })
-  }
-
-  function handleSendSessionInfo() {
-    if (!confirm('Envoyer les informations de la session (lieu, contact, dates…) au formateur par email ?')) return
-    startTransition(async () => {
-      const r = await sendSessionInfoToFormateurAction(session.id)
-      if ((r as any)?.success) toast('success', `Infos envoyées à ${(r as any).data?.email || 'au formateur'}`)
-      else toast('error', (r as any)?.error || 'Erreur')
     })
   }
 
@@ -513,12 +504,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-500 text-xs font-medium hover:bg-brand-100 transition-colors shrink-0">
                   <Download className="h-3.5 w-3.5" /> Contrat prestation
                 </a>
-              )}
-              {!isFormateur && formateur.email && (
-                <button onClick={handleSendSessionInfo} disabled={isPending}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors shrink-0">
-                  <Mail className="h-3.5 w-3.5" /> Envoyer les infos au formateur
-                </button>
               )}
             </div>
           )}
