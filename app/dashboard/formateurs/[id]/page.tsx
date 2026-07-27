@@ -11,6 +11,7 @@ import { formatDate } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
 import { Download } from 'lucide-react'
+import { FormateurFacturesAdmin } from './FormateurFacturesAdmin'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,6 +55,20 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
     ;(signed || []).forEach((s, i) => { if (s?.signedUrl && !s.error) docUrls[paths[i]] = s.signedUrl })
   }
   for (const d of docs) if (d.file_url && /^https?:\/\//.test(d.file_url)) docUrls[d.file_url] = d.file_url
+
+  // Factures de prestation envoyées par le formateur
+  const { data: facturesRaw } = await supabase
+    .from('factures_formateur')
+    .select('*, session:session_id(reference)')
+    .eq('formateur_id', params.id)
+    .order('created_at', { ascending: false })
+  const factures = (facturesRaw || []) as any[]
+  const facPaths = factures.map((f) => f.fichier_url).filter((u) => u && !/^https?:\/\//.test(u)) as string[]
+  const facUrls: Record<string, string> = {}
+  if (facPaths.length > 0) {
+    const { data: signed } = await supabase.storage.from('dossiers').createSignedUrls(facPaths, 3600)
+    ;(signed || []).forEach((s, i) => { if (s?.signedUrl && !s.error) facUrls[facPaths[i]] = s.signedUrl })
+  }
 
   const SessionRow = (s: any) => (
     <Link key={s.id} href={`/dashboard/sessions/${s.id}`}
@@ -149,6 +164,9 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
           </>
         )}
       </div>
+
+      {/* Factures de prestation envoyées par le formateur */}
+      <FormateurFacturesAdmin factures={factures} fileUrls={facUrls} />
 
       {/* Pièces administratives déposées par le formateur */}
       <div className="card overflow-hidden">

@@ -37,6 +37,7 @@ const formateurNav: NavItem[] = [
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
+  { label: 'Facturation', short: 'Factures', href: '/facturation', icon: Receipt },
 ]
 
 const clientNav: NavItem[] = [

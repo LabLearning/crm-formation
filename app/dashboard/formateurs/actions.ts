@@ -395,3 +395,37 @@ export async function sendAuditAccessAction(formateurId: string): Promise<Action
   await logAudit({ action: 'send_audit_access', entity_type: 'formateur', entity_id: formateurId, details: { email: f.email } })
   return { success: true, data: { email: f.email } }
 }
+
+/**
+ * Traitement admin d'une facture de prestation formateur : validation,
+ * mise en paiement, ou rejet (avec motif).
+ */
+export async function updateFactureFormateurStatusAction(
+  id: string,
+  status: 'validee' | 'payee' | 'rejetee',
+  motif?: string,
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'comptable'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
+  if (status === 'validee') { patch.validated_by = session.user.id; patch.validated_at = new Date().toISOString(); patch.motif_rejet = null }
+  if (status === 'payee') { patch.date_paiement = new Date().toISOString().slice(0, 10) }
+  if (status === 'rejetee') { patch.motif_rejet = (motif || '').trim() || 'Non conforme'; patch.validated_at = null }
+
+  const { data: fac, error } = await supabase
+    .from('factures_formateur')
+    .update(patch)
+    .eq('id', id)
+    .eq('organization_id', session.organization.id)
+    .select('formateur_id')
+    .single()
+  if (error || !fac) return { success: false, error: 'Erreur lors de la mise à jour' }
+
+  await logAudit({ action: 'update_facture_formateur', entity_type: 'facture_formateur', entity_id: id, details: { status } })
+  revalidatePath(`/dashboard/formateurs/${fac.formateur_id}`)
+  return { success: true }
+}
