@@ -20,6 +20,7 @@ import { SignaturePad } from './SignaturePad'
 import { SendDocButton } from './SendDocButton'
 import { SessionDocActions } from './SessionDocActions'
 import { SessionDocuments } from './SessionDocuments'
+import { SessionMails } from './SessionMails'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionForm } from '../SessionForm'
 
@@ -47,6 +48,8 @@ interface Props {
   formationsRef?: any[]
   formateursRef?: any[]
   clientsRef?: any[]
+  clientContacts?: any[]
+  emailLogs?: any[]
   apprenantsRef?: any[]
   sessionFormationIds?: string[]
   evaluationsAppr?: any[]
@@ -81,7 +84,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -423,6 +426,17 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}
               convention={conventions[0] || null}
               contrat={contratFormateur || null}
+            />
+          )}
+
+          {/* Mails de la session : trace + gestion par destinataire */}
+          {!isFormateur && (
+            <SessionMails
+              sessionId={session.id}
+              formateur={formateur ? { prenom: formateur.prenom, nom: formateur.nom, email: formateur.email } : null}
+              apprenants={inscriptions.map((i: any) => ({ id: i.apprenant?.id, nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), email: i.apprenant?.email || null }))}
+              contacts={clientContacts as any[]}
+              emailLogs={emailLogs as any[]}
             />
           )}
 

@@ -350,11 +350,51 @@ export async function sendBrandedEmail(params: {
   orgEmail?: string  // adresse reply-to (mail de l'OF)
   fromAddress?: string  // expéditeur (doit être sur domaine vérifié dans Resend)
   attachments?: Array<{ filename: string; content: string; contentType?: string }>  // base64
+  // Traçabilité (optionnelle) : si organizationId est fourni, l'envoi est
+  // enregistré dans email_logs (une ligne par destinataire).
+  organizationId?: string
+  toName?: string
+  entityType?: string
+  entityId?: string
+  triggeredBy?: string
+  templateSlug?: string
 }): Promise<{ success: boolean; error?: string }> {
   const resendApiKey = process.env.RESEND_API_KEY
   const recipients = Array.isArray(params.to) ? params.to : [params.to]
+
+  // Journalisation (une ligne par destinataire) si le contexte org est fourni
+  let logIds: string[] = []
+  if (params.organizationId) {
+    try {
+      const { createServiceRoleClient } = await import('@/lib/supabase/server')
+      const supabase = await createServiceRoleClient()
+      const rows = recipients.map((to) => ({
+        organization_id: params.organizationId,
+        to_email: to,
+        to_name: params.toName || null,
+        subject: params.subject,
+        template: params.templateSlug || 'document',
+        entity_type: params.entityType || null,
+        entity_id: params.entityId || null,
+        triggered_by: params.triggeredBy || null,
+        status: 'pending',
+      }))
+      const { data } = await supabase.from('email_logs').insert(rows).select('id')
+      logIds = (data || []).map((r: any) => r.id)
+    } catch (e) { console.error('[email_logs]', e) }
+  }
+  const markLogs = async (patch: Record<string, unknown>) => {
+    if (!logIds.length) return
+    try {
+      const { createServiceRoleClient } = await import('@/lib/supabase/server')
+      const supabase = await createServiceRoleClient()
+      await supabase.from('email_logs').update(patch).in('id', logIds)
+    } catch { /* noop */ }
+  }
+
   if (!resendApiKey) {
     console.log(`[Branded Email] DEV MODE — To: ${recipients.join(',')} · Subject: ${params.subject}`)
+    await markLogs({ status: 'sent', sent_at: new Date().toISOString() })
     return { success: true }
   }
   const from = `${params.orgName} <${params.fromAddress || 'noreply@lab-learning.fr'}>`
@@ -372,8 +412,13 @@ export async function sendBrandedEmail(params: {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendApiKey}` },
     body: JSON.stringify(body),
   })
-  if (response.ok) return { success: true }
+  if (response.ok) {
+    const j = await response.json().catch(() => ({}))
+    await markLogs({ status: 'sent', sent_at: new Date().toISOString(), resend_id: (j as any)?.id || null })
+    return { success: true }
+  }
   const err = await response.json().catch(() => ({}))
+  await markLogs({ status: 'failed', error: (err as any).message || 'Erreur Resend' })
   return { success: false, error: err.message || 'Erreur Resend' }
 }
 
@@ -403,6 +448,11 @@ export async function sendDocumentEmail(params: {
   pdfFilename?: string
   attachmentContentType?: string  // défaut application/pdf
   extraAttachments?: { filename: string; content: Buffer | Uint8Array; contentType?: string }[]
+  // Traçabilité optionnelle (email_logs) — voir sendBrandedEmail
+  organizationId?: string
+  entityType?: string
+  entityId?: string
+  triggeredBy?: string
 }): Promise<{ success: boolean; error?: string }> {
   const fileExt = (params.pdfFilename?.split('.').pop() || 'DOC').toUpperCase().slice(0, 4)
   const metaRows = (params.metadata || [])
@@ -465,6 +515,11 @@ export async function sendDocumentEmail(params: {
     subject: params.subject,
     html,
     attachments: attachments.length > 0 ? attachments : undefined,
+    organizationId: params.organizationId,
+    toName: params.recipientName,
+    entityType: params.entityType,
+    entityId: params.entityId,
+    triggeredBy: params.triggeredBy,
   })
 }
 

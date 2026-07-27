@@ -149,6 +149,28 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     getPositionnementEtat(supabase, params.id, inscritsRefs),
   ])
 
+  // Contacts du client + historique des emails de la session (par destinataire)
+  const { data: clientContacts } = sessionData.client_id
+    ? await supabase.from('contacts')
+        .select('id, prenom, nom, poste, email, telephone, mobile, est_signataire, est_principal')
+        .eq('client_id', sessionData.client_id)
+    : { data: [] as any[] }
+  const peopleEmails = Array.from(new Set([
+    ...(inscriptions || []).map((i: any) => i.apprenant?.email),
+    (sessionData.formateur as any)?.email,
+    ...((clientContacts || []) as any[]).map((c: any) => c.email),
+  ].filter(Boolean)))
+  let emailLogs: any[] = []
+  if (peopleEmails.length > 0) {
+    const { data } = await supabase.from('email_logs')
+      .select('id, to_email, to_name, subject, status, sent_at, created_at')
+      .eq('organization_id', session.organization.id)
+      .in('to_email', peopleEmails)
+      .order('created_at', { ascending: false })
+      .limit(150)
+    emailLogs = data || []
+  }
+
   // Est-ce que le user est le formateur de cette session ?
   const isFormateur = session.user.role === 'formateur' && (sessionData.formateur as any)?.user_id === session.user.id
 
@@ -169,6 +191,8 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         formationsRef={(formationsRef || []) as any[]}
         formateursRef={(formateursRef || []) as any[]}
         clientsRef={(clientsRef || []) as any[]}
+        clientContacts={(clientContacts || []) as any[]}
+        emailLogs={emailLogs as any[]}
         apprenantsRef={(apprenantsRef || []) as any[]}
         sessionFormationIds={((sessionFormations || []) as any[]).map((r) => r.formation_id)}
         evaluationsAppr={(evaluationsAppr || []) as any[]}

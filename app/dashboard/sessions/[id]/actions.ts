@@ -833,6 +833,10 @@ export async function sendSessionInfoToFormateurAction(sessionId: string): Promi
     ctaLabel: 'Accéder à mon espace formateur',
     ctaUrl: spaceUrl,
     footerNote: 'Merci de vérifier ces informations avant la session et de nous signaler tout changement.',
+    organizationId: session.organization.id,
+    entityType: 'session',
+    entityId: sessionId,
+    triggeredBy: session.user.id,
   })
   if (!r.success) return { success: false, error: r.error }
 
