@@ -14,6 +14,7 @@ import {
   toggleFormateurAction, updateHabilitationAction, sendFormateurAccessAction, sendAuditAccessAction,
 } from './actions'
 import { formatDate } from '@/lib/utils'
+import { FACTURE_MODELES } from '@/lib/pdf/facture-modeles'
 import type { Formateur } from '@/lib/types/formation'
 
 interface FormateursListProps {
@@ -136,6 +137,23 @@ function FormateurForm({ formateur, onDone }: { formateur?: Formateur; onDone: (
         <Input id="tarif_horaire" name="tarif_horaire" type="number" label="Tarif horaire (€)" defaultValue={formateur?.tarif_horaire?.toString() || ''} />
       </div>
       <Input id="zone_intervention" name="zone_intervention" label="Zone d'intervention" placeholder="Île-de-France, National, Grand Est..." defaultValue={(formateur as any)?.zone_intervention || ''} />
+
+      <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2">Facturation</div>
+      <div>
+        <Select id="facture_modele" name="facture_modele" label="Modèle de facture"
+          options={FACTURE_MODELES.map((m) => ({ value: m.value, label: `${m.label} — ${m.description}` }))}
+          defaultValue={(formateur as any)?.facture_modele || 'epure'} />
+        <p className="text-2xs text-surface-400 mt-1">
+          Style du PDF quand le formateur émet ses factures de prestation. La facture est à son nom (pas de branding Lab Learning).
+        </p>
+        <div className="flex items-center gap-3 mt-1.5">
+          <span className="text-2xs text-surface-400">Aperçu :</span>
+          {FACTURE_MODELES.map((m) => (
+            <a key={m.value} href={`/api/pdf/facture-modele-apercu?modele=${m.value}`} target="_blank" rel="noreferrer"
+              className="text-2xs font-medium text-brand-600 hover:underline">{m.label}</a>
+          ))}
+        </div>
+      </div>
 
       <div className="flex justify-end gap-3 pt-3 border-t border-surface-100">
         <Button type="button" variant="secondary" onClick={onDone}>Annuler</Button>

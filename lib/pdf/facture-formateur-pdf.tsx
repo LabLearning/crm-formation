@@ -1,112 +1,292 @@
 import * as React from 'react'
-import { Document, Page, View, Text } from '@react-pdf/renderer'
-import { PdfSectionTitle, shared, PdfDocHeader, PdfDocFooter } from './components'
+import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
+import { shared } from './components' // side-effect: enregistre les polices (Satoshi)
+import { FACTURE_MODELES, type FactureModele } from './facture-modeles'
+
+/**
+ * Facture de prestation émise PAR un formateur À l'organisme (Lab Learning).
+ * L'émetteur est le formateur — AUCUN branding Lab Learning : l'OF n'apparaît
+ * qu'en « Facturé à ». Trois modèles de style au choix du formateur.
+ */
+export { FACTURE_MODELES, type FactureModele }
 
 function fmt(n: number | string | null | undefined): string {
   if (n == null) return '—'
-  return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[  ]/g, ' ')
+  return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[  ]/g, ' ')
 }
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—'
   return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-/**
- * Facture de prestation émise PAR un formateur À Lab Learning.
- * Émetteur = le formateur ; Facturer à = l'organisme (org).
- */
-export function FactureFormateurPDF({ facture, formateur, org }: { facture: any; formateur: any; org?: any }) {
+interface Parts {
+  emetteurNom: string
+  emetteurLignes: string[]
+  ofNom: string
+  ofLignes: string[]
+  numAffiche: string
+  dateEmission: string
+  objet: string | null
+  sessionRef: string | null
+  montantHt: any
+  montantTva: any
+  montantTtc: any
+  tauxTva: number
+  mentionTva: string
+}
+
+function buildParts(facture: any, formateur: any, org: any): Parts {
   const f = formateur || {}
-  const emetteur = [f.civilite, f.prenom, f.nom].filter(Boolean).join(' ').trim() || 'Formateur'
+  const emetteurNom = [f.civilite, f.prenom, f.nom].filter(Boolean).join(' ').trim() || 'Formateur'
+  const emetteurLignes = [
+    f.adresse,
+    [f.code_postal, f.ville].filter(Boolean).join(' ') || null,
+    f.siret ? `SIRET : ${f.siret}` : null,
+    f.numero_da ? `N° déclaration d'activité : ${f.numero_da}` : null,
+    f.email,
+  ].filter(Boolean) as string[]
+
   const ofNom = org?.legal_name || org?.name || 'Lab Learning'
+  const ofLignes = [
+    org?.address,
+    [org?.postal_code, org?.city].filter(Boolean).join(' ') || null,
+    org?.siret ? `SIRET : ${org.siret}` : null,
+    org?.numero_tva_intra ? `TVA : ${org.numero_tva_intra}` : null,
+  ].filter(Boolean) as string[]
+
   const tauxTva = Number(facture.taux_tva || 0)
-  const numAffiche = facture.reference_externe || facture.numero
+  return {
+    emetteurNom, emetteurLignes, ofNom, ofLignes,
+    numAffiche: facture.reference_externe || facture.numero,
+    dateEmission: fmtDate(facture.date_emission || facture.created_at),
+    objet: facture.objet || null,
+    sessionRef: facture.session?.reference || null,
+    montantHt: facture.montant_ht, montantTva: facture.montant_tva, montantTtc: facture.montant_ttc,
+    tauxTva,
+    mentionTva: tauxTva === 0
+      ? "TVA non applicable (art. 293 B ou 261-4-4° a du CGI, selon le régime de l'émetteur)."
+      : 'TVA acquittée sur les encaissements (prestations de services).',
+  }
+}
 
+// ─────────────────────────── Modèle « Épuré » ───────────────────────────
+const ep = StyleSheet.create({
+  page: { padding: 48, fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
+  name: { fontSize: 18, fontWeight: 700, marginBottom: 4 },
+  meta: { fontSize: 9, color: '#78716c' },
+  small: { fontSize: 8, color: '#78716c', lineHeight: 1.5 },
+  rule: { borderTopWidth: 1, borderTopColor: '#1c1917', marginVertical: 20 },
+  ruleThin: { borderTopWidth: 0.5, borderTopColor: '#d6d3d1', marginVertical: 14 },
+  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#a8a29e', marginBottom: 4 },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  totLabel: { fontSize: 9, color: '#57534e' },
+  totVal: { fontSize: 9 },
+  ttcLabel: { fontSize: 12, fontWeight: 700 },
+  ttcVal: { fontSize: 12, fontWeight: 700 },
+})
+function ModeleEpure({ p }: { p: Parts }) {
   return (
-    <Document title={`Facture ${numAffiche}`} author={emetteur}>
-      <Page size="A4" style={shared.page}>
-        <PdfDocHeader
-          docTitle="Facture de prestation"
-          numero={numAffiche}
-          date={`Émise le ${fmtDate(facture.date_emission || facture.created_at)}`}
-          org={org}
-        />
-
-        {/* Émetteur (formateur) + Facturer à (OF) */}
-        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 18 }}>
-          <View style={{ flex: 1 }}>
-            <PdfSectionTitle>Émetteur (formateur)</PdfSectionTitle>
-            <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{emetteur}</Text>
-            {f.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{f.adresse}</Text>}
-            {(f.code_postal || f.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{f.code_postal || ''} {f.ville || ''}</Text>}
-            {f.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {f.siret}</Text>}
-            {f.numero_da && <Text style={{ fontSize: 8, color: '#57534e' }}>N° déclaration d'activité : {f.numero_da}</Text>}
-            {f.email && <Text style={{ fontSize: 8, color: '#57534e' }}>{f.email}</Text>}
-          </View>
-          <View style={{ flex: 1 }}>
-            <PdfSectionTitle>Facturer à</PdfSectionTitle>
-            <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{ofNom}</Text>
-            {org?.address && <Text style={{ fontSize: 8, color: '#57534e' }}>{org.address}</Text>}
-            {(org?.postal_code || org?.city) && <Text style={{ fontSize: 8, color: '#57534e' }}>{org?.postal_code || ''} {org?.city || ''}</Text>}
-            {org?.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {org.siret}</Text>}
-            {org?.numero_tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {org.numero_tva_intra}</Text>}
-          </View>
+    <Page size="A4" style={ep.page}>
+      <View style={ep.row}>
+        <View style={{ maxWidth: 300 }}>
+          <Text style={ep.name}>{p.emetteurNom}</Text>
+          {p.emetteurLignes.map((l, i) => <Text key={i} style={ep.small}>{l}</Text>)}
         </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{ fontSize: 22, fontWeight: 700, letterSpacing: 2 }}>FACTURE</Text>
+          <Text style={ep.meta}>N° {p.numAffiche}</Text>
+          <Text style={ep.meta}>{p.dateEmission}</Text>
+        </View>
+      </View>
 
-        {/* Objet */}
-        {facture.objet && (
-          <View style={{ ...shared.infoBox, marginBottom: 16 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 2 }}>Objet</Text>
-            <Text style={shared.infoBoxText}>{facture.objet}</Text>
-          </View>
-        )}
+      <View style={ep.rule} />
 
-        {/* Détail */}
-        <View style={shared.section}>
-          <PdfSectionTitle>Détail de la prestation</PdfSectionTitle>
-          <View style={shared.table}>
-            <View style={shared.tableHeader}>
-              <Text style={{ ...shared.tableHeaderCell, flex: 4 }}>Désignation</Text>
-              <Text style={{ ...shared.tableHeaderCell, width: 70, textAlign: 'right' }}>Montant HT</Text>
+      <View style={{ marginBottom: 4 }}>
+        <Text style={ep.label}>Facturé à</Text>
+        <Text style={{ fontSize: 10, fontWeight: 700 }}>{p.ofNom}</Text>
+        {p.ofLignes.map((l, i) => <Text key={i} style={ep.small}>{l}</Text>)}
+      </View>
+
+      {p.objet ? (
+        <>
+          <View style={ep.ruleThin} />
+          <Text style={ep.label}>Objet</Text>
+          <Text style={{ fontSize: 9 }}>{p.objet}{p.sessionRef ? `  ·  Session ${p.sessionRef}` : ''}</Text>
+        </>
+      ) : null}
+
+      <View style={ep.ruleThin} />
+      <View style={{ ...ep.row, marginBottom: 8 }}>
+        <Text style={{ fontSize: 9, color: '#57534e' }}>Prestation de formation</Text>
+        <Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text>
+      </View>
+
+      <View style={{ marginLeft: 'auto', width: 220, marginTop: 6 }}>
+        <View style={{ ...ep.row, marginBottom: 3 }}><Text style={ep.totLabel}>Total HT</Text><Text style={ep.totVal}>{fmt(p.montantHt)} €</Text></View>
+        <View style={{ ...ep.row, marginBottom: 6 }}><Text style={ep.totLabel}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={ep.totVal}>{fmt(p.montantTva)} €</Text></View>
+        <View style={{ borderTopWidth: 1, borderTopColor: '#1c1917', paddingTop: 6, ...ep.row }}>
+          <Text style={ep.ttcLabel}>Total TTC</Text><Text style={ep.ttcVal}>{fmt(p.montantTtc)} €</Text>
+        </View>
+      </View>
+
+      <View style={{ position: 'absolute', bottom: 40, left: 48, right: 48 }}>
+        <View style={{ borderTopWidth: 0.5, borderTopColor: '#d6d3d1', paddingTop: 8 }}>
+          <Text style={ep.small}>{p.mentionTva}</Text>
+          <Text style={ep.small}>Facture émise dans le cadre d'une sous-traitance pédagogique.</Text>
+        </View>
+      </View>
+    </Page>
+  )
+}
+
+// ─────────────────────────── Modèle « Classique » ───────────────────────
+const cl = StyleSheet.create({
+  page: { padding: 40, fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
+  box: { borderWidth: 1, borderColor: '#1c1917', padding: 14 },
+  boxLight: { borderWidth: 1, borderColor: '#d6d3d1', padding: 12 },
+  h: { fontSize: 20, fontWeight: 700, letterSpacing: 1 },
+  small: { fontSize: 8, color: '#57534e', lineHeight: 1.5 },
+  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#78716c', marginBottom: 4 },
+  th: { flexDirection: 'row', backgroundColor: '#1c1917', paddingVertical: 6, paddingHorizontal: 8 },
+  thc: { color: '#ffffff', fontSize: 8, fontWeight: 700 },
+  td: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e7e5e4' },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+})
+function ModeleClassique({ p }: { p: Parts }) {
+  return (
+    <Page size="A4" style={cl.page}>
+      <View style={{ ...cl.box, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View style={{ maxWidth: 280 }}>
+          <Text style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{p.emetteurNom}</Text>
+          {p.emetteurLignes.map((l, i) => <Text key={i} style={cl.small}>{l}</Text>)}
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={cl.h}>FACTURE</Text>
+          <Text style={{ fontSize: 9, marginTop: 4 }}>N° {p.numAffiche}</Text>
+          <Text style={{ fontSize: 9, color: '#57534e' }}>Date : {p.dateEmission}</Text>
+        </View>
+      </View>
+
+      <View style={{ marginTop: 14, ...cl.boxLight }}>
+        <Text style={cl.label}>Facturé à</Text>
+        <Text style={{ fontSize: 10, fontWeight: 700 }}>{p.ofNom}</Text>
+        {p.ofLignes.map((l, i) => <Text key={i} style={cl.small}>{l}</Text>)}
+      </View>
+
+      {p.objet ? (
+        <View style={{ marginTop: 14 }}>
+          <Text style={cl.label}>Objet</Text>
+          <Text style={{ fontSize: 9 }}>{p.objet}{p.sessionRef ? `  ·  Session ${p.sessionRef}` : ''}</Text>
+        </View>
+      ) : null}
+
+      <View style={{ marginTop: 14, borderWidth: 1, borderColor: '#1c1917' }}>
+        <View style={cl.th}>
+          <Text style={{ ...cl.thc, flex: 4 }}>Désignation</Text>
+          <Text style={{ ...cl.thc, width: 90, textAlign: 'right' }}>Montant HT</Text>
+        </View>
+        <View style={cl.td}>
+          <Text style={{ flex: 4, fontSize: 9 }}>{p.objet || 'Prestation de formation'}</Text>
+          <Text style={{ width: 90, textAlign: 'right', fontSize: 9 }}>{fmt(p.montantHt)} €</Text>
+        </View>
+        <View style={{ padding: 8 }}>
+          <View style={{ marginLeft: 'auto', width: 200 }}>
+            <View style={{ ...cl.row, marginBottom: 3 }}><Text style={{ fontSize: 9, color: '#57534e' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
+            <View style={{ ...cl.row, marginBottom: 5 }}><Text style={{ fontSize: 9, color: '#57534e' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
+            <View style={{ ...cl.row, borderTopWidth: 1, borderTopColor: '#1c1917', paddingTop: 5 }}>
+              <Text style={{ fontSize: 12, fontWeight: 700 }}>Total TTC</Text><Text style={{ fontSize: 12, fontWeight: 700 }}>{fmt(p.montantTtc)} €</Text>
             </View>
-            <View style={shared.tableRow}>
-              <View style={{ flex: 4 }}>
-                <Text style={shared.tableCell}>{facture.objet || 'Prestation de formation'}</Text>
-                {facture.session?.reference && <Text style={{ fontSize: 7, color: '#a8a29e', marginTop: 1 }}>Session {facture.session.reference}</Text>}
-              </View>
-              <Text style={{ ...shared.tableCell, width: 70, textAlign: 'right' }}>{fmt(facture.montant_ht)} €</Text>
-            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={{ position: 'absolute', bottom: 36, left: 40, right: 40 }}>
+        <Text style={cl.small}>{p.mentionTva}</Text>
+        <Text style={cl.small}>Facture émise dans le cadre d'une sous-traitance pédagogique.</Text>
+      </View>
+    </Page>
+  )
+}
+
+// ─────────────────────────── Modèle « Moderne » ─────────────────────────
+const ACCENT = '#4338ca' // indigo — volontairement distinct du vert Lab Learning
+const mo = StyleSheet.create({
+  page: { fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
+  band: { backgroundColor: ACCENT, paddingHorizontal: 40, paddingVertical: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  bandName: { color: '#ffffff', fontSize: 16, fontWeight: 700 },
+  bandSmall: { color: '#c7d2fe', fontSize: 8, lineHeight: 1.5, marginTop: 3 },
+  bandTitle: { color: '#ffffff', fontSize: 20, fontWeight: 700, letterSpacing: 2 },
+  body: { paddingHorizontal: 40, paddingTop: 22 },
+  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: ACCENT, fontWeight: 700, marginBottom: 4 },
+  small: { fontSize: 8, color: '#57534e', lineHeight: 1.5 },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  card: { backgroundColor: '#f5f3ff', borderRadius: 8, padding: 14, marginLeft: 'auto', width: 240, marginTop: 18 },
+})
+function ModeleModerne({ p }: { p: Parts }) {
+  return (
+    <Page size="A4" style={mo.page}>
+      <View style={mo.band}>
+        <View style={{ maxWidth: 300 }}>
+          <Text style={mo.bandName}>{p.emetteurNom}</Text>
+          {p.emetteurLignes.map((l, i) => <Text key={i} style={mo.bandSmall}>{l}</Text>)}
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={mo.bandTitle}>FACTURE</Text>
+          <Text style={{ color: '#e0e7ff', fontSize: 9, marginTop: 4 }}>N° {p.numAffiche}</Text>
+          <Text style={{ color: '#c7d2fe', fontSize: 9 }}>{p.dateEmission}</Text>
+        </View>
+      </View>
+
+      <View style={mo.body}>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={mo.label}>Facturé à</Text>
+          <Text style={{ fontSize: 10, fontWeight: 700 }}>{p.ofNom}</Text>
+          {p.ofLignes.map((l, i) => <Text key={i} style={mo.small}>{l}</Text>)}
+        </View>
+
+        {p.objet ? (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={mo.label}>Objet</Text>
+            <Text style={{ fontSize: 9 }}>{p.objet}{p.sessionRef ? `  ·  Session ${p.sessionRef}` : ''}</Text>
+          </View>
+        ) : null}
+
+        <View style={{ borderTopWidth: 2, borderTopColor: ACCENT, paddingTop: 10 }}>
+          <View style={{ ...mo.row, marginBottom: 6 }}>
+            <Text style={{ fontSize: 9, color: '#57534e' }}>Prestation de formation</Text>
+            <Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text>
           </View>
         </View>
 
-        {/* Totaux */}
-        <View style={shared.totalsBox}>
-          <View style={shared.totalRow}>
-            <Text style={shared.totalLabel}>Total HT</Text>
-            <Text style={shared.totalValue}>{fmt(facture.montant_ht)} €</Text>
-          </View>
-          <View style={shared.totalRow}>
-            <Text style={shared.totalLabel}>TVA ({fmt(tauxTva)}%)</Text>
-            <Text style={shared.totalValue}>{fmt(facture.montant_tva)} €</Text>
-          </View>
-          <View style={{ ...shared.totalRow, marginTop: 4 }}>
-            <Text style={shared.totalTTCLabel}>Total TTC</Text>
-            <Text style={shared.totalTTCValue}>{fmt(facture.montant_ttc)} €</Text>
+        <View style={mo.card}>
+          <View style={{ ...mo.row, marginBottom: 4 }}><Text style={{ fontSize: 9, color: '#57534e' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
+          <View style={{ ...mo.row, marginBottom: 6 }}><Text style={{ fontSize: 9, color: '#57534e' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
+          <View style={{ ...mo.row, borderTopWidth: 1, borderTopColor: '#ddd6fe', paddingTop: 6 }}>
+            <Text style={{ fontSize: 12, fontWeight: 700, color: ACCENT }}>Total TTC</Text>
+            <Text style={{ fontSize: 12, fontWeight: 700, color: ACCENT }}>{fmt(p.montantTtc)} €</Text>
           </View>
         </View>
+      </View>
 
-        {/* Mentions */}
-        <View style={{ ...shared.infoBox, marginTop: 8 }}>
-          <Text style={{ fontSize: 7, color: '#78716c', lineHeight: 1.5 }}>
-            {tauxTva === 0
-              ? 'TVA non applicable, art. 293 B du Code général des impôts (franchise en base) ou art. 261-4-4° a (formation professionnelle continue), selon le régime de l\'émetteur.\n'
-              : 'TVA acquittée sur les encaissements (prestations de services).\n'}
-            Facture de prestation adressée à l'organisme de formation dans le cadre d'une sous-traitance pédagogique.
-          </Text>
-        </View>
+      <View style={{ position: 'absolute', bottom: 36, left: 40, right: 40 }}>
+        <Text style={mo.small}>{p.mentionTva}</Text>
+        <Text style={mo.small}>Facture émise dans le cadre d'une sous-traitance pédagogique.</Text>
+      </View>
+    </Page>
+  )
+}
 
-        <PdfDocFooter numero={numAffiche} org={org} />
-      </Page>
+export function FactureFormateurPDF({ facture, formateur, org, modele = 'epure' }: {
+  facture: any; formateur: any; org?: any; modele?: FactureModele
+}) {
+  const p = buildParts(facture, formateur, org)
+  // Ref shared pour garantir le chargement des polices même si l'arbre ne l'utilise pas.
+  void shared
+  return (
+    <Document title={`Facture ${p.numAffiche}`} author={p.emetteurNom}>
+      {modele === 'classique' ? <ModeleClassique p={p} />
+        : modele === 'moderne' ? <ModeleModerne p={p} />
+        : <ModeleEpure p={p} />}
     </Document>
   )
 }

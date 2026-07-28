@@ -213,6 +213,7 @@ export async function createFormateurAction(formData: FormData): Promise<ActionR
       tarif_horaire: parsed.data.tarif_horaire || null,
       zone_intervention: parsed.data.zone_intervention || null,
       photo_url: parsed.data.photo_url || null,
+      facture_modele: parsed.data.facture_modele || 'epure',
     })
     .select()
     .single()
@@ -269,6 +270,7 @@ export async function updateFormateurAction(id: string, formData: FormData): Pro
       tarif_horaire: parsed.data.tarif_horaire || null,
       zone_intervention: parsed.data.zone_intervention || null,
       photo_url: parsed.data.photo_url || null,
+      facture_modele: parsed.data.facture_modele || 'epure',
     })
     .eq('id', id)
     .eq('organization_id', session.organization.id)

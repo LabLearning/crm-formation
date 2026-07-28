@@ -4,7 +4,7 @@ import { createElement } from 'react'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { requireApiUser } from '@/lib/api-auth'
 import { getPortalContext } from '@/lib/portal-auth'
-import { FactureFormateurPDF } from '@/lib/pdf/facture-formateur-pdf'
+import { FactureFormateurPDF, type FactureModele } from '@/lib/pdf/facture-formateur-pdf'
 
 /**
  * PDF d'une facture de prestation formateur. Accessible :
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: facture } = await supabase
     .from('factures_formateur')
-    .select('*, formateur:formateur_id(civilite, prenom, nom, email, adresse, code_postal, ville, siret, numero_da), session:session_id(reference)')
+    .select('*, formateur:formateur_id(civilite, prenom, nom, email, adresse, code_postal, ville, siret, numero_da, facture_modele), session:session_id(reference)')
     .eq('id', params.id)
     .single()
   if (!facture) return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 })
@@ -39,8 +39,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
+  // Modèle : override ?modele= (aperçu) sinon le choix enregistré du formateur
+  const override = req.nextUrl.searchParams.get('modele') as FactureModele | null
+  const modele = (override || (facture as any).formateur?.facture_modele || 'epure') as FactureModele
+
   const buffer = await renderToBuffer(
-    createElement(FactureFormateurPDF, { facture, formateur: (facture as any).formateur, org }) as any
+    createElement(FactureFormateurPDF, { facture, formateur: (facture as any).formateur, org, modele }) as any
   )
   const numAffiche = (facture as any).reference_externe || (facture as any).numero
 

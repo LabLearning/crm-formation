@@ -87,6 +87,7 @@ export const createFormateurSchema = z.object({
   tarif_horaire: z.coerce.number().min(0).optional(),
   zone_intervention: z.string().optional(),
   photo_url: z.string().optional(),
+  facture_modele: z.enum(['epure', 'classique', 'moderne']).optional(),
 })
 
 export const createApprenantSchema = z.object({
