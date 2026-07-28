@@ -28,6 +28,24 @@ export async function createClientAction(formData: FormData): Promise<ActionResu
 
   const supabase = await createServiceRoleClient()
 
+  // Anti-doublon : un SIRET ne peut exister qu'une fois dans l'organisation
+  const siretNorm = (parsed.data.siret || '').replace(/\D/g, '')
+  if (siretNorm) {
+    const { data: existing } = await supabase
+      .from('clients')
+      .select('id, raison_sociale, siret')
+      .eq('organization_id', session.organization.id)
+      .not('siret', 'is', null)
+    const dup = (existing || []).find((c: any) => (c.siret || '').replace(/\D/g, '') === siretNorm)
+    if (dup) {
+      return {
+        success: false,
+        errors: { siret: [`Un client avec ce SIRET existe déjà : ${dup.raison_sociale || 'client existant'}`] },
+        error: `Ce SIRET est déjà enregistré (${dup.raison_sociale || 'client existant'}).`,
+      }
+    }
+  }
+
   const insertData = {
     organization_id: session.organization.id,
     type: parsed.data.type,
@@ -110,6 +128,25 @@ export async function updateClientAction(id: string, formData: FormData): Promis
     const fieldErrors = parsed.error.flatten().fieldErrors
     const formErrors = parsed.error.flatten().formErrors
     return { success: false, errors: fieldErrors, error: formErrors[0] }
+  }
+
+  // Anti-doublon : le SIRET ne doit pas appartenir à un AUTRE client
+  const siretNorm = (parsed.data.siret || '').replace(/\D/g, '')
+  if (siretNorm) {
+    const { data: existing } = await supabase
+      .from('clients')
+      .select('id, raison_sociale, siret')
+      .eq('organization_id', session.organization.id)
+      .not('siret', 'is', null)
+      .neq('id', id)
+    const dup = (existing || []).find((c: any) => (c.siret || '').replace(/\D/g, '') === siretNorm)
+    if (dup) {
+      return {
+        success: false,
+        errors: { siret: [`Un autre client a déjà ce SIRET : ${dup.raison_sociale || 'client existant'}`] },
+        error: `Ce SIRET est déjà enregistré (${dup.raison_sociale || 'client existant'}).`,
+      }
+    }
   }
 
   const updateData = {
