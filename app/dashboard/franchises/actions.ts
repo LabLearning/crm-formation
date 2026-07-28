@@ -309,7 +309,8 @@ export async function updateDossierCoutFormateurAction(dossierId: string, montan
     .eq('id', dossierId)
     .eq('organization_id', session.organization.id)
   if (error) return { success: false, error: error.message }
-  const r = await recalcDossierCommission(supabase, dossierId, session.organization.id)
+  // Recalcul forcé : on corrige même une commission déjà validée/payée
+  const r = await recalcDossierCommission(supabase, dossierId, session.organization.id, { force: true })
   revalidatePath('/dashboard/franchises')
   return { success: true, data: r }
 }

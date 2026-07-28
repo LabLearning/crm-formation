@@ -55,6 +55,7 @@ export async function recalcDossierCommission(
   supabase: any,
   dossierId: string,
   organizationId: string,
+  opts?: { force?: boolean },
 ): Promise<{ montant: number; type: CommissionType; coutFormateur: number } | null> {
   const { data: dossier } = await supabase
     .from('dossiers_formation')
@@ -65,8 +66,9 @@ export async function recalcDossierCommission(
 
   if (!dossier) return null
 
-  // Ne pas toucher si commission figée (validée/payée)
-  if (dossier.commission_status === 'validee' || dossier.commission_status === 'payee') {
+  // Ne pas toucher si commission figée (validée/payée) — sauf recalcul forcé
+  // (ex : correction manuelle des frais formateur après validation).
+  if (!opts?.force && (dossier.commission_status === 'validee' || dossier.commission_status === 'payee')) {
     return null
   }
 

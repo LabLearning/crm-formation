@@ -373,7 +373,6 @@ function CoutFormateurCell({ dossier }: { dossier: Dossier }) {
   const router = useRouter()
   const [val, setVal] = useState<string>(dossier.cout_formateur != null ? String(dossier.cout_formateur) : '')
   const [pending, start] = useTransition()
-  const frozen = dossier.commission_status === 'validee' || dossier.commission_status === 'payee'
 
   function save() {
     const n = Number((val || '0').replace(',', '.'))
@@ -381,11 +380,8 @@ function CoutFormateurCell({ dossier }: { dossier: Dossier }) {
     start(async () => { await updateDossierCoutFormateurAction(dossier.id, n); router.refresh() })
   }
 
-  // Commission figée → lecture seule
-  if (frozen) {
-    return <div className="hidden md:block text-right w-20 text-sm tabular-nums text-surface-500">{fmtEuro(dossier.cout_formateur)}</div>
-  }
-
+  // Éditable même après validation (on a pu valider avant de saisir le coût) :
+  // le recalcul est forcé côté serveur.
   const changed = String(dossier.cout_formateur ?? '') !== (val || (dossier.cout_formateur == null ? '' : '0'))
   return (
     <div className="hidden md:flex items-center justify-end gap-1 w-28">
