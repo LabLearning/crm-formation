@@ -21,9 +21,17 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
-export function TacheMemos({ tacheId }: { tacheId: string }) {
+export interface PendingMemo { id: string; base64: string; duree: number }
+
+/**
+ * Mémos vocaux d'une tâche. Mode édition (tacheId fourni) : upload immédiat.
+ * Mode création (pas de tacheId) : les mémos sont gardés en attente et remontés
+ * au parent via onPendingChange, qui les uploadera après création de la tâche.
+ */
+export function TacheMemos({ tacheId, onPendingChange }: { tacheId?: string | null; onPendingChange?: (p: PendingMemo[]) => void }) {
   const { toast } = useToast()
   const [memos, setMemos] = useState<Memo[]>([])
+  const [pendingMemos, setPendingMemos] = useState<PendingMemo[]>([])
   const [recording, setRecording] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [pending, start] = useTransition()
@@ -32,8 +40,10 @@ export function TacheMemos({ tacheId }: { tacheId: string }) {
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<any>(null)
   const startedAtRef = useRef(0)
+  const counterRef = useRef(0)
 
   async function load() {
+    if (!tacheId) return
     try {
       const r = await fetch(`/api/taches/${tacheId}/memos`)
       if (r.ok) { const d = await r.json(); setMemos(d.memos || []) }
@@ -41,6 +51,11 @@ export function TacheMemos({ tacheId }: { tacheId: string }) {
   }
   useEffect(() => { load() /* eslint-disable-next-line */ }, [tacheId])
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
+
+  function updatePending(next: PendingMemo[]) {
+    setPendingMemos(next)
+    onPendingChange?.(next)
+  }
 
   async function startRecording() {
     try {
@@ -55,11 +70,16 @@ export function TacheMemos({ tacheId }: { tacheId: string }) {
         const reader = new FileReader()
         reader.onloadend = () => {
           const base64 = reader.result as string
-          start(async () => {
-            const res = await addTacheMemoAction(tacheId, base64, duree)
-            if (res.success) { toast('success', 'Mémo vocal ajouté'); load() }
-            else toast('error', res.error || 'Erreur')
-          })
+          if (tacheId) {
+            start(async () => {
+              const res = await addTacheMemoAction(tacheId, base64, duree)
+              if (res.success) { toast('success', 'Mémo vocal ajouté'); load() }
+              else toast('error', res.error || 'Erreur')
+            })
+          } else {
+            // Mode création : on garde le mémo en attente jusqu'à l'enregistrement de la tâche
+            updatePending([...pendingMemos, { id: `p${++counterRef.current}`, base64, duree }])
+          }
         }
         reader.readAsDataURL(blob)
       }
@@ -86,6 +106,9 @@ export function TacheMemos({ tacheId }: { tacheId: string }) {
       if (r.success) { toast('success', 'Mémo supprimé'); setMemos((m) => m.filter((x) => x.id !== id)) }
       else toast('error', r.error || 'Erreur')
     })
+  }
+  function removePending(id: string) {
+    updatePending(pendingMemos.filter((x) => x.id !== id))
   }
 
   return (
@@ -125,6 +148,26 @@ export function TacheMemos({ tacheId }: { tacheId: string }) {
                 </div>
               </div>
               <button type="button" onClick={() => remove(m.id)} className="h-7 w-7 flex items-center justify-center rounded-lg text-surface-400 hover:bg-danger-50 hover:text-danger-600 shrink-0">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Mémos en attente (création) — seront enregistrés avec la tâche */}
+      {pendingMemos.length > 0 && (
+        <div className="space-y-2">
+          {pendingMemos.map((m) => (
+            <div key={m.id} className="flex items-center gap-2 p-2 rounded-xl bg-amber-50/60 border border-amber-100">
+              <div className="h-7 w-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                <Play className="h-3.5 w-3.5 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <audio controls src={m.base64} className="w-full h-8" />
+                <div className="text-[10px] text-amber-600 mt-0.5">En attente · sera enregistré avec la tâche · {fmtDuree(m.duree)}</div>
+              </div>
+              <button type="button" onClick={() => removePending(m.id)} className="h-7 w-7 flex items-center justify-center rounded-lg text-surface-400 hover:bg-danger-50 hover:text-danger-600 shrink-0">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
