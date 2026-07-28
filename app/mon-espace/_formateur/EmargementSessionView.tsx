@@ -7,6 +7,7 @@ import { sortCreneaux, todayISO } from '@/app/portail/[token]/emargement/helpers
 import { SessionDays, type DayRow } from '@/app/portail/[token]/emargement/[sessionId]/SessionDays'
 import { ModeEmargement } from '@/app/portail/[token]/emargement/[sessionId]/ModeEmargement'
 import { SessionHeaderFormateur } from '@/app/portail/[token]/SessionHeaderFormateur'
+import { SessionPointage } from '@/app/mon-espace/_formateur/SessionPointage'
 
 /**
  * Détail d'émargement d'une session, partagé entre l'espace connecté et le
@@ -45,7 +46,8 @@ export async function EmargementSessionView({
   const { ensureEmargements } = await import('@/lib/emargements')
   await ensureEmargements(supabase, session.id, session.organization_id)
 
-  const [emRes, fRes, insRes] = await Promise.all([
+  const todayDate = todayISO()
+  const [emRes, fRes, insRes, pRes] = await Promise.all([
     supabase
       .from('emargements')
       .select(
@@ -62,7 +64,16 @@ export async function EmargementSessionView({
       .select('apprenant:apprenants(id, prenom, nom)')
       .eq('session_id', session.id)
       .not('status', 'in', '("annule","abandonne")'),
+    // Pointage du formateur pour cette session, jour courant
+    supabase
+      .from('pointages_formateur')
+      .select('id, heure_arrivee, heure_depart')
+      .eq('session_id', session.id)
+      .eq('formateur_id', formateurId)
+      .eq('date', todayDate)
+      .maybeSingle(),
   ])
+  const pointageToday = (pRes as any).data || null
 
   const emargements = (emRes.data || []) as any[]
   const feuilles = (fRes.data || []) as any[]
@@ -140,6 +151,12 @@ export async function EmargementSessionView({
           )
         }
       />
+
+      {/* Pointage du formateur (arrivée / départ, jour courant) */}
+      <div>
+        <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">Mon pointage — {new Date(todayDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <SessionPointage token={token} sessionId={session.id} pointage={pointageToday} />
+      </div>
 
       {nbSignatures > 0 && (
         <a
