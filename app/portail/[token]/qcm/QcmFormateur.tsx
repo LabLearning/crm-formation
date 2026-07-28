@@ -1,4 +1,5 @@
 import { ClipboardCheck, QrCode, CheckCircle2, Clock } from 'lucide-react'
+import { SendQcmButton } from '@/app/mon-espace/_formateur/SendQcmButton'
 
 interface QcmSession {
   id: string
@@ -90,6 +91,11 @@ export function QcmFormateur({
                     ? <><CheckCircle2 className="h-3.5 w-3.5" /> Complet</>
                     : <><Clock className="h-3.5 w-3.5" /> En cours</>}
                 </span>
+              </div>
+
+              {/* Envoi du questionnaire aux apprenants (email + WhatsApp) */}
+              <div className="flex justify-end mb-2">
+                <SendQcmButton token={token} sessionId={sessionId} qcmId={qs.qcm_id} titre={qs.qcm?.titre || 'Questionnaire'} />
               </div>
 
               {/* Résultat détaillé par apprenant, comme la vue admin */}
