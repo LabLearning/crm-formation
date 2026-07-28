@@ -20,15 +20,19 @@ export async function GET(req: Request) {
     const totalNew = Object.values(report).reduce((s: number, v: any) => s + (v.new || 0), 0)
     // Rattache automatiquement les QCM des formations aux sessions (dont celles
     // qui viennent d'être importées de Dendreo)
-    let qcmLinks = 0
+    let qcmLinks = 0, qcmReponses = 0
     try {
+      const ORG_ID = process.env.DENDREO_DEFAULT_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
       const { createServiceRoleClient } = await import('@/lib/supabase/server')
       const { backfillOrgQcmSessions } = await import('@/lib/qcm-autolink')
+      const { backfillOrgQcmReponses } = await import('@/lib/qcm-auto-seed')
       const supabase = await createServiceRoleClient()
-      qcmLinks = await backfillOrgQcmSessions(supabase, process.env.DENDREO_DEFAULT_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5')
-    } catch (e) { console.error('[cron dendreo-sync] autolink QCM', e) }
-    console.log(`[cron dendreo-sync] ${totalNew} nouveaux, ${qcmLinks} liens QCM en ${Date.now() - t0}ms`, JSON.stringify(report))
-    return NextResponse.json({ ok: true, ms: Date.now() - t0, totalNew, qcmLinks, report })
+      qcmLinks = await backfillOrgQcmSessions(supabase, ORG_ID)
+      // Semis silencieux des réponses (assignation lue par le portail apprenant)
+      qcmReponses = await backfillOrgQcmReponses(supabase, ORG_ID)
+    } catch (e) { console.error('[cron dendreo-sync] autolink/seed QCM', e) }
+    console.log(`[cron dendreo-sync] ${totalNew} nouveaux, ${qcmLinks} liens + ${qcmReponses} réponses QCM en ${Date.now() - t0}ms`, JSON.stringify(report))
+    return NextResponse.json({ ok: true, ms: Date.now() - t0, totalNew, qcmLinks, qcmReponses, report })
   } catch (e: any) {
     console.error('[cron dendreo-sync] échec', e)
     return NextResponse.json({ ok: false, error: e?.message || 'Erreur' }, { status: 500 })

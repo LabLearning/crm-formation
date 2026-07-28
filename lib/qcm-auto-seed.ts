@@ -40,7 +40,7 @@ export async function seedQcmReponsesForSession(
     .eq('organization_id', sess.organization_id)
     .eq('formation_id', sess.formation_id)
     .eq('type', qcmType)
-    .eq('is_active', true)
+    .eq('status', 'publie')
 
   if (!qcms || qcms.length === 0) return { created: 0 }  // Pas de QCM configuré pour ce type
 
@@ -121,6 +121,68 @@ export async function seedQcmReponsesForQcm(
   const { error } = await supabase.from('qcm_reponses').insert(rows)
   if (error) return { created: 0, error: error.message }
   return { created: rows.length }
+}
+
+const TYPES_BY_STATUS: Record<string, QcmType[]> = {
+  planifiee: ['positionnement', 'entree'],
+  confirmee: ['positionnement', 'entree'],
+  en_cours: ['positionnement', 'entree', 'sortie', 'satisfaction_chaud'],
+  terminee: ['positionnement', 'entree', 'sortie', 'satisfaction_chaud', 'satisfaction_froid'],
+}
+
+/**
+ * Sème (SILENCIEUSEMENT, sans notification) les qcm_reponses de toute une
+ * organisation selon le moment du cycle de chaque session. Idempotent. Appelé
+ * après le sync Dendreo pour que les sessions importées relient leurs QCM aux
+ * apprenants inscrits. Retourne le nombre de réponses créées.
+ */
+export async function backfillOrgQcmReponses(supabase: any, orgId: string): Promise<number> {
+  try {
+    const { data: qcms } = await supabase
+      .from('qcm').select('id, formation_id, type')
+      .eq('organization_id', orgId).eq('status', 'publie').not('formation_id', 'is', null)
+    if (!qcms || qcms.length === 0) return 0
+    const qcmByFT = new Map<string, string>()
+    for (const q of qcms) qcmByFT.set(`${q.formation_id}:${q.type}`, q.id)
+
+    const { data: sessions } = await supabase
+      .from('sessions').select('id, formation_id, status').eq('organization_id', orgId).not('formation_id', 'is', null)
+    const { data: inscriptions } = await supabase
+      .from('inscriptions').select('session_id, apprenant_id, status').eq('organization_id', orgId)
+    const insBySession = new Map<string, string[]>()
+    for (const i of (inscriptions || [])) {
+      if (['annule', 'abandonne'].includes(i.status) || !i.apprenant_id) continue
+      const arr = insBySession.get(i.session_id) || []; arr.push(i.apprenant_id); insBySession.set(i.session_id, arr)
+    }
+
+    const { data: existing } = await supabase
+      .from('qcm_reponses').select('qcm_id, apprenant_id').eq('organization_id', orgId)
+    const seen = new Set((existing || []).map((e: any) => `${e.qcm_id}:${e.apprenant_id}`))
+
+    const rows: any[] = []
+    for (const s of (sessions || [])) {
+      const types = TYPES_BY_STATUS[s.status]
+      if (!types) continue
+      const apprenants = insBySession.get(s.id) || []
+      for (const t of types) {
+        const qid = qcmByFT.get(`${s.formation_id}:${t}`)
+        if (!qid) continue
+        for (const aid of apprenants) {
+          const key = `${qid}:${aid}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          rows.push({ organization_id: orgId, qcm_id: qid, apprenant_id: aid, session_id: s.id, is_complete: false })
+        }
+      }
+    }
+    for (let i = 0; i < rows.length; i += 500) {
+      await supabase.from('qcm_reponses').insert(rows.slice(i, i + 500))
+    }
+    return rows.length
+  } catch (e) {
+    console.error('[backfillOrgQcmReponses]', e)
+    return 0
+  }
 }
 
 /** Notifie les apprenants concernés qu'un QCM leur est disponible */
