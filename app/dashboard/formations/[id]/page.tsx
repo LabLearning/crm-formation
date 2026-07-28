@@ -31,8 +31,9 @@ export default async function FormationDetailPage({ params }: { params: { id: st
       .order('date_debut', { ascending: false }),
     supabase
       .from('qcm')
-      .select('id, titre, type, status')
-      .eq('formation_id', params.id),
+      .select('id, titre, type, status, qcm_questions(count)')
+      .eq('formation_id', params.id)
+      .order('type'),
   ])
 
   const STATUS_LABELS: Record<string, string> = {
@@ -203,25 +204,38 @@ export default async function FormationDetailPage({ params }: { params: { id: st
         )}
       </div>
 
-      {/* QCM */}
-      {(qcms || []).length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="px-4 py-3 border-b border-surface-100">
-            <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">QCM associés ({(qcms || []).length})</span>
-          </div>
-          <div className="divide-y divide-surface-100">
-            {(qcms || []).map((q: any) => (
-              <div key={q.id} className="flex items-center gap-3 px-4 py-3.5">
-                <ListChecks className="h-4 w-4 text-violet-500 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-surface-900">{q.titre}</div>
-                </div>
-                <Badge variant={q.status === 'publie' ? 'success' : 'default'}>{q.status === 'publie' ? 'Publié' : 'Brouillon'}</Badge>
-              </div>
-            ))}
-          </div>
+      {/* QCM d'évaluation liés */}
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
+          <ListChecks className="h-4 w-4 text-violet-500" />
+          <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Questionnaires d'évaluation ({(qcms || []).length})</span>
         </div>
-      )}
+        {(qcms || []).length > 0 ? (
+          <div className="divide-y divide-surface-100">
+            {(qcms || []).map((q: any) => {
+              const nbQuestions = Array.isArray(q.qcm_questions) ? (q.qcm_questions[0]?.count ?? 0) : 0
+              return (
+                <Link key={q.id} href={`/dashboard/qcm?qcm=${q.id}`}
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-50 transition-colors">
+                  <ListChecks className="h-4 w-4 text-violet-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-surface-900 truncate">{q.titre}</div>
+                    <div className="text-xs text-surface-500">{QCM_TYPE_LABELS[q.type] || q.type} · {nbQuestions} question{nbQuestions > 1 ? 's' : ''}</div>
+                  </div>
+                  <Badge variant={q.status === 'publie' ? 'success' : 'default'}>{q.status === 'publie' ? 'Publié' : 'Brouillon'}</Badge>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-sm text-surface-400">Aucun questionnaire d'évaluation lié à cette formation</div>
+        )}
+      </div>
     </div>
   )
+}
+
+const QCM_TYPE_LABELS: Record<string, string> = {
+  positionnement: 'Positionnement', entree: "Évaluation d'entrée", sortie: 'Évaluation des acquis',
+  satisfaction_chaud: 'Satisfaction à chaud', satisfaction_froid: 'Satisfaction à froid',
 }
