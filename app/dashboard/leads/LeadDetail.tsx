@@ -41,7 +41,7 @@ export function LeadDetail({ lead, users, gestionnaires, formateurs = [], format
   const router = useRouter()
   const [addingInteraction, setAddingInteraction] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [tab, setTab] = useState<'info' | 'historique' | 'actions' | 'commentaires'>('info')
+  const [tab, setTab] = useState<'info' | 'historique' | 'actions'>('info')
   const [commentText, setCommentText] = useState('')
 
   const comments = interactions.filter((i) => i.type === 'note')
@@ -124,6 +124,41 @@ export function LeadDetail({ lead, users, gestionnaires, formateurs = [], format
         gestionnaires={gestionnaires}
       />
 
+      {/* Commentaires — carte visible directement (pas d'onglet) */}
+      <div className="card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-brand-500" />
+          <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">
+            Commentaires{comments.length ? ` (${comments.length})` : ''}
+          </span>
+        </div>
+        <textarea
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          rows={2}
+          className="input-base resize-none"
+          placeholder="Écrire un commentaire sur ce lead…"
+        />
+        <div className="flex justify-end">
+          <Button size="sm" onClick={handleAddComment} isLoading={isSaving} disabled={!commentText.trim()} icon={<Send className="h-3.5 w-3.5" />}>
+            Commenter
+          </Button>
+        </div>
+        {comments.length > 0 && (
+          <div className="space-y-2 pt-1 border-t border-surface-100">
+            {comments.map((c) => (
+              <div key={c.id} className="p-2.5 rounded-lg bg-surface-50">
+                <div className="text-sm text-surface-700 whitespace-pre-wrap">{c.content}</div>
+                <div className="text-[10px] text-surface-400 mt-1">
+                  {c.user && (c.user as any).first_name + ' ' + (c.user as any).last_name + ' · '}
+                  {formatDateTime(c.date)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Participants prévus (pool, futurs apprenants) */}
       <LeadParticipantsCard leadId={lead.id} nombreStagiaires={lead.nombre_stagiaires} />
 
@@ -156,7 +191,6 @@ export function LeadDetail({ lead, users, gestionnaires, formateurs = [], format
       <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5">
         {([
           { id: 'info' as const, label: 'Infos' },
-          { id: 'commentaires' as const, label: `Commentaires${comments.length ? ` (${comments.length})` : ''}` },
           { id: 'actions' as const, label: 'Actions rapides' },
           { id: 'historique' as const, label: 'Historique' },
         ]).map(t => (
@@ -315,41 +349,6 @@ export function LeadDetail({ lead, users, gestionnaires, formateurs = [], format
               </a>
             )}
           </div>
-        </div>
-      )}
-
-      {/* ── TAB COMMENTAIRES ── */}
-      {tab === 'commentaires' && (
-        <div className="space-y-3">
-          <div className="card p-3 space-y-2">
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              rows={3}
-              className="input-base resize-none"
-              placeholder="Écrire un commentaire sur ce lead…"
-            />
-            <div className="flex justify-end">
-              <Button size="sm" onClick={handleAddComment} isLoading={isSaving} disabled={!commentText.trim()} icon={<Send className="h-3.5 w-3.5" />}>
-                Commenter
-              </Button>
-            </div>
-          </div>
-          {comments.length > 0 ? (
-            <div className="space-y-2.5">
-              {comments.map((c) => (
-                <div key={c.id} className="p-3 rounded-xl bg-surface-50">
-                  <div className="text-sm text-surface-700 whitespace-pre-wrap">{c.content}</div>
-                  <div className="text-[10px] text-surface-400 mt-1.5">
-                    {c.user && (c.user as any).first_name + ' ' + (c.user as any).last_name + ' · '}
-                    {formatDateTime(c.date)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-sm text-surface-400">Aucun commentaire pour l'instant</div>
-          )}
         </div>
       )}
 
