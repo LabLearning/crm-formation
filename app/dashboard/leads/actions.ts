@@ -33,6 +33,13 @@ export async function createLeadAction(formData: FormData): Promise<ActionResult
 
   const supabase = await createServiceRoleClient()
 
+  // Anti-doublon SIRET (cross-entité : clients + leads)
+  {
+    const { normalizeSiret, findSiretOwner, siretDuplicateMessage } = await import('@/lib/siret')
+    const owner = await findSiretOwner(supabase, session.organization.id, normalizeSiret((parsed.data as any).siret))
+    if (owner) return { success: false, errors: { siret: [siretDuplicateMessage(owner)] }, error: siretDuplicateMessage(owner) }
+  }
+
   // Si c'est un apporteur, auto-lier le lead à sa fiche
   let apporteurId = parsed.data.apporteur_id || null
   if (session.user.role === 'apporteur_affaires' && !apporteurId) {
@@ -215,6 +222,13 @@ export async function updateLeadAction(id: string, formData: FormData): Promise<
   const parsed = createLeadSchema.safeParse(raw)
   if (!parsed.success) {
     return { success: false, errors: parsed.error.flatten().fieldErrors }
+  }
+
+  // Anti-doublon SIRET (cross-entité : clients + leads), en excluant ce lead
+  {
+    const { normalizeSiret, findSiretOwner, siretDuplicateMessage } = await import('@/lib/siret')
+    const owner = await findSiretOwner(supabase, session.organization.id, normalizeSiret((parsed.data as any).siret), { leadId: id })
+    if (owner) return { success: false, errors: { siret: [siretDuplicateMessage(owner)] }, error: siretDuplicateMessage(owner) }
   }
 
   const updateData = {

@@ -233,8 +233,11 @@ export function LeadForm({ lead, users, formations = [], franchises = [], isAppo
       : await createLeadAction(formData)
 
     if (result.success) onSuccess()
-    else if (result.errors) setFieldErrors(result.errors)
-    else setError(result.error || 'Erreur')
+    else {
+      if (result.errors) setFieldErrors(result.errors)
+      if (result.error) setError(result.error)
+      else if (!result.errors) setError('Erreur')
+    }
     setIsLoading(false)
   }
 
@@ -281,7 +284,7 @@ export function LeadForm({ lead, users, formations = [], franchises = [], isAppo
           <input type="hidden" name="est_organisme_formation" value={estOrgFormation ? 'true' : 'false'} />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input id="siret" name="siret" label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="14 chiffres" />
+            <Input id="siret" name="siret" label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="14 chiffres" error={fieldErrors.siret?.[0]} />
             <Input id="sigle" name="sigle" label="Sigle" value={sigle} onChange={(e) => setSigle(e.target.value)} />
           </div>
 
