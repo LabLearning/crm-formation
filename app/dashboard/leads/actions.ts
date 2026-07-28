@@ -673,6 +673,58 @@ export async function rejectLeadAction(leadId: string, comment: string): Promise
 }
 
 // ── Participants prévisionnels du lead ──
+
+/**
+ * Résout (ou crée) le client de l'établissement d'un lead :
+ *  1. le client déjà converti (converted_client_id),
+ *  2. sinon un client de même SIRET,
+ *  3. sinon on crée le client à partir des infos du lead.
+ * Renseigne converted_client_id sur le lead pour réutilisation.
+ */
+async function resolveLeadClient(supabase: any, orgId: string, lead: any, userId: string): Promise<string | null> {
+  if (lead.converted_client_id) return lead.converted_client_id
+
+  const siretNorm = (lead.siret || '').replace(/\D/g, '')
+  if (siretNorm) {
+    const { data: clients } = await supabase.from('clients').select('id, siret').eq('organization_id', orgId).not('siret', 'is', null)
+    const match = (clients || []).find((c: any) => (c.siret || '').replace(/\D/g, '') === siretNorm)
+    if (match) {
+      await supabase.from('leads').update({ converted_client_id: match.id }).eq('id', lead.id)
+      return match.id
+    }
+  }
+
+  if (!lead.entreprise) return null // sans raison sociale on ne peut pas créer le client
+  const { data: created, error } = await supabase.from('clients').insert({
+    organization_id: orgId, type: lead.type || 'entreprise',
+    raison_sociale: lead.entreprise, siret: lead.siret || null, sigle: lead.sigle || null,
+    code_naf: lead.code_naf || null, secteur_activite: lead.secteur_activite || null,
+    forme_juridique: lead.forme_juridique || null, tva_intra: lead.tva_intra || null,
+    adresse: lead.adresse || null, code_postal: lead.code_postal || null, ville: lead.ville || null,
+    telephone: lead.contact_telephone || null, email: lead.contact_email || null,
+    financeur_type: lead.financeur_type || null, opco_id: lead.opco_id || null,
+    numero_opco: lead.numero_opco || null, franchise_id: lead.franchise_id || null,
+    assigned_to: lead.assigned_to || userId, created_by: userId,
+  }).select('id').single()
+  if (error || !created) { console.error('[resolveLeadClient] create client', error); return null }
+  await supabase.from('leads').update({ converted_client_id: created.id }).eq('id', lead.id)
+  return created.id
+}
+
+/** Crée un apprenant (rattaché au client établissement) depuis un participant de lead. */
+async function createApprenantFromParticipant(supabase: any, orgId: string, clientId: string | null, p: any): Promise<string | null> {
+  const { data, error } = await supabase.from('apprenants').insert({
+    organization_id: orgId, client_id: clientId,
+    civilite: p.civilite || null, prenom: p.prenom || '', nom: p.nom || '—',
+    email: p.email || null, telephone: p.telephone || null, poste: p.poste || null,
+    date_naissance: p.date_naissance || null, lieu_naissance: p.lieu_naissance || null,
+    adresse: p.adresse || null, code_postal: p.code_postal || null, ville: p.ville || null,
+    type_contrat: p.type_contrat || null, numero_securite_sociale: p.numero_securite_sociale || null,
+  }).select('id').single()
+  if (error) { console.error('[createApprenantFromParticipant]', error); return null }
+  return data.id
+}
+
 export async function getLeadParticipantsAction(leadId: string): Promise<ActionResult> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
@@ -688,28 +740,35 @@ export async function getLeadParticipantsAction(leadId: string): Promise<ActionR
 export async function addLeadParticipantAction(leadId: string, formData: FormData): Promise<ActionResult> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
   const nom = (formData.get('nom') as string || '').trim()
   if (!nom) return { success: false, error: 'Nom requis' }
+
+  const p = {
+    civilite: (formData.get('civilite') as string) || null,
+    prenom: (formData.get('prenom') as string) || null,
+    nom,
+    email: (formData.get('email') as string) || null,
+    telephone: (formData.get('telephone') as string) || null,
+    poste: (formData.get('poste') as string) || null,
+    date_naissance: (formData.get('date_naissance') as string) || null,
+    lieu_naissance: (formData.get('lieu_naissance') as string) || null,
+    adresse: (formData.get('adresse') as string) || null,
+    code_postal: (formData.get('code_postal') as string) || null,
+    ville: (formData.get('ville') as string) || null,
+    type_contrat: (formData.get('type_contrat') as string) || null,
+    numero_securite_sociale: (formData.get('numero_securite_sociale') as string) || null,
+    niveau_diplome: (formData.get('niveau_diplome') as string) || null,
+  }
+
+  // Rattache l'apprenant au client établissement (créé/retrouvé)
+  const { data: lead } = await supabase.from('leads').select('*').eq('id', leadId).eq('organization_id', orgId).single()
+  const clientId = lead ? await resolveLeadClient(supabase, orgId, lead, session.user.id) : null
+  const apprenantId = await createApprenantFromParticipant(supabase, orgId, clientId, p)
+
   const { data, error } = await supabase
     .from('lead_participants')
-    .insert({
-      organization_id: session.organization.id,
-      lead_id: leadId,
-      civilite: (formData.get('civilite') as string) || null,
-      prenom: (formData.get('prenom') as string) || null,
-      nom,
-      email: (formData.get('email') as string) || null,
-      telephone: (formData.get('telephone') as string) || null,
-      poste: (formData.get('poste') as string) || null,
-      date_naissance: (formData.get('date_naissance') as string) || null,
-      lieu_naissance: (formData.get('lieu_naissance') as string) || null,
-      adresse: (formData.get('adresse') as string) || null,
-      code_postal: (formData.get('code_postal') as string) || null,
-      ville: (formData.get('ville') as string) || null,
-      type_contrat: (formData.get('type_contrat') as string) || null,
-      numero_securite_sociale: (formData.get('numero_securite_sociale') as string) || null,
-      niveau_diplome: (formData.get('niveau_diplome') as string) || null,
-    })
+    .insert({ organization_id: orgId, lead_id: leadId, apprenant_id: apprenantId, ...p })
     .select()
     .single()
   if (error) return { success: false, error: 'Erreur' }
@@ -722,29 +781,41 @@ export async function updateLeadParticipantAction(id: string, formData: FormData
   const supabase = await createServiceRoleClient()
   const nom = (formData.get('nom') as string || '').trim()
   if (!nom) return { success: false, error: 'Nom requis' }
+  const fields = {
+    civilite: (formData.get('civilite') as string) || null,
+    prenom: (formData.get('prenom') as string) || null,
+    nom,
+    email: (formData.get('email') as string) || null,
+    telephone: (formData.get('telephone') as string) || null,
+    poste: (formData.get('poste') as string) || null,
+    date_naissance: (formData.get('date_naissance') as string) || null,
+    lieu_naissance: (formData.get('lieu_naissance') as string) || null,
+    adresse: (formData.get('adresse') as string) || null,
+    code_postal: (formData.get('code_postal') as string) || null,
+    ville: (formData.get('ville') as string) || null,
+    type_contrat: (formData.get('type_contrat') as string) || null,
+    numero_securite_sociale: (formData.get('numero_securite_sociale') as string) || null,
+    niveau_diplome: (formData.get('niveau_diplome') as string) || null,
+  }
   const { data, error } = await supabase
     .from('lead_participants')
-    .update({
-      civilite: (formData.get('civilite') as string) || null,
-      prenom: (formData.get('prenom') as string) || null,
-      nom,
-      email: (formData.get('email') as string) || null,
-      telephone: (formData.get('telephone') as string) || null,
-      poste: (formData.get('poste') as string) || null,
-      date_naissance: (formData.get('date_naissance') as string) || null,
-      lieu_naissance: (formData.get('lieu_naissance') as string) || null,
-      adresse: (formData.get('adresse') as string) || null,
-      code_postal: (formData.get('code_postal') as string) || null,
-      ville: (formData.get('ville') as string) || null,
-      type_contrat: (formData.get('type_contrat') as string) || null,
-      numero_securite_sociale: (formData.get('numero_securite_sociale') as string) || null,
-      niveau_diplome: (formData.get('niveau_diplome') as string) || null,
-    })
+    .update(fields)
     .eq('id', id)
     .eq('organization_id', session.organization.id)
     .select()
     .single()
   if (error) return { success: false, error: 'Erreur' }
+
+  // Répercute sur l'apprenant lié (état civil, coordonnées…)
+  if (data?.apprenant_id) {
+    await supabase.from('apprenants').update({
+      civilite: fields.civilite, prenom: fields.prenom || '', nom: fields.nom,
+      email: fields.email, telephone: fields.telephone, poste: fields.poste,
+      date_naissance: fields.date_naissance, lieu_naissance: fields.lieu_naissance,
+      adresse: fields.adresse, code_postal: fields.code_postal, ville: fields.ville,
+      type_contrat: fields.type_contrat, numero_securite_sociale: fields.numero_securite_sociale,
+    }).eq('id', data.apprenant_id).eq('organization_id', session.organization.id)
+  }
   revalidatePath('/dashboard/leads')
   return { success: true, data }
 }
@@ -767,28 +838,27 @@ export async function bulkCreateLeadParticipantsAction(
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const rows = (participants || [])
-    .filter((p) => (p.nom || '').trim())
-    .map((p) => ({
-      organization_id: session.organization.id,
-      lead_id: leadId,
-      civilite: p.civilite || null,
-      prenom: p.prenom || null,
-      nom: (p.nom || '').trim(),
-      email: p.email || null,
-      telephone: p.telephone || null,
-      poste: p.poste || null,
-      date_naissance: p.date_naissance || null,
-      lieu_naissance: p.lieu_naissance || null,
-      adresse: p.adresse || null,
-      code_postal: p.code_postal || null,
-      ville: p.ville || null,
-      type_contrat: p.type_contrat || null,
-      numero_securite_sociale: p.numero_securite_sociale || null,
-      niveau_diplome: p.niveau_diplome || null,
-    }))
+  const orgId = session.organization.id
+  const clean = (participants || []).filter((p) => (p.nom || '').trim())
+  if (clean.length === 0) return { success: false, error: 'Aucun participant à enregistrer' }
 
-  if (rows.length === 0) return { success: false, error: 'Aucun participant à enregistrer' }
+  // Client établissement (créé/retrouvé une seule fois)
+  const { data: lead } = await supabase.from('leads').select('*').eq('id', leadId).eq('organization_id', orgId).single()
+  const clientId = lead ? await resolveLeadClient(supabase, orgId, lead, session.user.id) : null
+
+  const rows: any[] = []
+  for (const p of clean) {
+    const base = {
+      civilite: p.civilite || null, prenom: p.prenom || null, nom: (p.nom || '').trim(),
+      email: p.email || null, telephone: p.telephone || null, poste: p.poste || null,
+      date_naissance: p.date_naissance || null, lieu_naissance: p.lieu_naissance || null,
+      adresse: p.adresse || null, code_postal: p.code_postal || null, ville: p.ville || null,
+      type_contrat: p.type_contrat || null, numero_securite_sociale: p.numero_securite_sociale || null,
+      niveau_diplome: p.niveau_diplome || null,
+    }
+    const apprenantId = await createApprenantFromParticipant(supabase, orgId, clientId, base)
+    rows.push({ organization_id: orgId, lead_id: leadId, apprenant_id: apprenantId, ...base })
+  }
 
   const { data, error } = await supabase.from('lead_participants').insert(rows).select()
   if (error) return { success: false, error: "Erreur lors de l'enregistrement" }
