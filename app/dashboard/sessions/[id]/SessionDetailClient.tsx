@@ -8,7 +8,7 @@ import {
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
   Star, ListChecks, FileSignature, Award, Euro, BookOpen,
-  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil,
+  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
@@ -115,6 +115,20 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       router.refresh()
     })
   }
+
+  function attachSpecificQcm(qcmId: string) {
+    startTransition(async () => {
+      await attachQcmToSessionAction(session.id, qcmId)
+      router.refresh()
+    })
+  }
+
+  // QCM propres à la/aux formation(s) de cette session, pas encore rattachés :
+  // ce sont les questionnaires d'évaluation liés — on les met en avant.
+  const sessionFormationSet = new Set<string>([session.formation_id, ...(sessionFormationIds || [])].filter(Boolean))
+  const formationQcms = (qcmBank || []).filter(
+    (b: any) => b.formation_id && sessionFormationSet.has(b.formation_id) && !qcmSessions.some((qs: any) => qs.qcm_id === b.id),
+  )
 
   function saveCout() {
     const montant = coutValue.trim() === '' ? null : Number(coutValue)
@@ -1005,6 +1019,32 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ═══════════════════════════════════════════════ */}
       {tab === 'qcm' && (
         <div className="space-y-4">
+          {/* Suggestion : QCM d'évaluation de la formation de la session */}
+          {!isFormateur && formationQcms.length > 0 && (
+            <div className="card p-4 border border-brand-100 bg-brand-50/40">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-brand-500" />
+                <span className="text-sm font-semibold text-surface-900">Questionnaire d'évaluation de la formation</span>
+              </div>
+              <p className="text-xs text-surface-500 mb-3">Lié à la formation de cette session — rattachez-le en un clic pour que les apprenants puissent y répondre.</p>
+              <div className="space-y-2">
+                {formationQcms.map((b: any) => (
+                  <div key={b.id} className="flex items-center gap-3 bg-white rounded-xl border border-surface-100 px-3 py-2.5">
+                    <ListChecks className="h-4 w-4 text-brand-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-surface-900 truncate">{b.titre}</div>
+                      <div className="text-xs text-surface-500">{QCM_TYPE_LABELS[b.type] || b.type}</div>
+                    </div>
+                    <button onClick={() => attachSpecificQcm(b.id)} disabled={isPending}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors shrink-0">
+                      {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />} Rattacher
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Barre d'actions : rattacher un QCM + QR code à projeter */}
           {!isFormateur && (
             <div className="card p-4 space-y-3">

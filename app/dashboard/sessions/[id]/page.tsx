@@ -94,10 +94,11 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
       .from('qcm_reponses')
       .select('id, qcm_id, apprenant_id, score, is_reussi, is_complete, completed_at')
       .eq('session_id', params.id),
-    // Banque de QCM de l'organisation (pour rattacher)
+    // Banque de QCM de l'organisation (pour rattacher) — formation_id pour
+    // repérer le QCM propre à la formation de la session
     supabase
       .from('qcm')
-      .select('id, titre, type, status')
+      .select('id, titre, type, status, formation_id')
       .eq('organization_id', session.organization.id)
       .order('created_at', { ascending: false }),
     // Conventions liées à la session
