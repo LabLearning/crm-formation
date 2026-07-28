@@ -1,5 +1,6 @@
 import { CalendarDays, Clock, MapPin, Building2, User, Users } from 'lucide-react'
 import { formatShortDate } from './emargement/helpers'
+import { companyLabel } from '@/lib/utils'
 
 /**
  * Bloc d'infos d'une session côté formateur (formation, client, dates,
@@ -24,7 +25,7 @@ export function SessionHeaderFormateur({
     code_postal?: string | null
     ville?: string | null
     formation?: { intitule?: string | null; duree_heures?: number | null } | null
-    client?: { raison_sociale?: string | null } | null
+    client?: { raison_sociale?: string | null; nom_commercial?: string | null; sigle?: string | null } | null
   }
   formateurName: string
   stagiaires: { prenom: string; nom: string }[]
@@ -58,7 +59,7 @@ export function SessionHeaderFormateur({
         {client?.raison_sociale && (
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-surface-400 shrink-0" />
-            <span className="truncate">{client.raison_sociale}</span>
+            <span className="truncate">{companyLabel(client)}</span>
           </div>
         )}
         <div className="flex items-center gap-2">

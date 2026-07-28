@@ -11,7 +11,7 @@ import {
   Euro, TrendingUp, Target, UserPlus, Building2, MapPin, Wallet, ListChecks,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
-import { cn, formatDate } from '@/lib/utils'
+import { cn, formatDate, companyLabel } from '@/lib/utils'
 
 const STATUS_LABELS: Record<string, string> = {
   nouveau: 'Nouveau', contacte: 'Contacté', qualification: 'Qualifié',
@@ -91,14 +91,14 @@ export default async function MonEspacePage() {
       // Interventions POEI proposées (plusieurs formateurs par parcours)
       supabase
         .from('poei_interventions')
-        .select('id, libelle, date_debut, date_fin, nb_heures, montant_ht, mission_proposed_at, poei:poei(numero, formation:formations(intitule), client:clients(raison_sociale))')
+        .select('id, libelle, date_debut, date_fin, nb_heures, montant_ht, mission_proposed_at, poei:poei(numero, formation:formations(intitule), client:clients(raison_sociale, nom_commercial, sigle))')
         .eq('formateur_id', formateur.id)
         .eq('mission_status', 'pending')
         .order('date_debut', { ascending: true }),
       // Interventions POEI acceptées : elles restent visibles après acceptation
       supabase
         .from('poei_interventions')
-        .select('id, libelle, date_debut, date_fin, nb_heures, montant_ht, lieu, adresse, code_postal, ville, horaires, poei:poei(numero, formation:formations(intitule), client:clients(raison_sociale))')
+        .select('id, libelle, date_debut, date_fin, nb_heures, montant_ht, lieu, adresse, code_postal, ville, horaires, poei:poei(numero, formation:formations(intitule), client:clients(raison_sociale, nom_commercial, sigle))')
         .eq('formateur_id', formateur.id)
         .eq('mission_status', 'accepted')
         .order('date_debut', { ascending: true }),
@@ -192,7 +192,7 @@ export default async function MonEspacePage() {
                 date_fin: iv.date_fin,
                 nb_heures: iv.nb_heures,
                 montant_ht: iv.montant_ht,
-                contexte: [iv.poei?.formation?.intitule, iv.poei?.client?.raison_sociale].filter(Boolean).join(' — ') || iv.poei?.numero || 'Parcours POEI',
+                contexte: [iv.poei?.formation?.intitule, companyLabel(iv.poei?.client)].filter(Boolean).join(' — ') || iv.poei?.numero || 'Parcours POEI',
               }} />
             ))}
           </div>
@@ -211,7 +211,7 @@ export default async function MonEspacePage() {
               {(interventionsAcceptees || []).map((iv: any) => {
                 const lieu = [iv.lieu, iv.adresse, [iv.code_postal, iv.ville].filter(Boolean).join(' ')]
                   .filter(Boolean).join(', ')
-                const contexte = [iv.poei?.formation?.intitule, iv.poei?.client?.raison_sociale]
+                const contexte = [iv.poei?.formation?.intitule, companyLabel(iv.poei?.client)]
                   .filter(Boolean).join(' — ')
                 return (
                   <div key={iv.id} className="px-4 py-3">

@@ -11,7 +11,7 @@ import {
   convertDevisToConventionAction, addDevisLigneAction, removeDevisLigneAction,
 } from './actions'
 import { DEVIS_STATUS_LABELS, DEVIS_STATUS_COLORS } from '@/lib/types/dossier'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Devis, DevisStatus, DevisLigne } from '@/lib/types/dossier'
 import type { Client } from '@/lib/types/crm'
 import type { Formation } from '@/lib/types/formation'
@@ -54,7 +54,7 @@ export function DevisList({ devisList, clients, formations }: DevisListProps) {
   }), [devisList])
 
   function getClientName(d: Devis): string {
-    if (d.client?.raison_sociale) return d.client.raison_sociale
+    if (d.client?.raison_sociale) return companyLabel(d.client)
     if (d.client?.nom) return `${d.client.prenom || ''} ${d.client.nom}`.trim()
     return '—'
   }
@@ -258,7 +258,7 @@ function DevisDetail({ devis, onClose }: { devis: Devis; onClose: () => void }) 
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3 rounded-xl bg-surface-50">
           <div className="text-2xs text-surface-400">Client</div>
-          <div className="text-sm font-medium text-surface-800">{devis.client?.raison_sociale || '—'}</div>
+          <div className="text-sm font-medium text-surface-800">{companyLabel(devis.client) || '—'}</div>
         </div>
         <div className="p-3 rounded-xl bg-surface-50">
           <div className="text-2xs text-surface-400">Statut</div>

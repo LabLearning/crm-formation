@@ -13,7 +13,7 @@ import {
 import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
-import { cn, formatDate } from '@/lib/utils'
+import { cn, formatDate, companyLabel } from '@/lib/utils'
 import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
 import { SignaturePad } from './SignaturePad'
@@ -166,7 +166,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
   const formation = session.formation
   const formateur = session.formateur
-  const etablissement = (session as any).client?.raison_sociale || null
+  const etablissement = companyLabel((session as any).client) || null
   const adresseComplete = [session.adresse, [session.code_postal, session.ville].filter(Boolean).join(' ')]
     .filter(Boolean).join(', ') || session.lieu || null
   const canChangeStatus = isFormateur || ['super_admin', 'gestionnaire', 'directeur_commercial'].includes(userRole)
@@ -425,7 +425,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               formateurId={formateur?.id || session.formateur_id}
               formateurNom={formateur ? `${formateur.prenom || ''} ${formateur.nom || ''}`.trim() : null}
               formateurEmail={formateur?.email || null}
-              clientNom={(session as any).client?.raison_sociale || null}
+              clientNom={companyLabel((session as any).client) || null}
               clientEmail={(session as any).client?.email || null}
               formationNom={(session as any).formation?.intitule || session.intitule || null}
               dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}

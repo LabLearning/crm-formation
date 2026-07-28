@@ -14,7 +14,7 @@ import {
   SESSION_STATUS_LABELS, SESSION_STATUS_COLORS,
   MODALITE_LABELS, MODALITE_COLORS,
 } from '@/lib/types/formation'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Session, SessionStatus, Formation, Formateur } from '@/lib/types/formation'
 
 interface ClientLite {
@@ -84,13 +84,17 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
   const [createOpen, setCreateOpen] = useState(false)
   const [editSession, setEditSession] = useState<Session | null>(null)
   const [prefillFormationId, setPrefillFormationId] = useState<string | undefined>(undefined)
+  const [prefillClientId, setPrefillClientId] = useState<string | undefined>(undefined)
 
   // Ouverture directe du formulaire préréglé depuis la fiche formation (?formation=<id>)
+  // ou la fiche client (?client=<id>)
   const searchParams = useSearchParams()
   useEffect(() => {
     const fid = searchParams.get('formation')
-    if (fid) {
-      setPrefillFormationId(fid)
+    const cid = searchParams.get('client')
+    if (fid || cid) {
+      if (fid) setPrefillFormationId(fid)
+      if (cid) setPrefillClientId(cid)
       setCreateOpen(true)
       // Nettoie l'URL pour éviter la réouverture au refresh
       router.replace(pathname)
@@ -297,7 +301,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                     </span>
                     {/* Client */}
                     <span className="hidden xl:flex items-center gap-1 text-xs font-medium text-sky-700 w-40 truncate shrink-0">
-                      {(s as any).client?.raison_sociale ? (<><Building2 className="h-3.5 w-3.5 shrink-0" />{(s as any).client.raison_sociale}</>) : <span className="text-surface-300 font-normal">—</span>}
+                      {(s as any).client?.raison_sociale ? (<><Building2 className="h-3.5 w-3.5 shrink-0" />{companyLabel((s as any).client)}</>) : <span className="text-surface-300 font-normal">—</span>}
                     </span>
                     {/* Menu */}
                     <div onClick={(e) => e.stopPropagation()} className="shrink-0">{sessionMenu(s)}</div>
@@ -345,7 +349,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                         {timeRange(s) && <span className="font-mono">· {timeRange(s)}</span>}
                       </div>
                       {s.formateur && <div className="flex items-center gap-1 truncate"><UserIcon className="h-3 w-3 shrink-0" />{s.formateur.prenom} {s.formateur.nom}</div>}
-                      {(s as any).client?.raison_sociale && <div className="flex items-center gap-1 truncate text-sky-700"><Building2 className="h-3 w-3 shrink-0" />{(s as any).client.raison_sociale}</div>}
+                      {(s as any).client?.raison_sociale && <div className="flex items-center gap-1 truncate text-sky-700"><Building2 className="h-3 w-3 shrink-0" />{companyLabel((s as any).client)}</div>}
                     </div>
                   </div>
                 ))}
@@ -365,7 +369,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
       )}
 
       <Modal isOpen={createOpen} onClose={() => { setCreateOpen(false); setPrefillFormationId(undefined) }} title="Nouvelle session" size="lg">
-        <SessionForm formations={formations} formateurs={formateurs} clients={clients} apprenants={apprenants} initialFormationId={prefillFormationId} onSuccess={() => { setCreateOpen(false); setPrefillFormationId(undefined); toast('success', 'Session créée') }} onCancel={() => { setCreateOpen(false); setPrefillFormationId(undefined) }} />
+        <SessionForm formations={formations} formateurs={formateurs} clients={clients} apprenants={apprenants} initialFormationId={prefillFormationId} initialClientId={prefillClientId} onSuccess={() => { setCreateOpen(false); setPrefillFormationId(undefined); setPrefillClientId(undefined); toast('success', 'Session créée') }} onCancel={() => { setCreateOpen(false); setPrefillFormationId(undefined); setPrefillClientId(undefined) }} />
       </Modal>
       <Modal isOpen={!!editSession} onClose={() => setEditSession(null)} title="Modifier la session" size="lg">
         {editSession && <SessionForm session={editSession} formations={formations} formateurs={formateurs} clients={clients} apprenants={apprenants} initialInscrits={(editSession as any)._inscrits_ids || []} onSuccess={() => { setEditSession(null); toast('success', 'Session mise à jour') }} onCancel={() => setEditSession(null)} />}

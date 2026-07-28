@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Save, CheckCircle2 } from 'lucide-react'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { updatePoeiAction } from '../actions'
+import { companyLabel } from '@/lib/utils'
 import type { Poei } from '@/lib/types/poei'
 
 interface Props {
   poei: Poei
-  clients: { id: string; raison_sociale: string | null }[]
+  clients: { id: string; raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null }[]
   formations: { id: string; intitule: string }[]
   nbCandidats?: number
 }
@@ -19,7 +20,7 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0 }: Props
   const router = useRouter()
   const [saving, setSaving] = useState(false)
 
-  const clientOptions = clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id }))
+  const clientOptions = clients.map((c) => ({ value: c.id, label: companyLabel(c) || c.id }))
   const formationOptions = formations.map((f) => ({ value: f.id, label: f.intitule }))
   const d = (v: string | null) => v || ''
 

@@ -14,7 +14,7 @@ export default async function DevisPage() {
       .from('devis')
       .select(`
         *,
-        client:clients(raison_sociale, nom, prenom, type),
+        client:clients(raison_sociale, nom_commercial, sigle, nom, prenom, type),
         formation:formations(intitule, reference),
         lignes:devis_lignes(*)
       `)

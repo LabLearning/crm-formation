@@ -12,7 +12,7 @@ export default async function FacturesPage() {
       .from('factures')
       .select(`
         *,
-        client:clients(raison_sociale, nom, prenom, type, email),
+        client:clients(raison_sociale, nom_commercial, sigle, nom, prenom, type, email),
         lignes:facture_lignes(*),
         paiements(*)
       `)

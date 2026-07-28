@@ -5,11 +5,14 @@ import { Save, Building2, Users, X, Plus, CalendarDays, Clock, Search } from 'lu
 import { Button, Input, Select, FormateurDispoBadge, CalendarPicker, SearchSelect } from '@/components/ui'
 import { createSessionAction, updateSessionAction, getApprenantsForClientAction } from './actions'
 import { SESSION_STATUS_LABELS } from '@/lib/types/formation'
+import { companyLabel } from '@/lib/utils'
 import type { Session, Formation, Formateur, HoraireJour } from '@/lib/types/formation'
 
 interface ClientLite {
   id: string
   raison_sociale: string | null
+  nom_commercial?: string | null
+  sigle?: string | null
   siret?: string | null
   adresse: string | null
   code_postal: string | null
@@ -38,6 +41,8 @@ interface SessionFormProps {
   initialInscrits?: string[]
   /** Formation présélectionnée à la création (ex : depuis la fiche formation) */
   initialFormationId?: string
+  /** Client présélectionné à la création (ex : depuis la fiche client) */
+  initialClientId?: string
   onSuccess: () => void
   onCancel: () => void
 }
@@ -62,7 +67,7 @@ function heuresJour(h: HoraireJour): number {
   return diff(h.matin_debut, h.matin_fin) + diff(h.aprem_debut, h.aprem_fin)
 }
 
-export function SessionForm({ session, formations, formateurs, clients = [], apprenants = [], initialInscrits = [], initialFormationId, onSuccess, onCancel }: SessionFormProps) {
+export function SessionForm({ session, formations, formateurs, clients = [], apprenants = [], initialInscrits = [], initialFormationId, initialClientId, onSuccess, onCancel }: SessionFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
@@ -81,7 +86,7 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
   // Vide au départ (nouvelle session) : le choix inter/intra est imposé avant validation
   const [typeSession, setTypeSession] = useState<'inter' | 'intra' | ''>(session?.type_session || '')
   const [modalite, setModalite] = useState<'presentiel' | 'distanciel' | 'mixte'>(session?.modalite || 'presentiel')
-  const [clientId, setClientId] = useState(session?.client_id || '')
+  const [clientId, setClientId] = useState(session?.client_id || initialClientId || '')
   const [formateurId, setFormateurId] = useState(session?.formateur_id || '')
   const [horairesJours, setHorairesJours] = useState<HoraireJour[]>(session?.horaires_jours || [])
   const [adresse, setAdresse] = useState(session?.adresse || '')
@@ -180,9 +185,9 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
     { value: '', label: '— Sélectionner un client —' },
     ...clients.filter(c => c.raison_sociale).map(c => ({
       value: c.id,
-      label: c.raison_sociale!,
+      label: companyLabel(c),
       preview: {
-        title: c.raison_sociale!,
+        title: companyLabel(c),
         lines: [
           { label: 'SIRET', value: c.siret || '—' },
           { label: 'Adresse', value: [c.adresse, [c.code_postal, c.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—' },
@@ -563,7 +568,7 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
           <>
             Session intra — apprenants filtrés sur :{' '}
             <span className="font-medium text-brand-700">
-              {clients.find(c => c.id === clientId)?.raison_sociale}
+              {companyLabel(clients.find(c => c.id === clientId))}
             </span>
           </>
         ) : typeSession === 'inter' ? (
@@ -609,7 +614,7 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
           <div className="text-xs font-semibold text-surface-600">
             Nouveau participant
             {typeSession === 'intra' && clientId && (
-              <span className="font-normal text-surface-400"> — rattaché à {clients.find(c => c.id === clientId)?.raison_sociale}</span>
+              <span className="font-normal text-surface-400"> — rattaché à {companyLabel(clients.find(c => c.id === clientId))}</span>
             )}
           </div>
           <div className="grid grid-cols-2 gap-2">

@@ -10,7 +10,7 @@ import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMe
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
 import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LABELS } from '@/lib/types/dossier'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Convention, ConventionStatus, ConventionType } from '@/lib/types/dossier'
 import type { Client } from '@/lib/types/crm'
 import type { Formation } from '@/lib/types/formation'
@@ -160,7 +160,7 @@ export function ConventionsList({ conventions, clients, formations, sessions = [
                 </div>
                 <div className="text-sm text-surface-700 mb-2">{c.objet || c.formation?.intitule || '—'}</div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-surface-500">
-                  <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{c.client?.raison_sociale || '—'}</span>
+                  <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{companyLabel(c.client) || '—'}</span>
                   <span className="flex items-center gap-1"><Euro className="h-3.5 w-3.5" />{Number(c.montant_ttc).toLocaleString('fr-FR')} € TTC</span>
                   {c.duree_heures && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{c.duree_heures}h</span>}
                   {c.nombre_stagiaires > 1 && <span>{c.nombre_stagiaires} stagiaires</span>}

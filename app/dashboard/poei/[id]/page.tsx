@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Building2, GraduationCap, Calendar } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import { PoeiStatusBar } from './PoeiStatusBar'
 import { PoeiEditor } from './PoeiEditor'
 import { PoeiCandidats } from './PoeiCandidats'
@@ -21,7 +21,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
 
   const { data: poei } = await supabase
     .from('poei')
-    .select(`*, client:clients(raison_sociale), formation:formations(intitule), session:sessions(id, reference, date_debut, date_fin)`)
+    .select(`*, client:clients(raison_sociale, nom_commercial, sigle), formation:formations(intitule), session:sessions(id, reference, date_debut, date_fin)`)
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()
@@ -36,7 +36,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       .eq('poei_id', params.id)
       .order('created_at', { ascending: true }),
     supabase
-      .from('clients').select('id, raison_sociale').eq('organization_id', session.organization.id).order('raison_sociale'),
+      .from('clients').select('id, raison_sociale, nom_commercial, sigle').eq('organization_id', session.organization.id).order('raison_sociale'),
     supabase
       .from('formations').select('id, intitule').eq('organization_id', session.organization.id).eq('is_active', true).order('intitule'),
     // Apprenants de l'établissement du projet (client) — pas tout le monde.
@@ -100,7 +100,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           <div>
             <h1 className="text-2xl font-heading font-bold text-surface-900 inline-flex items-center gap-2">
               <Building2 className="h-5 w-5 text-sky-500" />
-              {p.client?.raison_sociale || 'Projet POEI'}
+              {companyLabel(p.client) || 'Projet POEI'}
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-surface-500">
               <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs font-semibold">POEI</span>
@@ -125,7 +125,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         dureeTotale={p.duree_heures}
       />
 
-      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={p.client?.raison_sociale || null} clientId={p.client_id} devisByCandidat={devisByCandidat} />
+      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} />
 
       <PoeiEmailHistory logs={(emailLogs || []) as any[]} />
 

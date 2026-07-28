@@ -11,7 +11,7 @@ export default async function PaiementsPage() {
     .from('paiements')
     .select(`
       *,
-      facture:factures(numero, montant_ttc, client:clients(raison_sociale))
+      facture:factures(numero, montant_ttc, client:clients(raison_sociale, nom_commercial, sigle))
     `)
     .eq('organization_id', session.organization.id)
     .order('date_paiement', { ascending: false })

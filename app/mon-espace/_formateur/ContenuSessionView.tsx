@@ -31,7 +31,7 @@ export async function ContenuSessionView({
   const { data: session } = await supabase
     .from('sessions')
     .select(
-      'id, reference, intitule, date_debut, date_fin, horaires, lieu, adresse, code_postal, ville, formateur_id, organization_id, deroule_pedagogique, materiel_necessaire, formation:formation_id(intitule, duree_heures), client:client_id(raison_sociale)',
+      'id, reference, intitule, date_debut, date_fin, horaires, lieu, adresse, code_postal, ville, formateur_id, organization_id, deroule_pedagogique, materiel_necessaire, formation:formation_id(intitule, duree_heures), client:client_id(raison_sociale, nom_commercial, sigle)',
     )
     .eq('id', sessionId)
     .maybeSingle()

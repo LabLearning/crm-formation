@@ -66,7 +66,7 @@ export default async function SessionsPage({
       *,
       formation:formation_id(intitule, reference, modalite, duree_heures, is_poei),
       formateur:formateurs(prenom, nom),
-      client:client_id(raison_sociale)
+      client:client_id(raison_sociale, nom_commercial, sigle)
     `)
     .eq('organization_id', orgId)
     .order('date_debut', { ascending: false })
@@ -105,7 +105,7 @@ export default async function SessionsPage({
       .order('nom'),
     supabase
       .from('clients')
-      .select('id, raison_sociale, siret, adresse, code_postal, ville')
+      .select('id, raison_sociale, nom_commercial, sigle, siret, adresse, code_postal, ville')
       .eq('organization_id', orgId)
       .eq('type', 'entreprise')
       .order('raison_sociale'),

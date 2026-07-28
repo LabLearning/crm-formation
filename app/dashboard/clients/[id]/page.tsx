@@ -132,7 +132,15 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
         <Link href="/dashboard/clients" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700">
           <ArrowLeft className="h-4 w-4" /> Clients
         </Link>
-        <ClientEditButton client={c} users={(users || []) as any[]} canAssign={canAssign} />
+        <div className="flex items-center gap-2">
+          {isEntreprise && (
+            <Link href={`/dashboard/sessions?client=${c.id}`}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium bg-surface-900 text-white hover:bg-surface-800 transition-colors">
+              <Calendar className="h-4 w-4" /> Créer une session
+            </Link>
+          )}
+          <ClientEditButton client={c} users={(users || []) as any[]} canAssign={canAssign} />
+        </div>
       </div>
 
       {/* En-tête */}

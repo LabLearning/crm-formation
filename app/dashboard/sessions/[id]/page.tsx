@@ -11,7 +11,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Session avec formation et formateur
   const { data: sessionData } = await supabase
     .from('sessions')
-    .select('*, formation:formation_id(intitule, reference, duree_heures, categorie, modalite, is_poei), formateur:formateurs(id, prenom, nom, email, telephone, user_id, tarif_journalier), client:client_id(id, raison_sociale, email)')
+    .select('*, formation:formation_id(intitule, reference, duree_heures, categorie, modalite, is_poei), formateur:formateurs(id, prenom, nom, email, telephone, user_id, tarif_journalier), client:client_id(id, raison_sociale, nom_commercial, sigle, email)')
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()
@@ -120,7 +120,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
       .eq('organization_id', session.organization.id).eq('is_active', true).order('intitule'),
     supabase.from('formateurs').select('id, prenom, nom, tarif_journalier')
       .eq('organization_id', session.organization.id).eq('is_active', true).order('nom'),
-    supabase.from('clients').select('id, raison_sociale, siret, adresse, code_postal, ville')
+    supabase.from('clients').select('id, raison_sociale, nom_commercial, sigle, siret, adresse, code_postal, ville')
       .eq('organization_id', session.organization.id).eq('type', 'entreprise').order('raison_sociale'),
     supabase.from('apprenants').select('id, prenom, nom, email, client_id')
       .eq('organization_id', session.organization.id).order('nom').range(0, 9999),

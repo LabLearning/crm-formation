@@ -12,7 +12,7 @@ export async function FacturationView({ formateurId, token }: { formateurId: str
   const [{ data: sessions }, { data: factures }, { data: formateur }] = await Promise.all([
     supabase
       .from('sessions')
-      .select('id, reference, intitule, date_debut, date_fin, status, cout_formateur, formation:formation_id(intitule), client:client_id(raison_sociale)')
+      .select('id, reference, intitule, date_debut, date_fin, status, cout_formateur, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial, sigle)')
       .eq('formateur_id', formateurId)
       .order('date_fin', { ascending: false }),
     supabase

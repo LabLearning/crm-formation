@@ -9,7 +9,7 @@ import {
   TrendingUp, Users, MapPin, Briefcase,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
-import { cn } from '@/lib/utils'
+import { cn, companyLabel } from '@/lib/utils'
 
 interface Lead {
   id: string; contact_nom: string; contact_prenom: string | null
@@ -230,7 +230,7 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                       <Building2 className="h-4 w-4 text-surface-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-surface-900 truncate">{client.raison_sociale}</div>
+                      <div className="text-sm font-medium text-surface-900 truncate">{companyLabel(client)}</div>
                       {client.ville && <div className="text-xs text-surface-500 flex items-center gap-1"><MapPin className="h-3 w-3" />{client.ville}</div>}
                     </div>
                     {client.secteur_activite && (
@@ -343,7 +343,7 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-50 transition-colors">
                     <div>
                       <div className="text-sm font-medium text-surface-800">{d.numero}</div>
-                      <div className="text-xs text-surface-500">{d.client?.raison_sociale || '—'}</div>
+                      <div className="text-xs text-surface-500">{companyLabel(d.client) || '—'}</div>
                     </div>
                     <div className="text-sm font-bold text-surface-900">{d.montant_ht ? Number(d.montant_ht).toLocaleString('fr-FR') + ' €' : '—'}</div>
                   </Link>
@@ -463,7 +463,7 @@ export function CommercialClient({ userName, userRole, leads, interactionsToday,
                     <Building2 className="h-5 w-5 text-brand-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-surface-900 truncate">{c.raison_sociale || 'Client'}</div>
+                    <div className="text-sm font-semibold text-surface-900 truncate">{companyLabel(c) || 'Client'}</div>
                     <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap mt-0.5">
                       {(c.ville || c.code_postal) && <span className="flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{[c.code_postal, c.ville].filter(Boolean).join(' ')}</span>}
                       {c.secteur_activite && <span className="flex items-center gap-1"><Briefcase className="h-3 w-3 shrink-0" />{c.secteur_activite}</span>}

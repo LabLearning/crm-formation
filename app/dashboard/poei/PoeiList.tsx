@@ -10,7 +10,7 @@ import {
 import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast } from '@/components/ui'
 import { createPoeiAction, updatePoeiStatutAction, deletePoeiAction } from './actions'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
-import { formatDate, cn } from '@/lib/utils'
+import { formatDate, cn, companyLabel } from '@/lib/utils'
 import type { Poei, PoeiPrevision } from '@/lib/types/poei'
 import { PoeiPrevisions } from './PoeiPrevisions'
 import { DocumentationDrive } from './DocumentationDrive'
@@ -19,7 +19,7 @@ import { VivierList } from '../vivier/VivierList'
 interface Props {
   poei: Poei[]
   previsions: PoeiPrevision[]
-  clients: { id: string; raison_sociale: string | null }[]
+  clients: { id: string; raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null }[]
   formations: { id: string; intitule: string; duree_heures?: number | null }[]
   hasPoeiCatalog: boolean
   vivierCandidats?: any[]
@@ -52,7 +52,7 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
   const [isCreating, setIsCreating] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
 
-  const clientOptions = [{ value: '', label: 'Sélectionner…' }, ...clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id }))]
+  const clientOptions = [{ value: '', label: 'Sélectionner…' }, ...clients.map((c) => ({ value: c.id, label: companyLabel(c) || c.id }))]
   const formationOptions = [{ value: '', label: 'Sélectionner…' }, ...formations.map((f) => ({ value: f.id, label: f.intitule }))]
 
   const stats = useMemo(() => ({
@@ -218,7 +218,7 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
                     <Link href={`/dashboard/poei/${p.id}`} className="block">
                       <div className="text-sm font-medium text-surface-900 inline-flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5 text-surface-400" />
-                        {p.client?.raison_sociale || '—'}
+                        {companyLabel(p.client) || '—'}
                       </div>
                       <div className="text-xs text-surface-500">{p.numero}</div>
                     </Link>

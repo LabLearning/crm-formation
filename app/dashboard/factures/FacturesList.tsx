@@ -15,7 +15,7 @@ import {
 import { cederFactureAction } from '../affacturage/actions'
 import { FACTURE_STATUS_LABELS, FACTURE_STATUS_COLORS, FACTURE_TYPE_LABELS, PAIEMENT_MODE_LABELS, PAIEMENT_STATUS_COLORS, PAIEMENT_STATUS_LABELS } from '@/lib/types/facture'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Facture, FactureStatus, Paiement } from '@/lib/types/facture'
 import type { Client } from '@/lib/types/crm'
 
@@ -66,7 +66,7 @@ export function FacturesList({ factures, clients, affactureurs = [] }: FacturesL
   }, [factures])
 
   function getClientName(f: Facture): string {
-    if (f.client?.raison_sociale) return f.client.raison_sociale
+    if (f.client?.raison_sociale) return companyLabel(f.client)
     return `${f.client?.prenom || ''} ${f.client?.nom || ''}`.trim() || '—'
   }
 
@@ -330,7 +330,7 @@ function FactureDetail({ facture, onRecordPayment }: { facture: Facture; onRecor
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
       {/* Info */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-xl bg-surface-50"><div className="text-2xs text-surface-400">Client</div><div className="text-sm font-medium">{facture.client?.raison_sociale || '—'}</div></div>
+        <div className="p-3 rounded-xl bg-surface-50"><div className="text-2xs text-surface-400">Client</div><div className="text-sm font-medium">{companyLabel(facture.client) || '—'}</div></div>
         <div className="p-3 rounded-xl bg-surface-50"><div className="text-2xs text-surface-400">Statut</div><Badge variant={FACTURE_STATUS_COLORS[facture.status]} dot>{FACTURE_STATUS_LABELS[facture.status]}</Badge></div>
         <div className="p-3 rounded-xl bg-surface-50"><div className="text-2xs text-surface-400">Émission</div><div className="text-sm">{formatDate(facture.date_emission)}</div></div>
         <div className="p-3 rounded-xl bg-surface-50"><div className="text-2xs text-surface-400">Échéance</div><div className="text-sm">{formatDate(facture.date_echeance)}</div></div>

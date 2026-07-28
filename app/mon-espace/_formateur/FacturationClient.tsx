@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText, Eye, Check } from 'lucide-react'
 import { Modal, Button, Input, useToast } from '@/components/ui'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import { submitFactureFormateurAction, deleteFactureFormateurAction, updateFactureModeleAction } from './facturation-actions'
 import { FACTURE_MODELES } from '@/lib/pdf/facture-modeles'
 
@@ -122,7 +122,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls, model
                   <div className="text-sm font-medium text-surface-900 truncate">{s.formation?.intitule || s.intitule || s.reference}</div>
                   <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap mt-0.5">
                     <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(s.date_debut, { day: 'numeric', month: 'short' })} → {formatDate(s.date_fin, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    {s.client?.raison_sociale && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{s.client.raison_sociale}</span>}
+                    {s.client?.raison_sociale && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{companyLabel(s.client)}</span>}
                   </div>
                 </div>
                 <div className="text-sm font-bold shrink-0 text-surface-900">

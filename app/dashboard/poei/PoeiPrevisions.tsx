@@ -15,12 +15,12 @@ import {
   PREVISION_STATUT_LABELS, RECRUTEMENT_STATUT_LABELS, COMPTE_FT_STATUT_LABELS,
 } from '@/lib/types/poei'
 import type { PoeiPrevision } from '@/lib/types/poei'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface Props {
   previsions: PoeiPrevision[]
-  clients: { id: string; raison_sociale: string | null }[]
+  clients: { id: string; raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null }[]
 }
 
 // Couleurs des selects de statut inline
@@ -82,7 +82,7 @@ function PrevisionForm({
 
   const clientOptions = [
     { value: '', label: 'Aucun (client créé à la transformation)' },
-    ...clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id })),
+    ...clients.map((c) => ({ value: c.id, label: companyLabel(c) || c.id })),
   ]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

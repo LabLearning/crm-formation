@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu } from '@/components/ui'
 import { createContactAction, updateContactAction, deleteContactAction } from './actions'
+import { companyLabel } from '@/lib/utils'
 import type { Contact, Client } from '@/lib/types/crm'
 
 interface ContactsListProps {
@@ -169,7 +170,7 @@ export function ContactsList({ contacts, clients }: ContactsListProps) {
                     {contact.client ? (
                       <div className="flex items-center gap-1 text-sm text-surface-600">
                         <Building2 className="h-3.5 w-3.5 text-surface-400" />
-                        {contact.client.raison_sociale || '—'}
+                        {companyLabel(contact.client) || '—'}
                       </div>
                     ) : <span className="text-sm text-surface-400">—</span>}
                   </td>

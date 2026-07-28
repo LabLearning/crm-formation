@@ -10,7 +10,7 @@ export default async function ConventionsPage() {
   const [{ data: conventions }, { data: clients }, { data: formations }, { data: sessions }] = await Promise.all([
     supabase
       .from('conventions')
-      .select('*, client:clients(raison_sociale), formation:formations(intitule)')
+      .select('*, client:clients(raison_sociale, nom_commercial, sigle), formation:formations(intitule)')
       .eq('organization_id', session.organization.id)
       .order('created_at', { ascending: false }),
     supabase

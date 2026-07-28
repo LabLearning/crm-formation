@@ -14,7 +14,7 @@ export default async function PoeiPage() {
       .from('poei')
       .select(`
         *,
-        client:clients(raison_sociale),
+        client:clients(raison_sociale, nom_commercial, sigle),
         formation:formations(intitule),
         session:sessions(reference, date_debut, date_fin),
         candidats:poei_candidats(id)
@@ -23,7 +23,7 @@ export default async function PoeiPage() {
       .order('created_at', { ascending: false }),
     supabase
       .from('clients')
-      .select('id, raison_sociale')
+      .select('id, raison_sociale, nom_commercial, sigle')
       .eq('organization_id', session.organization.id)
       .order('raison_sociale'),
     // Catalogue : on ne propose que les formations marquées POEI (fallback : toutes si aucune)
@@ -36,12 +36,12 @@ export default async function PoeiPage() {
     // Pipeline "à planifier" (pré-projets) — les plus proches en premier
     supabase
       .from('poei_previsions')
-      .select('*, client:clients(raison_sociale)')
+      .select('*, client:clients(raison_sociale, nom_commercial, sigle)')
       .eq('organization_id', session.organization.id)
       .order('date_debut_formation_prevue', { ascending: true, nullsFirst: false }),
     supabase
       .from('candidats_vivier')
-      .select('*, client:clients(raison_sociale), poei:poei(numero, formation:formations(intitule)), poei_prevision:poei_previsions(entreprise, date_debut_formation_prevue, client:clients(raison_sociale))')
+      .select('*, client:clients(raison_sociale, nom_commercial, sigle), poei:poei(numero, formation:formations(intitule)), poei_prevision:poei_previsions(entreprise, date_debut_formation_prevue, client:clients(raison_sociale, nom_commercial, sigle))')
       .eq('organization_id', session.organization.id)
       .order('created_at', { ascending: false }),
   ])

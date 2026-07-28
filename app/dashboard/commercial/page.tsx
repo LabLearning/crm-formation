@@ -61,7 +61,7 @@ export default async function CommercialPage() {
   // Devis — directeur sees all active, commercial sees own
   let devisQuery = supabase
     .from('devis')
-    .select('id, numero, status, montant_ht, client:clients(raison_sociale), created_by_user:users!devis_created_by_fkey(first_name, last_name)')
+    .select('id, numero, status, montant_ht, client:clients(raison_sociale, nom_commercial, sigle), created_by_user:users!devis_created_by_fkey(first_name, last_name)')
     .eq('organization_id', orgId)
     .in('status', ['brouillon', 'envoye'])
     .order('created_at', { ascending: false })
@@ -83,7 +83,7 @@ export default async function CommercialPage() {
     const leadClientIds = [...new Set((leads || []).map((l: any) => l.client_id).filter(Boolean))]
     let cq = supabase
       .from('clients')
-      .select('id, raison_sociale, ville, code_postal, secteur_activite, email, telephone')
+      .select('id, raison_sociale, nom_commercial, sigle, ville, code_postal, secteur_activite, email, telephone')
       .eq('organization_id', orgId)
       .order('raison_sociale', { ascending: true })
       .limit(500)
@@ -127,7 +127,7 @@ export default async function CommercialPage() {
     if (clientIds.length > 0) {
       const { data: clients } = await supabase
         .from('clients')
-        .select('id, raison_sociale, ville, secteur_activite')
+        .select('id, raison_sociale, nom_commercial, sigle, ville, secteur_activite')
         .in('id', clientIds)
       apporteurClients = clients || []
     }

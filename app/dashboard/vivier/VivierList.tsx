@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase } from 'lucide-react'
 import { Button, Badge, Input, Select, SearchSelectField, Modal, useToast, RowMenu } from '@/components/ui'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import {
   createCandidatVivierAction, updateCandidatVivierAction, updateCandidatVivierStatutAction,
   assignCandidatToPoeiAction, deleteCandidatVivierAction, validerCandidatVivierAction,
@@ -30,16 +30,16 @@ interface Candidat {
   source: string | null; disponibilite: string | null; permis: boolean | null; statut: string; notes: string | null
   client_id: string | null; poei_id: string | null; poei_prevision_id: string | null; poste_vise: string | null; identifiant_ft: string | null
   apprenant_id: string | null
-  client?: { raison_sociale: string | null } | null
+  client?: { raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null } | null
   poei?: { numero: string | null; formation?: { intitule: string | null } | null } | null
   poei_prevision?: { entreprise: string | null; date_debut_formation_prevue: string | null; client?: { raison_sociale: string | null } | null } | null
 }
-interface ClientLite { id: string; raison_sociale: string | null }
+interface ClientLite { id: string; raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null }
 interface PoeiLite { id: string; numero: string | null; formation?: { intitule: string | null } | null; client?: { raison_sociale: string | null } | null }
 interface PrevisionLite { id: string; entreprise: string | null; date_debut_formation_prevue: string | null; statut?: string | null; client?: { raison_sociale: string | null } | null }
 
 const previsionLabel = (p: PrevisionLite) =>
-  `${p.entreprise || p.client?.raison_sociale || 'Prévision'}${p.date_debut_formation_prevue ? ' — ' + formatDate(p.date_debut_formation_prevue, { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}`
+  `${p.entreprise || companyLabel(p.client) || 'Prévision'}${p.date_debut_formation_prevue ? ' — ' + formatDate(p.date_debut_formation_prevue, { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}`
 
 // Valeur actuelle de rattachement d'un candidat ("poei:<id>" / "prev:<id>" / "")
 const currentTarget = (c: Candidat) => c.poei_id ? `poei:${c.poei_id}` : c.poei_prevision_id ? `prev:${c.poei_prevision_id}` : ''
@@ -54,7 +54,7 @@ function TargetSelect({ value, poeis, previsions, name, disabled, onChange, clas
       <option value="">Aucun projet</option>
       {poeis.length > 0 && (
         <optgroup label="Projets POEI">
-          {poeis.map((p) => <option key={p.id} value={`poei:${p.id}`}>{`${p.numero || 'POEI'} — ${p.formation?.intitule || p.client?.raison_sociale || ''}`.trim()}</option>)}
+          {poeis.map((p) => <option key={p.id} value={`poei:${p.id}`}>{`${p.numero || 'POEI'} — ${p.formation?.intitule || companyLabel(p.client) || ''}`.trim()}</option>)}
         </optgroup>
       )}
       {previsions.length > 0 && (
@@ -181,7 +181,7 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
                         {c.permis && <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-1.5 py-0.5 text-[10px] font-medium">Permis</span>}
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-surface-700">{c.client?.raison_sociale || <span className="text-surface-300">—</span>}</td>
+                    <td className="py-2.5 px-3 text-surface-700">{companyLabel(c.client) || <span className="text-surface-300">—</span>}</td>
                     <td className="py-2.5 px-3">
                       {valide ? (
                         <span className="text-xs text-surface-600">{c.poei?.numero || '—'}</span>
@@ -272,7 +272,7 @@ function CandidatDetail({ c, onEdit, onValider }: { c: Candidat; onEdit: () => v
   const cible = c.poei?.numero
     ? `${c.poei.numero}${c.poei.formation?.intitule ? ' — ' + c.poei.formation.intitule : ''}`
     : c.poei_prevision
-    ? `À planifier — ${c.poei_prevision.entreprise || c.poei_prevision.client?.raison_sociale || ''}`
+    ? `À planifier — ${c.poei_prevision.entreprise || companyLabel(c.poei_prevision.client) || ''}`
     : null
   return (
     <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
@@ -307,7 +307,7 @@ function CandidatDetail({ c, onEdit, onValider }: { c: Candidat; onEdit: () => v
       </DSection>
 
       <DSection title="Rattachement">
-        <DRow label="Entreprise pressentie" value={c.client?.raison_sociale} />
+        <DRow label="Entreprise pressentie" value={companyLabel(c.client)} />
         <DRow label="POEI cible" value={cible} />
       </DSection>
 
@@ -326,7 +326,7 @@ function CandidatForm({ candidat, clients, poeis, previsions, onDone }: { candid
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
 
-  const clientOptions = [{ value: '', label: 'Aucune entreprise' }, ...clients.map((c) => ({ value: c.id, label: c.raison_sociale || c.id }))]
+  const clientOptions = [{ value: '', label: 'Aucune entreprise' }, ...clients.map((c) => ({ value: c.id, label: companyLabel(c) || c.id }))]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); setIsLoading(true); setErrors({})

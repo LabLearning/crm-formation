@@ -10,7 +10,7 @@ export default async function ContactsPage() {
   const [{ data: contacts }, { data: clients }] = await Promise.all([
     supabase
       .from('contacts')
-      .select('*, client:clients(raison_sociale, type)')
+      .select('*, client:clients(raison_sociale, nom_commercial, sigle, type)')
       .eq('organization_id', session.organization.id)
       .order('nom', { ascending: true }),
     supabase

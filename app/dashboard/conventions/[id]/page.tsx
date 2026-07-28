@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LABELS } from '@/lib/types/dossier'
-import { formatDate, formatDateTime } from '@/lib/utils'
+import { formatDate, formatDateTime, companyLabel } from '@/lib/utils'
 import { ConventionSignatureBlock } from './ConventionSignatureBlock'
 import { ConventionDetailsEditor } from './ConventionDetailsEditor'
 
@@ -22,7 +22,7 @@ export default async function ConventionDetailPage({ params }: { params: { id: s
     .from('conventions')
     .select(`
       *,
-      client:clients(id, raison_sociale, type, adresse, code_postal, ville, telephone, email, siret),
+      client:clients(id, raison_sociale, nom_commercial, sigle, type, adresse, code_postal, ville, telephone, email, siret),
       contact:contacts(id, prenom, nom, email, telephone, poste),
       formation:formations(id, intitule, reference, modalite, duree_heures, duree_jours),
       session:sessions(id, reference, status, date_debut, date_fin, lieu, formateur:formateurs(prenom, nom)),
@@ -129,7 +129,7 @@ export default async function ConventionDetailPage({ params }: { params: { id: s
           </div>
           {c.client ? (
             <>
-              <div className="text-base font-semibold text-surface-900">{c.client.raison_sociale}</div>
+              <div className="text-base font-semibold text-surface-900">{companyLabel(c.client)}</div>
               {c.client.siret && <div className="text-xs text-surface-500">SIRET {c.client.siret}</div>}
               {c.client.adresse && (
                 <div className="text-sm text-surface-700">

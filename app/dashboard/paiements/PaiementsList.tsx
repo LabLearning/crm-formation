@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { Search, CreditCard, Euro, Calendar, Building2 } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { PAIEMENT_MODE_LABELS, PAIEMENT_STATUS_LABELS, PAIEMENT_STATUS_COLORS } from '@/lib/types/facture'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Paiement, PaiementStatus } from '@/lib/types/facture'
 
 interface PaiementsListProps {
@@ -80,7 +80,7 @@ export function PaiementsList({ paiements }: PaiementsListProps) {
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-surface-50/50 transition-colors">
                   <td className="px-6 py-3.5 text-sm font-mono text-brand-600">{p.facture?.numero || '—'}</td>
-                  <td className="px-6 py-3.5 text-sm text-surface-700">{p.facture?.client?.raison_sociale || p.payeur_nom || '—'}</td>
+                  <td className="px-6 py-3.5 text-sm text-surface-700">{companyLabel(p.facture?.client) || p.payeur_nom || '—'}</td>
                   <td className="px-6 py-3.5"><Badge variant="default">{PAIEMENT_MODE_LABELS[p.mode]}</Badge></td>
                   <td className="px-6 py-3.5"><Badge variant={PAIEMENT_STATUS_COLORS[p.status]} dot>{PAIEMENT_STATUS_LABELS[p.status]}</Badge></td>
                   <td className="px-6 py-3.5 text-right text-sm font-medium text-surface-800">{Number(p.montant).toLocaleString('fr-FR')} €</td>
