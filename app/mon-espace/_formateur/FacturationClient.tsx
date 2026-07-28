@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText } from 'lucide-react'
+import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText, Eye, Check } from 'lucide-react'
 import { Modal, Button, Input, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { submitFactureFormateurAction, deleteFactureFormateurAction } from './facturation-actions'
+import { submitFactureFormateurAction, deleteFactureFormateurAction, updateFactureModeleAction } from './facturation-actions'
+import { FACTURE_MODELES } from '@/lib/pdf/facture-modeles'
 
 const STATUT: Record<string, { label: string; cls: string; Icon: any }> = {
   brouillon: { label: 'Brouillon', cls: 'bg-surface-100 text-surface-600', Icon: FileText },
@@ -16,15 +17,28 @@ const STATUT: Record<string, { label: string; cls: string; Icon: any }> = {
 }
 const fmtMontant = (n: any) => `${Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
-export function FacturationClient({ token, facturable, factures, fileUrls }: {
+export function FacturationClient({ token, facturable, factures, fileUrls, modele = 'epure' }: {
   token: string
   facturable: any[]
   factures: any[]
   fileUrls: Record<string, string>
+  modele?: string
 }) {
   const { toast } = useToast()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [modeleSel, setModeleSel] = useState(modele)
+  const [savingModele, setSavingModele] = useState(false)
+
+  async function chooseModele(v: string) {
+    if (v === modeleSel) return
+    const prev = modeleSel
+    setModeleSel(v); setSavingModele(true)
+    const r = await updateFactureModeleAction(v, token)
+    setSavingModele(false)
+    if (r.success) { toast('success', 'Modèle de facture mis à jour'); router.refresh() }
+    else { setModeleSel(prev); toast('error', r.error || 'Erreur') }
+  }
   const [preset, setPreset] = useState<{ sessionId?: string; montant?: number; objet?: string } | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -63,6 +77,35 @@ export function FacturationClient({ token, facturable, factures, fileUrls }: {
 
   return (
     <div className="space-y-6">
+      {/* Modèle de facture */}
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Modèle de mes factures</span>
+          {savingModele && <Loader2 className="h-4 w-4 text-surface-400 animate-spin" />}
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {FACTURE_MODELES.map((m) => {
+            const active = modeleSel === m.value
+            return (
+              <div key={m.value}
+                className={`rounded-xl border p-3 cursor-pointer transition-colors ${active ? 'border-brand-500 bg-brand-50/40' : 'border-surface-200 hover:border-surface-300'}`}
+                onClick={() => chooseModele(m.value)}>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-surface-900">{m.label}</span>
+                  {active && <span className="h-5 w-5 rounded-full bg-brand-500 flex items-center justify-center"><Check className="h-3 w-3 text-white" /></span>}
+                </div>
+                <p className="text-xs text-surface-500 mt-0.5">{m.description}</p>
+                <a href={`/api/pdf/facture-modele-apercu?modele=${m.value}&token=${encodeURIComponent(token)}`}
+                  target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-brand-600 hover:underline">
+                  <Eye className="h-3.5 w-3.5" /> Aperçu
+                </a>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* À facturer */}
       <div className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between gap-2">

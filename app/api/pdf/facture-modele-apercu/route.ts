@@ -3,20 +3,32 @@ import { renderToBuffer } from '@react-pdf/renderer'
 import { createElement } from 'react'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { requireApiUser } from '@/lib/api-auth'
+import { getPortalContext } from '@/lib/portal-auth'
 import { FactureFormateurPDF, type FactureModele } from '@/lib/pdf/facture-formateur-pdf'
 
 /**
  * Aperçu d'un modèle de facture formateur avec des données d'exemple.
- * Réservé aux utilisateurs du dashboard (choix du modèle à la création).
+ * Accessible aux utilisateurs du dashboard (choix à la création) et au
+ * formateur connecté / via token (choix depuis son espace Facturation).
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireApiUser()
-  if ('error' in auth) return auth.error
+  // Autorisation : membre de l'org OU formateur (token portail)
+  let orgId: string | null = null
+  const token = req.nextUrl.searchParams.get('token')
+  if (token) {
+    const ctx = await getPortalContext(token)
+    if (ctx && ctx.type === 'formateur') orgId = ctx.organization.id
+  }
+  if (!orgId) {
+    const auth = await requireApiUser()
+    if ('error' in auth) return auth.error
+    orgId = auth.user.organizationId
+  }
 
   const modele = (req.nextUrl.searchParams.get('modele') || 'epure') as FactureModele
 
   const supabase = await createServiceRoleClient()
-  const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', auth.user.organizationId).single()
+  const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', orgId).single()
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 

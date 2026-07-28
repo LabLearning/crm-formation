@@ -9,7 +9,7 @@ import { FacturationClient } from './FacturationClient'
 export async function FacturationView({ formateurId, token }: { formateurId: string; token: string }) {
   const supabase = await createServiceRoleClient()
 
-  const [{ data: sessions }, { data: factures }] = await Promise.all([
+  const [{ data: sessions }, { data: factures }, { data: formateur }] = await Promise.all([
     supabase
       .from('sessions')
       .select('id, reference, intitule, date_debut, date_fin, status, cout_formateur, formation:formation_id(intitule), client:client_id(raison_sociale)')
@@ -20,6 +20,11 @@ export async function FacturationView({ formateurId, token }: { formateurId: str
       .select('*, session:session_id(reference)')
       .eq('formateur_id', formateurId)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('formateurs')
+      .select('facture_modele')
+      .eq('id', formateurId)
+      .single(),
   ])
 
   const facturesList = (factures || []) as any[]
@@ -51,6 +56,7 @@ export async function FacturationView({ formateurId, token }: { formateurId: str
         facturable={facturable}
         factures={facturesList}
         fileUrls={fileUrls}
+        modele={(formateur as any)?.facture_modele || 'epure'}
       />
     </div>
   )

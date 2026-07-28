@@ -5,8 +5,10 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { getPortalContext } from '@/lib/portal-auth'
 import type { ActionResult } from '@/lib/types'
+import { FACTURE_MODELES } from '@/lib/pdf/facture-modeles'
 
 const DOSSIERS_BUCKET = 'dossiers'
+const MODELE_VALUES = FACTURE_MODELES.map((m) => m.value) as string[]
 
 async function resolveFormateur(token: string | null) {
   const supabase = await createServiceRoleClient()
@@ -84,6 +86,18 @@ export async function submitFactureFormateurAction(formData: FormData): Promise<
   })
   if (error) return { success: false, error: "Erreur lors de l'envoi de la facture" }
 
+  revalidatePath('/mon-espace/facturation')
+  if (token) revalidatePath(`/portail/${token}/facturation`)
+  return { success: true }
+}
+
+/** Le formateur choisit le style (modèle) de ses factures de prestation. */
+export async function updateFactureModeleAction(modele: string, token: string | null): Promise<ActionResult> {
+  const ctx = await resolveFormateur(token)
+  if (!ctx) return { success: false, error: 'Accès non autorisé' }
+  if (!MODELE_VALUES.includes(modele)) return { success: false, error: 'Modèle invalide' }
+  const { error } = await ctx.supabase.from('formateurs').update({ facture_modele: modele }).eq('id', ctx.formateurId)
+  if (error) return { success: false, error: 'Erreur lors de la mise à jour du modèle' }
   revalidatePath('/mon-espace/facturation')
   if (token) revalidatePath(`/portail/${token}/facturation`)
   return { success: true }
