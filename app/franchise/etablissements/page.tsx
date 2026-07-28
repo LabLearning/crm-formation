@@ -19,18 +19,26 @@ export default async function FranchiseEtablissementsPage() {
 
   const clientIds = (etablissements || []).map((c) => c.id)
 
-  // Compter les dossiers/sessions par établissement
+  // Compter les dossiers/sessions par établissement. Une formation est
+  // « réalisée » quand sa SESSION est terminée (le statut du dossier reste
+  // souvent 'en_cours' même après la formation).
   const { data: dossiers } = clientIds.length
     ? await supabase
         .from('dossiers_formation')
-        .select('id, client_id, status')
+        .select('id, client_id, status, session:session_id(status)')
         .eq('organization_id', orgId)
         .in('client_id', clientIds)
     : { data: [] as any[] }
 
   const countFor = (cid: string) => {
-    const ds = (dossiers || []).filter((d) => d.client_id === cid)
-    return { total: ds.length, realises: ds.filter((d) => d.status === 'realise' || d.status === 'cloture' || d.status === 'facture').length }
+    const ds = (dossiers || []).filter((d: any) => d.client_id === cid && d.status !== 'annule')
+    const realises = ds.filter((d: any) => (d.session as any)?.status === 'terminee').length
+    // En cours : session active (planifiée/confirmée/en cours), pas encore terminée
+    const enCours = ds.filter((d: any) => {
+      const st = (d.session as any)?.status
+      return st && st !== 'terminee' && st !== 'annulee'
+    }).length
+    return { total: ds.length, realises, enCours }
   }
 
   return (
@@ -73,8 +81,8 @@ export default async function FranchiseEtablissementsPage() {
                     <GraduationCap className="h-3.5 w-3.5 text-surface-400" />
                     <strong className="text-surface-900">{cnt.realises}</strong> formation{cnt.realises > 1 ? 's' : ''} réalisée{cnt.realises > 1 ? 's' : ''}
                   </span>
-                  {cnt.total > cnt.realises && (
-                    <span className="text-surface-400">{cnt.total - cnt.realises} en cours</span>
+                  {cnt.enCours > 0 && (
+                    <span className="text-surface-400">{cnt.enCours} en cours</span>
                   )}
                 </div>
               </Link>
