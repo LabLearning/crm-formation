@@ -24,6 +24,28 @@ export function formatDateTime(date: string | Date) {
   }).format(new Date(date))
 }
 
+/**
+ * Libellé d'affichage d'une entreprise : raison sociale suivie, entre
+ * parenthèses, du nom commercial / enseigne (ou du sigle à défaut).
+ * Ex : "ANNAYA (Dreams Donuts Narbonne)".
+ * Accepte soit un objet client, soit (raison, alt).
+ */
+export function companyLabel(
+  clientOrRaison: { raison_sociale?: string | null; nom_commercial?: string | null; sigle?: string | null } | string | null | undefined,
+  alt?: string | null,
+): string {
+  let base = ''
+  let a = ''
+  if (clientOrRaison && typeof clientOrRaison === 'object') {
+    base = (clientOrRaison.raison_sociale || '').trim()
+    a = (clientOrRaison.nom_commercial || clientOrRaison.sigle || '').trim()
+  } else {
+    base = (clientOrRaison || '').trim()
+    a = (alt || '').trim()
+  }
+  return a && a.toLowerCase() !== base.toLowerCase() ? `${base} (${a})` : base
+}
+
 export function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }

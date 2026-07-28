@@ -7,7 +7,7 @@ import {
   Receipt, FolderOpen, Users, Hash, Banknote, Calendar,
 } from 'lucide-react'
 import { Badge } from '@/components/ui'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
 import type { Client } from '@/lib/types/crm'
@@ -101,7 +101,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
 
   const isEntreprise = c.type === 'entreprise'
   const displayName = isEntreprise
-    ? (c.raison_sociale || 'Sans nom')
+    ? (companyLabel(c) || 'Sans nom')
     : `${c.prenom || ''} ${c.nom || ''}`.trim() || 'Sans nom'
 
   const totalFacture = facturesList
@@ -142,9 +142,6 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
         </div>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-heading font-bold text-surface-900 truncate">{displayName}</h1>
-          {(c as any).nom_commercial && (
-            <div className="text-sm text-surface-500 truncate">Enseigne : <span className="font-medium text-surface-700">{(c as any).nom_commercial}</span></div>
-          )}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <Badge variant={isEntreprise ? 'info' : 'default'}>{CLIENT_TYPE_LABELS[c.type]}</Badge>
             {c.financeur_type && <Badge variant="warning">{FINANCEUR_LABELS[c.financeur_type]}</Badge>}

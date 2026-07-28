@@ -7,7 +7,7 @@ import { Button, Badge, Modal, useToast, RowMenu, PaginationBar } from '@/compon
 import { ClientForm } from './ClientForm'
 import { deleteClientAction } from './actions'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
-import { formatDate } from '@/lib/utils'
+import { formatDate, companyLabel } from '@/lib/utils'
 import type { Client } from '@/lib/types/crm'
 
 interface OrgUser { id: string; first_name: string | null; last_name: string | null; role?: string }
@@ -63,7 +63,7 @@ export function ClientsList({ clients, users = [], canAssign = false, total, pag
   const filtered = clients
 
   function getDisplayName(c: Client): string {
-    if (c.type === 'entreprise') return c.raison_sociale || 'Sans nom'
+    if (c.type === 'entreprise') return companyLabel(c) || 'Sans nom'
     return `${c.prenom || ''} ${c.nom || ''}`.trim() || 'Sans nom'
   }
 
