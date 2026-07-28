@@ -1,12 +1,17 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import TachesBoard from './TachesBoard'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Tâches — CRM Lab Learning' }
 
+// Espace interne : réservé à l'équipe (admin / gestionnaire / commercial).
+const TACHES_ROLES = ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial']
+
 export default async function TachesPage() {
   const session = await getSession()
+  if (!TACHES_ROLES.includes(session.user.role)) redirect('/dashboard')
   const supabase = await createServiceRoleClient()
 
   const [tachesRes, usersRes] = await Promise.all([

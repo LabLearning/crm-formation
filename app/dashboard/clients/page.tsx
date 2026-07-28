@@ -38,7 +38,7 @@ export default async function ClientsPage({
 
   if (q) {
     clientsQuery = clientsQuery.or(
-      `raison_sociale.ilike.%${q}%,nom.ilike.%${q}%,prenom.ilike.%${q}%,email.ilike.%${q}%`
+      `raison_sociale.ilike.%${q}%,nom_commercial.ilike.%${q}%,nom.ilike.%${q}%,prenom.ilike.%${q}%,email.ilike.%${q}%`
     )
   }
   if (typeFilter) {

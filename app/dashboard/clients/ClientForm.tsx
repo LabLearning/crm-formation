@@ -38,6 +38,7 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
 
   // Champs entreprise contrôlés
   const [raisonSociale, setRaisonSociale] = useState(client?.raison_sociale || '')
+  const [nomCommercial, setNomCommercial] = useState((client as any)?.nom_commercial || '')
   const [siret, setSiret] = useState(client?.siret || '')
   const [codeNaf, setCodeNaf] = useState(client?.code_naf || '')
   const [secteurActivite, setSecteurActivite] = useState(client?.secteur_activite || '')
@@ -183,6 +184,16 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
             error={fieldErrors.raison_sociale?.[0]}
             onSelect={handleCompanySelect}
             onClear={handleCompanyClear}
+          />
+
+          <Input
+            id="nom_commercial"
+            name="nom_commercial"
+            label="Nom commercial / enseigne"
+            value={nomCommercial}
+            onChange={(e) => setNomCommercial(e.target.value)}
+            placeholder="Ex : Dreams Donuts Narbonne"
+            hint="Si l'enseigne diffère de la raison sociale"
           />
 
           {/* Badges Qualiopi / Organisme formation */}
