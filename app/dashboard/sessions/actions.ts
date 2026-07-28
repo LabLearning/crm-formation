@@ -146,6 +146,14 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
     )
   }
 
+  // Rattacher automatiquement le QCM d'évaluation de la/des formation(s)
+  const { autolinkFormationQcms } = await import('@/lib/qcm-autolink')
+  await autolinkFormationQcms(supabase, {
+    sessionId: data.id,
+    organizationId: session.organization.id,
+    formationIds: [parsed.data.formation_id, ...formationIds],
+  })
+
   if (hasFormateur && parsed.data.formateur_id) {
     await notifyFormateurOfMission(parsed.data.formateur_id, data.id, supabase, session)
   }
