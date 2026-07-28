@@ -70,7 +70,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
     canAssign
       ? supabase.from('users').select('id, first_name, last_name').eq('organization_id', session.organization.id).eq('status', 'active').order('first_name')
       : Promise.resolve({ data: [] as any[] }),
-    supabase.from('apprenants').select('id, prenom, nom, email, telephone, poste').eq('client_id', params.id).order('nom'),
+    supabase.from('apprenants').select('*').eq('client_id', params.id).order('nom'),
     supabase.from('documents').select('id, nom, type, description, file_name, file_size, storage_path, created_at').eq('client_id', params.id).order('created_at', { ascending: false }),
     supabase.from('sessions').select('id, reference, intitule, date_debut, date_fin, status, formateur:formateurs(prenom, nom), formation:formation_id(intitule)').eq('client_id', params.id).order('date_debut', { ascending: false }),
   ])
@@ -327,7 +327,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
           </div>
 
           {/* Employés / participants de l'entreprise */}
-          {isEntreprise && <ClientParticipants clientId={c.id} participants={(participants || []) as any[]} />}
+          {isEntreprise && <ClientParticipants clientId={c.id} clientNom={c.raison_sociale || ''} participants={(participants || []) as any[]} />}
 
           <ClientDocuments clientId={c.id} documents={(documents || []) as any[]} />
 
