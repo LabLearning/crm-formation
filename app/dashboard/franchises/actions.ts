@@ -298,6 +298,22 @@ export async function recalcCommissionAction(dossierId: string): Promise<Result>
   return { success: true, data: r }
 }
 
+/** Saisit/valide manuellement les frais formateur d'un dossier puis recalcule la commission. */
+export async function updateDossierCoutFormateurAction(dossierId: string, montant: number): Promise<Result> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const val = Number.isFinite(montant) && montant >= 0 ? Math.round(montant * 100) / 100 : 0
+  const { error } = await supabase
+    .from('dossiers_formation')
+    .update({ cout_formateur_manuel: val, cout_formateur: val })
+    .eq('id', dossierId)
+    .eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: error.message }
+  const r = await recalcDossierCommission(supabase, dossierId, session.organization.id)
+  revalidatePath('/dashboard/franchises')
+  return { success: true, data: r }
+}
+
 /** Change le statut d'une commission de dossier (valider / payer / annuler / remettre à venir). */
 export async function updateCommissionStatusAction(
   dossierId: string,

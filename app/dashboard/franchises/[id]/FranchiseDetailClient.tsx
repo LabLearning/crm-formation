@@ -14,6 +14,7 @@ import {
   recalcCommissionAction,
   updateCommissionStatusAction,
   payAllValidatedAction,
+  updateDossierCoutFormateurAction,
 } from '../actions'
 
 type CommissionType = 'budget_debloque' | 'budget_net'
@@ -322,7 +323,7 @@ export default function FranchiseDetailClient({
                               {d.formation && <div className="text-xs text-surface-400 truncate max-w-[220px]">{d.formation.intitule}</div>}
                             </div>
                             <div className="hidden sm:block text-right w-20 text-sm tabular-nums text-surface-700">{fmtEuro(d.montant_prise_en_charge)}</div>
-                            <div className="hidden md:block text-right w-20 text-sm tabular-nums text-surface-500">{fmtEuro(d.cout_formateur)}</div>
+                            <CoutFormateurCell dossier={d} />
                             <div className="text-right w-24">
                               <div className="text-sm font-bold text-amber-600 tabular-nums">{fmtEuro(d.commission_montant)}</div>
                               {d.commission_taux != null && (
@@ -363,6 +364,42 @@ export default function FranchiseDetailClient({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/** Coût formateur d'un dossier : lecture seule si figé, sinon saisie/ajustement manuel. */
+function CoutFormateurCell({ dossier }: { dossier: Dossier }) {
+  const router = useRouter()
+  const [val, setVal] = useState<string>(dossier.cout_formateur != null ? String(dossier.cout_formateur) : '')
+  const [pending, start] = useTransition()
+  const frozen = dossier.commission_status === 'validee' || dossier.commission_status === 'payee'
+
+  function save() {
+    const n = Number((val || '0').replace(',', '.'))
+    if (!Number.isFinite(n)) return
+    start(async () => { await updateDossierCoutFormateurAction(dossier.id, n); router.refresh() })
+  }
+
+  // Commission figée → lecture seule
+  if (frozen) {
+    return <div className="hidden md:block text-right w-20 text-sm tabular-nums text-surface-500">{fmtEuro(dossier.cout_formateur)}</div>
+  }
+
+  const changed = String(dossier.cout_formateur ?? '') !== (val || (dossier.cout_formateur == null ? '' : '0'))
+  return (
+    <div className="hidden md:flex items-center justify-end gap-1 w-28">
+      <input
+        type="number" step="0.01" min="0" value={val} onChange={(e) => setVal(e.target.value)}
+        placeholder="Frais form." disabled={pending}
+        className="w-16 rounded-md border border-surface-200 px-1.5 py-1 text-xs text-right tabular-nums focus:outline-none focus:border-brand-300"
+      />
+      {(changed || dossier.cout_formateur == null) && val !== '' && (
+        <button onClick={save} disabled={pending} title="Enregistrer et recalculer"
+          className="text-[10px] font-semibold px-1.5 py-1 rounded-md bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40">
+          {pending ? '…' : 'OK'}
+        </button>
+      )}
     </div>
   )
 }

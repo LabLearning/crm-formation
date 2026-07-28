@@ -58,7 +58,7 @@ export async function recalcDossierCommission(
 ): Promise<{ montant: number; type: CommissionType; coutFormateur: number } | null> {
   const { data: dossier } = await supabase
     .from('dossiers_formation')
-    .select('id, client_id, session_id, franchise_id, montant_prise_en_charge, commission_status')
+    .select('id, client_id, session_id, franchise_id, montant_prise_en_charge, commission_status, cout_formateur_manuel')
     .eq('id', dossierId)
     .eq('organization_id', organizationId)
     .single()
@@ -115,6 +115,10 @@ export async function recalcDossierCommission(
       .eq('session_id', dossier.session_id)
       .neq('status', 'annule')
     coutFormateur = (contrats || []).reduce((s: number, c: any) => s + Number(c.montant_ht || 0), 0)
+  }
+  // Aucun contrat formateur → on utilise le montant saisi manuellement sur le dossier
+  if (coutFormateur <= 0 && dossier.cout_formateur_manuel != null) {
+    coutFormateur = Number(dossier.cout_formateur_manuel) || 0
   }
 
   const { montant } = computeCommission({
