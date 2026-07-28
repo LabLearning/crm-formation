@@ -110,6 +110,7 @@ export async function recalcDossierCommission(
 
   // Coût formateur via la session du dossier (somme des contrats signés/émis)
   let coutFormateur = 0
+  let nbJours = 1
   if (dossier.session_id) {
     const { data: contrats } = await supabase
       .from('contrats_formateur')
@@ -117,10 +118,19 @@ export async function recalcDossierCommission(
       .eq('session_id', dossier.session_id)
       .neq('status', 'annule')
     coutFormateur = (contrats || []).reduce((s: number, c: any) => s + Number(c.montant_ht || 0), 0)
+
+    // Nombre de jours de la session (pour le tarif journalier manuel)
+    const { data: sess } = await supabase
+      .from('sessions')
+      .select('horaires_jours, formation:formation_id(duree_jours)')
+      .eq('id', dossier.session_id)
+      .maybeSingle()
+    const nbHoraires = Array.isArray(sess?.horaires_jours) ? sess.horaires_jours.length : 0
+    nbJours = Math.max(1, nbHoraires || Number((sess?.formation as any)?.duree_jours) || 1)
   }
-  // Aucun contrat formateur → on utilise le montant saisi manuellement sur le dossier
+  // Aucun contrat formateur → tarif JOURNALIER saisi × nombre de jours
   if (coutFormateur <= 0 && dossier.cout_formateur_manuel != null) {
-    coutFormateur = Number(dossier.cout_formateur_manuel) || 0
+    coutFormateur = (Number(dossier.cout_formateur_manuel) || 0) * nbJours
   }
 
   const { montant } = computeCommission({

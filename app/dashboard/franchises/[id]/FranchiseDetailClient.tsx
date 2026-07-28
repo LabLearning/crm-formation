@@ -28,6 +28,7 @@ interface Dossier {
   montant_total_ttc: number | null
   montant_prise_en_charge: number | null
   cout_formateur: number | null
+  cout_formateur_manuel: number | null
   commission_montant: number | null
   commission_taux: number | null
   commission_type: string | null
@@ -371,7 +372,8 @@ export default function FranchiseDetailClient({
 /** Coût formateur d'un dossier : lecture seule si figé, sinon saisie/ajustement manuel. */
 function CoutFormateurCell({ dossier }: { dossier: Dossier }) {
   const router = useRouter()
-  const [val, setVal] = useState<string>(dossier.cout_formateur != null ? String(dossier.cout_formateur) : '')
+  // Valeur saisie = tarif JOURNALIER (cout_formateur_manuel)
+  const [val, setVal] = useState<string>(dossier.cout_formateur_manuel != null ? String(dossier.cout_formateur_manuel) : '')
   const [pending, start] = useTransition()
 
   function save() {
@@ -382,19 +384,25 @@ function CoutFormateurCell({ dossier }: { dossier: Dossier }) {
 
   // Éditable même après validation (on a pu valider avant de saisir le coût) :
   // le recalcul est forcé côté serveur.
-  const changed = String(dossier.cout_formateur ?? '') !== (val || (dossier.cout_formateur == null ? '' : '0'))
+  const changed = String(dossier.cout_formateur_manuel ?? '') !== val
   return (
-    <div className="hidden md:flex items-center justify-end gap-1 w-28">
-      <input
-        type="number" step="0.01" min="0" value={val} onChange={(e) => setVal(e.target.value)}
-        placeholder="Frais form." disabled={pending}
-        className="w-16 rounded-md border border-surface-200 px-1.5 py-1 text-xs text-right tabular-nums focus:outline-none focus:border-brand-300"
-      />
-      {(changed || dossier.cout_formateur == null) && val !== '' && (
-        <button onClick={save} disabled={pending} title="Enregistrer et recalculer"
-          className="text-[10px] font-semibold px-1.5 py-1 rounded-md bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40">
-          {pending ? '…' : 'OK'}
-        </button>
+    <div className="hidden md:flex flex-col items-end gap-0.5 w-28">
+      <div className="flex items-center gap-1">
+        <input
+          type="number" step="0.01" min="0" value={val} onChange={(e) => setVal(e.target.value)}
+          placeholder="€/jour" disabled={pending}
+          className="w-16 rounded-md border border-surface-200 px-1.5 py-1 text-xs text-right tabular-nums focus:outline-none focus:border-brand-300"
+        />
+        {changed && val !== '' && (
+          <button onClick={save} disabled={pending} title="Enregistrer et recalculer"
+            className="text-[10px] font-semibold px-1.5 py-1 rounded-md bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40">
+            {pending ? '…' : 'OK'}
+          </button>
+        )}
+      </div>
+      {/* Total = tarif × nb jours (calculé au serveur) */}
+      {dossier.cout_formateur != null && Number(dossier.cout_formateur) > 0 && (
+        <span className="text-[10px] text-surface-400 tabular-nums">= {fmtEuro(dossier.cout_formateur)}</span>
       )}
     </div>
   )

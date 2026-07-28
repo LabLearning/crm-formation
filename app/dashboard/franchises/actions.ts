@@ -302,10 +302,11 @@ export async function recalcCommissionAction(dossierId: string): Promise<Result>
 export async function updateDossierCoutFormateurAction(dossierId: string, montant: number): Promise<Result> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
+  // `montant` = tarif JOURNALIER ; le total est calculé par recalc (× nb jours)
   const val = Number.isFinite(montant) && montant >= 0 ? Math.round(montant * 100) / 100 : 0
   const { error } = await supabase
     .from('dossiers_formation')
-    .update({ cout_formateur_manuel: val, cout_formateur: val })
+    .update({ cout_formateur_manuel: val })
     .eq('id', dossierId)
     .eq('organization_id', session.organization.id)
   if (error) return { success: false, error: error.message }

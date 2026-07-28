@@ -75,7 +75,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
     .from('dossiers_formation')
     .select(`
       id, numero, status, opco_workflow_status,
-      montant_total_ttc, montant_prise_en_charge, cout_formateur,
+      montant_total_ttc, montant_prise_en_charge, cout_formateur, cout_formateur_manuel,
       commission_montant, commission_taux, commission_type, commission_status, commission_payee_at,
       date_creation,
       client:clients(id, raison_sociale),
