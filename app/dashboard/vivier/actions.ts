@@ -247,3 +247,66 @@ export async function validerCandidatVivierAction(id: string): Promise<ActionRes
   revalidatePath(`/dashboard/poei/${poei.id}`)
   return { success: true, data: { apprenantId: app.id, poeiId: poei.id } }
 }
+
+// Pastilles d'évaluation recruteur
+const EVALUATIONS = ['top', 'bon', 'moyen', 'a_tester', 'a_ecarter'] as const
+
+/** Définit / retire la pastille d'évaluation d'un candidat. */
+export async function updateCandidatEvaluationAction(id: string, evaluation: string | null): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  if (evaluation && !EVALUATIONS.includes(evaluation as any)) return { success: false, error: 'Évaluation invalide' }
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('candidats_vivier')
+    .update({ evaluation: evaluation || null, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Erreur' }
+  revalidatePath('/dashboard/vivier')
+  return { success: true }
+}
+
+/** Téléverse le CV d'un candidat (bucket privé documents). */
+export async function uploadCandidatCvAction(formData: FormData): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+
+  const id = str(formData, 'id')
+  if (!id) return { success: false, error: 'Candidat manquant' }
+  const { data: cand } = await supabase.from('candidats_vivier').select('id, cv_url').eq('id', id).eq('organization_id', session.organization.id).maybeSingle()
+  if (!cand) return { success: false, error: 'Candidat introuvable' }
+
+  const file = formData.get('file')
+  if (!file || typeof file === 'string' || (file as File).size === 0) return { success: false, error: 'Fichier manquant' }
+  const f = file as File
+  if (f.size > 15 * 1024 * 1024) return { success: false, error: 'Fichier trop volumineux (max 15 Mo)' }
+  const safe = f.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const path = `vivier-cv/${session.organization.id}/${id}/${Date.now()}-${safe}`
+  const buffer = Buffer.from(await f.arrayBuffer())
+  const { error: upErr } = await supabase.storage.from('documents').upload(path, buffer, { contentType: f.type || 'application/pdf', upsert: false })
+  if (upErr) return { success: false, error: 'Échec du téléversement' }
+
+  // Remplace l'ancien CV si présent
+  if (cand.cv_url && !/^https?:\/\//.test(cand.cv_url)) await supabase.storage.from('documents').remove([cand.cv_url])
+
+  const { error } = await supabase.from('candidats_vivier')
+    .update({ cv_url: path, cv_nom: f.name, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Erreur enregistrement' }
+  revalidatePath('/dashboard/vivier')
+  return { success: true }
+}
+
+/** Supprime le CV d'un candidat. */
+export async function deleteCandidatCvAction(id: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const { data: cand } = await supabase.from('candidats_vivier').select('cv_url').eq('id', id).eq('organization_id', session.organization.id).maybeSingle()
+  if (!cand) return { success: false, error: 'Candidat introuvable' }
+  await supabase.from('candidats_vivier').update({ cv_url: null, cv_nom: null }).eq('id', id).eq('organization_id', session.organization.id)
+  if (cand.cv_url && !/^https?:\/\//.test(cand.cv_url)) await supabase.storage.from('documents').remove([cand.cv_url])
+  revalidatePath('/dashboard/vivier')
+  return { success: true }
+}

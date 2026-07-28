@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase } from 'lucide-react'
+import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase, FileText, Upload, Loader2 } from 'lucide-react'
 import { Button, Badge, Input, Select, SearchSelectField, Modal, useToast, RowMenu } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import {
   createCandidatVivierAction, updateCandidatVivierAction, updateCandidatVivierStatutAction,
   assignCandidatToPoeiAction, deleteCandidatVivierAction, validerCandidatVivierAction,
+  updateCandidatEvaluationAction, uploadCandidatCvAction, deleteCandidatCvAction,
 } from './actions'
 
 type BadgeVariant = 'default' | 'info' | 'success' | 'warning' | 'danger' | 'purple'
@@ -22,12 +23,23 @@ const STATUTS: { value: string; label: string; variant: BadgeVariant }[] = [
 ]
 const statutMeta = (s: string) => STATUTS.find((x) => x.value === s) || STATUTS[0]
 
+// Pastilles d'évaluation recruteur
+const EVALUATIONS: { value: string; label: string; cls: string }[] = [
+  { value: 'top', label: 'Top', cls: 'bg-emerald-100 text-emerald-700' },
+  { value: 'bon', label: 'Bon profil', cls: 'bg-sky-100 text-sky-700' },
+  { value: 'moyen', label: 'Moyen', cls: 'bg-amber-100 text-amber-700' },
+  { value: 'a_tester', label: 'À tester', cls: 'bg-violet-100 text-violet-700' },
+  { value: 'a_ecarter', label: 'À écarter', cls: 'bg-surface-200 text-surface-600' },
+]
+const evalMeta = (e: string | null) => EVALUATIONS.find((x) => x.value === e) || null
+
 interface Candidat {
   id: string; civilite: string | null; prenom: string; nom: string; sexe: string | null
   email: string | null; telephone: string | null; date_naissance: string | null
   lieu_naissance: string | null; numero_securite_sociale: string | null
   adresse: string | null; code_postal: string | null; ville: string | null; type_contrat: string | null
   source: string | null; disponibilite: string | null; permis: boolean | null; statut: string; notes: string | null
+  evaluation: string | null; cv_url: string | null; cv_nom: string | null
   client_id: string | null; poei_id: string | null; poei_prevision_id: string | null; poste_vise: string | null; identifiant_ft: string | null
   apprenant_id: string | null
   client?: { raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null } | null
@@ -68,7 +80,7 @@ function TargetSelect({ value, poeis, previsions, name, disabled, onChange, clas
   return <select name={name} defaultValue={value} className={className}>{opts}</select>
 }
 
-export function VivierList({ candidats, clients, poeis, previsions = [], embedded }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[]; previsions?: PrevisionLite[]; embedded?: boolean }) {
+export function VivierList({ candidats, clients, poeis, previsions = [], embedded, cvUrls = {} }: { candidats: Candidat[]; clients: ClientLite[]; poeis: PoeiLite[]; previsions?: PrevisionLite[]; embedded?: boolean; cvUrls?: Record<string, string> }) {
   const { toast } = useToast()
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -99,6 +111,13 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
   async function changeStatut(id: string, statut: string) {
     setBusy(id)
     const r = await updateCandidatVivierStatutAction(id, statut)
+    setBusy(null)
+    if (r.success) router.refresh()
+    else toast('error', r.error || 'Erreur')
+  }
+  async function changeEvaluation(id: string, evaluation: string) {
+    setBusy(id)
+    const r = await updateCandidatEvaluationAction(id, evaluation || null)
     setBusy(null)
     if (r.success) router.refresh()
     else toast('error', r.error || 'Erreur')
@@ -179,6 +198,14 @@ export function VivierList({ candidats, clients, poeis, previsions = [], embedde
                         {c.telephone && <span>{c.telephone}</span>}
                         {c.source && <span className="text-surface-400">via {c.source}</span>}
                         {c.permis && <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-1.5 py-0.5 text-[10px] font-medium">Permis</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <select value={c.evaluation || ''} disabled={busy === c.id} onChange={(e) => changeEvaluation(c.id, e.target.value)}
+                          className={`rounded-full text-[10px] font-medium px-2 py-0.5 border-0 cursor-pointer focus:outline-none ${evalMeta(c.evaluation)?.cls || 'bg-surface-100 text-surface-500'}`}>
+                          <option value="">Évaluer…</option>
+                          {EVALUATIONS.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
+                        </select>
+                        <CvButton c={c} url={c.cv_url ? cvUrls[c.cv_url] || null : null} onDone={() => router.refresh()} />
                       </div>
                     </td>
                     <td className="py-2.5 px-3 text-surface-700">{companyLabel(c.client) || <span className="text-surface-300">—</span>}</td>
@@ -266,6 +293,45 @@ function DSection({ title, children }: { title: string; children: React.ReactNod
 }
 
 /** Vue complète (lecture seule) d'un candidat du vivier */
+function CvButton({ c, url, onDone }: { c: Candidat; url: string | null; onDone: () => void }) {
+  const { toast } = useToast()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    setBusy(true)
+    const fd = new FormData(); fd.set('id', c.id); fd.set('file', file)
+    const r = await uploadCandidatCvAction(fd)
+    setBusy(false)
+    if (r.success) { toast('success', 'CV ajouté'); onDone() } else toast('error', r.error || 'Erreur')
+  }
+  async function del() {
+    if (!confirm('Supprimer le CV ?')) return
+    setBusy(true)
+    const r = await deleteCandidatCvAction(c.id); setBusy(false)
+    if (r.success) { toast('success', 'CV supprimé'); onDone() } else toast('error', r.error || 'Erreur')
+  }
+
+  if (c.cv_url) return (
+    <span className="inline-flex items-center gap-1.5">
+      {url && <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-medium text-brand-600 hover:underline"><FileText className="h-3 w-3" /> Voir CV</a>}
+      <button type="button" onClick={del} disabled={busy} title="Supprimer le CV" className="text-surface-300 hover:text-danger-500">
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+      </button>
+    </span>
+  )
+  return (
+    <>
+      <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden" onChange={onFile} />
+      <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}
+        className="inline-flex items-center gap-1 text-[10px] font-medium text-surface-400 hover:text-brand-600">
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Ajouter CV
+      </button>
+    </>
+  )
+}
+
 function CandidatDetail({ c, onEdit, onValider }: { c: Candidat; onEdit: () => void; onValider?: () => void }) {
   const sm = statutMeta(c.statut)
   const adresse = [c.adresse, [c.code_postal, c.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
