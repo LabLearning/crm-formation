@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { X, Loader2, Trash2, Link as LinkIcon, MessageSquare, Send } from 'lucide-react'
+import { X, Loader2, Trash2, Link as LinkIcon, MessageSquare, Send, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createTacheAction, updateTacheAction, deleteTacheAction, addCommentAction } from './actions'
+import { TacheMemos } from './TacheMemos'
 
 type Status = 'a_faire' | 'en_cours' | 'en_revue' | 'terminee'
 type Priorite = 'basse' | 'moyenne' | 'haute' | 'urgente'
@@ -297,8 +298,14 @@ export default function TacheModal({ tache, defaultStatus, users, currentUserId,
           </form>
 
           {/* Comments (only when editing) */}
-          {isEdit && (
+          {isEdit && tache && (
             <div className="px-5 pb-5 border-t border-surface-200 pt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Mic className="h-4 w-4 text-brand-500" />
+                <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Mémos vocaux</span>
+              </div>
+              <div className="mb-5"><TacheMemos tacheId={tache.id} /></div>
+
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquare className="h-4 w-4 text-surface-500" />
                 <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">

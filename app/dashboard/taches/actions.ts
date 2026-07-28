@@ -407,3 +407,50 @@ export async function addCommentAction(tacheId: string, contenu: string): Promis
   revalidatePath('/dashboard/taches')
   return { success: true }
 }
+
+/** Ajoute un mémo vocal à une tâche (audio base64 enregistré côté navigateur). */
+export async function addTacheMemoAction(tacheId: string, audioBase64: string, dureeSecondes: number): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+
+  const { data: tache } = await supabase
+    .from('crm_taches').select('id').eq('id', tacheId).eq('organization_id', session.organization.id).single()
+  if (!tache) return { success: false, error: 'Tâche introuvable' }
+
+  const b64 = (audioBase64 || '').replace(/^data:[^;]+;base64,/, '')
+  if (!b64) return { success: false, error: 'Audio manquant' }
+  const buffer = Buffer.from(b64, 'base64')
+  if (buffer.length > 15 * 1024 * 1024) return { success: false, error: 'Mémo trop long (max ~15 Mo)' }
+
+  const path = `taches-memos/${session.organization.id}/${tacheId}/${Date.now()}.webm`
+  const { error: upErr } = await supabase.storage.from('documents').upload(path, buffer, { contentType: 'audio/webm', upsert: false })
+  if (upErr) return { success: false, error: 'Échec du téléversement audio' }
+
+  const { error } = await supabase.from('crm_taches_memos').insert({
+    organization_id: session.organization.id,
+    tache_id: tacheId,
+    audio_path: path,
+    duree_secondes: Math.max(0, Math.round(dureeSecondes || 0)),
+    author_id: session.user.id,
+  })
+  if (error) { await supabase.storage.from('documents').remove([path]); return { success: false, error: 'Erreur enregistrement' } }
+
+  revalidatePath('/dashboard/taches')
+  return { success: true }
+}
+
+/** Supprime un mémo vocal (et son fichier). */
+export async function deleteTacheMemoAction(memoId: string): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+
+  const { data: memo } = await supabase
+    .from('crm_taches_memos').select('id, audio_path').eq('id', memoId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!memo) return { success: false, error: 'Mémo introuvable' }
+
+  await supabase.from('crm_taches_memos').delete().eq('id', memoId)
+  if (memo.audio_path) await supabase.storage.from('documents').remove([memo.audio_path])
+
+  revalidatePath('/dashboard/taches')
+  return { success: true }
+}
