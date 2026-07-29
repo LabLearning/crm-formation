@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Pencil, Trash2, Save,
@@ -134,12 +135,12 @@ export function ApprenantsList({ apprenants, clients, sessions, inscriptions, to
                       <div className="flex items-center gap-3">
                         <Avatar firstName={a.prenom} lastName={a.nom} size="sm" />
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-surface-900 flex items-center gap-1.5">
+                          <Link href={`/dashboard/apprenants/${a.id}`} className="text-sm font-medium text-surface-900 hover:text-brand-600 transition-colors flex items-center gap-1.5">
                             {a.civilite} {a.prenom} {a.nom}
                             {a.situation_handicap && (
                               <Accessibility className="h-3.5 w-3.5 text-brand-500" />
                             )}
-                          </div>
+                          </Link>
                           <div className="flex items-center gap-2 text-xs text-surface-500">
                             {a.email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{a.email}</span>}
                           </div>

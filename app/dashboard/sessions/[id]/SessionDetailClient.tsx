@@ -815,7 +815,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</span>
+                        {a?.id
+                          ? <Link href={`/dashboard/apprenants/${a.id}`} className="text-sm font-medium text-surface-900 hover:text-brand-600 transition-colors">{a?.prenom} {a?.nom}</Link>
+                          : <span className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</span>}
                         <Badge variant={ins.status === 'confirme' ? 'success' : ins.status === 'inscrit' ? 'info' : 'default'}>
                           {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}
                         </Badge>
