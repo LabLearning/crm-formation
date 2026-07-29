@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, GraduationCap, Users, UserCheck, CheckCircle2, Clock, XCircle, Send, Loader2, Eye } from 'lucide-react'
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { sendSessionInfoToFormateurAction } from './actions'
+import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction } from './actions'
 
 interface EmailLog {
   id: string; to_email: string; to_name: string | null; subject: string
@@ -40,30 +40,36 @@ export function SessionMails({
   const [tab, setTab] = useState<'apprenants' | 'referent' | 'formateur'>('apprenants')
   const [pending, startTransition] = useTransition()
   const [preview, setPreview] = useState<{ html: string; subject?: string; to?: string } | null>(null)
+  const [previewKind, setPreviewKind] = useState<'formateur' | 'convocation'>('formateur')
   const [previewLoading, setPreviewLoading] = useState(false)
   const [sending, setSending] = useState(false)
 
   const logsFor = (email?: string | null) => emailLogs.filter((l) => norm(l.to_email) === norm(email)).slice(0, 12)
 
   // Aperçu avant envoi : récupère le HTML de l'email sans l'envoyer
-  async function openFormateurPreview() {
+  async function openPreview(kind: 'formateur' | 'convocation') {
     setPreviewLoading(true)
-    const r = await sendSessionInfoToFormateurAction(sessionId, { preview: true })
+    const fn = kind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
+    const r = await fn(sessionId, { preview: true })
     setPreviewLoading(false)
     if ((r as any)?.success && (r as any).data?.html) {
+      setPreviewKind(kind)
       setPreview({ html: (r as any).data.html, subject: (r as any).data.subject, to: (r as any).data.email })
     } else {
       toast('error', (r as any)?.error || "Impossible de générer l'aperçu")
     }
   }
 
-  function confirmSendFormateur() {
+  function confirmSend() {
     setSending(true)
     startTransition(async () => {
-      const r = await sendSessionInfoToFormateurAction(sessionId)
+      const fn = previewKind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
+      const r = await fn(sessionId)
       setSending(false)
-      if ((r as any)?.success) { toast('success', `Infos envoyées à ${(r as any).data?.email || 'au formateur'}`); setPreview(null); router.refresh() }
-      else toast('error', (r as any)?.error || 'Erreur')
+      if ((r as any)?.success) {
+        toast('success', previewKind === 'convocation' ? `Convocation envoyée à ${(r as any).data?.email || 'au référent'}` : `Infos envoyées à ${(r as any).data?.email || 'au formateur'}`)
+        setPreview(null); router.refresh()
+      } else toast('error', (r as any)?.error || 'Erreur')
     })
   }
 
@@ -140,14 +146,23 @@ export function SessionMails({
         {tab === 'referent' && (
           referents.length === 0
             ? <div className="text-center py-8 text-sm text-surface-400">Aucun contact référent sur le client</div>
-            : referents.map((p, i) => <PersonRow key={i} p={p} />)
+            : <>
+                <div className="px-4 pt-3">
+                  <button onClick={() => openPreview('convocation')} disabled={previewLoading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors">
+                    {previewLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Convocation (participants + PDF) — aperçu & envoi
+                  </button>
+                  <p className="text-[11px] text-surface-400 mt-1">Envoyée au contact signataire / principal de l'établissement, avec la convocation PDF listant les participants.</p>
+                </div>
+                {referents.map((p, i) => <PersonRow key={i} p={p} />)}
+              </>
         )}
         {tab === 'formateur' && (
           !formateurPerson
             ? <div className="text-center py-8 text-sm text-surface-400">Aucun formateur rattaché</div>
             : <PersonRow p={formateurPerson} action={
                 formateurPerson.email ? (
-                  <button onClick={openFormateurPreview} disabled={previewLoading}
+                  <button onClick={() => openPreview('formateur')} disabled={previewLoading}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors shrink-0">
                     {previewLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Aperçu & envoi
                   </button>
@@ -173,7 +188,7 @@ export function SessionMails({
             </div>
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="secondary" onClick={() => setPreview(null)}>Annuler</Button>
-              <Button onClick={confirmSendFormateur} isLoading={sending || pending} icon={<Send className="h-4 w-4" />}>Confirmer l'envoi</Button>
+              <Button onClick={confirmSend} isLoading={sending || pending} icon={<Send className="h-4 w-4" />}>Confirmer l'envoi</Button>
             </div>
           </div>
         )}

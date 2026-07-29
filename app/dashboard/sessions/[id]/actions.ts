@@ -853,3 +853,84 @@ export async function sendSessionInfoToFormateurAction(sessionId: string, opts?:
   await logAudit({ action: 'send_session_info_formateur', entity_type: 'session', entity_id: sessionId, details: { email: formateur.email } })
   return { success: true, data: { email: formateur.email } }
 }
+
+/**
+ * Envoie la convocation de formation au référent (contact) de l'établissement :
+ * email brandé listant les participants + convocation de session en pièce jointe.
+ */
+export async function sendConvocationToReferentAction(sessionId: string, opts?: { preview?: boolean }): Promise<ActionResult & { data?: { email?: string; html?: string; subject?: string } }> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: sess } = await supabase
+    .from('sessions')
+    .select('*, formation:formation_id(intitule, duree_heures, prerequis), formateur:formateurs(prenom, nom), client:client_id(id, raison_sociale, nom_commercial, sigle)')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).single()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+  if (!sess.client_id) return { success: false, error: 'Aucun établissement rattaché à la session' }
+
+  const { data: contacts } = await supabase
+    .from('contacts').select('prenom, nom, poste, email, est_signataire, est_principal').eq('client_id', sess.client_id)
+  const list = (contacts || []) as any[]
+  const ref = list.find((c) => c.est_signataire && c.email) || list.find((c) => c.est_principal && c.email) || list.find((c) => c.email)
+  if (!ref?.email) return { success: false, error: "Le référent (contact de l'établissement) n'a pas d'email renseigné" }
+  const referentNom = [ref.prenom, ref.nom].filter(Boolean).join(' ') || 'Madame, Monsieur'
+
+  const { data: inscriptions } = await supabase
+    .from('inscriptions').select('apprenant:apprenants(civilite, prenom, nom)').eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+  const participants = (inscriptions || []).map((i: any) => i.apprenant).filter(Boolean)
+
+  const { data: org } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
+  const fmtFr = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—'
+  const formationNom = (sess as any).formation?.intitule || sess.intitule || 'Formation'
+  const cli = (sess as any).client
+  const lieu = [sess.lieu, sess.adresse, [sess.code_postal, sess.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—'
+  const participantsLine = participants.map((p: any) => [p.civilite, p.prenom, p.nom].filter(Boolean).join(' ')).join(', ')
+
+  const emailParams = {
+    orgName: org?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || org?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: referentNom,
+    subject: `Convocation de formation — ${formationNom}`,
+    docTitle: 'Convocation de formation',
+    intro: `Veuillez trouver ci-jointe la convocation pour la session de formation « ${formationNom} ». Merci de la transmettre aux participants de votre établissement.`,
+    metadata: ([
+      ['Formation', formationNom],
+      ['Dates', `Du ${fmtFr(sess.date_debut)} au ${fmtFr(sess.date_fin)}`],
+      sess.horaires ? ['Horaires', String(sess.horaires)] : null,
+      ['Lieu', lieu],
+      cli?.raison_sociale ? ['Établissement', String(cli.raison_sociale)] : null,
+      ['Participants', participantsLine || String(participants.length)],
+    ].filter(Boolean)) as [string, string][],
+    footerNote: 'La convocation détaillée est en pièce jointe (PDF).',
+  }
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    return { success: true, data: { html: buildDocumentEmailHtml(emailParams), subject: emailParams.subject, email: ref.email } }
+  }
+
+  const { renderToBuffer } = await import('@react-pdf/renderer')
+  const { createElement } = await import('react')
+  const { ConvocationSessionPDF } = await import('@/lib/pdf/convocation-session-pdf')
+  const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
+  const orgLogo = await withDocumentLogo(supabase, org)
+  const buffer = await renderToBuffer(
+    createElement(ConvocationSessionPDF, { session: sess, formation: (sess as any).formation, org: orgLogo, formateur: (sess as any).formateur, participants, entreprise: cli?.raison_sociale, referentNom }) as any
+  )
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    ...emailParams, to: ref.email,
+    pdfBuffer: buffer, pdfFilename: `convocation-${sess.reference || sessionId}.pdf`,
+    organizationId: session.organization.id, entityType: 'session', entityId: sessionId, triggeredBy: session.user.id,
+  })
+  if (!r.success) return { success: false, error: r.error }
+  await logAudit({ action: 'send_convocation_referent', entity_type: 'session', entity_id: sessionId, details: { email: ref.email } })
+  return { success: true, data: { email: ref.email } }
+}
