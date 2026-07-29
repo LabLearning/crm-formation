@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   UserPlus, Phone, Mail, Building2,
   ArrowRight, Trash2, Eye, Edit3, Euro, List, LayoutGrid, Columns3,
@@ -76,14 +76,23 @@ export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, cu
   const [detailLead, setDetailLead] = useState<Lead | null>(null)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const autoOpenedRef = useRef<string | null>(null)
 
-  // Ouverture auto d'un lead via ?lead=<id> (depuis une notification)
+  // Ouverture auto d'un lead via ?lead=<id> (depuis une notification), UNE
+  // SEULE fois : on nettoie l'URL aussitôt pour ne pas rouvrir ce lead à
+  // chaque refresh (ex : après enregistrement d'un apprenant, ça renvoyait
+  // l'utilisateur sur une autre fiche lead).
   useEffect(() => {
     const id = searchParams.get('lead')
-    if (id) {
+    if (id && autoOpenedRef.current !== id) {
+      autoOpenedRef.current = id
       const l = leads.find((x) => x.id === id)
       if (l) setDetailLead(l)
+      router.replace(pathname)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, leads])
   const [search, setSearch] = useState('')
   const [filterChip, setFilterChip] = useState<FilterChip>('all')
