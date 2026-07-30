@@ -11,6 +11,7 @@ import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LAB
 import { formatDate, formatDateTime, companyLabel } from '@/lib/utils'
 import { ConventionSignatureBlock } from './ConventionSignatureBlock'
 import { ConventionDetailsEditor } from './ConventionDetailsEditor'
+import { ConventionHistory } from './ConventionHistory'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,6 +97,9 @@ export default async function ConventionDetailPage({ params }: { params: { id: s
         signatureOfNom={c.signature_of_nom}
         signatureTokenExpiresAt={c.signature_token_expires_at}
       />
+
+      {/* Historique (créée, envoyée, signée, annulée, AKTO…) */}
+      <ConventionHistory conventionId={c.id} organizationId={session.organization.id} />
 
       {/* Avenants */}
       {(avenants || []).length > 0 && (
