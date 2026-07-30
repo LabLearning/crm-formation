@@ -9,7 +9,6 @@ const LINKS = [
   { href: '/site', label: 'Accueil' },
   { href: '/site/formations', label: 'Nos formations' },
   { href: '/site/financements', label: 'Financements' },
-  { href: '/site/equipe', label: 'Notre équipe' },
   { href: '/site/partenaires', label: 'Partenaires' },
   { href: '/site/a-propos', label: 'À propos' },
   { href: '/site/contact', label: 'Contact' },

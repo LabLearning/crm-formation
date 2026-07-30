@@ -23,7 +23,6 @@ export function SiteFooter() {
             <li><Link href="/site" className="text-[#D6D3D1] hover:text-white">Accueil</Link></li>
             <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white">Nos formations</Link></li>
             <li><Link href="/site/financements" className="text-[#D6D3D1] hover:text-white">Financements</Link></li>
-            <li><Link href="/site/equipe" className="text-[#D6D3D1] hover:text-white">Notre équipe</Link></li>
             <li><Link href="/site/partenaires" className="text-[#D6D3D1] hover:text-white">Partenaires</Link></li>
             <li><Link href="/site/a-propos" className="text-[#D6D3D1] hover:text-white">À propos</Link></li>
             <li><Link href="/site/contact" className="text-[#D6D3D1] hover:text-white">Contact</Link></li>
