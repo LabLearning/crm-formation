@@ -81,3 +81,34 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
     franchises: (franchisesRes.data || []) as any[],
   }
 }
+
+export interface PublicFormateur {
+  id: string
+  prenom: string
+  nom: string
+  photo_url: string | null
+  domaines_expertise: string[]
+  certifications: string[]
+  note_moyenne: number | null
+  zone_intervention: string | null
+}
+
+/**
+ * Équipe formateurs pour la page publique « Notre équipe ». N'expose JAMAIS
+ * les coordonnées (email/téléphone/SIRET) — uniquement l'identité pro.
+ */
+export async function getPublicTeam(): Promise<PublicFormateur[]> {
+  const supabase = await createServiceRoleClient()
+  const { data } = await supabase.from('formateurs')
+    .select('id, prenom, nom, photo_url, domaines_expertise, certifications, note_moyenne, zone_intervention')
+    .eq('organization_id', ORG).eq('is_active', true)
+    .order('note_moyenne', { ascending: false, nullsFirst: false })
+  return ((data || []) as any[]).map((f) => ({
+    id: f.id, prenom: f.prenom || '', nom: f.nom || '',
+    photo_url: f.photo_url || null,
+    domaines_expertise: Array.isArray(f.domaines_expertise) ? f.domaines_expertise : [],
+    certifications: Array.isArray(f.certifications) ? f.certifications : [],
+    note_moyenne: f.note_moyenne != null ? Number(f.note_moyenne) : null,
+    zone_intervention: f.zone_intervention || null,
+  }))
+}
