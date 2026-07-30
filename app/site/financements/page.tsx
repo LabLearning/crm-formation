@@ -1,9 +1,15 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap } from 'lucide-react'
+import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen } from 'lucide-react'
 
 export const metadata = { title: 'Financements — Lab Learning' }
 
 const DISPOSITIFS = [
+  {
+    Icon: DoorOpen,
+    t: 'POEI — avant l’ouverture',
+    d: "La Préparation Opérationnelle à l’Emploi Individuelle finance la formation de vos futurs salariés avant leur prise de poste. Idéale à l’ouverture : vous recrutez et formez une équipe déjà opérationnelle, financée par France Travail.",
+    tag: 'Recrutement',
+  },
   {
     Icon: Building2,
     t: 'OPCO',
@@ -13,7 +19,7 @@ const DISPOSITIFS = [
   {
     Icon: Briefcase,
     t: 'France Travail',
-    d: "Pour les demandeurs d’emploi, des dispositifs comme l’AIF ou les préparations opérationnelles permettent de financer une montée en compétence vers un poste.",
+    d: "Pour les demandeurs d’emploi, des dispositifs comme l’AIF ou la POEI permettent de financer une montée en compétence vers un poste concret.",
     tag: 'Demandeurs d’emploi',
   },
   {
@@ -42,13 +48,13 @@ export default function SiteFinancements() {
           Vos formations, <span className="text-[#195144]">financées</span>.
         </h1>
         <p className="mt-6 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
-          En tant qu’organisme certifié Qualiopi, nos formations sont éligibles aux principaux dispositifs
-          de financement. On vous accompagne de bout en bout dans le montage du dossier.
+          De l’ouverture avec la POEI à la formation continue de vos équipes, nos formations sont éligibles
+          aux principaux dispositifs. On vous accompagne de bout en bout dans le montage du dossier.
         </p>
       </section>
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {DISPOSITIFS.map((x) => (
             <div key={x.t} className="rounded-2xl border border-[#195144]/10 bg-white p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">

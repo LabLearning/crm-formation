@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Target, ClipboardCheck, Briefcase, ChefHat, Award } from 'lucide-react'
+import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Briefcase, DoorOpen, TrendingUp, MonitorPlay, Laptop } from 'lucide-react'
 import { getPublicSiteData } from '@/lib/public-site-data'
 import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
@@ -22,34 +22,27 @@ export default async function SiteHome() {
 
   const chapitres = [
     {
-      index: 1, eyebrow: 'Analyse', title: 'On cerne le besoin, avant tout',
-      desc: 'Chaque parcours démarre par un diagnostic : niveau, attentes, objectifs. On construit un programme qui colle à votre métier, pas un catalogue générique.',
-      bullets: ['Audit du niveau et des attentes', 'Objectifs pédagogiques cadrés Qualiopi', 'Programme adapté à votre établissement'],
-      Icon: Target, from: '#134E4A', to: '#0F766E',
-      chips: [{ Icon: Target, label: 'Positionnement à l’entrée' }, { Icon: ClipboardCheck, label: 'Cadrage Qualiopi' }],
+      index: 1, eyebrow: 'Recrutement & ouverture', title: 'On vous ouvre avec une équipe déjà prête, grâce à la POEI',
+      desc: 'Avant même l’ouverture, on recrute et on forme vos futurs salariés via la POEI (Préparation Opérationnelle à l’Emploi), financée par France Travail. Vous démarrez avec une équipe opérationnelle dès le premier jour.',
+      bullets: ['POEI financée par France Travail', 'Recrutement + formation avant l’ouverture', 'Équipe opérationnelle dès le jour 1'],
+      Icon: DoorOpen, from: '#134E4A', to: '#0F766E',
+      chips: [{ Icon: Briefcase, label: 'POEI · France Travail' }, { Icon: Users, label: 'Recrutement inclus' }],
     },
     {
-      index: 2, eyebrow: 'Financement', title: 'On monte le financement à votre place',
-      desc: 'OPCO, France Travail, plan de développement des compétences : on prépare le dossier de A à Z. Vous formez vos équipes, on gère toute l’administration.',
-      bullets: ['Dossier OPCO / France Travail clé en main', 'Devis et convention conformes', 'Zéro paperasse de votre côté'],
-      Icon: Banknote, from: '#1E3A8A', to: '#4338CA',
-      chips: [{ Icon: Building2, label: 'OPCO' }, { Icon: Briefcase, label: 'France Travail' }],
-      href: '/site/financements', cta: 'Voir les financements', flip: true,
-    },
-    {
-      index: 3, eyebrow: 'Formation', title: 'On forme sur le terrain, sur le geste',
-      desc: 'Des formateurs praticiens interviennent dans vos murs ou à distance. On transmet le geste réel du métier, au rythme de vos équipes et de votre exploitation.',
-      bullets: ['Formateurs praticiens du métier', 'Présentiel dans vos murs ou à distance', 'Centré sur la pratique, pas la théorie'],
-      Icon: ChefHat, from: '#92400E', to: '#D97706',
-      chips: [{ Icon: Users, label: `${fmt(stats.formateurs)} formateurs` }, { Icon: CheckCircle2, label: `${fmt(stats.sessionsRealisees)} sessions réalisées` }],
-    },
-    {
-      index: 4, eyebrow: 'Certification', title: 'On certifie et on prouve les acquis',
-      desc: 'Évaluation entrée/sortie, attestation de fin de formation, mesure de la satisfaction à froid : la progression est tracée et conforme aux exigences Qualiopi.',
-      bullets: ['Évaluation des acquis entrée / sortie', 'Attestation de fin de formation', 'Suivi de satisfaction à froid'],
-      Icon: Award, from: '#14532D', to: '#16A34A',
-      chips: [{ Icon: GraduationCap, label: `${fmt(stats.apprenants)} apprenants formés` }, { Icon: ShieldCheck, label: 'Certifié Qualiopi' }],
+      index: 2, eyebrow: 'Exploitation', title: 'On fait grandir vos équipes pendant l’exploitation',
+      desc: 'Une fois ouvert, on forme vos équipes en poste en continu via le plan de développement des compétences, financé par votre OPCO. La montée en compétence suit le rythme de votre établissement.',
+      bullets: ['Plan de développement des compétences', 'Financé par votre OPCO', 'Formations métier pendant l’activité'],
+      Icon: TrendingUp, from: '#1E3A8A', to: '#4338CA',
+      chips: [{ Icon: Building2, label: 'OPCO' }, { Icon: CheckCircle2, label: `${fmt(stats.sessionsRealisees)} sessions réalisées` }],
       flip: true,
+    },
+    {
+      index: 3, eyebrow: 'Formation continue', title: 'On ancre les acquis en digital avec Learnexa',
+      desc: 'Pour ancrer durablement les compétences, notre plateforme e-learning Learnexa prolonge la formation en ligne : vos équipes se forment à leur rythme, où qu’elles soient, avec un suivi de la progression.',
+      bullets: ['Notre plateforme e-learning Learnexa', 'Modules à la demande, accessibles partout', 'Suivi de la progression en continu'],
+      Icon: MonitorPlay, from: '#4C1D95', to: '#7C3AED',
+      chips: [{ Icon: Laptop, label: 'Plateforme Learnexa' }, { Icon: GraduationCap, label: `${fmt(stats.apprenants)} apprenants` }],
+      href: 'https://learnexa.fr', cta: 'Découvrir Learnexa',
     },
   ]
 
@@ -73,8 +66,8 @@ export default async function SiteHome() {
               <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
             </h1>
             <p className="mt-6 text-lg text-[#57534E] max-w-xl leading-relaxed">
-              Restauration, boucherie, boulangerie, pâtisserie, hôtellerie — nous formons vos équipes avec des programmes
-              concrets, des formateurs de terrain et un accompagnement du financement à l'attestation.
+              Du recrutement à la rentabilité, on est à vos côtés : ouverture avec la POEI, montée en compétence
+              de vos équipes pendant l'exploitation, puis formation continue en e-learning avec notre plateforme Learnexa.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
@@ -167,12 +160,17 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── STORYTELLING CHAPITRÉ ── */}
+      {/* ── STORYTELLING CHAPITRÉ : du recrutement à la rentabilité ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
-        <div className="max-w-2xl">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Comment ça se passe</div>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Du premier échange à l'attestation, on gère tout</h2>
-          <p className="mt-3 text-[#57534E]">Un accompagnement de bout en bout, en quatre temps.</p>
+        <div className="max-w-3xl">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Notre accompagnement</div>
+          <h2 className="font-heading font-bold text-3xl md:text-5xl text-[#14110F] tracking-heading text-balance">
+            Du recrutement à la rentabilité, <span className="text-[#195144]">on est avec vous</span>.
+          </h2>
+          <p className="mt-4 text-lg text-[#57534E]">
+            De l’ouverture avec la POEI, à la montée en compétence de vos équipes, jusqu’à la formation continue
+            en e-learning : un partenaire unique sur tout le cycle de vie de votre établissement.
+          </p>
         </div>
         <div className="mt-14 space-y-16 md:space-y-24">
           {chapitres.map((c) => <StoryChapter key={c.index} {...(c as any)} />)}

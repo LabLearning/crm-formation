@@ -40,9 +40,13 @@ export function StoryChapter(p: ChapterProps) {
           ))}
         </ul>
         {p.href && (
-          <Link href={p.href} className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
-            {p.cta || 'En savoir plus'} <ArrowRight className="h-4 w-4" />
-          </Link>
+          p.href.startsWith('http')
+            ? <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+                {p.cta || 'En savoir plus'} <ArrowRight className="h-4 w-4" />
+              </a>
+            : <Link href={p.href} className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+                {p.cta || 'En savoir plus'} <ArrowRight className="h-4 w-4" />
+              </Link>
         )}
       </div>
 
