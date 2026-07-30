@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock, Eye, EyeOff, KeyRound, Copy, Check, Save, Trash2, Loader2, ExternalLink } from 'lucide-react'
+import { Lock, Eye, EyeOff, KeyRound, Copy, Check, Save, Trash2, Loader2 } from 'lucide-react'
 import { Button, Input, useToast } from '@/components/ui'
 import { saveClientOpcoSecretAction, revealClientOpcoSecretAction, deleteClientOpcoSecretAction } from '../actions'
 
@@ -117,12 +117,6 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
             </div>
             <Field label="Notes" value={revealed.notes} k="notes" />
           </div>
-          {revealed.url && (
-            <a href={/^https?:\/\//.test(revealed.url) ? revealed.url : `https://${revealed.url}`} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-brand-600 hover:underline">
-              <ExternalLink className="h-3.5 w-3.5" /> Ouvrir le lien
-            </a>
-          )}
           <div className="flex items-center gap-3 pt-3">
             <Button size="sm" variant="secondary" onClick={() => { setRevealed(null); setShowPw(false); setMode('locked') }} icon={<Lock className="h-3.5 w-3.5" />}>Masquer</Button>
             <Button size="sm" variant="secondary" onClick={() => { setForm(revealed); setMode('edit') }}>Modifier</Button>
@@ -136,7 +130,6 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
         <div className="space-y-3">
           <Input id="opco-id" label="Identifiant" value={form.identifiant || ''} onChange={(e) => setForm({ ...form, identifiant: e.target.value })} placeholder="Identifiant" />
           <Input id="opco-mdp" label="Mot de passe" value={form.mot_de_passe || ''} onChange={(e) => setForm({ ...form, mot_de_passe: e.target.value })} placeholder="Mot de passe" />
-          <Input id="opco-url" label="URL / lien (optionnel)" value={form.url || ''} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" />
           <Input id="opco-notes" label="Notes (optionnel)" value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           <div className="pt-2 border-t border-amber-100 space-y-3">
             <p className="text-[11px] text-surface-500">Ces données sont <strong>chiffrées</strong>. Choisissez un mot de passe de protection — il sera demandé pour les consulter. Il n'est <strong>pas récupérable</strong> : notez-le bien.</p>
