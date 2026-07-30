@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Send, Loader2, CheckCircle2 } from 'lucide-react'
+import { Send, Loader2, CheckCircle2 } from '../icons'
 import { sendContactMessageAction } from './actions'
 
 export function ContactForm() {

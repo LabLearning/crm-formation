@@ -1,4 +1,4 @@
-import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Sandwich, Wine, ShieldCheck } from 'lucide-react'
+import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Sandwich, Wine, ShieldCheck } from './icons'
 
 export interface MetierStyle {
   Icon: any

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Building2, MapPin, Network, Store } from 'lucide-react'
+import { ArrowRight, Building2, MapPin, Network, Store } from '../icons'
 import { getPublicPartners } from '@/lib/public-site-data'
 
 export const dynamic = 'force-dynamic'

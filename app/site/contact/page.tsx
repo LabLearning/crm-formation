@@ -1,4 +1,4 @@
-import { Mail, ShieldCheck, Banknote, Clock } from 'lucide-react'
+import { Mail, ShieldCheck, Banknote, Clock } from '../icons'
 import { ContactForm } from './ContactForm'
 
 export const metadata = { title: 'Contact — Lab Learning' }

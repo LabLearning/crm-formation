@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Clock, Monitor, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Clock, Monitor, ArrowRight, CheckCircle2 } from '../icons'
 import { getPublicSiteData } from '@/lib/public-site-data'
 
 export const dynamic = 'force-dynamic'

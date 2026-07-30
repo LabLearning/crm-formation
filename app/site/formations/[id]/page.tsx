@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, GraduationCap, ClipboardCheck, Accessibility, ShieldCheck } from 'lucide-react'
+import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, ClipboardCheck, Accessibility, ShieldCheck, BookOpen, ListView, Bulb } from '../../icons'
 import { getPublicFormation } from '@/lib/public-site-data'
 
 export const dynamic = 'force-dynamic'
@@ -29,9 +29,9 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
 
   const sections: { Icon: any; title: string; content: React.ReactNode }[] = []
   if (f.public_vise) sections.push({ Icon: Users, title: 'Public visé', content: <Prose text={f.public_vise} /> })
-  if (f.prerequis) sections.push({ Icon: ListChecks, title: 'Prérequis', content: <Prose text={f.prerequis} /> })
-  if (f.programme_detaille) sections.push({ Icon: GraduationCap, title: 'Programme', content: <Prose text={f.programme_detaille} /> })
-  if (f.methodes_pedagogiques) sections.push({ Icon: Target, title: 'Méthodes pédagogiques', content: <Prose text={f.methodes_pedagogiques} /> })
+  if (f.prerequis) sections.push({ Icon: ListView, title: 'Prérequis', content: <Prose text={f.prerequis} /> })
+  if (f.programme_detaille) sections.push({ Icon: BookOpen, title: 'Programme', content: <Prose text={f.programme_detaille} /> })
+  if (f.methodes_pedagogiques) sections.push({ Icon: Bulb, title: 'Méthodes pédagogiques', content: <Prose text={f.methodes_pedagogiques} /> })
   if (f.modalites_evaluation) sections.push({ Icon: ClipboardCheck, title: 'Modalités d’évaluation', content: <Prose text={f.modalites_evaluation} /> })
   if (f.accessibilite_handicap) sections.push({ Icon: Accessibility, title: 'Accessibilité', content: <Prose text={f.accessibilite_handicap} /> })
 

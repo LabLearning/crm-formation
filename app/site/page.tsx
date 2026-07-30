@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Briefcase, DoorOpen, TrendingUp, MonitorPlay, Laptop } from 'lucide-react'
+import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Briefcase, DoorOpen, TrendingUp, MonitorPlay, Laptop } from './icons'
 import { getPublicSiteData } from '@/lib/public-site-data'
 import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'

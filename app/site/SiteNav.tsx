@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X } from './icons'
 
 const LINKS = [
   { href: '/site', label: 'Accueil' },

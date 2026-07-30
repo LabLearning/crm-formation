@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Mail, ShieldCheck } from 'lucide-react'
+import { Mail, ShieldCheck } from './icons'
 
 export function SiteFooter() {
   return (

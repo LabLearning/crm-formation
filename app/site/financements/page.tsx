@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen } from 'lucide-react'
+import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen } from '../icons'
 
 export const metadata = { title: 'Financements — Lab Learning' }
 

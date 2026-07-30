@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, Target, HeartHandshake, Award, MapPin } from 'lucide-react'
+import { ArrowRight, ShieldCheck, Target, HeartHandshake, Award, MapPin } from '../icons'
 import { getPublicSiteData } from '@/lib/public-site-data'
 
 export const dynamic = 'force-dynamic'
