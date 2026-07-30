@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/site/formations', label: 'Nos formations' },
   { href: '/site/financements', label: 'Financements' },
   { href: '/site/equipe', label: 'Notre équipe' },
+  { href: '/site/partenaires', label: 'Partenaires' },
   { href: '/site/a-propos', label: 'À propos' },
   { href: '/site/contact', label: 'Contact' },
 ]
@@ -26,10 +27,10 @@ export function SiteNav() {
           <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-8 w-auto" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-0.5">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(l.href) ? 'text-[#195144]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(l.href) ? 'text-[#195144]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
               {l.label}
             </Link>
           ))}
@@ -38,13 +39,13 @@ export function SiteNav() {
           </Link>
         </nav>
 
-        <button className="md:hidden p-2 -mr-2 text-[#14110F]" onClick={() => setOpen((v) => !v)} aria-label="Menu">
+        <button className="lg:hidden p-2 -mr-2 text-[#14110F]" onClick={() => setOpen((v) => !v)} aria-label="Menu">
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-[#195144]/10 bg-[#F6F4EF]">
+        <div className="lg:hidden border-t border-[#195144]/10 bg-[#F6F4EF]">
           <nav className="max-w-6xl mx-auto px-5 py-3 flex flex-col">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)}

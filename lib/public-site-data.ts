@@ -115,6 +115,40 @@ export async function getPublicFormation(id: string): Promise<PublicFormationDet
   }
 }
 
+export interface PublicPartner {
+  nom: string
+  logo_url: string | null
+  secteur: string | null
+  ville: string | null
+  zone_geographique: string | null
+  nombre_etablissements: number | null
+  etablissements_accompagnes: number
+}
+
+/** Partenaires franchise pour la page « Partenaires » (avec comptage réel des établissements liés). */
+export async function getPublicPartners(): Promise<PublicPartner[]> {
+  const supabase = await createServiceRoleClient()
+  const { data: franchises } = await supabase.from('franchises')
+    .select('id, nom, logo_url, secteur, ville, zone_geographique, nombre_etablissements')
+    .eq('organization_id', ORG).eq('is_active', true)
+    .order('nombre_etablissements', { ascending: false, nullsFirst: false })
+
+  const rows = (franchises || []) as any[]
+  // Comptage des établissements réellement rattachés (clients.franchise_id)
+  const counts = await Promise.all(rows.map((f) =>
+    supabase.from('clients').select('id', { count: 'exact', head: true })
+      .eq('organization_id', ORG).eq('franchise_id', f.id)
+      .then((r) => r.count || 0)
+  ))
+
+  return rows.map((f, i) => ({
+    nom: f.nom, logo_url: f.logo_url || null, secteur: f.secteur || null,
+    ville: f.ville || null, zone_geographique: f.zone_geographique || null,
+    nombre_etablissements: f.nombre_etablissements ?? null,
+    etablissements_accompagnes: counts[i],
+  }))
+}
+
 export interface PublicFormateur {
   id: string
   prenom: string

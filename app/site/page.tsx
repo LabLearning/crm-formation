@@ -1,10 +1,24 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, Clock, Sparkles } from 'lucide-react'
+import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Sandwich } from 'lucide-react'
 import { getPublicSiteData } from '@/lib/public-site-data'
+import { CountUp } from './CountUp'
 
 export const dynamic = 'force-dynamic'
 
 const fmt = (n: number) => n.toLocaleString('fr-FR')
+
+/** Icône métier selon la catégorie (aucun Sparkles — réservé à l'IA). */
+function iconFor(nom: string) {
+  const n = nom.toLowerCase()
+  if (n.includes('bouch')) return Beef
+  if (n.includes('boulanger')) return Wheat
+  if (n.includes('viennois') || n.includes('croissant')) return Croissant
+  if (n.includes('patiss') || n.includes('pâtiss') || n.includes('dessert')) return Cake
+  if (n.includes('rapid') || n.includes('snack') || n.includes('burger')) return Sandwich
+  if (n.includes('hcr') || n.includes('hôtel') || n.includes('hotel') || n.includes('café') || n.includes('cafe')) return Coffee
+  if (n.includes('cuisin') || n.includes('chef')) return ChefHat
+  return UtensilsCrossed
+}
 
 export default async function SiteHome() {
   const { stats, categories, franchises } = await getPublicSiteData()
@@ -48,14 +62,14 @@ export default async function SiteHome() {
       <section className="border-y border-[#195144]/10 bg-white/50">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            { v: `${fmt(stats.formations)}`, l: 'programmes au catalogue', Icon: GraduationCap },
-            { v: `${fmt(stats.apprenants)}`, l: 'apprenants formés', Icon: Users },
-            { v: `${fmt(stats.sessionsRealisees)}`, l: 'sessions réalisées', Icon: CheckCircle2 },
-            { v: `${fmt(stats.entreprises)}`, l: 'entreprises accompagnées', Icon: Building2 },
+            { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
+            { v: stats.apprenants, l: 'apprenants formés', Icon: Users },
+            { v: stats.sessionsRealisees, l: 'sessions réalisées', Icon: CheckCircle2 },
+            { v: stats.entreprises, l: 'entreprises accompagnées', Icon: Building2 },
           ].map((s) => (
             <div key={s.l}>
               <div className="flex items-center gap-1.5 text-[#195144] mb-1"><s.Icon className="h-4 w-4" /></div>
-              <div className="font-heading font-black text-3xl md:text-4xl text-[#14110F] tabular-nums">{s.v}</div>
+              <div className="font-heading font-black text-3xl md:text-4xl text-[#14110F] tabular-nums"><CountUp value={s.v} /></div>
               <div className="text-xs text-[#78716C] mt-0.5">{s.l}</div>
             </div>
           ))}
@@ -70,10 +84,12 @@ export default async function SiteHome() {
           <p className="mt-3 text-[#57534E]">Un catalogue vivant, mis à jour en continu. {fmt(stats.formations)} programmes couvrant l'ensemble de la filière.</p>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.slice(0, 9).map((c) => (
+          {categories.slice(0, 9).map((c) => {
+            const Icon = iconFor(c.nom)
+            return (
             <Link key={c.nom} href="/site/formations" className="group rounded-2xl border border-[#195144]/10 bg-white p-5 hover:border-[#195144]/30 hover:shadow-sm transition-all">
               <div className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4">
-                <Sparkles className="h-5 w-5 text-[#195144]" />
+                <Icon className="h-5 w-5 text-[#195144]" />
               </div>
               <div className="font-heading font-semibold text-[#14110F]">{c.nom}</div>
               <div className="text-sm text-[#78716C] mt-1">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</div>
@@ -81,7 +97,7 @@ export default async function SiteHome() {
                 Explorer <ArrowRight className="h-3.5 w-3.5" />
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       </section>
 
@@ -110,7 +126,7 @@ export default async function SiteHome() {
             <h2 className="font-heading font-bold text-2xl md:text-3xl text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-8">
-            {franchises.map((f) => (
+            {franchises.slice(0, 8).map((f) => (
               <div key={f.nom} className="flex flex-col items-center gap-2">
                 {f.logo_url
                   ? <img src={f.logo_url} alt={f.nom} className="h-12 w-auto max-w-[140px] object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
@@ -118,6 +134,11 @@ export default async function SiteHome() {
                 {f.nombre_etablissements ? <span className="text-[11px] text-[#A8A29E]">{f.nombre_etablissements} établissements</span> : null}
               </div>
             ))}
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+              Voir tous nos partenaires <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       )}
