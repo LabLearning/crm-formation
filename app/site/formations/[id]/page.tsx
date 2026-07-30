@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, ClipboardCheck, Accessibility, ShieldCheck, BookOpen, ListView, Bulb } from '../../icons'
 import { getPublicFormation } from '@/lib/public-site-data'
+import { metierStyle } from '../../metier'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,8 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
     <>
       <section className="relative overflow-hidden border-b border-[#195144]/10">
         <div className="absolute inset-0 -z-10 bg-[#195144]" />
+        <img src={metierStyle(f.categorie || '').img} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.92) 45%, rgba(18,63,52,0.75) 100%)' }} />
         <div className="absolute inset-0 -z-10 opacity-[0.15]" style={{ background: 'radial-gradient(60% 80% at 80% 0%, #6366F1 0%, transparent 60%)' }} />
         <div className="max-w-4xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white">
           <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">

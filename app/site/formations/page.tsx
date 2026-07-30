@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Clock, Monitor, ArrowRight, CheckCircle2 } from '../icons'
+import { MetierVisual } from '../MetierVisual'
 import { getPublicSiteData } from '@/lib/public-site-data'
 
 export const dynamic = 'force-dynamic'
@@ -23,9 +24,11 @@ export default async function SiteFormations() {
       <div className="max-w-6xl mx-auto px-5 md:px-8 pb-20 space-y-14">
         {categories.map((cat) => (
           <section key={cat.nom}>
-            <div className="flex items-baseline justify-between gap-4 border-b border-[#195144]/10 pb-3 mb-6">
-              <h2 className="font-heading font-bold text-xl md:text-2xl text-[#14110F] tracking-heading">{cat.nom}</h2>
-              <span className="text-sm text-[#A8A29E] shrink-0">{cat.formations.length} formation{cat.formations.length > 1 ? 's' : ''}</span>
+            <div className="relative rounded-3xl overflow-hidden mb-6 ring-1 ring-black/5 shadow-sm">
+              <MetierVisual nom={cat.nom} label={cat.nom} height="h-36 md:h-44" />
+              <span className="absolute top-4 right-4 rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25">
+                {cat.formations.length} formation{cat.formations.length > 1 ? 's' : ''}
+              </span>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {cat.formations.map((f) => (
