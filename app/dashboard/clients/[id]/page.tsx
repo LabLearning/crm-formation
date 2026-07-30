@@ -14,6 +14,7 @@ import type { Client } from '@/lib/types/crm'
 import { ClientEditButton } from './ClientEditButton'
 import { ClientNotes } from './ClientNotes'
 import { ClientParticipants } from './ClientParticipants'
+import { ClientSessionsList } from './ClientSessionsList'
 import { ClientDocuments } from './ClientDocuments'
 import { ClientContacts } from './ClientContacts'
 
@@ -219,44 +220,8 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
           {/* Contacts (ajout / modification / suppression) */}
           <ClientContacts clientId={c.id} contacts={contactsList as any[]} />
 
-          {/* Sessions de formation du client */}
-          <div className="card overflow-hidden">
-            <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-brand-500" />
-              <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Sessions de formation ({sessionsList.length})</span>
-            </div>
-            {sessionsList.length === 0 ? (
-              <div className="text-center py-8 text-sm text-surface-400">Aucune session</div>
-            ) : (
-              <div className="divide-y divide-surface-100">
-                {sessionsList.slice(0, 15).map((s) => {
-                  const formateurNom = s.formateur ? `${s.formateur.prenom || ''} ${s.formateur.nom || ''}`.trim() : null
-                  return (
-                    <Link key={s.id} href={`/dashboard/sessions/${s.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
-                      <Calendar className="h-4 w-4 text-surface-400 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-surface-900 truncate">
-                          {s.formation?.intitule || s.intitule || s.reference || 'Session'}
-                        </div>
-                        <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap mt-0.5">
-                          {s.reference && <span className="font-mono text-surface-400">{s.reference}</span>}
-                          {s.date_debut && (
-                            <span>{formatDate(s.date_debut, { day: 'numeric', month: 'short' })}{s.date_fin && s.date_fin !== s.date_debut ? ` → ${formatDate(s.date_fin, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
-                          )}
-                          {formateurNom && <span className="flex items-center gap-1"><User className="h-3 w-3 shrink-0" />{formateurNom}</span>}
-                        </div>
-                      </div>
-                      {s.status && (
-                        <Badge variant={SESSION_STATUS_COLORS[s.status as keyof typeof SESSION_STATUS_COLORS] || 'default'} dot>
-                          {SESSION_STATUS_LABELS[s.status as keyof typeof SESSION_STATUS_LABELS] || s.status}
-                        </Badge>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          {/* Sessions de formation du client — gérables (ouvrir / supprimer) */}
+          <ClientSessionsList sessions={sessionsList} canManage={['super_admin', 'gestionnaire', 'directeur_commercial'].includes(role)} />
 
           {/* Dossiers de formation */}
           <div className="card overflow-hidden">
