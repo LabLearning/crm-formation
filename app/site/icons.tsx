@@ -14,6 +14,7 @@ import {
   Target01Icon, CheckListIcon, TaskDone01Icon, AccessibilityIcon, Note04Icon,
   CallIcon, CalendarCheckIcon, MapPinIcon, ConnectIcon, Store03Icon,
   HeartHandshakeIcon, Award01Icon, BookOpen01Icon, ListViewIcon, BulbIcon,
+  ManagerIcon, CleaningBucketIcon, FirstAidKitIcon, GraduationScrollIcon,
 } from '@hugeicons/core-free-icons'
 
 type P = { className?: string; strokeWidth?: number }
@@ -72,7 +73,13 @@ export const Mail = make(Mail01Icon)
 export const PhoneCall = make(CallIcon)
 export const MapPin = make(MapPinIcon)
 
-// ── Métiers (cartes catégories) ──
+// ── Thématiques formation (cartes catégories) ──
+export const Management = make(ManagerIcon)
+export const Hygiene = make(CleaningBucketIcon)
+export const FirstAid = make(FirstAidKitIcon)
+export const Formation = make(GraduationScrollIcon)
+
+// ── Métiers de bouche (cartes catégories) ──
 export const ChefHat = make(ChefHatIcon)
 export const Beef = make(BeefIcon)
 export const Wheat = make(Bread02Icon)

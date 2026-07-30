@@ -1,4 +1,4 @@
-import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Sandwich, Wine, ShieldCheck } from './icons'
+import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Wine, Sandwich, Management, Hygiene, FirstAid, Formation } from './icons'
 
 export interface MetierStyle {
   Icon: any
@@ -12,11 +12,23 @@ export interface MetierStyle {
 const IMG = (k: string) => `/site/metiers/${k}.webp`
 
 /**
- * Identité visuelle par métier : une icône, un dégradé et une photo réelle,
- * qui servent d'« image » sur les cards. Aucun emoji.
+ * Identité visuelle par catégorie de formation : une icône, un dégradé et une
+ * photo réelle, qui servent d'« image » sur les cards. Aucun emoji.
+ * Couvre les thématiques réelles du catalogue (management, hygiène, secourisme,
+ * restauration…) puis les métiers de bouche, avec un repli « formation ».
  */
 export function metierStyle(nom: string): MetierStyle {
   const n = (nom || '').toLowerCase()
+
+  // ── Thématiques transverses ──
+  if (n.includes('managem') || n.includes('encadr') || n.includes('gestion') || n.includes('leader') || n.includes('rh') || n.includes('ressources humaines'))
+    return { Icon: Management, from: '#312E81', to: '#4F46E5', tint: '#EEF2FF', ink: '#4338CA', img: IMG('management') }
+  if (n.includes('hygièn') || n.includes('hygien') || n.includes('haccp') || n.includes('salubr') || n.includes('propreté') || n.includes('proprete') || n.includes('nettoyage'))
+    return { Icon: Hygiene, from: '#0E7490', to: '#06B6D4', tint: '#ECFEFF', ink: '#0E7490', img: IMG('hygiene') }
+  if (n.includes('secour') || n.includes('sst') || n.includes('sauveteur') || n.includes('incendie') || n.includes('sécurit') || n.includes('securit'))
+    return { Icon: FirstAid, from: '#9F1239', to: '#E11D48', tint: '#FFF1F2', ink: '#BE123C', img: IMG('secourisme') }
+
+  // ── Métiers de bouche ──
   if (n.includes('bouch'))
     return { Icon: Beef, from: '#7F1D1D', to: '#B91C1C', tint: '#FEF2F2', ink: '#B91C1C', img: IMG('boucherie') }
   if (n.includes('boulanger') || n.includes('pain'))
@@ -27,13 +39,13 @@ export function metierStyle(nom: string): MetierStyle {
     return { Icon: Cake, from: '#9D174D', to: '#DB2777', tint: '#FDF2F8', ink: '#BE185D', img: IMG('patisserie') }
   if (n.includes('rapid') || n.includes('snack') || n.includes('burger') || n.includes('fast'))
     return { Icon: Sandwich, from: '#9A3412', to: '#EA580C', tint: '#FFF7ED', ink: '#C2410C', img: IMG('rapide') }
-  if (n.includes('hcr') || n.includes('hôtel') || n.includes('hotel') || n.includes('café') || n.includes('cafe') || n.includes('bar'))
+  if (n.includes('hcr') || n.includes('hôtel') || n.includes('hotel') || n.includes('café') || n.includes('cafe') || n.includes('bar') || n.includes('service') || n.includes('salle'))
     return { Icon: Coffee, from: '#1E3A8A', to: '#4338CA', tint: '#EEF2FF', ink: '#4338CA', img: IMG('hcr') }
   if (n.includes('vin') || n.includes('sommel') || n.includes('boisson'))
     return { Icon: Wine, from: '#581C87', to: '#7C3AED', tint: '#FAF5FF', ink: '#7C3AED', img: IMG('hcr') }
   if (n.includes('cuisin') || n.includes('chef') || n.includes('restaur'))
     return { Icon: ChefHat, from: '#134E4A', to: '#0F766E', tint: '#F0FDFA', ink: '#0F766E', img: IMG('cuisine') }
-  if (n.includes('hygièn') || n.includes('hygien') || n.includes('haccp') || n.includes('sécur') || n.includes('secur'))
-    return { Icon: ShieldCheck, from: '#14532D', to: '#16A34A', tint: '#F0FDF4', ink: '#15803D', img: IMG('cuisine') }
-  return { Icon: UtensilsCrossed, from: '#195144', to: '#0F766E', tint: '#F0FDFA', ink: '#195144', img: IMG('cuisine') }
+
+  // ── Repli : formation générique ──
+  return { Icon: Formation, from: '#195144', to: '#0F766E', tint: '#F0FDFA', ink: '#195144', img: IMG('formation') }
 }
