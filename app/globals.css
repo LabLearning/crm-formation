@@ -182,3 +182,14 @@
     @apply text-sm font-heading font-semibold text-surface-900 tracking-tight;
   }
 }
+
+/* ── Site vitrine public (/site) — animations décoratives ── */
+@keyframes ll-float-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-28px) scale(1.08); } }
+@keyframes ll-float-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px,22px) scale(1.12); } }
+@keyframes ll-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.ll-orb-a { animation: ll-float-a 16s ease-in-out infinite; }
+.ll-orb-b { animation: ll-float-b 20s ease-in-out infinite; }
+.ll-rise { animation: ll-rise 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .ll-orb-a, .ll-orb-b, .ll-rise { animation: none !important; }
+}

@@ -1,24 +1,20 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Sandwich } from 'lucide-react'
+import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal } from 'lucide-react'
 import { getPublicSiteData } from '@/lib/public-site-data'
 import { CountUp } from './CountUp'
+import { MetierVisual } from './MetierVisual'
+import { metierStyle } from './metier'
 
 export const dynamic = 'force-dynamic'
 
 const fmt = (n: number) => n.toLocaleString('fr-FR')
 
-/** Icône métier selon la catégorie (aucun Sparkles — réservé à l'IA). */
-function iconFor(nom: string) {
-  const n = nom.toLowerCase()
-  if (n.includes('bouch')) return Beef
-  if (n.includes('boulanger')) return Wheat
-  if (n.includes('viennois') || n.includes('croissant')) return Croissant
-  if (n.includes('patiss') || n.includes('pâtiss') || n.includes('dessert')) return Cake
-  if (n.includes('rapid') || n.includes('snack') || n.includes('burger')) return Sandwich
-  if (n.includes('hcr') || n.includes('hôtel') || n.includes('hotel') || n.includes('café') || n.includes('cafe')) return Coffee
-  if (n.includes('cuisin') || n.includes('chef')) return ChefHat
-  return UtensilsCrossed
-}
+const POURQUOI = [
+  { Icon: UserCheck, t: 'Des formateurs de terrain', d: 'Des praticiens du métier qui transmettent le geste réel, pas de la théorie hors-sol.' },
+  { Icon: Banknote, t: 'Financement clé en main', d: 'On monte votre dossier OPCO / France Travail de A à Z. Vous formez, on gère l’administratif.' },
+  { Icon: ShieldCheck, t: 'Qualité certifiée Qualiopi', d: 'Des parcours évalués et tracés, du positionnement à l’attestation.' },
+  { Icon: SlidersHorizontal, t: 'Sur-mesure', d: 'Programmes adaptés à votre établissement, vos équipes et vos contraintes d’exploitation.' },
+]
 
 export default async function SiteHome() {
   const { stats, categories, franchises } = await getPublicSiteData()
@@ -30,36 +26,59 @@ export default async function SiteHome() {
     { t: 'Attestation', d: 'Attestation de fin de formation et suivi de la satisfaction à froid (Qualiopi).' },
   ]
 
+  const heroTiles = categories.slice(0, 4)
+
   return (
     <>
       {/* ── HERO ── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10" style={{ background: 'radial-gradient(1200px 600px at 15% -10%, rgba(25,81,68,0.14), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.12), transparent 55%)' }} />
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-20 md:pt-28 pb-16 md:pb-24">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-6">
-            <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
+        <div className="absolute inset-0 -z-10" style={{ background: 'radial-gradient(1200px 600px at 15% -10%, rgba(25,81,68,0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.10), transparent 55%)' }} />
+        <div className="ll-orb-a absolute -z-10 -top-24 -left-16 h-72 w-72 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(25,81,68,0.28), transparent 65%)' }} />
+        <div className="ll-orb-b absolute -z-10 top-10 right-0 h-80 w-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.22), transparent 65%)' }} />
+
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-16 md:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          <div className="ll-rise">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-6">
+              <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
+            </div>
+            <h1 className="font-heading font-black tracking-heading text-[#14110F] text-4xl sm:text-5xl md:text-[58px] leading-[1.03] text-balance">
+              Former les métiers de bouche avec l'exigence du{' '}
+              <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
+            </h1>
+            <p className="mt-6 text-lg text-[#57534E] max-w-xl leading-relaxed">
+              Restauration, boucherie, boulangerie, pâtisserie, hôtellerie — nous formons vos équipes avec des programmes
+              concrets, des formateurs de terrain et un accompagnement du financement à l'attestation.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
+                Découvrir nos formations <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#195144]/25 text-[#195144] text-sm font-semibold hover:bg-[#195144]/5 transition-colors">
+                Parler à un conseiller
+              </Link>
+            </div>
           </div>
-          <h1 className="font-heading font-black tracking-heading text-[#14110F] text-4xl sm:text-5xl md:text-[64px] leading-[1.02] max-w-4xl text-balance">
-            Former les métiers de bouche avec l'exigence du{' '}
-            <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
-          </h1>
-          <p className="mt-6 text-lg text-[#57534E] max-w-2xl leading-relaxed">
-            Restauration, boucherie, boulangerie, pâtisserie, hôtellerie — nous formons vos équipes avec des programmes
-            concrets, des formateurs de terrain et un accompagnement du financement à l'attestation.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
-              Découvrir nos formations <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#195144]/25 text-[#195144] text-sm font-semibold hover:bg-[#195144]/5 transition-colors">
-              Parler à un conseiller
-            </Link>
-          </div>
+
+          {/* Collage métier (données live) */}
+          {heroTiles.length >= 2 && (
+            <div className="ll-rise grid grid-cols-2 gap-3 sm:gap-4" style={{ animationDelay: '0.12s' }}>
+              {heroTiles.map((c, i) => (
+                <Link key={c.nom} href="/site/formations"
+                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ${i % 2 === 1 ? 'translate-y-5' : ''}`}>
+                  <MetierVisual nom={c.nom} label={c.nom} height="h-40 sm:h-48" />
+                  <div className="bg-white px-4 py-3 flex items-center justify-between">
+                    <span className="text-xs text-[#78716C]">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</span>
+                    <ArrowRight className="h-4 w-4 text-[#195144] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* ── STATS (live) ── */}
-      <section className="border-y border-[#195144]/10 bg-white/50">
+      <section className="border-y border-[#195144]/10 bg-white/60">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
@@ -76,39 +95,61 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── DOMAINES (catégories live) ── */}
+      {/* ── DOMAINES (catégories live, cards visuelles) ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
         <div className="max-w-2xl">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Nos domaines</div>
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Des formations pour chaque métier</h2>
           <p className="mt-3 text-[#57534E]">Un catalogue vivant, mis à jour en continu. {fmt(stats.formations)} programmes couvrant l'ensemble de la filière.</p>
         </div>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {categories.slice(0, 9).map((c) => {
-            const Icon = iconFor(c.nom)
+            const s = metierStyle(c.nom)
             return (
-            <Link key={c.nom} href="/site/formations" className="group rounded-2xl border border-[#195144]/10 bg-white p-5 hover:border-[#195144]/30 hover:shadow-sm transition-all">
-              <div className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4">
-                <Icon className="h-5 w-5 text-[#195144]" />
+              <Link key={c.nom} href="/site/formations" className="group rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md transition-all">
+                <MetierVisual nom={c.nom} height="h-28" />
+                <div className="p-5">
+                  <div className="font-heading font-semibold text-lg text-[#14110F] leading-snug">{c.nom}</div>
+                  <div className="text-sm text-[#78716C] mt-1">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</div>
+                  <div className="mt-4 inline-flex items-center gap-1 text-sm font-semibold group-hover:gap-2 transition-all" style={{ color: s.ink }}>
+                    Explorer <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ── POURQUOI NOUS ── */}
+      <section className="bg-white/60 border-y border-[#195144]/10">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+          <div className="max-w-2xl">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Pourquoi Lab Learning</div>
+            <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Un partenaire formation, pas juste un catalogue</h2>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {POURQUOI.map((p) => (
+              <div key={p.t} className="rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-sm transition-shadow">
+                <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4"><p.Icon className="h-5 w-5 text-[#195144]" /></span>
+                <div className="font-heading font-semibold text-[#14110F]">{p.t}</div>
+                <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{p.d}</p>
               </div>
-              <div className="font-heading font-semibold text-[#14110F]">{c.nom}</div>
-              <div className="text-sm text-[#78716C] mt-1">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</div>
-              <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#195144] opacity-0 group-hover:opacity-100 transition-opacity">
-                Explorer <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </Link>
-          )})}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ── PARCOURS ── */}
-      <section className="bg-[#195144] text-white">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+      <section className="bg-[#195144] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24 relative">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#8ec9b8] mb-2">Notre approche</div>
           <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-heading max-w-2xl text-balance">Un parcours structuré, de l'entrée à l'attestation</h2>
           <div className="mt-12 grid gap-8 md:grid-cols-4">
             {parcours.map((p, i) => (
-              <div key={p.t}>
+              <div key={p.t} className="relative">
+                {i < parcours.length - 1 && <div className="hidden md:block absolute top-7 left-16 right-0 h-px bg-white/15" />}
                 <div className="font-heading font-black text-5xl text-white/15 tabular-nums">{String(i + 1).padStart(2, '0')}</div>
                 <div className="font-heading font-semibold text-lg mt-2">{p.t}</div>
                 <p className="text-sm text-white/70 mt-1.5 leading-relaxed">{p.d}</p>
@@ -125,12 +166,12 @@ export default async function SiteHome() {
             <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Ils nous font confiance</div>
             <h2 className="font-heading font-bold text-2xl md:text-3xl text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
           </div>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-8">
+          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {franchises.slice(0, 8).map((f) => (
-              <div key={f.nom} className="flex flex-col items-center gap-2">
+              <div key={f.nom} className="rounded-2xl border border-[#195144]/10 bg-white p-5 flex flex-col items-center justify-center gap-2 h-28 hover:shadow-sm transition-shadow">
                 {f.logo_url
-                  ? <img src={f.logo_url} alt={f.nom} className="h-12 w-auto max-w-[140px] object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-                  : <span className="font-heading font-semibold text-[#57534E]">{f.nom}</span>}
+                  ? <img src={f.logo_url} alt={f.nom} className="h-11 w-auto max-w-[130px] object-contain grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all" />
+                  : <span className="font-heading font-semibold text-[#57534E] text-center text-sm">{f.nom}</span>}
                 {f.nombre_etablissements ? <span className="text-[11px] text-[#A8A29E]">{f.nombre_etablissements} établissements</span> : null}
               </div>
             ))}
