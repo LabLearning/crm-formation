@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   FileSignature, Send, Download, Eye, Loader2, Check, Copy, Clock,
-  CheckCircle2, AlertCircle, Mail, FileText,
+  CheckCircle2, AlertCircle, Mail, FileText, XCircle,
 } from 'lucide-react'
 import { Button, Modal, useToast } from '@/components/ui'
 import { sendConventionForSignatureAction, sendContratToFormateurAction } from './actions'
@@ -117,6 +117,19 @@ export function SessionDocuments(props: Props) {
     })
   }
 
+  function doCancelConvention() {
+    if (!convention) return
+    if (!confirm('Annuler la demande de signature ? Le lien envoyé au client sera invalidé et la convention repassera en brouillon (vous pourrez la renvoyer avec les dates à jour).')) return
+    setBusy('conv')
+    startTransition(async () => {
+      const { cancelSignatureRequestAction } = await import('@/app/dashboard/conventions/signature-actions')
+      const r = await cancelSignatureRequestAction(convention.id)
+      setBusy(null); setSignUrl(null)
+      if (r.success) { toast('success', 'Demande de signature annulée'); router.refresh() }
+      else toast('error', r.error || 'Erreur')
+    })
+  }
+
   function doSendContrat() {
     setBusy('contrat')
     startTransition(async () => {
@@ -148,12 +161,13 @@ export function SessionDocuments(props: Props) {
 
   // ── Ligne document ──
   function DocRow({
-    icon, titre, sousTitre, etat, date, onPreview, onSend, sendLabel, downloadUrl, disabled, disabledReason, busyKey,
+    icon, titre, sousTitre, etat, date, onPreview, onSend, sendLabel, downloadUrl, disabled, disabledReason, busyKey, onCancel,
   }: {
     icon: React.ReactNode; titre: string; sousTitre: string
     etat: 'absent' | 'attente' | 'partiel' | 'signe'; date?: string | null
     onPreview: () => void; onSend: () => void; sendLabel: string
     downloadUrl: string | null; disabled?: boolean; disabledReason?: string; busyKey: 'conv' | 'contrat'
+    onCancel?: () => void
   }) {
     return (
       <div className="flex flex-wrap items-center gap-3 px-4 py-3.5">
@@ -178,6 +192,16 @@ export function SessionDocuments(props: Props) {
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-surface-200 text-xs font-medium text-surface-700 hover:bg-surface-50">
               <Download className="h-3.5 w-3.5" /> {etat === 'signe' ? 'Signé' : 'PDF'}
             </a>
+          )}
+          {onCancel && etat === 'attente' && (
+            <button
+              onClick={onCancel}
+              disabled={pending}
+              title="Annuler la demande de signature (invalide le lien)"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-danger-200 text-danger-600 text-xs font-medium hover:bg-danger-50 disabled:opacity-40"
+            >
+              <XCircle className="h-3.5 w-3.5" /> Annuler
+            </button>
           )}
           {etat !== 'signe' && (
             <button
@@ -210,6 +234,7 @@ export function SessionDocuments(props: Props) {
           etat={convEtat} date={convDate}
           onPreview={() => openPreview('conv')}
           onSend={doSendConvention}
+          onCancel={doCancelConvention}
           sendLabel="Envoyer en signature"
           downloadUrl={convention ? `/api/pdf/convention/${convention.id}` : null}
           disabled={!hasClient} disabledReason="Aucun client entreprise rattaché à la session"
