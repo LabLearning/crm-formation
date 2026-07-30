@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal } from 'lucide-react'
+import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Target, ClipboardCheck, Briefcase, ChefHat, Award } from 'lucide-react'
 import { getPublicSiteData } from '@/lib/public-site-data'
 import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
 import { metierStyle } from './metier'
+import { StoryChapter } from './StoryChapter'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,11 +20,37 @@ const POURQUOI = [
 export default async function SiteHome() {
   const { stats, categories, franchises } = await getPublicSiteData()
 
-  const parcours = [
-    { t: 'Positionnement', d: 'Évaluation du niveau et des attentes de chaque apprenant avant l\'entrée en formation.' },
-    { t: 'Formation', d: 'Sessions animées par des formateurs experts, en présentiel ou à distance, centrées sur le geste.' },
-    { t: 'Évaluation', d: 'Questionnaires de validation des acquis à chaud, mesure de la progression entrée/sortie.' },
-    { t: 'Attestation', d: 'Attestation de fin de formation et suivi de la satisfaction à froid (Qualiopi).' },
+  const chapitres = [
+    {
+      index: 1, eyebrow: 'Analyse', title: 'On cerne le besoin, avant tout',
+      desc: 'Chaque parcours démarre par un diagnostic : niveau, attentes, objectifs. On construit un programme qui colle à votre métier, pas un catalogue générique.',
+      bullets: ['Audit du niveau et des attentes', 'Objectifs pédagogiques cadrés Qualiopi', 'Programme adapté à votre établissement'],
+      Icon: Target, from: '#134E4A', to: '#0F766E',
+      chips: [{ Icon: Target, label: 'Positionnement à l’entrée' }, { Icon: ClipboardCheck, label: 'Cadrage Qualiopi' }],
+    },
+    {
+      index: 2, eyebrow: 'Financement', title: 'On monte le financement à votre place',
+      desc: 'OPCO, France Travail, plan de développement des compétences : on prépare le dossier de A à Z. Vous formez vos équipes, on gère toute l’administration.',
+      bullets: ['Dossier OPCO / France Travail clé en main', 'Devis et convention conformes', 'Zéro paperasse de votre côté'],
+      Icon: Banknote, from: '#1E3A8A', to: '#4338CA',
+      chips: [{ Icon: Building2, label: 'OPCO' }, { Icon: Briefcase, label: 'France Travail' }],
+      href: '/site/financements', cta: 'Voir les financements', flip: true,
+    },
+    {
+      index: 3, eyebrow: 'Formation', title: 'On forme sur le terrain, sur le geste',
+      desc: 'Des formateurs praticiens interviennent dans vos murs ou à distance. On transmet le geste réel du métier, au rythme de vos équipes et de votre exploitation.',
+      bullets: ['Formateurs praticiens du métier', 'Présentiel dans vos murs ou à distance', 'Centré sur la pratique, pas la théorie'],
+      Icon: ChefHat, from: '#92400E', to: '#D97706',
+      chips: [{ Icon: Users, label: `${fmt(stats.formateurs)} formateurs` }, { Icon: CheckCircle2, label: `${fmt(stats.sessionsRealisees)} sessions réalisées` }],
+    },
+    {
+      index: 4, eyebrow: 'Certification', title: 'On certifie et on prouve les acquis',
+      desc: 'Évaluation entrée/sortie, attestation de fin de formation, mesure de la satisfaction à froid : la progression est tracée et conforme aux exigences Qualiopi.',
+      bullets: ['Évaluation des acquis entrée / sortie', 'Attestation de fin de formation', 'Suivi de satisfaction à froid'],
+      Icon: Award, from: '#14532D', to: '#16A34A',
+      chips: [{ Icon: GraduationCap, label: `${fmt(stats.apprenants)} apprenants formés` }, { Icon: ShieldCheck, label: 'Certifié Qualiopi' }],
+      flip: true,
+    },
   ]
 
   const heroTiles = categories.slice(0, 4)
@@ -140,22 +167,15 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── PARCOURS ── */}
-      <section className="bg-[#195144] text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24 relative">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[#8ec9b8] mb-2">Notre approche</div>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-heading max-w-2xl text-balance">Un parcours structuré, de l'entrée à l'attestation</h2>
-          <div className="mt-12 grid gap-8 md:grid-cols-4">
-            {parcours.map((p, i) => (
-              <div key={p.t} className="relative">
-                {i < parcours.length - 1 && <div className="hidden md:block absolute top-7 left-16 right-0 h-px bg-white/15" />}
-                <div className="font-heading font-black text-5xl text-white/15 tabular-nums">{String(i + 1).padStart(2, '0')}</div>
-                <div className="font-heading font-semibold text-lg mt-2">{p.t}</div>
-                <p className="text-sm text-white/70 mt-1.5 leading-relaxed">{p.d}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── STORYTELLING CHAPITRÉ ── */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+        <div className="max-w-2xl">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Comment ça se passe</div>
+          <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Du premier échange à l'attestation, on gère tout</h2>
+          <p className="mt-3 text-[#57534E]">Un accompagnement de bout en bout, en quatre temps.</p>
+        </div>
+        <div className="mt-14 space-y-16 md:space-y-24">
+          {chapitres.map((c) => <StoryChapter key={c.index} {...(c as any)} />)}
         </div>
       </section>
 
