@@ -123,6 +123,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     })
   }
 
+  function cancelSignature(convId: string) {
+    if (!confirm('Annuler la demande de signature ? Le lien envoyé au client sera invalidé et la convention repassera en brouillon (vous pourrez la renvoyer avec les infos à jour).')) return
+    startTransition(async () => {
+      const { cancelSignatureRequestAction } = await import('@/app/dashboard/conventions/signature-actions')
+      const r = await cancelSignatureRequestAction(convId)
+      if (r.success) { toast('success', 'Demande de signature annulée'); router.refresh() }
+      else toast('error', r.error || 'Erreur')
+    })
+  }
+
   // QCM propres à la/aux formation(s) de cette session, pas encore rattachés :
   // ce sont les questionnaires d'évaluation liés — on les met en avant.
   const sessionFormationSet = new Set<string>([session.formation_id, ...(sessionFormationIds || [])].filter(Boolean))
@@ -1214,6 +1224,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     <Badge variant={CONVENTION_STATUS[c.status]?.variant || 'default'}>
                       {CONVENTION_STATUS[c.status]?.label || c.status}
                     </Badge>
+                    {c.signature_token && !c.signature_client_date && (
+                      <button onClick={() => cancelSignature(c.id)} disabled={isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-50 text-danger-600 text-xs font-medium hover:bg-danger-100 disabled:opacity-50 transition-colors shrink-0">
+                        <XCircle className="h-3.5 w-3.5" /> Annuler la signature
+                      </button>
+                    )}
                     <a href={`/api/pdf/convention/${c.id}`} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-50 text-surface-600 text-xs font-medium hover:bg-surface-100 transition-colors shrink-0">
                       <Download className="h-3.5 w-3.5" /> PDF

@@ -72,6 +72,48 @@ export async function generateSignatureLinkAction(conventionId: string): Promise
   return { success: true, data: { url: `${appUrl}/convention/${token}/signer` } }
 }
 
+/**
+ * Annule une demande de signature en cours : invalide le lien (token) et
+ * remet la convention en brouillon. Refuse si déjà signée. Réinitialise le
+ * snapshot des participants pour qu'un nouvel envoi reparte des données à jour.
+ */
+export async function cancelSignatureRequestAction(conventionId: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: conv } = await supabase
+    .from('conventions')
+    .select('id, status, signature_client_date')
+    .eq('id', conventionId)
+    .eq('organization_id', session.organization.id)
+    .single()
+  if (!conv) return { success: false, error: 'Convention introuvable' }
+  if (conv.signature_client_date || ['signee_client', 'signee_complete'].includes(conv.status)) {
+    return { success: false, error: 'Cette convention est déjà signée — annulation impossible.' }
+  }
+
+  const { error } = await supabase
+    .from('conventions')
+    .update({
+      signature_token: null,
+      signature_token_expires_at: null,
+      sent_at: null,
+      participants_snapshot: null,
+      status: 'brouillon',
+    })
+    .eq('id', conventionId)
+    .eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: "Impossible d'annuler la demande" }
+
+  await logAudit({ action: 'cancel_signature_request', entity_type: 'convention', entity_id: conventionId })
+  revalidatePath('/dashboard/conventions')
+  revalidatePath(`/dashboard/conventions/${conventionId}`)
+  return { success: true }
+}
+
 /** Action publique : enregistre la signature client (depuis la page /convention/[token]/signer) */
 export async function signConventionPublicAction(
   token: string,

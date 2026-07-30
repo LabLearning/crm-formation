@@ -319,6 +319,21 @@ export async function sendConventionForSignatureAction(
     convId = created.id
   }
 
+  // Re-synchronise le snapshot dates/lieu depuis la session courante avant
+  // (re)génération du lien : sinon un changement de dates de session n'était pas
+  // repris dans la convention envoyée en signature. On ne touche pas une
+  // convention déjà signée.
+  {
+    const { data: conv } = await supabase
+      .from('conventions').select('status, signature_client_date').eq('id', convId).single()
+    if (conv && !conv.signature_client_date && conv.status !== 'signee') {
+      await supabase.from('conventions').update({
+        dates_formation: `Du ${fmtFr(sess.date_debut)} au ${fmtFr(sess.date_fin)}`,
+        lieu: sess.lieu || null,
+      }).eq('id', convId).eq('organization_id', session.organization.id)
+    }
+  }
+
   // Lien de signature
   const { generateSignatureLinkAction } = await import('@/app/dashboard/conventions/signature-actions')
   const link = await generateSignatureLinkAction(convId)
