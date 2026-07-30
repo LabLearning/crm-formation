@@ -98,7 +98,7 @@ export default async function SiteHome() {
       </section>
 
       {/* ── STATS (live) ── */}
-      <section className="border-y border-[#195144]/10 bg-white/60">
+      <section className="border-y border-[#195144]/10 bg-[#FAFAFA]">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
@@ -142,7 +142,7 @@ export default async function SiteHome() {
       </section>
 
       {/* ── POURQUOI NOUS ── */}
-      <section className="bg-white/60 border-y border-[#195144]/10">
+      <section className="bg-[#FAFAFA] border-y border-[#195144]/10">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
           <div className="max-w-2xl">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Pourquoi Lab Learning</div>

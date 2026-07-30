@@ -20,7 +20,7 @@ export function SiteNav() {
   const isActive = (h: string) => h === '/site' ? pathname === '/site' : pathname.startsWith(h)
 
   return (
-    <header className="sticky top-0 z-50 bg-[#F6F4EF]/85 backdrop-blur-md border-b border-[#195144]/10">
+    <header className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-[#195144]/10">
       <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         <Link href="/site" className="flex items-center gap-2.5 group">
           <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-8 w-auto" />
@@ -44,7 +44,7 @@ export function SiteNav() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-[#195144]/10 bg-[#F6F4EF]">
+        <div className="lg:hidden border-t border-[#195144]/10 bg-white">
           <nav className="max-w-6xl mx-auto px-5 py-3 flex flex-col">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
