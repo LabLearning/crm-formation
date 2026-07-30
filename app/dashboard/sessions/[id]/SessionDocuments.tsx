@@ -72,6 +72,7 @@ export function SessionDocuments(props: Props) {
   const [preview, setPreview] = useState<'conv' | 'contrat' | null>(null)
   const [signUrl, setSignUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
   // Contrôle de conformité de la convention (mentions obligatoires)
   const [check, setCheck] = useState<{ ok: boolean; blocking: { section: string; label: string }[] } | null>(null)
   const [checking, setChecking] = useState(false)
@@ -117,14 +118,13 @@ export function SessionDocuments(props: Props) {
     })
   }
 
-  function doCancelConvention() {
+  function performCancelConvention() {
     if (!convention) return
-    if (!confirm('Annuler la demande de signature ? Le lien envoyé au client sera invalidé et la convention repassera en brouillon (vous pourrez la renvoyer avec les dates à jour).')) return
     setBusy('conv')
     startTransition(async () => {
       const { cancelSignatureRequestAction } = await import('@/app/dashboard/conventions/signature-actions')
       const r = await cancelSignatureRequestAction(convention.id)
-      setBusy(null); setSignUrl(null)
+      setBusy(null); setSignUrl(null); setConfirmCancelOpen(false)
       if (r.success) { toast('success', 'Demande de signature annulée'); router.refresh() }
       else toast('error', r.error || 'Erreur')
     })
@@ -234,7 +234,7 @@ export function SessionDocuments(props: Props) {
           etat={convEtat} date={convDate}
           onPreview={() => openPreview('conv')}
           onSend={doSendConvention}
-          onCancel={doCancelConvention}
+          onCancel={() => setConfirmCancelOpen(true)}
           sendLabel="Envoyer en signature"
           downloadUrl={convention ? `/api/pdf/convention/${convention.id}` : null}
           disabled={!hasClient} disabledReason="Aucun client entreprise rattaché à la session"
@@ -366,6 +366,22 @@ export function SessionDocuments(props: Props) {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Confirmation d'annulation de la demande de signature */}
+      <Modal isOpen={confirmCancelOpen} onClose={() => setConfirmCancelOpen(false)} title="Annuler la demande de signature ?" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-surface-600">
+            Le lien envoyé au client sera <strong>invalidé</strong> et la convention repassera en <strong>brouillon</strong>.
+            Vous pourrez la renvoyer avec les dates à jour.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setConfirmCancelOpen(false)}>Retour</Button>
+            <Button onClick={performCancelConvention} isLoading={busy === 'conv'} className="!bg-danger-600 hover:!bg-danger-700" icon={<XCircle className="h-4 w-4" />}>
+              Annuler la demande
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )
