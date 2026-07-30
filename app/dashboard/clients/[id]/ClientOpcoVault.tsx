@@ -20,7 +20,6 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
   // édition
   const [form, setForm] = useState<Secret>({})
   const [protectPw, setProtectPw] = useState('')
-  const [hintVal, setHintVal] = useState(hint || '')
 
   function copy(v: string, k: string) {
     navigator.clipboard.writeText(v); setCopied(k); setTimeout(() => setCopied(null), 1500)
@@ -38,7 +37,7 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
   function save() {
     if (!protectPw) { toast('error', 'Choisissez un mot de passe de protection'); return }
     start(async () => {
-      const r = await saveClientOpcoSecretAction(clientId, form, protectPw, hintVal)
+      const r = await saveClientOpcoSecretAction(clientId, form, protectPw)
       if (r.success) { toast('success', 'Compte OPCO chiffré et enregistré'); setForm({}); setProtectPw(''); setRevealed(null); setMode('locked'); router.refresh() }
       else toast('error', r.error || 'Erreur')
     })
@@ -74,7 +73,7 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <Lock className="h-4 w-4 text-amber-600" />
-          <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Compte OPCO (chiffré)</span>
+          <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Données chiffrées</span>
         </div>
         {hasSecret && mode !== 'edit' && (
           <span className="text-[11px] text-emerald-600 font-medium inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Protégé par mot de passe</span>
@@ -84,8 +83,7 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
       {/* Verrouillé : demander le mot de passe pour consulter */}
       {mode === 'locked' && (
         <div className="space-y-3">
-          <p className="text-xs text-surface-500">Identifiants d'accès au portail OPCO, chiffrés. Saisissez le mot de passe pour les consulter.</p>
-          {hint && <p className="text-[11px] text-surface-400">Indice : {hint}</p>}
+          <p className="text-xs text-surface-500">Données sensibles chiffrées. Saisissez le mot de passe pour les consulter.</p>
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Input id="opco-pw" type="password" label="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)}
@@ -122,7 +120,7 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
           {revealed.url && (
             <a href={/^https?:\/\//.test(revealed.url) ? revealed.url : `https://${revealed.url}`} target="_blank" rel="noreferrer"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-brand-600 hover:underline">
-              <ExternalLink className="h-3.5 w-3.5" /> Ouvrir le portail OPCO
+              <ExternalLink className="h-3.5 w-3.5" /> Ouvrir le lien
             </a>
           )}
           <div className="flex items-center gap-3 pt-3">
@@ -136,16 +134,13 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
       {/* Édition / première saisie */}
       {mode === 'edit' && (
         <div className="space-y-3">
-          <Input id="opco-id" label="Identifiant" value={form.identifiant || ''} onChange={(e) => setForm({ ...form, identifiant: e.target.value })} placeholder="login du compte OPCO" />
-          <Input id="opco-mdp" label="Mot de passe du compte OPCO" value={form.mot_de_passe || ''} onChange={(e) => setForm({ ...form, mot_de_passe: e.target.value })} placeholder="mot de passe du portail" />
-          <Input id="opco-url" label="URL du portail (optionnel)" value={form.url || ''} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" />
+          <Input id="opco-id" label="Identifiant" value={form.identifiant || ''} onChange={(e) => setForm({ ...form, identifiant: e.target.value })} placeholder="Identifiant" />
+          <Input id="opco-mdp" label="Mot de passe" value={form.mot_de_passe || ''} onChange={(e) => setForm({ ...form, mot_de_passe: e.target.value })} placeholder="Mot de passe" />
+          <Input id="opco-url" label="URL / lien (optionnel)" value={form.url || ''} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" />
           <Input id="opco-notes" label="Notes (optionnel)" value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           <div className="pt-2 border-t border-amber-100 space-y-3">
             <p className="text-[11px] text-surface-500">Ces données sont <strong>chiffrées</strong>. Choisissez un mot de passe de protection — il sera demandé pour les consulter. Il n'est <strong>pas récupérable</strong> : notez-le bien.</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Input id="opco-protect" type="password" label="Mot de passe de protection *" value={protectPw} onChange={(e) => setProtectPw(e.target.value)} />
-              <Input id="opco-hint" label="Indice (optionnel)" value={hintVal} onChange={(e) => setHintVal(e.target.value)} placeholder="ex : mot de passe habituel" />
-            </div>
+            <Input id="opco-protect" type="password" label="Mot de passe de protection *" value={protectPw} onChange={(e) => setProtectPw(e.target.value)} />
             <div className="flex justify-end gap-3">
               {hasSecret && <Button size="sm" variant="secondary" onClick={() => setMode('locked')}>Annuler</Button>}
               <Button size="sm" onClick={save} isLoading={pending} icon={<Save className="h-4 w-4" />}>Chiffrer et enregistrer</Button>
