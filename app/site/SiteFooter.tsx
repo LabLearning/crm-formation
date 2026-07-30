@@ -6,11 +6,8 @@ export function SiteFooter() {
     <footer className="bg-[#14110F] text-[#E7E5E4]">
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="h-8 w-8 rounded-xl bg-[#195144] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>
-            </span>
-            <span className="font-heading font-bold text-white">Lab Learning</span>
+          <div className="mb-3">
+            <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-9 w-auto brightness-0 invert opacity-90" />
           </div>
           <p className="text-sm text-[#A8A29E] max-w-sm leading-relaxed">
             Organisme de formation professionnelle certifié Qualiopi, spécialiste des métiers de bouche
@@ -25,7 +22,9 @@ export function SiteFooter() {
           <ul className="space-y-2 text-sm">
             <li><Link href="/site" className="text-[#D6D3D1] hover:text-white">Accueil</Link></li>
             <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white">Nos formations</Link></li>
+            <li><Link href="/site/financements" className="text-[#D6D3D1] hover:text-white">Financements</Link></li>
             <li><Link href="/site/equipe" className="text-[#D6D3D1] hover:text-white">Notre équipe</Link></li>
+            <li><Link href="/site/a-propos" className="text-[#D6D3D1] hover:text-white">À propos</Link></li>
             <li><Link href="/site/contact" className="text-[#D6D3D1] hover:text-white">Contact</Link></li>
           </ul>
         </div>

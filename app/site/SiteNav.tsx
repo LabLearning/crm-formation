@@ -8,7 +8,9 @@ import { Menu, X } from 'lucide-react'
 const LINKS = [
   { href: '/site', label: 'Accueil' },
   { href: '/site/formations', label: 'Nos formations' },
+  { href: '/site/financements', label: 'Financements' },
   { href: '/site/equipe', label: 'Notre équipe' },
+  { href: '/site/a-propos', label: 'À propos' },
   { href: '/site/contact', label: 'Contact' },
 ]
 
@@ -21,10 +23,7 @@ export function SiteNav() {
     <header className="sticky top-0 z-50 bg-[#F6F4EF]/85 backdrop-blur-md border-b border-[#195144]/10">
       <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         <Link href="/site" className="flex items-center gap-2.5 group">
-          <span className="h-8 w-8 rounded-xl bg-[#195144] flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>
-          </span>
-          <span className="font-heading font-bold tracking-heading text-[#14110F] text-[15px]">Lab Learning</span>
+          <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-8 w-auto" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

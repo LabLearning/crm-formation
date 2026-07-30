@@ -29,8 +29,8 @@ export default async function SiteFormations() {
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {cat.formations.map((f) => (
-                <div key={f.id} className="rounded-2xl border border-[#195144]/10 bg-white p-5 flex flex-col hover:border-[#195144]/30 hover:shadow-sm transition-all">
-                  <div className="font-heading font-semibold text-[#14110F] leading-snug">{f.intitule}</div>
+                <Link key={f.id} href={`/site/formations/${f.id}`} className="group rounded-2xl border border-[#195144]/10 bg-white p-5 flex flex-col hover:border-[#195144]/30 hover:shadow-sm transition-all">
+                  <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
                   <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
                     {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
                     {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
@@ -44,10 +44,10 @@ export default async function SiteFormations() {
                       ))}
                     </ul>
                   )}
-                  <Link href="/site/contact" className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
-                    Demander cette formation <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
+                    Voir le programme <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </Link>
               ))}
             </div>
           </section>

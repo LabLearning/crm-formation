@@ -82,6 +82,39 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
   }
 }
 
+export interface PublicFormationDetail extends PublicFormation {
+  sous_titre: string | null
+  public_vise: string | null
+  prerequis: string | null
+  programme_detaille: string | null
+  methodes_pedagogiques: string | null
+  modalites_evaluation: string | null
+  accessibilite_handicap: string | null
+  competences_visees: string[]
+  duree_jours: number | null
+}
+
+/** Détail public d'une formation (par id). */
+export async function getPublicFormation(id: string): Promise<PublicFormationDetail | null> {
+  const supabase = await createServiceRoleClient()
+  const { data: f } = await supabase.from('formations')
+    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap')
+    .eq('id', id).eq('organization_id', ORG).eq('is_active', true).maybeSingle()
+  if (!f) return null
+  return {
+    id: (f as any).id, intitule: (f as any).intitule, sous_titre: (f as any).sous_titre || null,
+    categorie: (f as any).categorie || null, duree_heures: (f as any).duree_heures || null,
+    duree_jours: (f as any).duree_jours || null, modalite: (f as any).modalite || null,
+    objectifs: Array.isArray((f as any).objectifs_pedagogiques) ? (f as any).objectifs_pedagogiques : [],
+    competences_visees: Array.isArray((f as any).competences_visees) ? (f as any).competences_visees : [],
+    public_vise: (f as any).public_vise || null, prerequis: (f as any).prerequis || null,
+    programme_detaille: (f as any).programme_detaille || null,
+    methodes_pedagogiques: (f as any).methodes_pedagogiques || null,
+    modalites_evaluation: (f as any).modalites_evaluation || null,
+    accessibilite_handicap: (f as any).accessibilite_handicap || null,
+  }
+}
+
 export interface PublicFormateur {
   id: string
   prenom: string

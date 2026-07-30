@@ -1,0 +1,92 @@
+import Link from 'next/link'
+import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap } from 'lucide-react'
+
+export const metadata = { title: 'Financements — Lab Learning' }
+
+const DISPOSITIFS = [
+  {
+    Icon: Building2,
+    t: 'OPCO',
+    d: "Les Opérateurs de Compétences financent tout ou partie de la formation de vos salariés au titre du plan de développement des compétences ou de dispositifs dédiés à votre branche.",
+    tag: 'Salariés',
+  },
+  {
+    Icon: Briefcase,
+    t: 'France Travail',
+    d: "Pour les demandeurs d’emploi, des dispositifs comme l’AIF ou les préparations opérationnelles permettent de financer une montée en compétence vers un poste.",
+    tag: 'Demandeurs d’emploi',
+  },
+  {
+    Icon: TrendingUp,
+    t: 'Plan de développement des compétences',
+    d: "L’employeur mobilise son budget formation pour faire monter ses équipes en compétence — un levier de fidélisation et de performance en cuisine comme en salle.",
+    tag: 'Employeurs',
+  },
+]
+
+const ETAPES = [
+  { Icon: PhoneCall, t: 'On échange sur votre besoin', d: 'Un premier point pour cadrer les objectifs, le public et le calendrier.' },
+  { Icon: FileCheck2, t: 'On monte le dossier', d: 'Programme, devis et convention conformes Qualiopi, prêts pour votre financeur.' },
+  { Icon: CalendarCheck, t: 'On planifie la session', d: 'Dates, formateur et logistique calés avec vos contraintes d’exploitation.' },
+  { Icon: GraduationCap, t: 'On forme et on certifie', d: 'Évaluation des acquis et attestation en fin de parcours.' },
+]
+
+export default function SiteFinancements() {
+  return (
+    <>
+      <section className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-10">
+        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">
+          <Banknote className="h-4 w-4" /> Financements
+        </div>
+        <h1 className="font-heading font-black text-4xl md:text-6xl text-[#14110F] tracking-heading text-balance">
+          Vos formations, <span className="text-[#195144]">financées</span>.
+        </h1>
+        <p className="mt-6 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
+          En tant qu’organisme certifié Qualiopi, nos formations sont éligibles aux principaux dispositifs
+          de financement. On vous accompagne de bout en bout dans le montage du dossier.
+        </p>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
+        <div className="grid md:grid-cols-3 gap-4">
+          {DISPOSITIFS.map((x) => (
+            <div key={x.t} className="rounded-2xl border border-[#195144]/10 bg-white p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center"><x.Icon className="h-5 w-5 text-[#195144]" /></span>
+                <span className="text-xs font-semibold text-[#195144] bg-[#195144]/8 rounded-full px-2.5 py-1">{x.tag}</span>
+              </div>
+              <div className="font-heading font-semibold text-lg text-[#14110F]">{x.t}</div>
+              <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed flex-1">{x.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
+        <h2 className="font-heading font-bold text-2xl md:text-3xl text-[#14110F] tracking-heading mb-8">Comment ça se passe</h2>
+        <div className="grid md:grid-cols-4 gap-4">
+          {ETAPES.map((e, i) => (
+            <div key={e.t} className="relative rounded-2xl border border-[#195144]/10 bg-white p-6">
+              <div className="font-heading font-black text-2xl text-[#195144]/20 tabular-nums">0{i + 1}</div>
+              <e.Icon className="h-6 w-6 text-[#195144] mt-2" />
+              <div className="mt-3 font-heading font-semibold text-[#14110F] leading-snug">{e.t}</div>
+              <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{e.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+        <div className="rounded-3xl bg-[#195144] text-white px-6 md:px-12 py-12 md:flex items-center justify-between gap-8">
+          <div>
+            <h2 className="font-heading font-bold text-2xl md:text-3xl tracking-heading">On monte votre dossier de financement</h2>
+            <p className="mt-2 text-white/70 max-w-xl">Dites-nous qui former et pour quel objectif — on s’occupe du reste.</p>
+          </div>
+          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
+            Étudier mon financement <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </>
+  )
+}
