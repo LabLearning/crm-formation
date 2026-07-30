@@ -15,6 +15,7 @@ import { ClientEditButton } from './ClientEditButton'
 import { ClientNotes } from './ClientNotes'
 import { ClientParticipants } from './ClientParticipants'
 import { ClientSessionsList } from './ClientSessionsList'
+import { ClientOpcoVault } from './ClientOpcoVault'
 import { ClientDocuments } from './ClientDocuments'
 import { ClientContacts } from './ClientContacts'
 
@@ -212,6 +213,11 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
               {(c as any).tva_intra && <InfoRow icon={Hash} label="TVA intra" value={(c as any).tva_intra} />}
               {(c as any).convention_collective && <InfoRow icon={FileText} label="Convention collective" value={(c as any).convention_collective} />}
             </div>
+          )}
+
+          {/* Compte OPCO chiffré (consultable par mot de passe) */}
+          {isEntreprise && ['super_admin', 'gestionnaire', 'directeur_commercial'].includes(role) && (
+            <ClientOpcoVault clientId={c.id} hasSecret={!!(c as any).opco_compte_chiffre} hint={(c as any).opco_compte_chiffre?.hint} />
           )}
         </div>
 

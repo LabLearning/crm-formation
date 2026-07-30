@@ -221,3 +221,73 @@ export async function deleteClientAction(id: string): Promise<ActionResult> {
   revalidatePath('/dashboard/clients')
   return { success: true }
 }
+
+// ── Compte OPCO chiffré (coffre-fort par mot de passe) ──
+const OPCO_ROLES = ['super_admin', 'gestionnaire', 'directeur_commercial']
+
+/** Enregistre (chiffre) les identifiants du compte OPCO d'un client. */
+export async function saveClientOpcoSecretAction(
+  clientId: string,
+  secret: { identifiant?: string; mot_de_passe?: string; url?: string; notes?: string },
+  password: string,
+  hint?: string,
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!OPCO_ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  if (!password || password.length < 4) return { success: false, error: 'Mot de passe trop court (min 4 caractères)' }
+  const clean = {
+    identifiant: (secret.identifiant || '').trim(),
+    mot_de_passe: (secret.mot_de_passe || '').trim(),
+    url: (secret.url || '').trim(),
+    notes: (secret.notes || '').trim(),
+  }
+  if (!clean.identifiant && !clean.mot_de_passe && !clean.url && !clean.notes) {
+    return { success: false, error: 'Renseignez au moins un champ' }
+  }
+  const { encryptSecret } = await import('@/lib/secret-vault')
+  const blob = encryptSecret(clean, password, hint || null)
+
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase.from('clients')
+    .update({ opco_compte_chiffre: blob })
+    .eq('id', clientId).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Erreur lors de l\'enregistrement' }
+  await logAudit({ action: 'save_opco_secret', entity_type: 'client', entity_id: clientId })
+  revalidatePath(`/dashboard/clients/${clientId}`)
+  return { success: true }
+}
+
+/** Déchiffre et renvoie le compte OPCO si le mot de passe est correct. */
+export async function revealClientOpcoSecretAction(
+  clientId: string, password: string,
+): Promise<ActionResult & { data?: any }> {
+  const session = await getSession()
+  if (!OPCO_ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const { data: c } = await supabase.from('clients')
+    .select('opco_compte_chiffre').eq('id', clientId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!c?.opco_compte_chiffre) return { success: false, error: 'Aucun compte OPCO enregistré' }
+  const { decryptSecret } = await import('@/lib/secret-vault')
+  const plain = decryptSecret(c.opco_compte_chiffre as any, password)
+  if (!plain) return { success: false, error: 'Mot de passe incorrect' }
+  await logAudit({ action: 'reveal_opco_secret', entity_type: 'client', entity_id: clientId })
+  return { success: true, data: plain }
+}
+
+/** Supprime le compte OPCO chiffré (mot de passe requis pour prouver l'accès). */
+export async function deleteClientOpcoSecretAction(clientId: string, password: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!OPCO_ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const { data: c } = await supabase.from('clients')
+    .select('opco_compte_chiffre').eq('id', clientId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!c?.opco_compte_chiffre) return { success: false, error: 'Aucun compte OPCO' }
+  const { decryptSecret } = await import('@/lib/secret-vault')
+  if (!decryptSecret(c.opco_compte_chiffre as any, password)) return { success: false, error: 'Mot de passe incorrect' }
+  const { error } = await supabase.from('clients')
+    .update({ opco_compte_chiffre: null }).eq('id', clientId).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Erreur' }
+  await logAudit({ action: 'delete_opco_secret', entity_type: 'client', entity_id: clientId })
+  revalidatePath(`/dashboard/clients/${clientId}`)
+  return { success: true }
+}
