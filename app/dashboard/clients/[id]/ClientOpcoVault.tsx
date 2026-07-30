@@ -70,16 +70,9 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
 
   return (
     <div className="card p-5 border border-amber-100 bg-amber-50/20">
-      <div className="mb-3">
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-amber-600 shrink-0" />
-          <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Données chiffrées</span>
-        </div>
-        {hasSecret && mode !== 'edit' && (
-          <div className="text-[11px] text-emerald-600 font-medium inline-flex items-center gap-1 mt-1 ml-6">
-            <Lock className="h-3 w-3 shrink-0" /> Protégé par mot de passe
-          </div>
-        )}
+      <div className="mb-3 flex items-center gap-2">
+        <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+        <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Données chiffrées</span>
       </div>
 
       {/* Verrouillé : demander le mot de passe pour consulter */}
@@ -92,6 +85,9 @@ export function ClientOpcoVault({ clientId, hasSecret, hint }: { clientId: strin
                 onKeyDown={(e) => { if (e.key === 'Enter') reveal() }} placeholder="••••••••" />
             </div>
             <Button onClick={reveal} isLoading={pending} disabled={!password} icon={<KeyRound className="h-4 w-4" />}>Consulter</Button>
+          </div>
+          <div className="text-[11px] text-emerald-600 font-medium inline-flex items-center gap-1">
+            <Lock className="h-3 w-3 shrink-0" /> Protégé par mot de passe
           </div>
         </div>
       )}
