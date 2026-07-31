@@ -742,6 +742,44 @@ export async function searchApprenantsForSessionAction(
 }
 
 /**
+ * Apprenants rattachés à l'entreprise (client) de la session, avec le marqueur
+ * `dejaInscrit`. Permet d'inscrire en un clic les apprenants du client sans
+ * avoir à les rechercher par nom.
+ */
+export async function getClientApprenantsForSessionAction(
+  sessionId: string,
+  clientId: string,
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  if (!clientId) return { success: true, data: [] }
+  const supabase = await createServiceRoleClient()
+
+  const { data } = await supabase
+    .from('apprenants')
+    .select('id, prenom, nom, email, entreprise, client:clients(raison_sociale)')
+    .eq('organization_id', session.organization.id)
+    .eq('client_id', clientId)
+    .order('nom', { ascending: true })
+
+  const { data: inscrits } = await supabase
+    .from('inscriptions')
+    .select('apprenant_id')
+    .eq('session_id', sessionId)
+    .not('status', 'in', '("annule","abandonne")')
+  const inscritsSet = new Set((inscrits || []).map((i: any) => i.apprenant_id))
+
+  const results = (data || []).map((a: any) => ({
+    id: a.id, prenom: a.prenom, nom: a.nom, email: a.email,
+    entreprise: a.entreprise || a.client?.raison_sociale || null,
+    dejaInscrit: inscritsSet.has(a.id),
+  }))
+  return { success: true, data: results }
+}
+
+/**
  * Retire un apprenant d'une session (désinscription). L'inscription est
  * marquée « annule » plutôt que supprimée, pour conserver l'historique.
  */
