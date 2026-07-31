@@ -6,6 +6,7 @@ import { Button, Input, Select, CompanySearchInput, OpcoSelector } from '@/compo
 import { createClientAction, updateClientAction } from './actions'
 import { createContactAction } from '../contacts/actions'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
+import { BRANCHES_BASE } from '@/lib/branches'
 import type { Client } from '@/lib/types/crm'
 import type { SireneCompany } from '@/lib/sirene'
 
@@ -42,6 +43,7 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
   const [siret, setSiret] = useState(client?.siret || '')
   const [codeNaf, setCodeNaf] = useState(client?.code_naf || '')
   const [secteurActivite, setSecteurActivite] = useState(client?.secteur_activite || '')
+  const [branche, setBranche] = useState((client as any)?.branche || '')
   const [codeIdcc, setCodeIdcc] = useState(client?.code_idcc || '')
   const [tailleEntreprise, setTailleEntreprise] = useState(client?.taille_entreprise || '')
   const [adresse, setAdresse] = useState(client?.adresse || '')
@@ -227,7 +229,11 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
             <Input id="code_naf" name="code_naf" label="Code NAF" value={codeNaf} onChange={(e) => setCodeNaf(e.target.value)} />
             <Input id="tva_intra" name="tva_intra" label="N° TVA intracommunautaire" value={tvaIntra} onChange={(e) => setTvaIntra(e.target.value)} />
           </div>
-          <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+            <Select id="branche" name="branche" label="Branche métier" value={branche} onChange={(e) => setBranche(e.target.value)}
+              options={[{ value: '', label: '—' }, ...BRANCHES_BASE.map((b) => ({ value: b.slug, label: b.label }))]} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
             <Input id="effectif_libelle" name="effectif_libelle" label="Effectif" value={effectifLibelle} onChange={(e) => setEffectifLibelle(e.target.value)} placeholder="Ex: 10 à 19 salariés" />

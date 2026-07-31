@@ -19,6 +19,7 @@ export const createLeadSchema = z.object({
   nom_commercial: z.string().optional(),
   code_naf: z.string().optional(),
   secteur_activite: z.string().optional(),
+  branche: z.string().optional(),
   taille_entreprise: z.string().optional(),
   forme_juridique: z.string().optional(),
   date_creation_entreprise: z.string().optional().or(z.literal('')),
@@ -84,6 +85,7 @@ export const createClientSchema = z.object({
   siret: z.string().regex(/^\d{14}$/, 'SIRET: 14 chiffres').optional().or(z.literal('')),
   code_naf: z.string().optional(),
   secteur_activite: z.string().optional(),
+  branche: z.string().optional(),
   taille_entreprise: z.string().optional(),
   // Particulier
   civilite: z.string().optional(),

@@ -6,6 +6,7 @@ import { Button, Input, Select, CompanySearchInput, OpcoSelector, SearchSelect }
 import { createLeadAction, updateLeadAction } from './actions'
 import { LEAD_SOURCE_LABELS, CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
 import type { Lead, ClientType } from '@/lib/types/crm'
+import { BRANCHES_BASE } from '@/lib/branches'
 import type { User } from '@/lib/types'
 import type { SireneCompany } from '@/lib/sirene'
 
@@ -95,6 +96,7 @@ export function LeadForm({ lead, users, formations = [], franchises = [], isAppo
   const [sigle, setSigle] = useState(lead?.sigle || '')
   const [codeNaf, setCodeNaf] = useState(lead?.code_naf || '')
   const [secteurActivite, setSecteurActivite] = useState(lead?.secteur_activite || '')
+  const [branche, setBranche] = useState((lead as any)?.branche || '')
   const [tailleEntreprise, setTailleEntreprise] = useState(lead?.taille_entreprise || '')
   const [formeJuridique, setFormeJuridique] = useState(lead?.forme_juridique || '')
   const [dateCreation, setDateCreation] = useState(lead?.date_creation_entreprise || '')
@@ -330,7 +332,11 @@ export function LeadForm({ lead, users, formations = [], franchises = [], isAppo
             <Input id="code_naf" name="code_naf" label="Code NAF" value={codeNaf} onChange={(e) => setCodeNaf(e.target.value)} />
             <Input id="tva_intra" name="tva_intra" label="N° TVA intra" value={tvaIntra} onChange={(e) => setTvaIntra(e.target.value)} />
           </div>
-          <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input id="secteur_activite" name="secteur_activite" label="Secteur d'activité" value={secteurActivite} onChange={(e) => setSecteurActivite(e.target.value)} />
+            <Select id="branche" name="branche" label="Branche métier" value={branche} onChange={(e) => setBranche(e.target.value)}
+              options={[{ value: '', label: '—' }, ...BRANCHES_BASE.map((b) => ({ value: b.slug, label: b.label }))]} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
             <Input id="effectif_libelle" name="effectif_libelle" label="Effectif" value={effectifLibelle} onChange={(e) => setEffectifLibelle(e.target.value)} />

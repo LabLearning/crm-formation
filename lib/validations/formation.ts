@@ -42,6 +42,8 @@ export const createFormationSchema = z.object({
   modalites_admission: z.string().optional(),
   is_published: z.coerce.boolean().optional(),
   is_poei: z.coerce.boolean().optional(),
+  est_transverse: z.coerce.boolean().optional(),
+  site_publie: z.coerce.boolean().optional(),
 })
 
 export const createSessionSchema = z.object({

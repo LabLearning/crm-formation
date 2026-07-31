@@ -75,6 +75,9 @@ export async function createFormationAction(formData: FormData): Promise<ActionR
       certificateur: parsed.data.certificateur || null,
       is_published: parsed.data.is_published || false,
       is_poei: parsed.data.is_poei || false,
+      branches: formData.getAll('branches').map(String).filter(Boolean),
+      est_transverse: !!parsed.data.est_transverse,
+      site_publie: !!parsed.data.site_publie,
       created_by: session.user.id,
     })
     .select()
@@ -147,6 +150,9 @@ export async function updateFormationAction(id: string, formData: FormData): Pro
       certificateur: parsed.data.certificateur || null,
       is_published: parsed.data.is_published || false,
       is_poei: parsed.data.is_poei || false,
+      branches: formData.getAll('branches').map(String).filter(Boolean),
+      est_transverse: !!parsed.data.est_transverse,
+      site_publie: !!parsed.data.site_publie,
       version: newVersion,
       date_derniere_maj: new Date().toISOString().split('T')[0],
       historique_versions: history,
