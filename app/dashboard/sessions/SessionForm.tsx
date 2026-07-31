@@ -555,8 +555,8 @@ export function SessionForm({ session, formations, formateurs, clients = [], app
       )}
 
       {/* Capacité : valeurs par défaut envoyées en hidden (pas exposées dans l'UI) */}
-      <input type="hidden" name="places_min" value={session?.places_min?.toString() || '1'} />
-      <input type="hidden" name="places_max" value={session?.places_max?.toString() || '12'} />
+      <input type="hidden" name="places_min" value={(Math.max(1, Number(session?.places_min) || 1)).toString()} />
+      <input type="hidden" name="places_max" value={(Math.max(1, Number(session?.places_max) || 12)).toString()} />
 
       {/* ── Apprenants ── */}
       <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider pt-2 flex items-center gap-2">

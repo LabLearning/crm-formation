@@ -4,6 +4,15 @@ import { z } from 'zod'
 // undefined pour qu'il soit stocké null (prix absent ≠ prix nul).
 const emptyToUndefined = (v: unknown) => (v === '' || v == null ? undefined : v)
 
+// Nombre de places : vide / 0 / invalide → valeur par défaut (jamais bloquant).
+// Certaines sessions importées ont places_min = 0, ce qui ne doit pas empêcher
+// leur modification.
+const placesOrDefault = (def: number) =>
+  z.preprocess((v) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n >= 1 ? Math.trunc(n) : def
+  }, z.coerce.number().int().min(1))
+
 export const createFormationSchema = z.object({
   reference: z.string().optional(),
   intitule: z.string().min(3, 'Intitulé requis (min. 3 caractères)'),
@@ -52,8 +61,8 @@ export const createSessionSchema = z.object({
   code_postal: z.string().optional(),
   ville: z.string().optional(),
   lien_visio: z.string().url('URL invalide').optional().or(z.literal('')),
-  places_min: z.coerce.number().int().min(1).default(1),
-  places_max: z.coerce.number().int().min(1).default(12),
+  places_min: placesOrDefault(1),
+  places_max: placesOrDefault(12),
   formateur_id: z.string().uuid().optional().or(z.literal('')),
   apprenant_ids: z.string().optional(),  // CSV des apprenants à inscrire
   status: z.enum(['planifiee', 'confirmee', 'en_cours', 'terminee', 'annulee']).optional(),
