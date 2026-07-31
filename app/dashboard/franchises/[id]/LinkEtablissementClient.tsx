@@ -31,7 +31,9 @@ export default function LinkEtablissementClient({
       const r = await linkClientToFranchiseAction(clientId, franchiseId)
       setBusy(null)
       if (!r.success) alert((r as any).error || 'Erreur')
-      else { setQuery(''); router.refresh() }
+      // On garde la recherche telle quelle : l'établissement lié sort des
+      // résultats (désormais rattaché) mais le filtre reste, pour enchaîner.
+      else router.refresh()
     })
   }
 
