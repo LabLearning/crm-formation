@@ -138,26 +138,40 @@ const TYPES_BY_STATUS: Record<string, QcmType[]> = {
  */
 export async function backfillOrgQcmReponses(supabase: any, orgId: string): Promise<number> {
   try {
-    const { data: qcms } = await supabase
+    // PostgREST plafonne une requête à 1000 lignes : sans pagination, l'ensemble
+    // « déjà vu » (seen) est incomplet sur une grosse table (qcm_reponses ~20k)
+    // et les mêmes réponses sont ré-insérées à chaque exécution → doublons.
+    const fetchAll = async (build: (from: number, to: number) => any): Promise<any[]> => {
+      const out: any[] = []; const PAGE = 1000
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await build(from, from + PAGE - 1)
+        if (error || !data || data.length === 0) break
+        out.push(...data)
+        if (data.length < PAGE) break
+      }
+      return out
+    }
+
+    const qcms = await fetchAll((f, t) => supabase
       .from('qcm').select('id, formation_id, type')
-      .eq('organization_id', orgId).eq('status', 'publie').not('formation_id', 'is', null)
-    if (!qcms || qcms.length === 0) return 0
+      .eq('organization_id', orgId).eq('status', 'publie').not('formation_id', 'is', null).range(f, t))
+    if (qcms.length === 0) return 0
     const qcmByFT = new Map<string, string>()
     for (const q of qcms) qcmByFT.set(`${q.formation_id}:${q.type}`, q.id)
 
-    const { data: sessions } = await supabase
-      .from('sessions').select('id, formation_id, status').eq('organization_id', orgId).not('formation_id', 'is', null)
-    const { data: inscriptions } = await supabase
-      .from('inscriptions').select('session_id, apprenant_id, status').eq('organization_id', orgId)
+    const sessions = await fetchAll((f, t) => supabase
+      .from('sessions').select('id, formation_id, status').eq('organization_id', orgId).not('formation_id', 'is', null).range(f, t))
+    const inscriptions = await fetchAll((f, t) => supabase
+      .from('inscriptions').select('session_id, apprenant_id, status').eq('organization_id', orgId).range(f, t))
     const insBySession = new Map<string, string[]>()
-    for (const i of (inscriptions || [])) {
+    for (const i of inscriptions) {
       if (['annule', 'abandonne'].includes(i.status) || !i.apprenant_id) continue
       const arr = insBySession.get(i.session_id) || []; arr.push(i.apprenant_id); insBySession.set(i.session_id, arr)
     }
 
-    const { data: existing } = await supabase
-      .from('qcm_reponses').select('qcm_id, apprenant_id').eq('organization_id', orgId)
-    const seen = new Set((existing || []).map((e: any) => `${e.qcm_id}:${e.apprenant_id}`))
+    const existing = await fetchAll((f, t) => supabase
+      .from('qcm_reponses').select('qcm_id, apprenant_id').eq('organization_id', orgId).range(f, t))
+    const seen = new Set(existing.map((e: any) => `${e.qcm_id}:${e.apprenant_id}`))
 
     const rows: any[] = []
     for (const s of (sessions || [])) {

@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { fetchAllPaged } from '@/lib/supabase/fetch-all'
 import { QCMList } from './QCMList'
 import type { QCM } from '@/lib/types/evaluation'
 
@@ -21,12 +22,15 @@ export default async function QCMPage() {
   const reponsesCounts: Record<string, number> = {}
   const qcmIds = (qcms || []).map((q) => q.id)
   if (qcmIds.length > 0) {
-    const { data: reponseRows } = await supabase
+    // Pagination : qcm_reponses dépasse 1000 lignes → un select simple tronquerait
+    // le comptage de réponses par QCM.
+    const reponseRows = await fetchAllPaged<{ qcm_id: string }>((from, to) => supabase
       .from('qcm_reponses')
       .select('qcm_id')
       .in('qcm_id', qcmIds)
       .eq('is_complete', true)
-    for (const r of reponseRows || []) {
+      .range(from, to))
+    for (const r of reponseRows) {
       reponsesCounts[r.qcm_id] = (reponsesCounts[r.qcm_id] || 0) + 1
     }
   }
