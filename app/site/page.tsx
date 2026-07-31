@@ -5,6 +5,8 @@ import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
 import { StoryChapter } from './StoryChapter'
 import { Reveal } from './Reveal'
+import { Kicker } from './Kicker'
+import { Marquee } from './Marquee'
 import { BRANCHES } from './branches'
 
 export const dynamic = 'force-dynamic'
@@ -54,46 +56,60 @@ export default async function SiteHome() {
     <>
       {/* ── HERO ── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10" style={{ background: 'radial-gradient(1200px 600px at 15% -10%, rgba(25,81,68,0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.10), transparent 55%)' }} />
+        <div className="absolute inset-0 -z-10 ll-grid-faint" />
+        <div className="absolute inset-0 -z-10" style={{ background: 'radial-gradient(1200px 600px at 12% -12%, rgba(25,81,68,0.12), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.10), transparent 55%)' }} />
         <div className="ll-orb-a absolute -z-10 -top-24 -left-16 h-72 w-72 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(25,81,68,0.28), transparent 65%)' }} />
         <div className="ll-orb-b absolute -z-10 top-10 right-0 h-80 w-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.22), transparent 65%)' }} />
 
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-16 md:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          <div className="ll-rise">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-6">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-16 md:pb-24 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+          <div className="ll-rise lg:col-span-7">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-7">
               <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
             </div>
-            <h1 className="font-heading font-black tracking-heading text-[#14110F] text-5xl sm:text-6xl md:text-[76px] leading-[0.98] text-balance">
-              Former les métiers de bouche avec l'exigence du{' '}
+            <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
+              Former les métiers de bouche
+              <br className="hidden sm:block" /> avec l’exigence du{' '}
               <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
             </h1>
-            <p className="mt-6 text-lg text-[#57534E] max-w-xl leading-relaxed">
+            <p className="mt-7 text-lg md:text-xl text-[#57534E] max-w-xl leading-relaxed">
               Du recrutement à la rentabilité, on est à vos côtés : ouverture avec la POEI, montée en compétence
-              de vos équipes pendant l'exploitation, puis formation continue en e-learning avec notre plateforme Learnexa.
+              de vos équipes pendant l’exploitation, puis formation continue en e-learning avec Learnexa.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] ll-lift">
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] ll-lift">
                 Découvrir nos formations <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#195144]/25 text-[#195144] text-sm font-semibold hover:bg-[#195144]/5 transition-colors">
+              <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-[#195144]/25 text-[#195144] text-sm font-semibold hover:bg-[#195144]/5 transition-colors">
                 Parler à un conseiller
               </Link>
             </div>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#78716C]">
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#195144]" /> Financement OPCO &amp; France Travail</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#195144]" /> Formateurs praticiens du métier</span>
+            </div>
           </div>
 
-          {/* Collage métier (données live) */}
+          {/* Collage métier (données live) — asymétrique */}
           {heroTiles.length >= 2 && (
-            <div className="ll-rise grid grid-cols-2 gap-3 sm:gap-4" style={{ animationDelay: '0.12s' }}>
+            <div className="ll-rise lg:col-span-5 grid grid-cols-2 gap-3 sm:gap-4 relative" style={{ animationDelay: '0.12s' }}>
               {heroTiles.map((b, i) => (
                 <Link key={b.slug} href={`/site/branches/${b.slug}`}
-                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-5' : ''}`}>
-                  <MetierVisual nom={b.label} label={b.label} height="h-40 sm:h-48" />
+                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-6 sm:translate-y-8' : ''}`}>
+                  <MetierVisual nom={b.label} label={b.label} height={i % 2 === 1 ? 'h-44 sm:h-56' : 'h-40 sm:h-48'} />
                   <div className="bg-white px-4 py-3 flex items-center justify-between">
                     <span className="text-xs text-[#78716C]">{brancheCount.get(b.slug) || 0} formation{(brancheCount.get(b.slug) || 0) > 1 ? 's' : ''}</span>
-                    <ArrowRight className="h-4 w-4 text-[#195144] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight className="h-4 w-4 text-[#195144] opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
                   </div>
                 </Link>
               ))}
+              {/* Badge flottant preuve */}
+              <div className="hidden sm:flex absolute -left-6 bottom-2 items-center gap-3 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3">
+                <span className="h-9 w-9 rounded-xl bg-[#195144]/10 flex items-center justify-center"><GraduationCap className="h-5 w-5 text-[#195144]" /></span>
+                <span className="leading-tight">
+                  <span className="block font-heading font-black text-lg text-[#14110F] tabular-nums">{fmt(stats.apprenants)}</span>
+                  <span className="block text-[11px] text-[#78716C]">apprenants formés</span>
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -101,41 +117,41 @@ export default async function SiteHome() {
 
       {/* ── STATS (live) ── */}
       <section className="border-y border-[#195144]/10 bg-[#FAFAFA]">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 md:divide-x md:divide-[#195144]/10">
           {[
             { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
             { v: stats.apprenants, l: 'apprenants formés', Icon: Users },
             { v: stats.sessionsRealisees, l: 'sessions réalisées', Icon: CheckCircle2 },
             { v: stats.entreprises, l: 'entreprises accompagnées', Icon: Building2 },
-          ].map((s) => (
-            <div key={s.l}>
-              <div className="flex items-center gap-1.5 text-[#195144] mb-1"><s.Icon className="h-4 w-4" /></div>
-              <div className="font-heading font-black text-3xl md:text-4xl text-[#14110F] tabular-nums"><CountUp value={s.v} /></div>
-              <div className="text-xs text-[#78716C] mt-0.5">{s.l}</div>
+          ].map((s, i) => (
+            <div key={s.l} className={i > 0 ? 'md:pl-8' : ''}>
+              <div className="flex items-center gap-1.5 text-[#195144] mb-2"><s.Icon className="h-4 w-4" /></div>
+              <div className="ll-display text-4xl md:text-[52px] text-[#14110F] leading-none"><CountUp value={s.v} /></div>
+              <div className="text-xs text-[#78716C] mt-2 uppercase tracking-wide">{s.l}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── BRANCHES MÉTIER ── */}
-      <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
         <div className="max-w-2xl">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Votre métier</div>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Des formations pensées pour votre activité</h2>
-          <p className="mt-3 text-[#57534E]">Identifiez-vous par votre métier — on vous montre ce à quoi vous avez droit, financement compris.</p>
+          <Kicker className="mb-4">Votre métier</Kicker>
+          <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Des formations pensées pour votre activité</h2>
+          <p className="mt-4 text-lg text-[#57534E]">Identifiez-vous par votre métier — on vous montre ce à quoi vous avez droit, financement compris.</p>
         </div>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2">
           {BRANCHES.map((b, i) => (
             <Reveal key={b.slug} delay={(i % 2) * 90} className="h-full">
-              <Link href={`/site/branches/${b.slug}`} className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md ll-lift">
-                <MetierVisual nom={b.label} label={b.label} height="h-44" />
-                <div className="p-5 flex items-center justify-between gap-4">
+              <Link href={`/site/branches/${b.slug}`} className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-xl hover:shadow-black/5 ll-lift">
+                <MetierVisual nom={b.label} label={b.label} height="h-48 md:h-52" />
+                <div className="p-5 md:p-6 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm text-[#57534E]">{b.tagline}</div>
+                    <div className="text-[15px] text-[#57534E]">{b.tagline}</div>
                     <div className="text-xs text-[#A8A29E] mt-1">{brancheCount.get(b.slug) || 0} formation{(brancheCount.get(b.slug) || 0) > 1 ? 's' : ''}</div>
                   </div>
-                  <span className="shrink-0 inline-flex items-center gap-1 text-sm font-semibold text-[#195144] group-hover:gap-2 transition-all">
-                    Voir <ArrowRight className="h-3.5 w-3.5" />
+                  <span className="shrink-0 h-10 w-10 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
               </Link>
@@ -146,16 +162,16 @@ export default async function SiteHome() {
 
       {/* ── POURQUOI NOUS ── */}
       <section className="bg-[#FAFAFA] border-y border-[#195144]/10">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
           <div className="max-w-2xl">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Pourquoi Lab Learning</div>
-            <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Un partenaire formation, pas juste un catalogue</h2>
+            <Kicker className="mb-4">Pourquoi Lab Learning</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Un partenaire formation, pas juste un catalogue</h2>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {POURQUOI.map((p, i) => (
               <Reveal key={p.t} delay={(i % 4) * 80}>
-              <div className="h-full rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-md ll-lift">
-                <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4"><p.Icon className="h-5 w-5 text-[#195144]" /></span>
+              <div className="group h-full rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-lg hover:shadow-black/5 hover:border-[#195144]/25 ll-lift">
+                <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4 group-hover:bg-[#195144] transition-colors"><p.Icon className="h-5 w-5 text-[#195144] group-hover:text-white transition-colors" /></span>
                 <div className="font-heading font-semibold text-[#14110F]">{p.t}</div>
                 <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{p.d}</p>
               </div>
@@ -166,38 +182,32 @@ export default async function SiteHome() {
       </section>
 
       {/* ── STORYTELLING CHAPITRÉ : du recrutement à la rentabilité ── */}
-      <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
         <Reveal className="max-w-3xl">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Notre accompagnement</div>
-          <h2 className="font-heading font-bold text-3xl md:text-5xl text-[#14110F] tracking-heading text-balance">
+          <Kicker className="mb-4">Notre accompagnement</Kicker>
+          <h2 className="ll-display ll-fluid-h1 text-[#14110F] text-balance">
             Du recrutement à la rentabilité, <span className="text-[#195144]">on est avec vous</span>.
           </h2>
-          <p className="mt-4 text-lg text-[#57534E]">
+          <p className="mt-5 text-lg md:text-xl text-[#57534E] leading-relaxed">
             De l’ouverture avec la POEI, à la montée en compétence de vos équipes, jusqu’à la formation continue
             en e-learning : un partenaire unique sur tout le cycle de vie de votre établissement.
           </p>
         </Reveal>
-        <div className="mt-14 space-y-16 md:space-y-24">
+        <div className="mt-16 md:mt-20 space-y-20 md:space-y-28">
           {chapitres.map((c) => <Reveal key={c.index}><StoryChapter {...(c as any)} /></Reveal>)}
         </div>
       </section>
 
-      {/* ── FRANCHISES (partenaires live) ── */}
+      {/* ── PREUVES / FRANCHISES (marquee live) ── */}
       {franchises.length > 0 && (
-        <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
-          <div className="text-center">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Ils nous font confiance</div>
-            <h2 className="font-heading font-bold text-2xl md:text-3xl text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
+        <section className="bg-[#FAFAFA] border-y border-[#195144]/10 py-16 md:py-20 overflow-hidden">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 text-center">
+            <Kicker center className="mb-4 justify-center">Ils nous font confiance</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
+            <p className="mt-3 text-[#57534E] max-w-xl mx-auto">Des enseignes multi-sites nous confient la montée en compétence de leurs équipes, partout en France.</p>
           </div>
-          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {franchises.slice(0, 8).map((f) => (
-              <div key={f.nom} className="rounded-2xl border border-[#195144]/10 bg-white p-5 flex flex-col items-center justify-center gap-2 h-28 hover:shadow-sm transition-shadow">
-                {f.logo_url
-                  ? <img src={f.logo_url} alt={f.nom} className="h-11 w-auto max-w-[130px] object-contain grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all" />
-                  : <span className="font-heading font-semibold text-[#57534E] text-center text-sm">{f.nom}</span>}
-                {f.nombre_etablissements ? <span className="text-[11px] text-[#A8A29E]">{f.nombre_etablissements} établissements</span> : null}
-              </div>
-            ))}
+          <div className="mt-10">
+            <Marquee items={franchises.map((f) => ({ nom: f.nom, logo_url: f.logo_url, nombre_etablissements: f.nombre_etablissements }))} />
           </div>
           <div className="mt-10 text-center">
             <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
@@ -208,14 +218,15 @@ export default async function SiteHome() {
       )}
 
       {/* ── CTA ── */}
-      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-24">
         <Reveal>
-        <div className="rounded-3xl bg-[#14110F] text-white px-6 md:px-14 py-14 md:py-16 text-center relative overflow-hidden">
+        <div className="rounded-[32px] bg-[#14110F] text-white px-6 md:px-16 py-16 md:py-20 text-center relative overflow-hidden">
           <div className="absolute inset-0 -z-0 opacity-70" style={{ background: 'radial-gradient(600px 300px at 20% 0%, rgba(25,81,68,0.5), transparent 60%), radial-gradient(500px 260px at 100% 100%, rgba(99,102,241,0.35), transparent 55%)' }} />
           <div className="relative">
-            <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-heading text-balance max-w-2xl mx-auto">Prêt à faire monter vos équipes en compétences ?</h2>
-            <p className="mt-3 text-white/70 max-w-xl mx-auto">Nous étudions votre besoin, montons le financement OPCO et planifions les sessions.</p>
-            <Link href="/site/contact" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
+            <Kicker tone="light" center className="mb-5 justify-center">Prêt à démarrer</Kicker>
+            <h2 className="ll-display ll-fluid-h1 text-balance max-w-3xl mx-auto">Prêt à faire monter vos équipes en compétences ?</h2>
+            <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">Nous étudions votre besoin, montons le financement OPCO et planifions les sessions.</p>
+            <Link href="/site/contact" className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
               Demander un devis <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

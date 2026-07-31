@@ -205,3 +205,51 @@
 @media (prefers-reduced-motion: reduce) {
   .ll-reveal, .ll-page-enter, .ll-lift { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* ══ Site vitrine — élévation éditoriale (typo monumentale, kickers, motion) ══ */
+
+/* Titres monumentaux : tracking serré, interligne compact, taille fluide */
+.ll-display { font-family: var(--font-heading); font-weight: 900; letter-spacing: -0.038em; line-height: 0.94; }
+.ll-fluid-hero { font-size: clamp(2.9rem, 7.2vw, 5.75rem); }
+.ll-fluid-h1 { font-size: clamp(2.3rem, 5.6vw, 4.25rem); }
+.ll-fluid-h2 { font-size: clamp(1.9rem, 3.8vw, 3rem); }
+
+/* Kicker / eyebrow : label soigné précédé d'un trait, deux tons */
+.ll-kicker { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--font-heading); font-weight: 700; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: #195144; }
+.ll-kicker::before { content: ''; width: 2rem; height: 1px; flex: none; background: linear-gradient(90deg, currentColor, transparent); }
+.ll-kicker--light { color: #8ec9b8; }
+.ll-kicker--center::before, .ll-kicker--center::after { content: ''; width: 1.75rem; height: 1px; flex: none; background: linear-gradient(90deg, transparent, currentColor); }
+.ll-kicker--center::after { background: linear-gradient(90deg, currentColor, transparent); }
+
+/* Soulignement animé au survol (liens texte) */
+.ll-underline { background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1px; background-position: 0 100%; background-repeat: no-repeat; transition: background-size .4s cubic-bezier(.22,1,.36,1); }
+.ll-underline:hover { background-size: 100% 1px; }
+
+/* Numéro de section géant (chapitres, étapes) */
+.ll-index { font-family: var(--font-heading); font-weight: 900; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* Grille de fond très discrète (héros) */
+.ll-grid-faint { background-image: linear-gradient(rgba(25,81,68,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(25,81,68,.045) 1px, transparent 1px); background-size: 58px 58px; -webkit-mask-image: radial-gradient(120% 80% at 50% 0%, #000 30%, transparent 78%); mask-image: radial-gradient(120% 80% at 50% 0%, #000 30%, transparent 78%); }
+
+/* Marquee (bandeau de logos franchises) */
+@keyframes ll-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ll-marquee-mask { -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+.ll-marquee-track { display: flex; width: max-content; animation: ll-marquee 42s linear infinite; }
+.ll-marquee-track:hover { animation-play-state: paused; }
+
+/* Reveal étagé enfant par enfant (via --i) */
+.ll-stagger > * { opacity: 0; transform: translateY(22px); }
+.ll-stagger.ll-reveal-in > * { opacity: 1; transform: none; transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); transition-delay: calc(var(--i, 0) * 90ms); }
+
+/* Curseur custom discret (desktop, pointeur fin uniquement) */
+.ll-cursor { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; border-radius: 9999px; transform: translate3d(-50%, -50%, 0); will-change: transform; }
+.ll-cursor-dot { width: 7px; height: 7px; background: #195144; }
+.ll-cursor-ring { width: 36px; height: 36px; border: 1px solid rgba(25,81,68,.3); transition: width .22s ease, height .22s ease, border-color .22s ease, background-color .22s ease; }
+.ll-cursor-ring.is-active { width: 54px; height: 54px; border-color: rgba(25,81,68,.5); background: rgba(25,81,68,.06); }
+@media (hover: none), (pointer: coarse) { .ll-cursor { display: none !important; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ll-marquee-track { animation: none !important; }
+  .ll-stagger > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .ll-cursor { display: none !important; }
+}

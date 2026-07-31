@@ -47,9 +47,9 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" /> Toutes les formations
           </Link>
-          {f.categorie && <div className="mt-6 text-xs font-semibold uppercase tracking-wider text-[#8ec9b8]">{f.categorie}</div>}
-          <h1 className="mt-2 font-heading font-black text-3xl md:text-5xl tracking-heading text-balance">{f.intitule}</h1>
-          {f.sous_titre && <p className="mt-3 text-lg text-white/75 max-w-2xl">{f.sous_titre}</p>}
+          {f.categorie && <div className="mt-6"><span className="ll-kicker ll-kicker--light">{f.categorie}</span></div>}
+          <h1 className="mt-2 ll-display text-3xl md:text-[52px] leading-[1.02] text-balance">{f.intitule}</h1>
+          {f.sous_titre && <p className="mt-4 text-lg md:text-xl text-white/75 max-w-2xl">{f.sous_titre}</p>}
           <div className="mt-6 flex flex-wrap items-center gap-2">
             {f.duree_heures ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Clock className="h-4 w-4" />{f.duree_heures} heures</span> : null}
             {f.duree_jours ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Calendar className="h-4 w-4" />{f.duree_jours} jour{f.duree_jours > 1 ? 's' : ''}</span> : null}

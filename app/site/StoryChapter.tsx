@@ -21,17 +21,17 @@ export interface ChapterProps {
 /** Section « chapitre » : texte d'un côté, visuel dégradé de l'autre, en alternance. */
 export function StoryChapter(p: ChapterProps) {
   const Big = p.Icon
+  const num = String(p.index).padStart(2, '0')
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
       {/* Texte */}
       <div className={p.flip ? 'lg:order-2' : ''}>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="font-heading font-black text-sm tabular-nums text-[#195144]">{String(p.index).padStart(2, '0')}</span>
-          <span className="h-px w-8 bg-[#195144]/30" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#195144]">{p.eyebrow}</span>
+        <div className="flex items-center gap-4 mb-5">
+          <span className="ll-index text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-[#195144] to-[#195144]/25">{num}</span>
+          <span className="ll-kicker">{p.eyebrow}</span>
         </div>
-        <h3 className="font-heading font-bold text-2xl md:text-[32px] leading-tight text-[#14110F] tracking-heading text-balance">{p.title}</h3>
-        <p className="mt-3 text-lg text-[#57534E] leading-relaxed">{p.desc}</p>
+        <h3 className="ll-display text-[28px] md:text-[38px] leading-[1.05] text-[#14110F] text-balance">{p.title}</h3>
+        <p className="mt-4 text-lg text-[#57534E] leading-relaxed">{p.desc}</p>
         <ul className="mt-6 space-y-2.5">
           {p.bullets.map((b, i) => (
             <li key={i} className="flex items-start gap-2.5 text-[#44403C]">
@@ -52,11 +52,12 @@ export function StoryChapter(p: ChapterProps) {
 
       {/* Visuel */}
       <div className={p.flip ? 'lg:order-1' : ''}>
-        <div className="relative rounded-[28px] overflow-hidden aspect-[4/3] ring-1 ring-black/5 shadow-lg shadow-black/5" style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
+        <div className="group relative rounded-[28px] overflow-hidden aspect-[4/3] ring-1 ring-black/5 shadow-xl shadow-black/10" style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
           <div className="absolute inset-0 opacity-[0.16]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '16px 16px' }} />
-          <div className="absolute -right-8 -top-8 text-white/15"><Big className="h-52 w-52" strokeWidth={1} /></div>
+          <span className="ll-index absolute right-5 top-1 text-[8rem] md:text-[11rem] leading-none text-white/10 select-none">{num}</span>
+          <div className="absolute -right-8 -bottom-10 text-white/12 transition-transform duration-700 group-hover:scale-105"><Big className="h-56 w-56" strokeWidth={1} /></div>
           <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm self-start">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-1 ring-white/25 self-start">
               <Big className="h-6 w-6 text-white" />
             </span>
             <div className="flex flex-wrap gap-2">

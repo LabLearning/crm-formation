@@ -33,9 +33,9 @@ export default async function SiteBranche({ params }: { params: { slug: string }
           <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" /> Tous les métiers
           </Link>
-          <div className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/70">Vous êtes</div>
-          <h1 className="mt-1 font-heading font-black text-4xl md:text-6xl tracking-heading text-balance">{b.label}</h1>
-          <p className="mt-3 text-lg text-white/85 max-w-2xl">{b.tagline}</p>
+          <div className="mt-6"><span className="ll-kicker ll-kicker--light">Vous êtes</span></div>
+          <h1 className="mt-2 ll-display ll-fluid-hero text-balance">{b.label}</h1>
+          <p className="mt-4 text-lg md:text-xl text-white/85 max-w-2xl">{b.tagline}</p>
           <div className="mt-6 flex flex-wrap gap-2 text-sm">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><CheckCircle2 className="h-4 w-4" />{branche?.total || 0} formations pour vous</span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
@@ -54,8 +54,8 @@ export default async function SiteBranche({ params }: { params: { slug: string }
         {groups.map((g) => (
           <section key={g.key}>
             <div className="flex items-baseline justify-between gap-4 border-b border-[#195144]/10 pb-3 mb-6">
-              <h2 className="font-heading font-bold text-xl md:text-2xl text-[#14110F] tracking-heading">{g.label}</h2>
-              <span className="text-sm text-[#A8A29E] shrink-0">{g.formations.length}</span>
+              <h2 className="ll-display text-2xl md:text-3xl text-[#14110F]">{g.label}</h2>
+              <span className="text-sm text-[#A8A29E] shrink-0 tabular-nums">{g.formations.length}</span>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {g.formations.map((f, i) => (
@@ -88,7 +88,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
 
       {/* Autres métiers */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-4">Autres métiers</div>
+        <div className="mb-5"><span className="ll-kicker">Autres métiers</span></div>
         <div className="grid gap-3 sm:grid-cols-3">
           {autres.map((x) => (
             <Link key={x.slug} href={`/site/branches/${x.slug}`} className="group rounded-2xl overflow-hidden ring-1 ring-black/5 hover:ring-[#195144]/25 ll-lift">
@@ -100,10 +100,10 @@ export default async function SiteBranche({ params }: { params: { slug: string }
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
-        <div className="rounded-3xl bg-[#195144] text-white px-6 md:px-12 py-12 md:flex items-center justify-between gap-8">
+        <div className="rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
-            <h2 className="font-heading font-bold text-2xl md:text-3xl tracking-heading">Un besoin précis pour votre équipe ?</h2>
-            <p className="mt-2 text-white/70 max-w-xl">On construit le parcours et on monte le financement (POEI, OPCO) avec vous.</p>
+            <h2 className="ll-display text-2xl md:text-4xl text-balance">Un besoin précis pour votre équipe ?</h2>
+            <p className="mt-3 text-white/70 max-w-xl">On construit le parcours et on monte le financement (POEI, OPCO) avec vous.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
             Demander un devis <ArrowRight className="h-4 w-4" />

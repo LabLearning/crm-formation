@@ -26,14 +26,15 @@ export function SiteNav() {
           <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-8 w-auto" />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-0.5">
+        <nav className="hidden lg:flex items-center gap-1">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(l.href) ? 'text-[#195144]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
+              className={`relative px-3 py-2 text-sm font-medium transition-colors ${isActive(l.href) ? 'text-[#195144]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
               {l.label}
+              <span className={`pointer-events-none absolute left-3 right-3 -bottom-0.5 h-px origin-left bg-[#195144] transition-transform duration-300 ${isActive(l.href) ? 'scale-x-100' : 'scale-x-0'}`} />
             </Link>
           ))}
-          <Link href="/site/contact" className="ml-2 inline-flex items-center px-4 py-2 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
+          <Link href="/site/contact" className="ml-3 inline-flex items-center px-4 py-2 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] ll-lift">
             Nous contacter
           </Link>
         </nav>

@@ -4,6 +4,7 @@ import { getBranchesData } from '@/lib/public-site-data'
 import { BRANCHES } from '../branches'
 import { MetierVisual } from '../MetierVisual'
 import { Reveal } from '../Reveal'
+import { Kicker } from '../Kicker'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Nos formations par métier — Lab Learning' }
@@ -14,15 +15,18 @@ export default async function SiteFormations() {
 
   return (
     <>
-      <section className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-10">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Nos formations</div>
-        <h1 className="font-heading font-black text-4xl md:text-6xl text-[#14110F] tracking-heading text-balance">
-          Quel est <span className="text-[#195144]">votre métier</span> ?
-        </h1>
-        <p className="mt-6 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
-          Choisissez votre activité : on vous montre les formations faites pour vous — cœur de métier,
-          hygiène, sécurité et management — et à quel financement vous avez droit.
-        </p>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 ll-grid-faint" />
+        <div className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
+          <Kicker className="mb-5">Nos formations</Kicker>
+          <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
+            Quel est <span className="text-[#195144]">votre métier</span> ?
+          </h1>
+          <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
+            Choisissez votre activité : on vous montre les formations faites pour vous — cœur de métier,
+            hygiène, sécurité et management — et à quel financement vous avez droit.
+          </p>
+        </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">

@@ -1,14 +1,16 @@
 import { Mail, ShieldCheck, Banknote, Clock } from '../icons'
 import { ContactForm } from './ContactForm'
+import { Kicker } from '../Kicker'
 
 export const metadata = { title: 'Contact — Lab Learning' }
 
 export default function SiteContact() {
   return (
-    <section className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-20 pb-20">
-      <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Contact</div>
-      <h1 className="font-heading font-black text-4xl md:text-5xl text-[#14110F] tracking-heading text-balance max-w-3xl">Parlons de votre projet de formation</h1>
-      <p className="mt-4 text-lg text-[#57534E] max-w-2xl">
+    <section className="relative overflow-hidden max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-20">
+      <div className="absolute inset-0 -z-10 ll-grid-faint" />
+      <Kicker className="mb-5">Contact</Kicker>
+      <h1 className="ll-display ll-fluid-h1 text-[#14110F] text-balance max-w-3xl">Parlons de votre projet de formation</h1>
+      <p className="mt-5 text-lg md:text-xl text-[#57534E] max-w-2xl">
         Un besoin précis, une équipe à former, un financement à monter ? Écrivez-nous — nous revenons vers vous rapidement.
       </p>
 
