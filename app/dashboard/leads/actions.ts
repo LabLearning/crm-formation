@@ -1330,6 +1330,17 @@ export async function proposeLeadFormationDateAction(leadFormationId: string, fo
   return { success: true }
 }
 
+/** Modifie la date de formation SOUHAITÉE d'une ligne (le commercial peut l'ajuster). */
+export async function updateLeadFormationSouhaiteeAction(leadFormationId: string, date: string): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  await supabase.from('lead_formations')
+    .update({ date_souhaitee: date || null })
+    .eq('id', leadFormationId).eq('organization_id', session.organization.id)
+  revalidatePath('/dashboard/leads')
+  return { success: true }
+}
+
 // Génère la convention d'UNE formation (Option A) : convertit le lead en client,
 // crée les apprenants des participants AFFECTÉS, les inscrit dans SA session, crée SA convention.
 export async function generateConventionForFormationAction(leadFormationId: string): Promise<ActionResult> {

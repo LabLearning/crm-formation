@@ -8,7 +8,7 @@ import {
   getLeadFormationsAction, addLeadFormationAction, deleteLeadFormationAction,
   confirmLeadFormationDateAction, proposeLeadFormationDateAction,
   setLeadFormationParticipantsAction, generateConventionForFormationAction,
-  getLeadParticipantsAction, addLeadParticipantAction,
+  getLeadParticipantsAction, addLeadParticipantAction, updateLeadFormationSouhaiteeAction,
 } from './actions'
 import { Input } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
@@ -181,6 +181,7 @@ function FormationRow({ lf, pool, formateurs, isManager, onChange, onDelete, onA
   const { toast } = useToast()
   const router = useRouter()
   const [date, setDate] = useState(lf.date_confirmee || lf.date_souhaitee || '')
+  const [souhaitee, setSouhaitee] = useState(lf.date_souhaitee || '')
   const [formateurId, setFormateurId] = useState(lf.formateur_id || '')
   const [busy, setBusy] = useState<string | null>(null)
   const [assigned, setAssigned] = useState<Set<string>>(new Set((lf.assignments || []).map((a) => a.lead_participant_id)))
@@ -240,7 +241,14 @@ function FormationRow({ lf, pool, formateurs, isManager, onChange, onDelete, onA
 
   const duree = libelleDuree(lf.formation)
   const dureeJours = lf.formation?.duree_jours
-  const finSouhaitee = lf.date_souhaitee ? dateFinPrevue(lf.date_souhaitee, dureeJours) : null
+  const finSouhaitee = souhaitee ? dateFinPrevue(souhaitee, dureeJours) : null
+
+  async function saveSouhaitee(v: string) {
+    setSouhaitee(v)
+    const r = await updateLeadFormationSouhaiteeAction(lf.id, v)
+    if (r.success) { toast('success', 'Date souhaitée mise à jour'); onChange({ ...lf, date_souhaitee: v || null }) }
+    else toast('error', r.error || 'Erreur')
+  }
   // Date de fin de la session telle qu'elle sera créée à partir de la date choisie
   const finChoisie = date ? dateFinPrevue(date, dureeJours) : null
 
@@ -256,11 +264,21 @@ function FormationRow({ lf, pool, formateurs, isManager, onChange, onDelete, onA
               </span>
             )}
           </div>
-          {lf.date_souhaitee && (
-            <div className="text-2xs text-surface-400">
-              Souhaitée : {formatDate(lf.date_souhaitee, { day: 'numeric', month: 'short', year: 'numeric' })}
-              {finSouhaitee && finSouhaitee !== lf.date_souhaitee && (
-                <> → {formatDate(finSouhaitee, { day: 'numeric', month: 'short', year: 'numeric' })}</>
+          {conventionGenerated ? (
+            souhaitee && (
+              <div className="text-2xs text-surface-400">
+                Souhaitée : {formatDate(souhaitee, { day: 'numeric', month: 'short', year: 'numeric' })}
+                {finSouhaitee && finSouhaitee !== souhaitee && <> → {formatDate(finSouhaitee, { day: 'numeric', month: 'short', year: 'numeric' })}</>}
+              </div>
+            )
+          ) : (
+            <div className="flex flex-wrap items-center gap-1.5 mt-1 text-2xs text-surface-500">
+              <CalendarClock className="h-3 w-3 text-surface-400" />
+              <span>Souhaitée :</span>
+              <input type="date" value={souhaitee} onChange={(e) => saveSouhaitee(e.target.value)}
+                className="input-base h-6 py-0 px-1.5 text-2xs w-[132px]" />
+              {finSouhaitee && souhaitee && finSouhaitee !== souhaitee && (
+                <span className="text-surface-400">→ {formatDate(finSouhaitee, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               )}
             </div>
           )}
