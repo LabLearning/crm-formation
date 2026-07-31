@@ -1,70 +1,56 @@
 import Link from 'next/link'
-import { Clock, Monitor, ArrowRight, CheckCircle2 } from '../icons'
+import { ArrowRight } from '../icons'
+import { getBranchesData } from '@/lib/public-site-data'
+import { BRANCHES } from '../branches'
 import { MetierVisual } from '../MetierVisual'
-import { getPublicSiteData } from '@/lib/public-site-data'
+import { Reveal } from '../Reveal'
 
 export const dynamic = 'force-dynamic'
-
-const MODALITE: Record<string, string> = { presentiel: 'Présentiel', distanciel: 'À distance', mixte: 'Mixte' }
+export const metadata = { title: 'Nos formations par métier — Lab Learning' }
 
 export default async function SiteFormations() {
-  const { categories, stats } = await getPublicSiteData()
+  const data = await getBranchesData()
+  const bySlug = new Map(data.map((d) => [d.slug, d]))
 
   return (
     <>
-      <section className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-20 pb-8">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Catalogue</div>
-        <h1 className="font-heading font-black text-4xl md:text-5xl text-[#14110F] tracking-heading text-balance max-w-3xl">Nos formations</h1>
-        <p className="mt-4 text-lg text-[#57534E] max-w-2xl">
-          {stats.formations} programmes professionnels, du CAP au perfectionnement métier, éligibles aux financements OPCO.
-          Catalogue mis à jour en continu.
+      <section className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-10">
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Nos formations</div>
+        <h1 className="font-heading font-black text-4xl md:text-6xl text-[#14110F] tracking-heading text-balance">
+          Quel est <span className="text-[#195144]">votre métier</span> ?
+        </h1>
+        <p className="mt-6 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
+          Choisissez votre activité : on vous montre les formations faites pour vous — cœur de métier,
+          hygiène, sécurité et management — et à quel financement vous avez droit.
         </p>
       </section>
 
-      <div className="max-w-6xl mx-auto px-5 md:px-8 pb-20 space-y-14">
-        {categories.map((cat) => (
-          <section key={cat.nom}>
-            <div className="relative rounded-3xl overflow-hidden mb-6 ring-1 ring-black/5 shadow-sm">
-              <MetierVisual nom={cat.nom} label={cat.nom} height="h-36 md:h-44" />
-              <span className="absolute top-4 right-4 rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25">
-                {cat.formations.length} formation{cat.formations.length > 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {cat.formations.map((f) => (
-                <Link key={f.id} href={`/site/formations/${f.id}`} className="group rounded-2xl border border-[#195144]/10 bg-white p-5 flex flex-col hover:border-[#195144]/30 hover:shadow-sm transition-all">
-                  <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
-                    {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
-                    {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
-                  </div>
-                  {f.objectifs.length > 0 && (
-                    <ul className="mt-4 space-y-1.5 flex-1">
-                      {f.objectifs.slice(0, 3).map((o, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-[#57534E]">
-                          <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
-                    Voir le programme <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
-        <div className="rounded-3xl bg-[#195144] text-white px-6 md:px-12 py-12 text-center">
-          <h2 className="font-heading font-bold text-2xl md:text-3xl tracking-heading">Une formation sur mesure ?</h2>
-          <p className="mt-2 text-white/70 max-w-xl mx-auto">Nous adaptons nos programmes à votre établissement et à vos équipes.</p>
-          <Link href="/site/contact" className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
-            Construire mon parcours <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {BRANCHES.map((b, i) => {
+            const d = bySlug.get(b.slug)
+            return (
+              <Reveal key={b.slug} delay={(i % 2) * 90}>
+                <Link href={`/site/branches/${b.slug}`} className="group block rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-lg ll-lift">
+                  <MetierVisual nom={b.label} label={b.label} height="h-52 md:h-60" />
+                  <div className="p-5 md:p-6 flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-sm text-[#57534E]">{b.tagline}</div>
+                      {d && <div className="text-xs text-[#A8A29E] mt-1">{d.total} formation{d.total > 1 ? 's' : ''} pour ce métier</div>}
+                    </div>
+                    <span className="shrink-0 h-10 w-10 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              </Reveal>
+            )
+          })}
         </div>
+
+        <p className="mt-8 text-center text-sm text-[#78716C]">
+          Vous ne trouvez pas votre secteur ? <Link href="/site/contact" className="font-semibold text-[#195144] hover:underline">Parlons-en</Link> — on construit du sur-mesure.
+        </p>
       </section>
     </>
   )

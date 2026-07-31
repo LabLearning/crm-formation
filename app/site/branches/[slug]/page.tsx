@@ -1,0 +1,115 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowRight, ArrowLeft, Clock, Monitor, CheckCircle2, ShieldCheck, Banknote } from '../../icons'
+import { getBranchesData } from '@/lib/public-site-data'
+import { brancheBySlug, BRANCHES } from '../../branches'
+import { MetierVisual } from '../../MetierVisual'
+import { Reveal } from '../../Reveal'
+
+export const dynamic = 'force-dynamic'
+
+const MODALITE: Record<string, string> = { presentiel: 'Présentiel', distanciel: 'À distance', mixte: 'Mixte' }
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const b = brancheBySlug(params.slug)
+  return { title: b ? `Formations ${b.label} — Lab Learning` : 'Formations — Lab Learning' }
+}
+
+export default async function SiteBranche({ params }: { params: { slug: string } }) {
+  const b = brancheBySlug(params.slug)
+  if (!b) notFound()
+  const data = await getBranchesData()
+  const branche = data.find((d) => d.slug === params.slug)
+  const groups = branche?.groups || []
+  const autres = BRANCHES.filter((x) => x.slug !== b.slug)
+
+  return (
+    <>
+      {/* Hero métier */}
+      <section className="relative overflow-hidden border-b border-[#195144]/10">
+        <img src={`/site/metiers/${b.img}.webp`} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10" style={{ background: `linear-gradient(120deg, ${b.from}E6 0%, ${b.to}B3 55%, rgba(0,0,0,0.55) 100%)` }} />
+        <div className="max-w-5xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-14 md:pb-20 text-white">
+          <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Tous les métiers
+          </Link>
+          <div className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/70">Vous êtes</div>
+          <h1 className="mt-1 font-heading font-black text-4xl md:text-6xl tracking-heading text-balance">{b.label}</h1>
+          <p className="mt-3 text-lg text-white/85 max-w-2xl">{b.tagline}</p>
+          <div className="mt-6 flex flex-wrap gap-2 text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><CheckCircle2 className="h-4 w-4" />{branche?.total || 0} formations pour vous</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><Banknote className="h-4 w-4" />Éligible OPCO</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Formations groupées par thème */}
+      <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 md:py-16 space-y-14">
+        {groups.length === 0 && (
+          <div className="rounded-2xl border border-[#195144]/10 bg-white p-10 text-center text-[#78716C]">
+            Le catalogue de ce métier arrive très bientôt. <Link href="/site/contact" className="font-semibold text-[#195144]">Contactez-nous</Link>.
+          </div>
+        )}
+        {groups.map((g) => (
+          <section key={g.key}>
+            <div className="flex items-baseline justify-between gap-4 border-b border-[#195144]/10 pb-3 mb-6">
+              <h2 className="font-heading font-bold text-xl md:text-2xl text-[#14110F] tracking-heading">{g.label}</h2>
+              <span className="text-sm text-[#A8A29E] shrink-0">{g.formations.length}</span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {g.formations.map((f, i) => (
+                <Reveal key={f.id} delay={(i % 3) * 70}>
+                  <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#195144]/10 bg-white p-5 hover:border-[#195144]/30 hover:shadow-sm ll-lift">
+                    <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
+                      {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
+                      {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+                    </div>
+                    {f.objectifs.length > 0 && (
+                      <ul className="mt-4 space-y-1.5 flex-1">
+                        {f.objectifs.slice(0, 3).map((o, j) => (
+                          <li key={j} className="flex items-start gap-2 text-sm text-[#57534E]">
+                            <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
+                      Voir le programme <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {/* Autres métiers */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-4">Autres métiers</div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {autres.map((x) => (
+            <Link key={x.slug} href={`/site/branches/${x.slug}`} className="group rounded-2xl overflow-hidden ring-1 ring-black/5 hover:ring-[#195144]/25 ll-lift">
+              <MetierVisual nom={x.label} label={x.label} height="h-28" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+        <div className="rounded-3xl bg-[#195144] text-white px-6 md:px-12 py-12 md:flex items-center justify-between gap-8">
+          <div>
+            <h2 className="font-heading font-bold text-2xl md:text-3xl tracking-heading">Un besoin précis pour votre équipe ?</h2>
+            <p className="mt-2 text-white/70 max-w-xl">On construit le parcours et on monte le financement (POEI, OPCO) avec vous.</p>
+          </div>
+          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
+            Demander un devis <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </>
+  )
+}

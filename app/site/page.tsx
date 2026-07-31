@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Briefcase, DoorOpen, TrendingUp, MonitorPlay, Laptop } from './icons'
-import { getPublicSiteData } from '@/lib/public-site-data'
+import { getPublicSiteData, getBranchesData } from '@/lib/public-site-data'
 import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
-import { metierStyle } from './metier'
 import { StoryChapter } from './StoryChapter'
 import { Reveal } from './Reveal'
+import { BRANCHES } from './branches'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +19,8 @@ const POURQUOI = [
 ]
 
 export default async function SiteHome() {
-  const { stats, categories, franchises } = await getPublicSiteData()
+  const [{ stats, franchises }, branches] = await Promise.all([getPublicSiteData(), getBranchesData()])
+  const brancheCount = new Map(branches.map((b) => [b.slug, b.total]))
 
   const chapitres = [
     {
@@ -47,7 +48,7 @@ export default async function SiteHome() {
     },
   ]
 
-  const heroTiles = categories.slice(0, 4)
+  const heroTiles = BRANCHES
 
   return (
     <>
@@ -83,12 +84,12 @@ export default async function SiteHome() {
           {/* Collage métier (données live) */}
           {heroTiles.length >= 2 && (
             <div className="ll-rise grid grid-cols-2 gap-3 sm:gap-4" style={{ animationDelay: '0.12s' }}>
-              {heroTiles.map((c, i) => (
-                <Link key={c.nom} href="/site/formations"
-                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ${i % 2 === 1 ? 'translate-y-5' : ''}`}>
-                  <MetierVisual nom={c.nom} label={c.nom} height="h-40 sm:h-48" />
+              {heroTiles.map((b, i) => (
+                <Link key={b.slug} href={`/site/branches/${b.slug}`}
+                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-5' : ''}`}>
+                  <MetierVisual nom={b.label} label={b.label} height="h-40 sm:h-48" />
                   <div className="bg-white px-4 py-3 flex items-center justify-between">
-                    <span className="text-xs text-[#78716C]">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</span>
+                    <span className="text-xs text-[#78716C]">{brancheCount.get(b.slug) || 0} formation{(brancheCount.get(b.slug) || 0) > 1 ? 's' : ''}</span>
                     <ArrowRight className="h-4 w-4 text-[#195144] opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </Link>
@@ -116,31 +117,30 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── DOMAINES (catégories live, cards visuelles) ── */}
+      {/* ── BRANCHES MÉTIER ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
         <div className="max-w-2xl">
-          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Nos domaines</div>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Des formations pour chaque métier</h2>
-          <p className="mt-3 text-[#57534E]">Un catalogue vivant, mis à jour en continu. {fmt(stats.formations)} programmes couvrant l'ensemble de la filière.</p>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Votre métier</div>
+          <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Des formations pensées pour votre activité</h2>
+          <p className="mt-3 text-[#57534E]">Identifiez-vous par votre métier — on vous montre ce à quoi vous avez droit, financement compris.</p>
         </div>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.slice(0, 9).map((c, i) => {
-            const s = metierStyle(c.nom)
-            return (
-              <Reveal key={c.nom} delay={(i % 3) * 90} className="h-full">
-              <Link href="/site/formations" className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md ll-lift">
-                <MetierVisual nom={c.nom} height="h-28" />
-                <div className="p-5">
-                  <div className="font-heading font-semibold text-lg text-[#14110F] leading-snug">{c.nom}</div>
-                  <div className="text-sm text-[#78716C] mt-1">{c.formations.length} formation{c.formations.length > 1 ? 's' : ''}</div>
-                  <div className="mt-4 inline-flex items-center gap-1 text-sm font-semibold group-hover:gap-2 transition-all" style={{ color: s.ink }}>
-                    Explorer <ArrowRight className="h-3.5 w-3.5" />
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {BRANCHES.map((b, i) => (
+            <Reveal key={b.slug} delay={(i % 2) * 90} className="h-full">
+              <Link href={`/site/branches/${b.slug}`} className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md ll-lift">
+                <MetierVisual nom={b.label} label={b.label} height="h-44" />
+                <div className="p-5 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-[#57534E]">{b.tagline}</div>
+                    <div className="text-xs text-[#A8A29E] mt-1">{brancheCount.get(b.slug) || 0} formation{(brancheCount.get(b.slug) || 0) > 1 ? 's' : ''}</div>
                   </div>
+                  <span className="shrink-0 inline-flex items-center gap-1 text-sm font-semibold text-[#195144] group-hover:gap-2 transition-all">
+                    Voir <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
               </Link>
-              </Reveal>
-            )
-          })}
+            </Reveal>
+          ))}
         </div>
       </section>
 

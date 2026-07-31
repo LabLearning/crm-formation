@@ -82,6 +82,59 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
   }
 }
 
+import { buildBranches, BRANCHES_BASE, type BrancheFormationInput, type BrancheGroup } from '@/lib/branches'
+
+export interface BrancheData {
+  slug: string
+  label: string
+  tagline: string
+  total: number
+  groups: BrancheGroup<PublicFormation>[]
+}
+
+/**
+ * Catalogue réparti par branche métier. Utilise les vrais champs
+ * (branches/est_transverse/site_publie) dès que la migration 099 est appliquée,
+ * sinon retombe sur le classifieur par mots-clés — le site marche dans les deux cas.
+ */
+export async function getBranchesData(): Promise<BrancheData[]> {
+  const supabase = await createServiceRoleClient()
+  const base = 'id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques'
+  let rows: any[] | null = null
+  // Tente les colonnes branche ; si absentes (avant migration), on refait sans.
+  const withCols = await supabase.from('formations')
+    .select(`${base}, branches, est_transverse, site_publie`)
+    .eq('organization_id', ORG).eq('is_active', true).order('intitule')
+  if (withCols.error) {
+    const basic = await supabase.from('formations')
+      .select(base).eq('organization_id', ORG).eq('is_active', true).order('intitule')
+    rows = basic.data || []
+  } else {
+    rows = withCols.data || []
+  }
+
+  // Dédoublonnage par intitulé normalisé
+  const seen = new Set<string>()
+  const formations: (PublicFormation & BrancheFormationInput)[] = []
+  for (const f of rows) {
+    const k = norm(f.intitule)
+    if (!k || seen.has(k)) continue
+    seen.add(k)
+    formations.push({
+      id: f.id, intitule: f.intitule, categorie: f.categorie || null,
+      duree_heures: f.duree_heures || null, modalite: f.modalite || null,
+      objectifs: Array.isArray(f.objectifs_pedagogiques) ? f.objectifs_pedagogiques.slice(0, 4) : [],
+      branches: f.branches, est_transverse: f.est_transverse, site_publie: f.site_publie,
+    })
+  }
+
+  const map = buildBranches(formations)
+  return BRANCHES_BASE.map((b) => {
+    const groups = (map.get(b.slug) || []) as BrancheGroup<PublicFormation>[]
+    return { slug: b.slug, label: b.label, tagline: b.tagline, total: groups.reduce((s, g) => s + g.formations.length, 0), groups }
+  })
+}
+
 export interface PublicFormationDetail extends PublicFormation {
   sous_titre: string | null
   public_vise: string | null
