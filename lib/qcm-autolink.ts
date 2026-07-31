@@ -46,26 +46,43 @@ export async function autolinkFormationQcms(
 }
 
 /**
+ * Récupère TOUTES les lignes d'une table pour une org, par pages de 1000
+ * (PostgREST plafonne une requête à 1000 lignes : sans pagination, l'ensemble
+ * « déjà lié » est incomplet dès que l'org dépasse 1000 qcm_sessions, ce qui
+ * ré-insère les mêmes liens à chaque exécution → doublons).
+ */
+async function fetchAll(supabase: any, table: string, columns: string, orgId: string): Promise<any[]> {
+  const out: any[] = []
+  const PAGE = 1000
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from(table).select(columns).eq('organization_id', orgId)
+      .range(from, from + PAGE - 1)
+    if (error || !data || data.length === 0) break
+    out.push(...data)
+    if (data.length < PAGE) break
+  }
+  return out
+}
+
+/**
  * Rattache, pour toute une organisation, les QCM publiés des formations à
  * TOUTES leurs sessions non encore liées. Idempotent — appelé après le sync
  * Dendreo pour couvrir les sessions importées automatiquement.
  */
 export async function backfillOrgQcmSessions(supabase: any, orgId: string): Promise<number> {
   try {
-    const { data: qcms } = await supabase
-      .from('qcm').select('id, formation_id')
-      .eq('organization_id', orgId).eq('status', 'publie').not('formation_id', 'is', null)
-    if (!qcms || qcms.length === 0) return 0
+    const qcms = (await fetchAll(supabase, 'qcm', 'id, formation_id, status', orgId))
+      .filter((q: any) => q.status === 'publie' && q.formation_id)
+    if (qcms.length === 0) return 0
     const qcmByForm = new Map<string, string[]>()
     for (const q of qcms) {
       const arr = qcmByForm.get(q.formation_id) || []; arr.push(q.id); qcmByForm.set(q.formation_id, arr)
     }
 
-    const { data: sessions } = await supabase
-      .from('sessions').select('id, formation_id').eq('organization_id', orgId)
-    const { data: existing } = await supabase
-      .from('qcm_sessions').select('session_id, qcm_id').eq('organization_id', orgId)
-    const linked = new Set((existing || []).map((e: any) => `${e.session_id}:${e.qcm_id}`))
+    const sessions = await fetchAll(supabase, 'sessions', 'id, formation_id', orgId)
+    const existing = await fetchAll(supabase, 'qcm_sessions', 'session_id, qcm_id', orgId)
+    const linked = new Set(existing.map((e: any) => `${e.session_id}:${e.qcm_id}`))
 
     const rows: any[] = []
     for (const s of (sessions || [])) {
