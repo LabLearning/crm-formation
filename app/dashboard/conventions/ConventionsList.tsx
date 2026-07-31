@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMenu } from '@/components/ui'
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
+import { annulerConventionSigneeAction } from './signature-actions'
 import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LABELS } from '@/lib/types/dossier'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
 import { formatDate, companyLabel } from '@/lib/utils'
@@ -107,6 +108,18 @@ export function ConventionsList({ conventions, clients, formations, sessions = [
     else toast('error', result.error || 'Erreur')
   }
 
+  const [annulerId, setAnnulerId] = useState<string | null>(null)
+  const [annulerLoading, setAnnulerLoading] = useState(false)
+  async function performAnnulerSignee() {
+    if (!annulerId) return
+    setAnnulerLoading(true)
+    const r = await annulerConventionSigneeAction(annulerId)
+    setAnnulerLoading(false)
+    setAnnulerId(null)
+    if (r.success) { toast('success', 'Signature annulée — convention repassée en brouillon'); router.refresh() }
+    else toast('error', r.error || 'Erreur')
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -199,6 +212,7 @@ export function ConventionsList({ conventions, clients, formations, sessions = [
                     { label: 'Marquer envoyée', icon: <Send className="h-4 w-4 text-brand-600" />, onClick: () => handleStatus(c.id, 'envoyee'), hidden: c.status !== 'brouillon' },
                     { label: 'Signée par le client', icon: <Check className="h-4 w-4 text-success-600" />, onClick: () => handleStatus(c.id, 'signee_client'), hidden: c.status !== 'envoyee' },
                     { label: 'Signature complète', icon: <Check className="h-4 w-4 text-success-600" />, onClick: () => handleStatus(c.id, 'signee_complete'), hidden: c.status !== 'signee_client' },
+                    { label: 'Annuler la signature', icon: <PenTool className="h-4 w-4" />, onClick: () => setAnnulerId(c.id), danger: true, hidden: !['signee_client', 'signee_of', 'signee_complete'].includes(c.status) },
                     { label: 'Supprimer', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDelete(c.id), danger: true, hidden: !['brouillon', 'envoyee'].includes(c.status) },
                   ]}
                 />
@@ -214,6 +228,19 @@ export function ConventionsList({ conventions, clients, formations, sessions = [
           <p className="text-sm text-surface-500">Aucune convention</p>
         </div>
       )}
+
+      <Modal isOpen={!!annulerId} onClose={() => setAnnulerId(null)} title="Annuler la signature" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-surface-600">
+            La convention repassera en <strong>brouillon</strong> : signature client et OF effacées, lien de signature invalidé,
+            et la session liée revient en « confirmée ». Les emails déjà envoyés ne peuvent pas être rappelés.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setAnnulerId(null)}>Retour</Button>
+            <Button variant="danger" isLoading={annulerLoading} onClick={performAnnulerSignee}>Annuler la signature</Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle convention" size="lg">
         <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">

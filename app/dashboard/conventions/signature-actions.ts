@@ -114,6 +114,51 @@ export async function cancelSignatureRequestAction(conventionId: string): Promis
   return { success: true }
 }
 
+/**
+ * Annule une convention DÉJÀ SIGNÉE : efface la signature (client + OF) et le
+ * lien, repasse en brouillon et remet la session liée en 'confirmee' si elle
+ * avait été validée par la signature. Réservé aux rôles de gestion (les emails
+ * déjà envoyés ne peuvent pas être rappelés).
+ */
+export async function annulerConventionSigneeAction(conventionId: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: conv } = await supabase
+    .from('conventions')
+    .select('id, numero, status, session_id')
+    .eq('id', conventionId).eq('organization_id', session.organization.id).single()
+  if (!conv) return { success: false, error: 'Convention introuvable' }
+
+  const { error } = await supabase
+    .from('conventions')
+    .update({
+      status: 'brouillon',
+      signature_client_date: null, signature_client_nom: null, signature_client_signature_data: null,
+      signature_client_ip: null, signature_client_user_agent: null,
+      signature_of_date: null, signature_of_nom: null,
+      signature_token: null, signature_token_expires_at: null,
+      participants_snapshot: null,
+      akto_dossier_status: 'non_envoye',
+    })
+    .eq('id', conventionId).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: "Impossible d'annuler la convention" }
+
+  // La signature avait pu valider la session liée → on revient à 'confirmee'
+  if (conv.session_id) {
+    await supabase.from('sessions').update({ status: 'confirmee' })
+      .eq('id', conv.session_id).eq('organization_id', session.organization.id).eq('status', 'validee')
+  }
+
+  await logAudit({ action: 'cancel_signed_convention', entity_type: 'convention', entity_id: conventionId, details: { numero: conv.numero } })
+  revalidatePath('/dashboard/conventions')
+  revalidatePath(`/dashboard/conventions/${conventionId}`)
+  return { success: true }
+}
+
 /** Action publique : enregistre la signature client (depuis la page /convention/[token]/signer) */
 export async function signConventionPublicAction(
   token: string,
