@@ -87,6 +87,16 @@ export default async function LeadsPage() {
 
   const isApporteur = session.user.role === 'apporteur_affaires'
 
+  // Commentaires / interactions des leads visibles (pour les afficher dans la fiche)
+  const leadIds = (leads || []).map((l: any) => l.id)
+  const { data: interactions } = leadIds.length
+    ? await supabase
+        .from('lead_interactions')
+        .select('id, lead_id, type, content, date, user:users(first_name, last_name)')
+        .in('lead_id', leadIds)
+        .order('date', { ascending: false })
+    : { data: [] as any[] }
+
   return (
     <div className="animate-fade-in">
       <LeadsPipeline
@@ -98,6 +108,7 @@ export default async function LeadsPage() {
         formations={formations || []}
         formateurs={formateurs || []}
         franchises={franchises || []}
+        interactions={(interactions || []) as any[]}
         isApporteur={isApporteur}
       />
     </div>

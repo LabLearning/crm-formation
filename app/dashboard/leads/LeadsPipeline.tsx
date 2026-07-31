@@ -41,6 +41,7 @@ interface LeadsPipelineProps {
   formations?: Formation[]
   formateurs?: { id: string; prenom: string; nom: string }[]
   franchises?: { id: string; nom: string }[]
+  interactions?: any[]
   isApporteur?: boolean
 }
 
@@ -68,7 +69,7 @@ function scoreBg(s: number) { return s >= 70 ? 'bg-success-50' : s >= 40 ? 'bg-w
 type ViewMode = 'kanban' | 'list'
 type FilterChip = 'all' | 'gagne' | 'perdu' | 'today' | 'high_score'
 
-export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, currentUserId, formations = [], formateurs = [], franchises = [], isApporteur }: LeadsPipelineProps) {
+export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, currentUserId, formations = [], formateurs = [], franchises = [], interactions = [], isApporteur }: LeadsPipelineProps) {
   const { toast } = useToast()
   const [view, setView] = useState<ViewMode>('kanban')
   const [createOpen, setCreateOpen] = useState(false)
@@ -422,7 +423,7 @@ export function LeadsPipeline({ leads, users, gestionnaires, currentUserRole, cu
 
       {/* Detail Modal */}
       <Modal isOpen={!!detailLead} onClose={() => setDetailLead(null)} title={detailLead ? (detailLead.entreprise || `${detailLead.contact_prenom || ''} ${detailLead.contact_nom}`.trim()) : ''} description={detailLead ? `${detailLead.contact_prenom || ''} ${detailLead.contact_nom}`.trim() : undefined} size="lg">
-        {detailLead && <LeadDetail lead={detailLead} users={users} gestionnaires={gestionnaires} formateurs={formateurs} formations={formations} currentUserRole={currentUserRole} currentUserId={currentUserId} onStatusChange={s => handleStatusChange(detailLead.id, s)} onClose={() => setDetailLead(null)} />}
+        {detailLead && <LeadDetail lead={detailLead} users={users} gestionnaires={gestionnaires} formateurs={formateurs} formations={formations} currentUserRole={currentUserRole} currentUserId={currentUserId} interactions={interactions.filter((i) => i.lead_id === detailLead.id)} onStatusChange={s => handleStatusChange(detailLead.id, s)} onClose={() => setDetailLead(null)} />}
       </Modal>
 
       {/* Import Modal */}
