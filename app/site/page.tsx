@@ -5,6 +5,7 @@ import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
 import { metierStyle } from './metier'
 import { StoryChapter } from './StoryChapter'
+import { Reveal } from './Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,7 +62,7 @@ export default async function SiteHome() {
             <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-6">
               <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
             </div>
-            <h1 className="font-heading font-black tracking-heading text-[#14110F] text-4xl sm:text-5xl md:text-[58px] leading-[1.03] text-balance">
+            <h1 className="font-heading font-black tracking-heading text-[#14110F] text-5xl sm:text-6xl md:text-[76px] leading-[0.98] text-balance">
               Former les métiers de bouche avec l'exigence du{' '}
               <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
             </h1>
@@ -70,7 +71,7 @@ export default async function SiteHome() {
               de vos équipes pendant l'exploitation, puis formation continue en e-learning avec notre plateforme Learnexa.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
+              <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] ll-lift">
                 Découvrir nos formations <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#195144]/25 text-[#195144] text-sm font-semibold hover:bg-[#195144]/5 transition-colors">
@@ -123,10 +124,11 @@ export default async function SiteHome() {
           <p className="mt-3 text-[#57534E]">Un catalogue vivant, mis à jour en continu. {fmt(stats.formations)} programmes couvrant l'ensemble de la filière.</p>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.slice(0, 9).map((c) => {
+          {categories.slice(0, 9).map((c, i) => {
             const s = metierStyle(c.nom)
             return (
-              <Link key={c.nom} href="/site/formations" className="group rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md transition-all">
+              <Reveal key={c.nom} delay={(i % 3) * 90} className="h-full">
+              <Link href="/site/formations" className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-md ll-lift">
                 <MetierVisual nom={c.nom} height="h-28" />
                 <div className="p-5">
                   <div className="font-heading font-semibold text-lg text-[#14110F] leading-snug">{c.nom}</div>
@@ -136,6 +138,7 @@ export default async function SiteHome() {
                   </div>
                 </div>
               </Link>
+              </Reveal>
             )
           })}
         </div>
@@ -149,12 +152,14 @@ export default async function SiteHome() {
             <h2 className="font-heading font-bold text-3xl md:text-4xl text-[#14110F] tracking-heading text-balance">Un partenaire formation, pas juste un catalogue</h2>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {POURQUOI.map((p) => (
-              <div key={p.t} className="rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-sm transition-shadow">
+            {POURQUOI.map((p, i) => (
+              <Reveal key={p.t} delay={(i % 4) * 80}>
+              <div className="h-full rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-md ll-lift">
                 <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4"><p.Icon className="h-5 w-5 text-[#195144]" /></span>
                 <div className="font-heading font-semibold text-[#14110F]">{p.t}</div>
                 <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{p.d}</p>
               </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -162,7 +167,7 @@ export default async function SiteHome() {
 
       {/* ── STORYTELLING CHAPITRÉ : du recrutement à la rentabilité ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
-        <div className="max-w-3xl">
+        <Reveal className="max-w-3xl">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Notre accompagnement</div>
           <h2 className="font-heading font-bold text-3xl md:text-5xl text-[#14110F] tracking-heading text-balance">
             Du recrutement à la rentabilité, <span className="text-[#195144]">on est avec vous</span>.
@@ -171,9 +176,9 @@ export default async function SiteHome() {
             De l’ouverture avec la POEI, à la montée en compétence de vos équipes, jusqu’à la formation continue
             en e-learning : un partenaire unique sur tout le cycle de vie de votre établissement.
           </p>
-        </div>
+        </Reveal>
         <div className="mt-14 space-y-16 md:space-y-24">
-          {chapitres.map((c) => <StoryChapter key={c.index} {...(c as any)} />)}
+          {chapitres.map((c) => <Reveal key={c.index}><StoryChapter {...(c as any)} /></Reveal>)}
         </div>
       </section>
 
@@ -204,16 +209,18 @@ export default async function SiteHome() {
 
       {/* ── CTA ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+        <Reveal>
         <div className="rounded-3xl bg-[#14110F] text-white px-6 md:px-14 py-14 md:py-16 text-center relative overflow-hidden">
           <div className="absolute inset-0 -z-0 opacity-70" style={{ background: 'radial-gradient(600px 300px at 20% 0%, rgba(25,81,68,0.5), transparent 60%), radial-gradient(500px 260px at 100% 100%, rgba(99,102,241,0.35), transparent 55%)' }} />
           <div className="relative">
             <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-heading text-balance max-w-2xl mx-auto">Prêt à faire monter vos équipes en compétences ?</h2>
             <p className="mt-3 text-white/70 max-w-xl mx-auto">Nous étudions votre besoin, montons le financement OPCO et planifions les sessions.</p>
-            <Link href="/site/contact" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
+            <Link href="/site/contact" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
               Demander un devis <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
+        </Reveal>
       </section>
     </>
   )
