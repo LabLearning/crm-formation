@@ -61,14 +61,13 @@ export default async function SiteHome() {
         <div className="ll-orb-a absolute -z-10 -top-24 -left-16 h-72 w-72 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(25,81,68,0.28), transparent 65%)' }} />
         <div className="ll-orb-b absolute -z-10 top-10 right-0 h-80 w-80 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.22), transparent 65%)' }} />
 
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-16 md:pb-24 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-          <div className="ll-rise lg:col-span-7">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-16 md:pb-24 grid lg:grid-cols-12 gap-12 lg:gap-12 items-center">
+          <div className="ll-rise lg:col-span-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#195144]/10 text-[#195144] px-3 py-1 text-xs font-semibold mb-7">
               <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
             </div>
             <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
-              Former les métiers de bouche
-              <br className="hidden sm:block" /> avec l’exigence du{' '}
+              Former les métiers de bouche avec l’exigence du{' '}
               <span className="italic bg-gradient-to-r from-[#195144] to-[#6366F1] bg-clip-text text-transparent">geste juste</span>.
             </h1>
             <p className="mt-7 text-lg md:text-xl text-[#57534E] max-w-xl leading-relaxed">
@@ -91,11 +90,11 @@ export default async function SiteHome() {
 
           {/* Collage métier (données live) — asymétrique */}
           {heroTiles.length >= 2 && (
-            <div className="ll-rise lg:col-span-5 grid grid-cols-2 gap-3 sm:gap-4 relative" style={{ animationDelay: '0.12s' }}>
+            <div className="ll-rise lg:col-span-6 grid grid-cols-2 gap-4 sm:gap-5 relative" style={{ animationDelay: '0.12s' }}>
               {heroTiles.map((b, i) => (
                 <Link key={b.slug} href={`/site/branches/${b.slug}`}
-                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-6 sm:translate-y-8' : ''}`}>
-                  <MetierVisual nom={b.label} label={b.label} height={i % 2 === 1 ? 'h-44 sm:h-56' : 'h-40 sm:h-48'} />
+                  className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-6 sm:translate-y-10' : ''}`}>
+                  <MetierVisual nom={b.label} label={b.label} height={i % 2 === 1 ? 'h-56 sm:h-72' : 'h-52 sm:h-64'} />
                   <div className="bg-white px-4 py-3 flex items-center justify-between">
                     <span className="text-xs text-[#78716C]">{brancheCount.get(b.slug) || 0} formation{(brancheCount.get(b.slug) || 0) > 1 ? 's' : ''}</span>
                     <ArrowRight className="h-4 w-4 text-[#195144] opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
