@@ -133,7 +133,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
     const r = await generateDevisPrevisionnelPoeiAction(poeiId)
     setGenPrev(false)
     if (r.success) {
-      toast('success', r.warning || 'Devis prévisionnel créé — disponible dans le module Devis')
+      toast('success', r.warning || 'Devis prévisionnel à jour — disponible dans le module Devis')
       router.refresh()
     } else {
       toast('error', r.error || 'Erreur')
@@ -146,9 +146,13 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
     setGenDevis(false)
     setGenDevisOpen(false)
     if (r.success) {
-      const { created, skipped } = (r.data || {}) as { created: number; skipped: number }
-      if (created > 0) toast('success', `${created} devis généré${created > 1 ? 's' : ''}${skipped ? ` (${skipped} déjà existant${skipped > 1 ? 's' : ''})` : ''}`)
-      else toast('success', r.warning || 'Aucun nouveau devis')
+      const { created, updated, skipped } = (r.data || {}) as { created: number; updated: number; skipped: number }
+      const parts: string[] = []
+      if (created) parts.push(`${created} généré${created > 1 ? 's' : ''}`)
+      if (updated) parts.push(`${updated} mis à jour`)
+      if (skipped) parts.push(`${skipped} déjà accepté${skipped > 1 ? 's' : ''}`)
+      if (created || updated) toast('success', `Devis : ${parts.join(', ')}`)
+      else toast('success', r.warning || 'Aucun devis modifié')
       router.refresh()
     } else {
       toast('error', r.error || 'Erreur')

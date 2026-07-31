@@ -488,15 +488,32 @@ export async function generateDevisPerCandidatAction(poeiId: string): Promise<Ac
   const today = new Date().toISOString().slice(0, 10)
   const validite = new Date(); validite.setDate(validite.getDate() + 30)
 
-  let created = 0, skipped = 0
+  let created = 0, skipped = 0, updated = 0
   for (const c of candidats) {
     const marker = `[POEI:${poeiId}:${c.id}]`
-    const { count: exists } = await supabase
-      .from('devis').select('id', { count: 'exact', head: true })
-      .eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`)
-    if (exists && exists > 0) { skipped++; continue }
-
     const nom = `${(c as any).apprenant?.prenom || ''} ${(c as any).apprenant?.nom || ''}`.trim() || 'Candidat'
+
+    // Un devis existe déjà pour ce candidat : on le met à jour au prix courant
+    // (le taux/durée du projet a pu changer) — sauf s'il est déjà accepté.
+    const { data: existingDevis } = await supabase
+      .from('devis').select('id, status')
+      .eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`).maybeSingle()
+    if (existingDevis) {
+      if (existingDevis.status === 'accepte') { skipped++; continue }
+      await supabase.from('devis_lignes').delete().eq('devis_id', existingDevis.id)
+      await supabase.from('devis_lignes').insert({
+        devis_id: existingDevis.id,
+        designation: `${formationNom} — ${nom}`,
+        description: `Formation POEI : ${duree} h × ${taux.toLocaleString('fr-FR')} €/h`,
+        quantite: duree, unite: 'heure', prix_unitaire_ht: taux, montant_ht: montantHt, position: 0,
+      })
+      await supabase.from('devis').update({
+        montant_ht: montantHt, montant_tva: 0, montant_ttc: montantHt, remise_montant: 0,
+      }).eq('id', existingDevis.id)
+      updated++
+      continue
+    }
+
     const { data: devis, error } = await supabase
       .from('devis')
       .insert({
@@ -525,11 +542,11 @@ export async function generateDevisPerCandidatAction(poeiId: string): Promise<Ac
     created++
   }
 
-  await logAudit({ action: 'generate_devis_poei', entity_type: 'poei', entity_id: poeiId, details: { created, skipped } })
+  await logAudit({ action: 'generate_devis_poei', entity_type: 'poei', entity_id: poeiId, details: { created, updated, skipped } })
   revalidatePath('/dashboard/devis')
   revalidatePath(`/dashboard/poei/${poeiId}`)
-  if (created === 0 && skipped > 0) return { success: true, data: { created, skipped }, warning: 'Tous les candidats ont déjà un devis.' }
-  return { success: true, data: { created, skipped } }
+  if (created === 0 && updated === 0 && skipped > 0) return { success: true, data: { created, updated, skipped }, warning: 'Tous les devis sont déjà acceptés — aucun mis à jour.' }
+  return { success: true, data: { created, updated, skipped } }
 }
 
 /**
@@ -557,11 +574,6 @@ export async function generateDevisPrevisionnelPoeiAction(
     return { success: false, error: 'Renseignez le taux horaire et la durée du projet avant de générer le devis' }
   }
 
-  const marker = `[POEI:${poeiId}:previsionnel]`
-  const { data: existing } = await supabase
-    .from('devis').select('id').eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`).maybeSingle()
-  if (existing) return { success: true, data: { devisId: existing.id }, warning: 'Un devis prévisionnel existe déjà pour ce projet.' }
-
   const duree = Number(poei.duree_heures)
   const taux = Number(poei.montant_horaire)
   const places = Math.max(1, Number(nbCandidats) || 1)
@@ -570,6 +582,33 @@ export async function generateDevisPrevisionnelPoeiAction(
   const formationNom = (poei as any).formation?.intitule || 'Formation POEI'
   const today = new Date().toISOString().slice(0, 10)
   const validite = new Date(); validite.setDate(validite.getDate() + 30)
+
+  const ligne = {
+    designation: `${formationNom}${places > 1 ? ` — ${places} places` : ''}`,
+    description: `Formation POEI : ${duree} h × ${taux.toLocaleString('fr-FR')} €/h${places > 1 ? ` × ${places} candidats` : ''}`,
+    quantite: places > 1 ? places : duree,
+    unite: places > 1 ? 'candidat' : 'heure',
+    prix_unitaire_ht: places > 1 ? montantUnitaire : taux,
+    montant_ht: montantHt, position: 0,
+  }
+
+  const marker = `[POEI:${poeiId}:previsionnel]`
+  const { data: existing } = await supabase
+    .from('devis').select('id, status').eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`).maybeSingle()
+  // Un prévisionnel existe déjà : on le remet au prix courant (sauf s'il est accepté)
+  if (existing) {
+    if (existing.status === 'accepte') return { success: true, data: { devisId: existing.id }, warning: 'Le devis prévisionnel est déjà accepté.' }
+    await supabase.from('devis_lignes').delete().eq('devis_id', existing.id)
+    await supabase.from('devis_lignes').insert({ devis_id: existing.id, ...ligne })
+    await supabase.from('devis').update({
+      objet: `POEI — Devis prévisionnel${places > 1 ? ` (${places} places)` : ''} — ${formationNom}`,
+      montant_ht: montantHt, montant_tva: 0, montant_ttc: montantHt, remise_montant: 0,
+    }).eq('id', existing.id)
+    await logAudit({ action: 'update_devis_previsionnel_poei', entity_type: 'poei', entity_id: poeiId, details: { devisId: existing.id, places } })
+    revalidatePath('/dashboard/devis')
+    revalidatePath(`/dashboard/poei/${poeiId}`)
+    return { success: true, data: { devisId: existing.id } }
+  }
 
   const { data: devis, error } = await supabase
     .from('devis')
@@ -587,15 +626,7 @@ export async function generateDevisPrevisionnelPoeiAction(
     .select('id').single()
   if (error || !devis) return { success: false, error: 'Impossible de créer le devis' }
 
-  await supabase.from('devis_lignes').insert({
-    devis_id: devis.id,
-    designation: `${formationNom}${places > 1 ? ` — ${places} places` : ''}`,
-    description: `Formation POEI : ${duree} h × ${taux.toLocaleString('fr-FR')} €/h${places > 1 ? ` × ${places} candidats` : ''}`,
-    quantite: places > 1 ? places : duree,
-    unite: places > 1 ? 'candidat' : 'heure',
-    prix_unitaire_ht: places > 1 ? montantUnitaire : taux,
-    montant_ht: montantHt, position: 0,
-  })
+  await supabase.from('devis_lignes').insert({ devis_id: devis.id, ...ligne })
   await supabase.from('devis').update({
     montant_ht: montantHt, montant_tva: 0, montant_ttc: montantHt, remise_montant: 0,
   }).eq('id', devis.id)
