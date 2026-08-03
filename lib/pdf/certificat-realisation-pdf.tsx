@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Document, Page, View, Text } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image } from '@react-pdf/renderer'
 import { PdfSectionTitle, PdfDocHeader, PdfDocFooter, shared, BRAND_GREEN, SURFACE_500, SURFACE_700, SURFACE_900 } from './components'
 
 interface CertificatRealisationProps {
@@ -69,7 +69,11 @@ export function CertificatRealisationPDF({ apprenant, session, formation, org, a
           <Text style={{ fontSize: 8, color: SURFACE_500 }}>Fait à {org.city || '___________'}, le {today}, pour faire valoir ce que de droit.</Text>
           <View style={{ marginTop: 12 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org.name} — {representant}</Text>
-            <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', width: 220 }} />
+            <View style={{ height: 60, width: 220, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+              {org.tampon_signature_url ? (
+                <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 150, height: 75, objectFit: 'contain' }} />
+              ) : null}
+            </View>
             <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet du dispensateur</Text>
           </View>
         </View>
