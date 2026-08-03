@@ -34,7 +34,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
             <ArrowLeft className="h-4 w-4" /> Tous les métiers
           </Link>
           <div className="mt-6"><span className="ll-kicker ll-kicker--light">Vous êtes</span></div>
-          <h1 className="mt-2 ll-display ll-fluid-hero text-balance">{b.label}</h1>
+          <h1 className="mt-2 ll-display ll-fluid-hero text-balance text-white">{b.label}</h1>
           <p className="mt-4 text-lg md:text-xl text-white/85 max-w-2xl">{b.tagline}</p>
           <div className="mt-6 flex flex-wrap gap-2 text-sm">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-sm"><CheckCircle2 className="h-4 w-4" />{branche?.total || 0} formations pour vous</span>
