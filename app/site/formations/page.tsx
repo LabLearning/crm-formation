@@ -17,7 +17,7 @@ export default async function SiteFormations() {
     <>
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 ll-grid-faint" />
-        <div className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
           <Kicker className="mb-5">Nos formations</Kicker>
           <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
             Quel est <span className="text-[#195144]">votre métier</span> ?

@@ -24,7 +24,7 @@ export default async function SiteAPropos() {
 
   return (
     <>
-      <section className="relative overflow-hidden max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-10">
+      <section className="relative overflow-hidden max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-10">
         <div className="absolute inset-0 -z-10 ll-grid-faint" />
         <Kicker className="mb-5">Qui sommes-nous</Kicker>
         <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
