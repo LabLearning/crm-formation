@@ -55,6 +55,12 @@ export function SiteFooter() {
             Lab Learning — SAS au capital de 5 000 € · SIRET 931 658 561 000 10 · Déclaration d’activité n° 76 34 13151 34
             (cet enregistrement ne vaut pas agrément de l’État) · TVA FR41931658561
           </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/site/mentions-legales" className="hover:text-[#D6D3D1]">Mentions légales</Link>
+            <Link href="/site/cgv" className="hover:text-[#D6D3D1]">CGV</Link>
+            <Link href="/site/confidentialite" className="hover:text-[#D6D3D1]">Confidentialité</Link>
+            <Link href="/site/cookies" className="hover:text-[#D6D3D1]">Cookies</Link>
+          </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <span>© {'{année}'.replace('{année}', String(new Date().getFullYear()))} Lab Learning. Tous droits réservés.</span>
             <span>Restauration · Boucherie · Boulangerie · Pâtisserie · Hôtellerie</span>
