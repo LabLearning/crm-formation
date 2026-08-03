@@ -711,8 +711,26 @@ async function resolveLeadClient(supabase: any, orgId: string, lead: any, userId
   return created.id
 }
 
-/** Crée un apprenant (rattaché au client établissement) depuis un participant de lead. */
+/** Crée (ou retrouve) un apprenant rattaché au client depuis un participant de lead. */
 async function createApprenantFromParticipant(supabase: any, orgId: string, clientId: string | null, p: any): Promise<string | null> {
+  const prenom = (p.prenom || '').trim()
+  const nom = (p.nom || '—').trim()
+  // Anti-doublon : par email, sinon par (prénom + nom) au sein du même client
+  if (clientId) {
+    if (p.email) {
+      const { data } = await supabase.from('apprenants').select('id')
+        .eq('organization_id', orgId).eq('client_id', clientId).eq('email', p.email).limit(1)
+      if (data?.[0]) return data[0].id
+    }
+    if (nom) {
+      const { data } = await supabase.from('apprenants').select('id, prenom, nom')
+        .eq('organization_id', orgId).eq('client_id', clientId).ilike('nom', nom)
+      const m = (data || []).find((a: any) =>
+        (a.prenom || '').trim().toLowerCase() === prenom.toLowerCase() &&
+        (a.nom || '').trim().toLowerCase() === nom.toLowerCase())
+      if (m) return m.id
+    }
+  }
   const { data, error } = await supabase.from('apprenants').insert({
     organization_id: orgId, client_id: clientId,
     civilite: p.civilite || null, prenom: p.prenom || '', nom: p.nom || '—',
@@ -1382,10 +1400,26 @@ export async function generateConventionForFormationAction(leadFormationId: stri
 
   const apprenantIds: string[] = []
   for (const p of participants) {
+    const pPrenom = (p.prenom || p.nom || '').trim()
+    const pNom = (p.nom || '').trim()
+    // Anti-doublon : d'abord par email, sinon par (prénom + nom) au sein du MÊME
+    // client — sinon un participant sans email est recréé à chaque appel (ex.
+    // une convention par formation d'un même lead → doublons d'apprenants).
+    let existingId: string | null = null
     if (p.email) {
-      const { data: existing } = await supabase.from('apprenants').select('id').eq('organization_id', session.organization.id).eq('client_id', clientId).eq('email', p.email).maybeSingle()
-      if (existing) { apprenantIds.push(existing.id); continue }
+      const { data } = await supabase.from('apprenants').select('id')
+        .eq('organization_id', session.organization.id).eq('client_id', clientId).eq('email', p.email).limit(1)
+      existingId = data?.[0]?.id || null
     }
+    if (!existingId && pNom) {
+      const { data } = await supabase.from('apprenants').select('id, prenom, nom')
+        .eq('organization_id', session.organization.id).eq('client_id', clientId).ilike('nom', pNom)
+      const match = (data || []).find((a: any) =>
+        (a.prenom || '').trim().toLowerCase() === pPrenom.toLowerCase() &&
+        (a.nom || '').trim().toLowerCase() === pNom.toLowerCase())
+      existingId = match?.id || null
+    }
+    if (existingId) { apprenantIds.push(existingId); continue }
     const { data: appr } = await supabase.from('apprenants').insert({
       organization_id: session.organization.id, client_id: clientId,
       civilite: p.civilite || null, prenom: p.prenom || p.nom, nom: p.nom,
