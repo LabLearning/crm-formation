@@ -102,7 +102,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
         <div className="rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
-            <h2 className="ll-display text-2xl md:text-4xl text-balance">Un besoin précis pour votre équipe ?</h2>
+            <h2 className="ll-display text-2xl md:text-4xl text-balance text-white">Un besoin précis pour votre équipe ?</h2>
             <p className="mt-3 text-white/70 max-w-xl">On construit le parcours et on monte le financement (POEI, OPCO) avec vous.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">

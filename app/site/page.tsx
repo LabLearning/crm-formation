@@ -223,7 +223,7 @@ export default async function SiteHome() {
           <div className="absolute inset-0 -z-0 opacity-70" style={{ background: 'radial-gradient(600px 300px at 20% 0%, rgba(25,81,68,0.5), transparent 60%), radial-gradient(500px 260px at 100% 100%, rgba(99,102,241,0.35), transparent 55%)' }} />
           <div className="relative">
             <Kicker tone="light" center className="mb-5 justify-center">Prêt à démarrer</Kicker>
-            <h2 className="ll-display ll-fluid-h1 text-balance max-w-3xl mx-auto">Prêt à faire monter vos équipes en compétences ?</h2>
+            <h2 className="ll-display ll-fluid-h1 text-balance max-w-3xl mx-auto text-white">Prêt à faire monter vos équipes en compétences ?</h2>
             <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">Nous étudions votre besoin, montons le financement OPCO et planifions les sessions.</p>
             <Link href="/site/contact" className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
               Demander un devis <ArrowRight className="h-4 w-4" />
