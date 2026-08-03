@@ -34,11 +34,14 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
+  const entrepriseNom = (poei as any).client?.raison_sociale || null
   const { data: cands } = await supabase
     .from('poei_candidats')
     .select('apprenant:apprenants(*)')
     .eq('poei_id', params.id)
   const apprenants = (cands || []).map((c: any) => c.apprenant).filter(Boolean)
+    // L'entreprise du stagiaire = l'établissement du projet POEI (comme le format officiel)
+    .map((a: any) => ({ ...a, entreprise: a.entreprise || entrepriseNom }))
   if (apprenants.length === 0) return NextResponse.json({ error: 'Aucun stagiaire à certifier' }, { status: 404 })
 
   const files: Record<string, Uint8Array> = {}
