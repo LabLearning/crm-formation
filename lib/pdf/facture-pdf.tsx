@@ -32,7 +32,7 @@ const PAIEMENT_LABELS: Record<string, string> = {
   autre: 'Autre',
 }
 
-export function FacturePDF({ facture, org }: { facture: Facture; org?: any }) {
+export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: any; agence?: any }) {
   const clientName = facture.client?.raison_sociale
     || (facture.client?.nom ? `${facture.client.prenom || ''} ${facture.client.nom}`.trim() : '—')
   const client: any = facture.client || {}
@@ -79,12 +79,30 @@ export function FacturePDF({ facture, org }: { facture: Facture; org?: any }) {
           </View>
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Facturer à</PdfSectionTitle>
-            <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{clientName}</Text>
-            {client.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.adresse}</Text>}
-            {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
-            {client.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {client.siret}</Text>}
-            {client.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {client.tva_intra}</Text>}
-            {client.email && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.email}</Text>}
+            {agence ? (
+              <>
+                <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{agence.nom}</Text>
+                {agence.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{agence.adresse}</Text>}
+                {(agence.code_postal || agence.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{agence.code_postal || ''} {agence.ville || ''}</Text>}
+                {agence.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {agence.siret}</Text>}
+                {agence.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {agence.tva_intra}</Text>}
+                <View style={{ marginTop: 6 }}>
+                  <Text style={{ fontSize: 7.5, color: '#78716c' }}>Pour le compte de :</Text>
+                  <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{clientName}</Text>
+                  {client.adresse && <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{client.adresse}</Text>}
+                  {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{clientName}</Text>
+                {client.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.adresse}</Text>}
+                {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                {client.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {client.siret}</Text>}
+                {client.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {client.tva_intra}</Text>}
+                {client.email && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.email}</Text>}
+              </>
+            )}
           </View>
         </View>
 

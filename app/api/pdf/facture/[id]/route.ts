@@ -40,8 +40,16 @@ export async function GET(
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
+  // Facture POEI adressée à une agence France Travail (« pour le compte de » le client)
+  let agence: any = null
+  if ((facture as any).agence_ft_id) {
+    const { data: ag } = await supabase.from('agences_france_travail')
+      .select('*').eq('id', (facture as any).agence_ft_id).maybeSingle()
+    agence = ag || null
+  }
+
   const buffer = await renderToBuffer(
-    createElement(FacturePDF, { facture: facture as Facture, org }) as any
+    createElement(FacturePDF, { facture: facture as Facture, org, agence }) as any
   )
 
   return new NextResponse(new Uint8Array(buffer), {

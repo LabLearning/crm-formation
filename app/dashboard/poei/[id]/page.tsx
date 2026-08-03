@@ -103,6 +103,12 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     if (m) facturesByCandidat[m[1]] = { id: f.id, numero: f.numero, status: f.status, montant_ttc: f.montant_ttc }
   }
 
+  // Agences France Travail (résilient : table absente avant migration 100)
+  const { data: agencesFt } = await supabase
+    .from('agences_france_travail')
+    .select('id, nom, ville')
+    .eq('organization_id', session.organization.id).eq('is_active', true).order('nom')
+
   // Dernier statut d'envoi d'attestation par adresse email (le plus récent gagne)
   const emailStatus: Record<string, { status: string; date: string | null }> = {}
   for (const log of (emailLogs || []).filter((l: any) => l.template === 'attestation_entree')) {
@@ -153,6 +159,8 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         sessionTerminee={formationTerminee}
         candidats={candidats as any[]}
         facturesByCandidat={facturesByCandidat}
+        agences={(agencesFt || []) as any[]}
+        currentAgenceId={(p as any).agence_ft_id || null}
       />
 
       <PoeiEmailHistory logs={(emailLogs || []) as any[]} />

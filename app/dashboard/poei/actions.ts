@@ -549,6 +549,50 @@ export async function generateDevisPerCandidatAction(poeiId: string): Promise<Ac
   return { success: true, data: { created, updated, skipped } }
 }
 
+// ─── Agences France Travail (destinataire de facturation POEI) ────────────────
+
+export async function listAgencesFtAction(): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const { data } = await supabase.from('agences_france_travail')
+    .select('*').eq('organization_id', session.organization.id).eq('is_active', true).order('nom')
+  return { success: true, data: data || [] }
+}
+
+export async function createAgenceFtAction(formData: FormData): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const nom = ((formData.get('nom') as string) || '').trim()
+  if (!nom) return { success: false, error: 'Nom de l’agence requis' }
+  const { data, error } = await supabase.from('agences_france_travail').insert({
+    organization_id: session.organization.id,
+    nom,
+    adresse: (formData.get('adresse') as string) || null,
+    code_postal: (formData.get('code_postal') as string) || null,
+    ville: (formData.get('ville') as string) || null,
+    siret: (formData.get('siret') as string) || null,
+    tva_intra: (formData.get('tva_intra') as string) || null,
+    email: (formData.get('email') as string) || null,
+    telephone: (formData.get('telephone') as string) || null,
+    created_by: session.user.id,
+  }).select().single()
+  if (error) return { success: false, error: 'Impossible de créer l’agence (migration 100 appliquée ?)' }
+  return { success: true, data }
+}
+
+export async function setPoeiAgenceFtAction(poeiId: string, agenceId: string | null): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase.from('poei')
+    .update({ agence_ft_id: agenceId || null })
+    .eq('id', poeiId).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Impossible de rattacher l’agence' }
+  revalidatePath(`/dashboard/poei/${poeiId}`)
+  return { success: true }
+}
+
 /**
  * Génère une FACTURE par candidat d'un projet POEI dont la session est terminée.
  * Idempotent (marqueur dans notes_internes). TVA 0 (financeur France Travail).
@@ -579,6 +623,13 @@ export async function generateFacturesPerCandidatPoeiAction(
   }
   if (!finie) return { success: false, error: 'La formation doit être terminée pour générer les factures' }
 
+  // Agence France Travail destinataire (lecture résiliente : colonne absente avant migration 100)
+  let agenceFtId: string | null = null
+  {
+    const { data: pex } = await supabase.from('poei').select('agence_ft_id').eq('id', poeiId).maybeSingle()
+    agenceFtId = (pex as any)?.agence_ft_id || null
+  }
+
   const { data: candidats } = await supabase
     .from('poei_candidats')
     .select('id, apprenant:apprenants(nom, prenom)')
@@ -608,6 +659,7 @@ export async function generateFacturesPerCandidatPoeiAction(
     // TVA 0 → HT = TTC = restant
     await supabase.from('factures').update({
       montant_ht: montantHt, montant_tva: 0, montant_ttc: montantHt, remise_montant: 0, montant_restant: montantHt,
+      ...(agenceFtId ? { agence_ft_id: agenceFtId } : {}),
     }).eq('id', factureId)
   }
 
