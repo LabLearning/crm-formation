@@ -120,19 +120,25 @@ export async function ensureContratFormateur(
   // la rémunération POEI est définie, on l'aligne sur l'intervention.
   const { data: existing } = await supabase
     .from('contrats_formateur')
-    .select('id, status')
+    .select('id, status, formateur_id')
     .eq('session_id', sessionId)
     .neq('status', 'annule')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (existing) {
-    if (existing.status === 'brouillon' && poeiMontant != null) {
-      await supabase.from('contrats_formateur')
-        .update({ montant_ht: poeiMontant, ...(poeiTarif != null ? { tarif_journalier: poeiTarif } : {}) })
-        .eq('id', existing.id)
+    // Le formateur de la session a changé → l'ancien contrat n'est plus valable :
+    // on l'annule et on crée un nouveau contrat pour le bon formateur (ci-dessous).
+    if (existing.formateur_id && sess.formateur_id && existing.formateur_id !== sess.formateur_id) {
+      await supabase.from('contrats_formateur').update({ status: 'annule' }).eq('id', existing.id)
+    } else {
+      if (existing.status === 'brouillon' && poeiMontant != null) {
+        await supabase.from('contrats_formateur')
+          .update({ montant_ht: poeiMontant, ...(poeiTarif != null ? { tarif_journalier: poeiTarif } : {}) })
+          .eq('id', existing.id)
+      }
+      return { id: existing.id }
     }
-    return { id: existing.id }
   }
 
   const { count } = await supabase
