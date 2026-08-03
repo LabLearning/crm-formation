@@ -30,6 +30,13 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   if (!poei) redirect('/dashboard/poei')
   const p = poei as Poei
 
+  // Formation « terminée » = statut POEI terminé, session terminée, ou date de fin
+  // passée (le statut de session peut être en retard).
+  const _sess = (p as any).session
+  const formationTerminee = p.statut === 'terminee'
+    || _sess?.status === 'terminee'
+    || (!!_sess?.date_fin && new Date(_sess.date_fin) < new Date())
+
   const [{ data: candidatsRaw }, { data: clients }, { data: formations }, { data: apprenants }, { data: emailLogs }] = await Promise.all([
     supabase
       .from('poei_candidats')
@@ -138,12 +145,12 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         dureeTotale={p.duree_heures}
       />
 
-      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={(p as any).session?.status === 'terminee'} />
+      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
 
       <PoeiFacturation
         poeiId={p.id}
         sessionId={(p as any).session?.id || null}
-        sessionTerminee={(p as any).session?.status === 'terminee'}
+        sessionTerminee={formationTerminee}
         candidats={candidats as any[]}
         facturesByCandidat={facturesByCandidat}
       />

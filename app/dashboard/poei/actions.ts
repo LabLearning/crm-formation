@@ -563,18 +563,21 @@ export async function generateFacturesPerCandidatPoeiAction(
 
   const { data: poei } = await supabase
     .from('poei')
-    .select('id, client_id, formation_id, session_id, duree_heures, montant_horaire, formation:formations(intitule)')
+    .select('id, client_id, formation_id, session_id, duree_heures, montant_horaire, statut, formation:formations(intitule)')
     .eq('id', poeiId).eq('organization_id', orgId).single()
   if (!poei) return { success: false, error: 'Projet introuvable' }
   if (!poei.client_id) return { success: false, error: 'Aucune entreprise liée au projet' }
   if (!(Number(poei.montant_horaire) > 0) || !(Number(poei.duree_heures) > 0)) {
     return { success: false, error: 'Renseignez le taux horaire et la durée du projet avant de facturer' }
   }
-  // La facturation intervient après réalisation : la session doit être terminée
-  if (poei.session_id) {
-    const { data: se } = await supabase.from('sessions').select('status').eq('id', poei.session_id).maybeSingle()
-    if (se && se.status !== 'terminee') return { success: false, error: 'La session doit être terminée pour générer les factures' }
+  // La facturation intervient après réalisation : statut POEI terminé, session
+  // terminée, ou date de fin passée (le statut de session peut être en retard).
+  let finie = (poei as any).statut === 'terminee'
+  if (!finie && poei.session_id) {
+    const { data: se } = await supabase.from('sessions').select('status, date_fin').eq('id', poei.session_id).maybeSingle()
+    finie = !!se && (se.status === 'terminee' || (!!se.date_fin && new Date(se.date_fin) < new Date()))
   }
+  if (!finie) return { success: false, error: 'La formation doit être terminée pour générer les factures' }
 
   const { data: candidats } = await supabase
     .from('poei_candidats')
