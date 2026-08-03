@@ -21,7 +21,6 @@ export async function GET(
     .select(`
       *,
       client:clients(raison_sociale, nom, prenom, type, email, adresse, code_postal, ville, siret, tva_intra),
-      formation:formations(intitule),
       lignes:facture_lignes(*),
       paiements(*)
     `)
