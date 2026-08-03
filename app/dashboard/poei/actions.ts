@@ -550,6 +550,100 @@ export async function generateDevisPerCandidatAction(poeiId: string): Promise<Ac
 }
 
 /**
+ * Génère une FACTURE par candidat d'un projet POEI dont la session est terminée.
+ * Idempotent (marqueur dans notes_internes). TVA 0 (financeur France Travail).
+ */
+export async function generateFacturesPerCandidatPoeiAction(
+  poeiId: string,
+): Promise<ActionResult & { data?: { created: number; updated: number; skipped: number } }> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const orgId = session.organization.id
+  const supabase = await createServiceRoleClient()
+
+  const { data: poei } = await supabase
+    .from('poei')
+    .select('id, client_id, formation_id, session_id, duree_heures, montant_horaire, formation:formations(intitule)')
+    .eq('id', poeiId).eq('organization_id', orgId).single()
+  if (!poei) return { success: false, error: 'Projet introuvable' }
+  if (!poei.client_id) return { success: false, error: 'Aucune entreprise liée au projet' }
+  if (!(Number(poei.montant_horaire) > 0) || !(Number(poei.duree_heures) > 0)) {
+    return { success: false, error: 'Renseignez le taux horaire et la durée du projet avant de facturer' }
+  }
+  // La facturation intervient après réalisation : la session doit être terminée
+  if (poei.session_id) {
+    const { data: se } = await supabase.from('sessions').select('status').eq('id', poei.session_id).maybeSingle()
+    if (se && se.status !== 'terminee') return { success: false, error: 'La session doit être terminée pour générer les factures' }
+  }
+
+  const { data: candidats } = await supabase
+    .from('poei_candidats')
+    .select('id, apprenant:apprenants(nom, prenom)')
+    .eq('poei_id', poeiId).order('created_at', { ascending: true })
+  if (!candidats || candidats.length === 0) return { success: false, error: 'Aucun candidat à facturer' }
+
+  const duree = Number(poei.duree_heures)
+  const taux = Number(poei.montant_horaire)
+  const montantHt = Math.round(duree * taux * 100) / 100
+  const formationNom = (poei as any).formation?.intitule || 'Formation POEI'
+  const today = new Date().toISOString().slice(0, 10)
+  const echeance = new Date(); echeance.setDate(echeance.getDate() + 30)
+
+  // Numéro de départ (max des factures de l'année + 1)
+  const { data: nums } = await supabase.from('factures').select('numero')
+    .eq('organization_id', orgId).like('numero', `FAC-${new Date().getFullYear()}-%`)
+  let maxNum = 0
+  for (const r of nums || []) { const m = String(r.numero || '').match(/(\d+)$/); if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10)) }
+
+  const applyLigneEtTotaux = async (factureId: string, nom: string) => {
+    await supabase.from('facture_lignes').delete().eq('facture_id', factureId)
+    await supabase.from('facture_lignes').insert({
+      facture_id: factureId,
+      designation: `${formationNom} — ${nom}`,
+      quantite: duree, unite: 'heure', prix_unitaire_ht: taux, montant_ht: montantHt, position: 0,
+    })
+    // TVA 0 → HT = TTC = restant
+    await supabase.from('factures').update({
+      montant_ht: montantHt, montant_tva: 0, montant_ttc: montantHt, remise_montant: 0, montant_restant: montantHt,
+    }).eq('id', factureId)
+  }
+
+  let created = 0, updated = 0, skipped = 0
+  for (const c of candidats) {
+    const nom = `${(c as any).apprenant?.prenom || ''} ${(c as any).apprenant?.nom || ''}`.trim() || 'Candidat'
+    const marker = `[POEI-FACT:${poeiId}:${c.id}]`
+    const { data: existing } = await supabase.from('factures')
+      .select('id, status').eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`).maybeSingle()
+    if (existing) {
+      // On ne retouche pas une facture déjà émise/envoyée/payée
+      if (['emise', 'envoyee', 'payee_partiellement', 'payee'].includes(existing.status)) { skipped++; continue }
+      await applyLigneEtTotaux(existing.id, nom)
+      updated++
+      continue
+    }
+    const numero = `FAC-${new Date().getFullYear()}-${String(++maxNum).padStart(3, '0')}`
+    const { data: fac, error } = await supabase.from('factures').insert({
+      organization_id: orgId, numero, type: 'facture', client_id: poei.client_id,
+      session_id: poei.session_id || null,
+      objet: `POEI — ${nom} — ${formationNom}`,
+      status: 'brouillon', date_emission: today, date_echeance: echeance.toISOString().slice(0, 10),
+      taux_tva: 0, financeur_type: 'france_travail',
+      conditions_paiement: 'Paiement à 30 jours',
+      notes_internes: `Facture POEI (candidat ${nom}). ${marker}`,
+      created_by: session.user.id,
+    }).select('id').single()
+    if (error || !fac) continue
+    await applyLigneEtTotaux(fac.id, nom)
+    created++
+  }
+
+  await logAudit({ action: 'generate_factures_poei', entity_type: 'poei', entity_id: poeiId, details: { created, updated, skipped } })
+  revalidatePath('/dashboard/factures')
+  revalidatePath(`/dashboard/poei/${poeiId}`)
+  return { success: true, data: { created, updated, skipped } }
+}
+
+/**
  * Devis PRÉVISIONNEL d'un projet POEI, SANS candidat : sert à faire valider
  * le coût de la formation par France Travail AVANT le recrutement. 1 ligne
  * (formation × taux horaire × durée), TVA 0. Idempotent (un seul prévisionnel

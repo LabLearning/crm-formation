@@ -21,7 +21,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
 
   const { data: poei } = await supabase
     .from('poei')
-    .select(`*, client:clients(raison_sociale, nom_commercial, sigle), formation:formations(intitule), session:sessions(id, reference, date_debut, date_fin)`)
+    .select(`*, client:clients(raison_sociale, nom_commercial, sigle), formation:formations(intitule), session:sessions(id, reference, date_debut, date_fin, status)`)
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()
@@ -125,7 +125,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         dureeTotale={p.duree_heures}
       />
 
-      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} />
+      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={(p as any).session?.status === 'terminee'} />
 
       <PoeiEmailHistory logs={(emailLogs || []) as any[]} />
 

@@ -4,12 +4,13 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Trash2, Users, FileText, GraduationCap, Pencil, Mail, Send, CheckCircle2, XCircle, Paperclip, Euro, Download } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast, SearchSelect } from '@/components/ui'
-import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction } from '../actions'
+import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, generateFacturesPerCandidatPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction } from '../actions'
 import { CANDIDAT_STATUT_LABELS, TYPE_CONTRAT_LABELS } from '@/lib/types/poei'
 import type { PoeiCandidat } from '@/lib/types/poei'
 
 interface Props {
   poeiId: string
+  sessionTerminee?: boolean
   candidats: PoeiCandidat[]
   apprenants: { id: string; nom: string | null; prenom: string | null; email?: string | null }[]
   emailStatus?: Record<string, { status: string; date: string | null }>
@@ -47,7 +48,7 @@ function fmtDateTime(d: string | null): string {
   try { return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) } catch { return '' }
 }
 
-export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {}, clientNom, clientId, devisByCandidat = {} }: Props) {
+export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {}, clientNom, clientId, devisByCandidat = {}, sessionTerminee = false }: Props) {
   const { toast } = useToast()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -138,6 +139,22 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
     } else {
       toast('error', r.error || 'Erreur')
     }
+  }
+
+  const [genFactures, setGenFactures] = useState(false)
+  async function handleGenerateFactures() {
+    setGenFactures(true)
+    const r = await generateFacturesPerCandidatPoeiAction(poeiId)
+    setGenFactures(false)
+    if (r.success) {
+      const { created, updated, skipped } = (r.data || {}) as { created: number; updated: number; skipped: number }
+      const parts: string[] = []
+      if (created) parts.push(`${created} générée${created > 1 ? 's' : ''}`)
+      if (updated) parts.push(`${updated} mise${updated > 1 ? 's' : ''} à jour`)
+      if (skipped) parts.push(`${skipped} déjà émise${skipped > 1 ? 's' : ''}`)
+      toast('success', parts.length ? `Factures : ${parts.join(', ')}` : 'Aucune facture modifiée')
+      router.refresh()
+    } else toast('error', r.error || 'Erreur')
   }
 
   async function handleGenerateDevis() {
@@ -262,6 +279,16 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                 <a href={`/api/pdf/poei-devis/${poeiId}`} className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
                   <Download className="h-4 w-4" /> Télécharger les devis (ZIP)
                 </a>
+              )}
+              {sessionTerminee && (
+                <>
+                  <Button onClick={handleGenerateFactures} isLoading={genFactures} size="sm" variant="secondary" icon={<Euro className="h-4 w-4" />}>
+                    Générer les factures
+                  </Button>
+                  <a href={`/api/pdf/poei-certificats/${poeiId}`} className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
+                    <Download className="h-4 w-4" /> Certificats de réalisation (ZIP)
+                  </a>
+                </>
               )}
               <Button onClick={openGroupMail} size="sm" variant="secondary" icon={<Mail className="h-4 w-4" />}>
                 Mail groupé
