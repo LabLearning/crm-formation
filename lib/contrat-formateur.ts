@@ -94,22 +94,46 @@ export async function ensureContratFormateur(
   sessionId: string,
   createdBy: string,
 ): Promise<{ id: string } | null> {
+  const { data: sess } = await supabase
+    .from('sessions')
+    .select('id, organization_id, formateur_id, cout_formateur, poei_intervention_id, formation:formation_id(duree_jours)')
+    .eq('id', sessionId)
+    .single()
+  if (!sess || !sess.formateur_id) return null
+
+  // POEI : la rémunération du formateur est définie sur l'intervention liée à la
+  // session — elle prime sur le coût manuel / le calcul tarif × jours.
+  let poeiMontant: number | null = null, poeiTarif: number | null = null
+  if ((sess as any).poei_intervention_id) {
+    const { data: iv } = await supabase
+      .from('poei_interventions')
+      .select('montant_ht, tarif_journalier')
+      .eq('id', (sess as any).poei_intervention_id)
+      .maybeSingle()
+    if (iv) {
+      poeiMontant = iv.montant_ht != null ? Number(iv.montant_ht) : null
+      poeiTarif = iv.tarif_journalier != null ? Number(iv.tarif_journalier) : null
+    }
+  }
+
+  // Contrat déjà présent : on le réutilise. S'il est encore en brouillon et que
+  // la rémunération POEI est définie, on l'aligne sur l'intervention.
   const { data: existing } = await supabase
     .from('contrats_formateur')
-    .select('id')
+    .select('id, status')
     .eq('session_id', sessionId)
     .neq('status', 'annule')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
-  if (existing) return { id: existing.id }
-
-  const { data: sess } = await supabase
-    .from('sessions')
-    .select('id, organization_id, formateur_id, cout_formateur, formation:formation_id(duree_jours)')
-    .eq('id', sessionId)
-    .single()
-  if (!sess || !sess.formateur_id) return null
+  if (existing) {
+    if (existing.status === 'brouillon' && poeiMontant != null) {
+      await supabase.from('contrats_formateur')
+        .update({ montant_ht: poeiMontant, ...(poeiTarif != null ? { tarif_journalier: poeiTarif } : {}) })
+        .eq('id', existing.id)
+    }
+    return { id: existing.id }
+  }
 
   const { count } = await supabase
     .from('contrats_formateur')
@@ -119,11 +143,13 @@ export async function ensureContratFormateur(
 
   const { data: formateurRow } = await supabase
     .from('formateurs').select('tarif_journalier').eq('id', sess.formateur_id).single()
-  const tarif = formateurRow?.tarif_journalier || null
+  const tarif = poeiTarif ?? (formateurRow?.tarif_journalier || null)
   const duree = (sess as any).formation?.duree_jours || null
-  const montant = sess.cout_formateur != null
-    ? Number(sess.cout_formateur)
-    : (tarif && duree ? Number(tarif) * Number(duree) : null)
+  const montant = poeiMontant != null
+    ? poeiMontant
+    : (sess.cout_formateur != null
+      ? Number(sess.cout_formateur)
+      : (tarif && duree ? Number(tarif) * Number(duree) : null))
 
   const { data: created, error } = await supabase
     .from('contrats_formateur')
