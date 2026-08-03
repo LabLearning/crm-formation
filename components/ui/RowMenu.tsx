@@ -33,14 +33,24 @@ interface RowMenuProps {
 export function RowMenu({ items, align = 'right', trigger, triggerClassName, width = 180 }: RowMenuProps) {
   const [open, setOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; maxH: number }>({ top: 0, left: 0, maxH: 400 })
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return
     const r = btnRef.current.getBoundingClientRect()
     const left = align === 'right' ? r.right - width : r.left
     const maxLeft = window.innerWidth - width - 8
-    setPos({ top: r.bottom + 4, left: Math.min(Math.max(8, left), Math.max(8, maxLeft)) })
+    const clampedLeft = Math.min(Math.max(8, left), Math.max(8, maxLeft))
+    const spaceBelow = window.innerHeight - r.bottom - 8
+    const spaceAbove = r.top - 8
+    // On bascule vers le haut si peu de place en dessous ET plus de place au-dessus
+    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow
+    setPos({
+      left: clampedLeft,
+      top: openUp ? undefined : r.bottom + 4,
+      bottom: openUp ? window.innerHeight - r.top + 4 : undefined,
+      maxH: Math.max(160, (openUp ? spaceAbove : spaceBelow) - 4),
+    })
   }, [open, align, width])
 
   useEffect(() => {
@@ -70,8 +80,8 @@ export function RowMenu({ items, align = 'right', trigger, triggerClassName, wid
         <>
           <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
           <div
-            style={{ top: pos.top, left: pos.left, width }}
-            className="fixed z-[61] bg-white rounded-xl border border-surface-200 shadow-elevated py-1 animate-in-scale origin-top-right"
+            style={{ top: pos.top, bottom: pos.bottom, left: pos.left, width, maxHeight: pos.maxH }}
+            className="fixed z-[61] bg-white rounded-xl border border-surface-200 shadow-elevated py-1 animate-in-scale origin-top-right overflow-y-auto"
           >
             {visible.map((it, i) => {
               if (it.info) {

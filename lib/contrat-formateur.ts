@@ -143,8 +143,13 @@ export async function ensureContratFormateur(
 
   const { data: formateurRow } = await supabase
     .from('formateurs').select('tarif_journalier').eq('id', sess.formateur_id).single()
-  const tarif = poeiTarif ?? (formateurRow?.tarif_journalier || null)
   const duree = (sess as any).formation?.duree_jours || null
+  // POEI : la rémunération vient de l'intervention. Le tarif journalier affiché
+  // en découle (intervention.tarif, sinon montant / nb de jours) — jamais le
+  // tarif par défaut de la fiche formateur, pour rester cohérent avec le montant.
+  const tarif = poeiTarif
+    ?? (poeiMontant != null && duree ? Math.round((poeiMontant / Number(duree)) * 100) / 100 : null)
+    ?? (formateurRow?.tarif_journalier || null)
   const montant = poeiMontant != null
     ? poeiMontant
     : (sess.cout_formateur != null
