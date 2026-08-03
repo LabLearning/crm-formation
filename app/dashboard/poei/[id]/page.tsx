@@ -9,6 +9,7 @@ import { formatDate, companyLabel } from '@/lib/utils'
 import { PoeiStatusBar } from './PoeiStatusBar'
 import { PoeiEditor } from './PoeiEditor'
 import { PoeiCandidats } from './PoeiCandidats'
+import { PoeiFacturation } from './PoeiFacturation'
 import { PoeiEmailHistory } from './PoeiEmailHistory'
 import { PoeiInterventions } from './PoeiInterventions'
 import type { Poei, PoeiCandidat } from '@/lib/types/poei'
@@ -32,7 +33,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   const [{ data: candidatsRaw }, { data: clients }, { data: formations }, { data: apprenants }, { data: emailLogs }] = await Promise.all([
     supabase
       .from('poei_candidats')
-      .select('*, apprenant:apprenants(nom, prenom, email, telephone, date_naissance)')
+      .select('*, apprenant:apprenants(id, nom, prenom, email, telephone, date_naissance)')
       .eq('poei_id', params.id)
       .order('created_at', { ascending: true }),
     supabase
@@ -83,6 +84,18 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     if (m) devisByCandidat[m[1]] = { id: d.id, numero: d.numero }
   }
 
+  // Factures POEI existantes → map candidat_id → facture (section Facturation)
+  const { data: facturesPoei } = await supabase
+    .from('factures')
+    .select('id, numero, status, montant_ttc, notes_internes')
+    .eq('organization_id', session.organization.id)
+    .ilike('notes_internes', `%[POEI-FACT:${params.id}:%`)
+  const facturesByCandidat: Record<string, { id: string; numero: string | null; status: string; montant_ttc: number | null }> = {}
+  for (const f of facturesPoei || []) {
+    const m = (f.notes_internes || '').match(new RegExp(`\\[POEI-FACT:${params.id}:([^\\]]+)\\]`))
+    if (m) facturesByCandidat[m[1]] = { id: f.id, numero: f.numero, status: f.status, montant_ttc: f.montant_ttc }
+  }
+
   // Dernier statut d'envoi d'attestation par adresse email (le plus récent gagne)
   const emailStatus: Record<string, { status: string; date: string | null }> = {}
   for (const log of (emailLogs || []).filter((l: any) => l.template === 'attestation_entree')) {
@@ -126,6 +139,14 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       />
 
       <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={(p as any).session?.status === 'terminee'} />
+
+      <PoeiFacturation
+        poeiId={p.id}
+        sessionId={(p as any).session?.id || null}
+        sessionTerminee={(p as any).session?.status === 'terminee'}
+        candidats={candidats as any[]}
+        facturesByCandidat={facturesByCandidat}
+      />
 
       <PoeiEmailHistory logs={(emailLogs || []) as any[]} />
 
