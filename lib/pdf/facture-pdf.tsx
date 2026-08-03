@@ -229,7 +229,7 @@ export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: a
 
         {/* Coordonnées bancaires (paiement par virement) */}
         {iban && (
-          <View style={shared.section}>
+          <View wrap={false} style={shared.section}>
             <PdfSectionTitle>Règlement par virement</PdfSectionTitle>
             <View style={shared.row}><Text style={shared.label}>Bénéficiaire</Text><Text style={shared.value}>{titulaire}</Text></View>
             {banque && <View style={shared.row}><Text style={shared.label}>Banque</Text><Text style={shared.value}>{banque}</Text></View>}
@@ -240,7 +240,7 @@ export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: a
         )}
 
         {/* Mentions légales (art. L441-9, L441-10, D441-5) */}
-        <View style={{ ...shared.infoBox, marginTop: 8 }}>
+        <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
           <Text style={{ fontSize: 7, color: '#78716c', lineHeight: 1.5 }}>
             {ofExonereTVA
               ? `TVA non applicable, art. 261-4-4° a du Code général des impôts (action de formation professionnelle continue dispensée par un organisme déclaré sous le n° ${org?.numero_da || '—'}).\n`
