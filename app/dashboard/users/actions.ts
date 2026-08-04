@@ -460,3 +460,55 @@ export async function cancelInvitationAction(invitationId: string): Promise<Acti
   revalidatePath('/dashboard/users')
   return { success: true }
 }
+
+/**
+ * Renvoie les accès à un utilisateur existant (franchise, commercial…) qui a
+ * oublié son mot de passe : génère un lien de réinitialisation et l'envoie par
+ * email brandé. Réservé aux rôles de gestion.
+ */
+export async function resendAccessAction(userId: string): Promise<ActionResult & { data?: { email: string } }> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, email, first_name, last_name, organization_id')
+    .eq('id', userId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!user || !user.email) return { success: false, error: 'Utilisateur introuvable' }
+
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+    const { data: linkData } = await supabase.auth.admin.generateLink({
+      type: 'recovery', email: user.email, options: { redirectTo: `${appUrl}/reset-password` },
+    })
+    const hashedToken = (linkData as any)?.properties?.hashed_token
+    const recoveryUrl = hashedToken
+      ? `${appUrl}/auth/confirm?token_hash=${hashedToken}&type=recovery&next=/reset-password`
+      : ((linkData as any)?.properties?.action_link || `${appUrl}/reset-password`)
+
+    const { data: org } = await supabase.from('organizations').select('*').eq('id', user.organization_id).single()
+    const { sendDocumentEmail } = await import('@/lib/email')
+    await sendDocumentEmail({
+      to: user.email,
+      orgName: org?.name || 'Lab Learning',
+      orgEmail: (org as any)?.email_contact || org?.email,
+      orgLogoUrl: (org as any)?.logo_url,
+      qualiopiCertified: (org as any)?.is_qualiopi !== false,
+      recipientName: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Madame, Monsieur',
+      subject: 'Vos accès — réinitialisation du mot de passe',
+      docTitle: 'Réinitialisation du mot de passe',
+      intro: `Votre administrateur vous renvoie vos accès à ${org?.name || 'Lab Learning'}. Cliquez ci-dessous pour définir un nouveau mot de passe.`,
+      ctaLabel: 'Définir mon mot de passe',
+      ctaUrl: recoveryUrl,
+      footerNote: 'Ce lien est valable 1 heure. Si vous n\'êtes pas concerné, ignorez cet email.',
+    })
+  } catch (e) {
+    console.error('[resend access]', e)
+    return { success: false, error: 'Échec de l\'envoi du lien' }
+  }
+
+  await logAudit({ action: 'resend_access', entity_type: 'user', entity_id: userId })
+  return { success: true, data: { email: user.email } }
+}

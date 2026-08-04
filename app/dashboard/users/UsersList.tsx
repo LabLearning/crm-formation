@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, ShieldAlert, ShieldOff, Mail, UserCog, Clock, RefreshCw, X, Send } from 'lucide-react'
+import { UserPlus, ShieldAlert, ShieldOff, Mail, UserCog, Clock, RefreshCw, X, Send, KeyRound } from 'lucide-react'
 import { Button, Input, Select, Badge, Avatar, Modal, useToast, RowMenu } from '@/components/ui'
-import { inviteUserAction, updateUserRoleAction, toggleUserStatusAction, startImpersonationAction, resendInvitationAction, cancelInvitationAction, sendTestInvitationAction } from './actions'
+import { inviteUserAction, updateUserRoleAction, toggleUserStatusAction, startImpersonationAction, resendInvitationAction, cancelInvitationAction, sendTestInvitationAction, resendAccessAction } from './actions'
 import { ROLE_LABELS, ROLE_COLORS, STATUS_LABELS, STATUS_COLORS } from '@/lib/types'
 import { formatDateTime } from '@/lib/utils'
 import type { User, UserRole } from '@/lib/types'
@@ -104,6 +104,15 @@ export function UsersList({ users, invitations, franchises = [], currentUserId, 
     const result = await startImpersonationAction(userId)
     if (result.success) {
       window.location.href = '/dashboard'
+    } else {
+      toast('error', result.error || 'Erreur')
+    }
+  }
+
+  async function handleResendAccess(userId: string) {
+    const result = await resendAccessAction(userId)
+    if (result.success) {
+      toast('success', `Lien d'accès envoyé à ${result.data?.email || 'l\'utilisateur'}`)
     } else {
       toast('error', result.error || 'Erreur')
     }
@@ -236,6 +245,11 @@ export function UsersList({ users, invitations, franchises = [], currentUserId, 
                               icon: <UserCog className="h-4 w-4 text-surface-400" />,
                               onClick: () => handleImpersonate(user.id),
                               hidden: !isSuperAdmin || user.role === 'super_admin',
+                            },
+                            {
+                              label: 'Renvoyer les accès (mot de passe)',
+                              icon: <KeyRound className="h-4 w-4 text-surface-400" />,
+                              onClick: () => handleResendAccess(user.id),
                             },
                             user.status === 'active'
                               ? { label: 'Suspendre', icon: <ShieldOff className="h-4 w-4 text-danger-600" />, danger: true, onClick: () => handleToggleStatus(user.id, user.status) }
