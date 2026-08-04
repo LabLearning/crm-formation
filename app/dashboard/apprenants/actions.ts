@@ -147,19 +147,32 @@ export async function inscrireApprenantAction(apprenantId: string, sessionId: st
     return { success: false, error: 'La session est complète (plus de places disponibles)' }
   }
 
-  const { data, error } = await supabase
+  // Une inscription existe déjà (même annulée/abandonnée) ? La contrainte unique
+  // (session, apprenant) empêche un nouvel INSERT → on RÉACTIVE l'existante.
+  const { data: existingIns } = await supabase
     .from('inscriptions')
-    .insert({
-      organization_id: session.organization.id,
-      session_id: sessionId,
-      apprenant_id: apprenantId,
-      status: 'inscrit',
-    })
-    .select()
-    .single()
+    .select('id, status')
+    .eq('session_id', sessionId)
+    .eq('apprenant_id', apprenantId)
+    .maybeSingle()
+
+  let data: any = null
+  let error: any = null
+  if (existingIns) {
+    if (!['annule', 'abandonne'].includes(existingIns.status)) {
+      return { success: false, error: 'Cet apprenant est déjà inscrit à cette session' }
+    }
+    const res = await supabase.from('inscriptions')
+      .update({ status: 'inscrit' }).eq('id', existingIns.id).select().single()
+    data = res.data; error = res.error
+  } else {
+    const res = await supabase.from('inscriptions')
+      .insert({ organization_id: session.organization.id, session_id: sessionId, apprenant_id: apprenantId, status: 'inscrit' })
+      .select().single()
+    data = res.data; error = res.error
+  }
 
   if (error) {
-    if (error.code === '23505') return { success: false, error: 'Cet apprenant est déjà inscrit à cette session' }
     return { success: false, error: 'Erreur lors de l\'inscription' }
   }
 
