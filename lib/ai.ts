@@ -583,7 +583,8 @@ RÈGLES ABSOLUES :
 - Si l'information est trop mince pour développer, tu restes général et factuel plutôt que d'inventer.
 - Tu écris en français professionnel, à la 3e personne, sans jargon inutile, sans flatterie.
 - Registre : bilan pédagogique lisible par un conseiller France Travail et un employeur.
-- Longueur : 4 à 8 phrases. Pas de titre, pas de liste à puces, pas de formule de politesse. Réponds UNIQUEMENT par le texte final.`
+- LONGUEUR : 3 à 5 phrases maximum, environ 60 à 90 mots. Reste CONCIS : un conseiller France Travail doit pouvoir le lire en quelques secondes. Va à l'essentiel, pas de remplissage, pas de répétition, pas de reformulation de la même idée.
+- Pas de titre, pas de liste à puces, pas de formule de politesse. Réponds UNIQUEMENT par le texte final.`
 
   const constats = (p.constats || []).slice(0, 40)
   const parNiveau = (n: string) => constats.filter((c) => c.niveau === n).map((c) => `- ${c.label}${c.observation ? ` (observation : ${c.observation})` : ''}`).join('\n')
