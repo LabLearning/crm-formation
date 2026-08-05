@@ -150,6 +150,13 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     if (!rec.error) recueil = rec.data || null
   }
 
+  // Nombre d'évaluations des acquis réelles (Dendreo) pour cette session — résilient.
+  let nbEvalAcquis = 0
+  {
+    const r = await supabase.from('evaluations_acquis').select('*', { count: 'exact', head: true }).eq('session_id', params.id).eq('organization_id', session.organization.id)
+    if (!r.error) nbEvalAcquis = r.count || 0
+  }
+
   // Contenu pédagogique : supports téléversés + état du positionnement des inscrits
   const { getAllSessionSupports, getPositionnementEtat } = await import('@/lib/session-contenu')
   const inscritsRefs = allInscriptions
@@ -216,6 +223,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         recueilTemplates={recueilTemplates as any[]}
         recueil={recueil as any}
         formationIntitule={(sessionData as any).formation?.intitule || ''}
+        nbEvalAcquis={nbEvalAcquis}
       />
     </div>
   )
