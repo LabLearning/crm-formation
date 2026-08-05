@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest) {
 
   const { data: sess } = await supabase
     .from('sessions')
-    .select('id, reference, intitule, date_debut, formation:formation_id(intitule)')
+    .select('id, reference, intitule, date_debut, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
     .eq('organization_id', orgId).eq('status', 'terminee')
   const smap = new Map((sess || []).map((s: any) => [s.id, s]))
   const sids = Array.from(smap.keys())
@@ -53,6 +53,7 @@ export async function GET(_req: NextRequest) {
       return {
         date: s?.date_debut ? new Date(s.date_debut).toLocaleDateString('fr-FR') : '',
         reference: s?.reference || '',
+        client: s?.client?.nom_commercial || s?.client?.raison_sociale || '',
         formation: s?.formation?.intitule || s?.intitule || '',
         participants: names.sort((a, b) => a.localeCompare(b)).map((nom) => ({ nom })),
       }

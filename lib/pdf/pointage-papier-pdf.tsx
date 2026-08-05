@@ -4,6 +4,7 @@ import { Document, Page, View, Text } from '@react-pdf/renderer'
 export interface PointageSession {
   date: string
   reference: string
+  client: string
   formation: string
   participants: { nom: string }[]
 }
@@ -36,9 +37,12 @@ export function PointagePapierPDF({ sessions, orgName, editedOn }: { sessions: P
         {sessions.map((s, si) => (
           <View key={si} wrap={false} style={{ marginBottom: 12, borderWidth: 0.5, borderColor: LINE, borderRadius: 4 }}>
             {/* Bandeau session */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#f2f5f3', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 0.5, borderBottomColor: LINE }}>
-              <Text style={{ fontFamily: 'Helvetica-Bold', color: GREEN, fontSize: 9 }}>{s.date}  ·  {s.reference}</Text>
-              <Text style={{ color: SOFT, fontSize: 8.5, maxWidth: 300, textAlign: 'right' }}>{s.formation}</Text>
+            <View style={{ backgroundColor: '#f2f5f3', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 0.5, borderBottomColor: LINE }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontFamily: 'Helvetica-Bold', color: INK, fontSize: 10 }}>{s.client || 'Client non renseigné'}</Text>
+                <Text style={{ fontFamily: 'Helvetica-Bold', color: GREEN, fontSize: 8.5 }}>{s.date}  ·  {s.reference}</Text>
+              </View>
+              <Text style={{ color: SOFT, fontSize: 8.5, marginTop: 1 }}>{s.formation}</Text>
             </View>
             {/* Lignes participants */}
             {s.participants.map((p, pi) => (
