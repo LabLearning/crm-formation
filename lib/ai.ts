@@ -514,3 +514,39 @@ Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour, chaque élé
 
   return { success: true, participants }
 }
+
+// ── Veille Qualiopi (indicateurs 23-26) ───────────────────
+// L'IA PROPOSE des brouillons de veille sur sujets réels ; un humain valide.
+
+export interface VeilleSuggestion {
+  type: 'legale' | 'metier' | 'pedagogique' | 'handicap'
+  titre: string
+  source: string
+  resume: string
+  impact: string
+  action: string
+  lien?: string
+}
+
+const VEILLE_TYPES = ['legale', 'metier', 'pedagogique', 'handicap']
+
+export async function generateVeilleSuggestions(params: { perType?: number } = {}): Promise<{ success: boolean; items: VeilleSuggestion[]; error?: string }> {
+  const perType = params.perType || 1
+  const system = `Tu es le référent qualité d'un organisme de formation français (Lab Learning), certifié Qualiopi, spécialisé dans les métiers de bouche : restauration, restauration rapide, boucherie, boulangerie, pâtisserie, hôtellerie. Tu prépares la veille exigée par le Référentiel National Qualité (RNQ v9), indicateurs 23 à 26 (veille légale/réglementaire, veille métier/emploi, veille pédagogique/technologique, veille handicap). Tu proposes des sujets de veille RÉELS et VÉRIFIABLES. Ne fabrique JAMAIS de numéro de texte, de date de décret ou de statistique précise dont tu n'es pas certain : reste sur des sujets et sources réels et généraux ; la vérification et les chiffres seront complétés par un humain avant validation. Réponds en français, ton professionnel et concret.`
+  const user = `Propose ${perType} sujet(s) de veille par type parmi : legale, metier, pedagogique, handicap.
+Pour chaque sujet, un objet JSON avec les clés : type, titre (court), source (organisme/source à suivre : Legifrance, France Compétences, OPCO, Agefiph, DARES, Centre Inffo, presse pro…), resume (1-2 phrases sur ce qui est observé), impact (impact concret sur nos prestations de formation métiers de bouche), action (action concrète à déclencher), lien (URL de la source si sûre, sinon "").
+Réponds UNIQUEMENT par un tableau JSON d'objets, sans aucun texte autour.`
+  const res = await callClaude(system, user, 3000, { noThinking: true })
+  if (!res.success) return { success: false, items: [], error: res.error }
+  const parsed = parseJsonArray(res.content)
+  if (!parsed.ok) return { success: false, items: [], error: parsed.error }
+  const items = parsed.rows
+    .filter((r: any) => VEILLE_TYPES.includes(r?.type) && r?.titre)
+    .map((r: any) => ({
+      type: r.type, titre: String(r.titre).slice(0, 300),
+      source: String(r.source || ''), resume: String(r.resume || ''),
+      impact: String(r.impact || ''), action: String(r.action || ''),
+      lien: r.lien && /^https?:\/\//.test(r.lien) ? String(r.lien) : '',
+    })) as VeilleSuggestion[]
+  return { success: true, items }
+}

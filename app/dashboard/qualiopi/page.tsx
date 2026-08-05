@@ -52,7 +52,6 @@ export default async function QualiopiPage() {
   const [
     nbSessionsTerm, nbEmargSignes, nbQcmComplets, nbConventions, nbContratsForm,
     nbFormateurs, nbFormations, nbDocs, nbRecla, nbActions, nbApprenants, orgRow,
-    nbVeilleLegale, nbVeilleMetier, nbVeillePedago, nbVeilleHandicap,
   ] = await Promise.all([
     cnt('sessions', (q) => q.eq('status', 'terminee')),
     cnt('emargements', (q) => q.not('signed_at', 'is', null)),
@@ -65,14 +64,29 @@ export default async function QualiopiPage() {
     cnt('reclamations'),
     cnt('actions_amelioration'),
     cnt('apprenants'),
-    supabase.from('organizations').select('referent_handicap_nom, numero_da, delai_acces').eq('id', orgId).single().then((r) => r.data as any).catch(() => null),
-    cnt('veilles', (q) => q.eq('type', 'legale')),
-    cnt('veilles', (q) => q.eq('type', 'metier')),
-    cnt('veilles', (q) => q.eq('type', 'pedagogique')),
-    cnt('veilles', (q) => q.eq('type', 'handicap')),
+    supabase.from('organizations').select('referent_handicap_nom, numero_da, delai_acces').eq('id', orgId).single().then((r) => (r.data as any) || null),
   ])
   const hasReferentHandicap = !!(orgRow?.referent_handicap_nom)
   const hasNda = !!(orgRow?.numero_da)
+
+  // Recompte les veilles VALIDÉES par type (résilient si la colonne statut n'existe
+  // pas encore — migration 102 non appliquée → on compte toutes les entrées).
+  const cntVeilleValid = async (type: string): Promise<number> => {
+    try {
+      const { count, error } = await supabase.from('veilles').select('*', { count: 'exact', head: true })
+        .eq('organization_id', orgId).eq('type', type).eq('statut', 'validee')
+      if (error) throw error
+      return count || 0
+    } catch {
+      try {
+        const { count } = await supabase.from('veilles').select('*', { count: 'exact', head: true }).eq('organization_id', orgId).eq('type', type)
+        return count || 0
+      } catch { return 0 }
+    }
+  }
+  const [nbVL, nbVM, nbVP, nbVH] = await Promise.all([
+    cntVeilleValid('legale'), cntVeilleValid('metier'), cntVeilleValid('pedagogique'), cntVeilleValid('handicap'),
+  ])
 
   // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
   // warn:true = trou à combler avant l'audit.
@@ -90,10 +104,10 @@ export default async function QualiopiPage() {
     17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
     18: [{ label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm }],
     21: [{ label: 'Formateurs (CV, diplômes)', href: '/dashboard/formateurs', count: nbFormateurs }],
-    23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVeilleLegale, warn: nbVeilleLegale === 0 }],
-    24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVeilleMetier, warn: nbVeilleMetier === 0 }],
-    25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVeillePedago, warn: nbVeillePedago === 0 }],
-    26: [{ label: hasReferentHandicap ? 'Veille & réseau handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVeilleHandicap + (hasReferentHandicap ? 1 : 0), warn: nbVeilleHandicap === 0 && !hasReferentHandicap }],
+    23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
+    24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],
+    25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 }],
+    26: [{ label: hasReferentHandicap ? 'Veille & réseau handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVH + (hasReferentHandicap ? 1 : 0), warn: nbVH === 0 && !hasReferentHandicap }],
     27: [{ label: hasNda ? 'N° DA / Qualiopi / RGPD' : 'N° déclaration d\'activité à renseigner', href: '/dashboard/settings', count: hasNda ? 1 : 0, warn: !hasNda }],
     28: [{ label: 'Satisfaction (papier — à saisir dans le CRM)', href: '/dashboard/evaluations', count: 0, warn: true }],
     29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],

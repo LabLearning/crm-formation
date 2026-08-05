@@ -14,6 +14,8 @@ export interface VeilleRow {
   impact: string | null
   action: string | null
   lien: string | null
+  statut: 'brouillon' | 'validee'
+  genere_par_ia: boolean
   created_at: string
 }
 
