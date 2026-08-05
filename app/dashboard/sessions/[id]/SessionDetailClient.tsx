@@ -185,6 +185,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const etablissement = companyLabel((session as any).client) || null
   const adresseComplete = [session.adresse, [session.code_postal, session.ville].filter(Boolean).join(' ')]
     .filter(Boolean).join(', ') || session.lieu || null
+  // Les questionnaires de satisfaction vivent dans l'onglet « Évaluations »
+  // (évaluation de satisfaction) ; le QCM garde le pédagogique.
+  const SATIS_TYPES = ['satisfaction_chaud', 'satisfaction_froid']
+  const qcmPedago = qcmSessions.filter((q: any) => !SATIS_TYPES.includes(q.qcm?.type))
+  const qcmSatisfaction = qcmSessions.filter((q: any) => SATIS_TYPES.includes(q.qcm?.type))
+
   const canChangeStatus = isFormateur || ['super_admin', 'gestionnaire', 'directeur_commercial'].includes(userRole)
   const canEmarge = isFormateur || ['super_admin', 'gestionnaire'].includes(userRole)
   const nextStatuses = STATUS_TRANSITIONS[session.status] || []
@@ -368,8 +374,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ...(!isFormateur ? [{ id: 'recueil' as const, label: recueil?.statut === 'complete' ? 'Recueil du besoin ✓' : 'Recueil du besoin', icon: ClipboardList }] : []),
           { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
           { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
-          { id: 'evaluations' as const, label: `Évaluations (${evaluations.length})`, icon: Star },
-          { id: 'qcm' as const, label: `QCM (${qcmSessions.length})`, icon: ListChecks },
+          { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
+          { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: `Conventions (${conventions.length})`, icon: FileSignature }] : []),
         ].map(t => (
@@ -1028,13 +1034,47 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ═══════════════════════════════════════════════ */}
       {tab === 'evaluations' && (
         <div className="space-y-3">
-          {evaluations.length === 0 ? (
+          {qcmSatisfaction.length > 0 && (
+            <div className="card overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-surface-100 text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                Questionnaires de satisfaction
+              </div>
+              <div className="divide-y divide-surface-100">
+                {qcmSatisfaction.map((q: any) => {
+                  const rep = qcmReponses.filter((r: any) => r.qcm_id === q.qcm_id)
+                  const done = rep.filter((r: any) => r.is_complete).length
+                  const chaud = q.qcm?.type === 'satisfaction_chaud'
+                  return (
+                    <div key={q.id} className="px-4 py-3 flex flex-wrap items-center gap-3">
+                      <Star className="h-4 w-4 text-amber-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-surface-900 truncate">{q.qcm?.titre || 'Questionnaire'}</div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-2xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                            {chaud ? 'Satisfaction à chaud' : 'Satisfaction à froid'}
+                          </span>
+                          <span className="text-xs text-surface-500 tabular-nums">{done}/{rep.length} répondu</span>
+                        </div>
+                      </div>
+                      {rep.length === 0 && (
+                        <span className="text-2xs text-surface-400">
+                          {chaud ? 'Envoyé en fin de session' : 'Envoyé 3 mois après la formation'}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {evaluations.length === 0 && qcmSatisfaction.length === 0 ? (
             <div className="card p-8 text-center">
               <Star className="h-8 w-8 text-surface-300 mx-auto mb-2" />
               <div className="text-sm text-surface-500">Aucune évaluation de satisfaction enregistrée</div>
               <div className="text-xs text-surface-400 mt-1">Les apprenants peuvent évaluer la formation à chaud (fin) ou à froid (3 mois après).</div>
             </div>
-          ) : (
+          ) : evaluations.length > 0 ? (
             <div className="card overflow-hidden">
               <div className="divide-y divide-surface-100">
                 {evaluations.map((e: any) => (
@@ -1057,7 +1097,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
@@ -1147,7 +1187,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           )}
 
           {/* Liste des questionnaires rattachés + suivi des réponses */}
-          {qcmSessions.length === 0 ? (
+          {qcmPedago.length === 0 ? (
             <div className="card p-8 text-center">
               <ListChecks className="h-8 w-8 text-surface-300 mx-auto mb-2" />
               <div className="text-sm text-surface-500">Aucun questionnaire rattaché à cette session</div>
@@ -1155,7 +1195,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
           ) : (
             <div className="space-y-3">
-              {qcmSessions.map((q: any) => {
+              {qcmPedago.map((q: any) => {
                 const reponses = qcmReponses.filter((r: any) => r.qcm_id === q.qcm_id)
                 const completed = reponses.filter((r: any) => r.is_complete)
                 const scoreMin = q.qcm?.score_min_reussite != null ? Number(q.qcm.score_min_reussite) : null
