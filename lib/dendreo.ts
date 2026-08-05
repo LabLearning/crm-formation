@@ -8,7 +8,7 @@ const KEY = process.env.DENDREO_API_KEY || ''
 export type DendreoResource =
   | 'entreprises' | 'contacts' | 'participants' | 'formateurs'
   | 'modules' | 'actions_de_formation' | 'creneaux' | 'factures'
-  | 'financements' | 'sessions_permanentes' | 'participations'
+  | 'financements' | 'sessions_permanentes' | 'participations' | 'evaluations'
 
 function authHeaders(): Record<string, string> {
   return { Authorization: `Token token="${KEY}"`, Accept: 'application/json' }

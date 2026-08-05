@@ -96,6 +96,13 @@ export default async function QualiopiPage() {
     if (!error) nbSecours = count || 0
   } catch { nbSecours = 0 }
 
+  // Évaluations des acquis réelles importées de Dendreo — résilient avant migration 104.
+  let nbEvalAcquis = 0
+  try {
+    const { count, error } = await supabase.from('evaluations_acquis').select('*', { count: 'exact', head: true }).eq('organization_id', orgId)
+    if (!error) nbEvalAcquis = count || 0
+  } catch { nbEvalAcquis = 0 }
+
   // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
   // warn:true = trou à combler avant l'audit.
   const crmEvidence: Record<number, CrmEvidence[]> = {
@@ -106,7 +113,7 @@ export default async function QualiopiPage() {
     6: [{ label: 'Programmes détaillés', href: '/dashboard/formations', count: nbFormations }],
     8: [{ label: 'Positionnement / QCM complétés', href: '/dashboard/qcm', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
     9: [{ label: 'Sessions réalisées (convocations, déroulé)', href: '/dashboard/sessions', count: nbSessionsTerm }],
-    11: [{ label: 'Évaluations des acquis (QCM complétés)', href: '/dashboard/evaluations', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
+    11: [{ label: 'Évaluations des acquis (notes réelles)', href: '/dashboard/evaluations-acquis', count: nbEvalAcquis, warn: nbEvalAcquis === 0 }],
     12: [{ label: 'Émargements signés', href: '/dashboard/emargement', count: nbEmargSignes, warn: true }],
     16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
     17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
