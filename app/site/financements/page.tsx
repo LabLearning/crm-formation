@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen } from '../icons'
+import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen, UserCheck } from '../icons'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
@@ -30,6 +30,12 @@ const DISPOSITIFS = [
     d: "L’employeur mobilise son budget formation pour faire monter ses équipes en compétence — un levier de fidélisation et de performance en cuisine comme en salle.",
     tag: 'Employeurs',
   },
+  {
+    Icon: UserCheck,
+    t: 'CPF — Compte Personnel de Formation',
+    d: "Chaque actif dispose d’un budget formation attaché à son compte. Pour les formations éligibles, le CPF finance tout ou partie du parcours — mobilisable directement par le salarié ou le demandeur d’emploi.",
+    tag: 'Individuel',
+  },
 ]
 
 const ETAPES = [
@@ -57,9 +63,9 @@ export default function SiteFinancements() {
       </section>
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {DISPOSITIFS.map((x, i) => (
-            <Reveal key={x.t} delay={(i % 4) * 80}>
+            <Reveal key={x.t} delay={(i % 3) * 80}>
             <div className="group h-full rounded-2xl border border-[#195144]/10 bg-white p-6 flex flex-col hover:shadow-lg hover:shadow-black/5 hover:border-[#195144]/25 ll-lift">
               <div className="flex items-center justify-between mb-4">
                 <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center group-hover:bg-[#195144] transition-colors"><x.Icon className="h-5 w-5 text-[#195144] group-hover:text-white transition-colors" /></span>

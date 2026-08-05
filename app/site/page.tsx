@@ -210,7 +210,7 @@ export default async function SiteHome() {
           </div>
           <div className="mt-10 text-center">
             <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
-              Voir tous nos partenaires <ArrowRight className="h-4 w-4" />
+              Voir tous nos clients <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </section>

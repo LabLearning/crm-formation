@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic'
 
 const MODALITE: Record<string, string> = { presentiel: 'Présentiel', distanciel: 'À distance', mixte: 'Mixte' }
 
+// Visuel de la card selon le thème de la formation ; cœur de métier → photo de la branche.
+const GROUP_IMG: Record<string, string> = { hygiene: 'hygiene', prevention: 'secourisme', management: 'management' }
+
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const b = brancheBySlug(params.slug)
   return { title: b ? `Formations ${b.label} — Lab Learning` : 'Formations — Lab Learning' }
@@ -60,24 +63,30 @@ export default async function SiteBranche({ params }: { params: { slug: string }
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {g.formations.map((f, i) => (
                 <Reveal key={f.id} delay={(i % 3) * 70}>
-                  <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#195144]/10 bg-white p-5 hover:border-[#195144]/30 hover:shadow-sm ll-lift">
-                    <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
-                      {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
-                      {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+                  <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#195144]/10 bg-white overflow-hidden hover:border-[#195144]/30 hover:shadow-sm ll-lift">
+                    <div className="relative h-32 overflow-hidden">
+                      <img src={`/site/metiers/${GROUP_IMG[g.key] || b.img}.webp`} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${b.from}26 0%, ${b.to}73 100%)` }} />
                     </div>
-                    {f.objectifs.length > 0 && (
-                      <ul className="mt-4 space-y-1.5 flex-1">
-                        {f.objectifs.slice(0, 3).map((o, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm text-[#57534E]">
-                            <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
-                      Voir le programme <ArrowRight className="h-3.5 w-3.5" />
-                    </span>
+                    <div className="flex flex-col flex-1 p-5">
+                      <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
+                        {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
+                        {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+                      </div>
+                      {f.objectifs.length > 0 && (
+                        <ul className="mt-4 space-y-1.5 flex-1">
+                          {f.objectifs.slice(0, 3).map((o, j) => (
+                            <li key={j} className="flex items-start gap-2 text-sm text-[#57534E]">
+                              <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
+                        Voir le programme <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </Link>
                 </Reveal>
               ))}

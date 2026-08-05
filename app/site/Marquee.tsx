@@ -26,9 +26,6 @@ export function Marquee({ items }: { items: MarqueeItem[] }) {
                 <Store className="h-4 w-4 text-[#195144]/60" /> {f.nom}
               </span>
             )}
-            {f.nombre_etablissements ? (
-              <span className="text-[11px] text-[#A8A29E] tabular-nums">{f.nombre_etablissements} établissements</span>
-            ) : null}
           </div>
         ))}
       </div>
