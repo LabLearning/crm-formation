@@ -127,9 +127,12 @@ export async function seedQcmReponsesForQcm(
 // → satisfaction à chaud (fin) → satisfaction à froid (J+90).
 // Le type « entree » (évaluation diagnostique) faisait doublon avec le
 // positionnement : il n'est plus rattaché aux nouvelles sessions.
+// L'évaluation des acquis est préparée dès la planification : le formateur doit
+// pouvoir la faire passer en fin de session sans attendre un changement de
+// statut. La satisfaction reste déclenchée au bon moment (fin, puis J+90).
 const TYPES_BY_STATUS: Record<string, QcmType[]> = {
-  planifiee: ['positionnement'],
-  confirmee: ['positionnement'],
+  planifiee: ['positionnement', 'sortie'],
+  confirmee: ['positionnement', 'sortie'],
   en_cours: ['positionnement', 'sortie', 'satisfaction_chaud'],
   terminee: ['positionnement', 'sortie', 'satisfaction_chaud', 'satisfaction_froid'],
 }
