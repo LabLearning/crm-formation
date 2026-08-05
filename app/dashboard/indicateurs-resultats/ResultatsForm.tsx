@@ -99,9 +99,14 @@ export function ResultatsForm({ current, tableReady, reussiteCalc, nbEvals, assi
         </label>
 
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-surface-100">
-          <Link href="/site/resultats" target="_blank" className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:underline">
-            <ExternalLink className="h-4 w-4" /> Voir la page publique
-          </Link>
+          <div className="flex flex-col gap-1">
+            <Link href="/site/resultats" target="_blank" className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:underline">
+              <ExternalLink className="h-4 w-4" /> Voir la page publique
+            </Link>
+            <a href="/api/pdf/pointage-papier" className="inline-flex items-center gap-1.5 text-sm text-surface-600 hover:underline">
+              <Download className="h-4 w-4" /> Feuille de pointage à confirmer (présences non saisies)
+            </a>
+          </div>
           <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>
         </div>
       </form>
