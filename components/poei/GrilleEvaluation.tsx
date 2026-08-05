@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, CheckCircle2, ClipboardCheck } from 'lucide-react'
+import { Save, CheckCircle2, ClipboardCheck, Sparkles, Loader2 } from 'lucide-react'
 import { Button, Badge, useToast } from '@/components/ui'
 import { GRILLE_SECTIONS, NIVEAUX, APPRECIATIONS, AVIS_FINAL, grilleProgress, type NiveauAcquis } from '@/lib/poei-grille'
-import { saveGrilleAction } from '@/app/dashboard/poei/grille-actions'
+import { saveGrilleAction, detaillerReponseAction } from '@/app/dashboard/poei/grille-actions'
 
 type Items = Record<string, { n?: NiveauAcquis; o?: string }>
 
@@ -28,7 +28,28 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
     duree_realisee: initial?.duree_realisee || '', absences: initial?.absences || '',
   })
   const [saving, setSaving] = useState(false)
+  const [detail, setDetail] = useState<string | null>(null)   // champ en cours de génération
   const isFinale = semaine === null
+
+  // Développe une appréciation à partir des constats réels de la grille.
+  // L'IA propose : le texte reste modifiable avant enregistrement.
+  async function detailler(champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion') {
+    setDetail(champ)
+    const r = await detaillerReponseAction({
+      poeiId, apprenantId, champ, texte: (txt as any)[champ] || '', items, avisFinal: txt.avis_final || null,
+    })
+    if (r.success && r.data?.texte) setTxt((p) => ({ ...p, [champ]: r.data!.texte }))
+    else toast('error', r.error || 'Erreur')
+    setDetail(null)
+  }
+
+  const BoutonIA = ({ champ }: { champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion' }) => (
+    <button type="button" onClick={() => detailler(champ)} disabled={detail !== null}
+      title="Développer à partir des compétences évaluées"
+      className="inline-flex items-center gap-1 text-2xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-40">
+      {detail === champ ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Détailler
+    </button>
+  )
   const prog = useMemo(() => grilleProgress(items), [items])
 
   const setN = (id: string, n: NiveauAcquis) => setItems((p) => ({ ...p, [id]: { ...p[id], n: p[id]?.n === n ? undefined : n } }))
@@ -129,8 +150,11 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
           <div className="card p-4 space-y-3">
             {([['points_forts', "Points forts de l'apprenant"], ['a_renforcer', 'Compétences ou comportements restant à renforcer'], ['recommandations', "Recommandations pour la prise de poste ou l'accompagnement"]] as const).map(([k, l]) => (
               <div key={k}>
-                <label className="block text-sm font-medium text-surface-700 mb-1">{l}</label>
-                <textarea rows={2} className="input-base resize-none" value={(txt as any)[k]}
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-surface-700">{l}</label>
+                  <BoutonIA champ={k} />
+                </div>
+                <textarea rows={3} className="input-base resize-none" value={(txt as any)[k]}
                   onChange={(e) => setTxt((p) => ({ ...p, [k]: e.target.value }))} />
               </div>
             ))}
@@ -147,13 +171,19 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
               ))}
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">Motivation de l'avis <span className="text-danger-500">*</span></label>
-              <textarea rows={2} className="input-base resize-none" value={txt.motivation_avis}
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-surface-700">Motivation de l'avis <span className="text-danger-500">*</span></label>
+                <BoutonIA champ="motivation_avis" />
+              </div>
+              <textarea rows={3} className="input-base resize-none" value={txt.motivation_avis}
                 onChange={(e) => setTxt((p) => ({ ...p, motivation_avis: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">Conclusion personnalisée (reprise dans le bilan)</label>
-              <textarea rows={3} className="input-base resize-none" value={txt.conclusion}
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-surface-700">Conclusion personnalisée (reprise dans le bilan)</label>
+                <BoutonIA champ="conclusion" />
+              </div>
+              <textarea rows={4} className="input-base resize-none" value={txt.conclusion}
                 onChange={(e) => setTxt((p) => ({ ...p, conclusion: e.target.value }))}
                 placeholder="Au terme de la formation, [Prénom Nom] …" />
             </div>

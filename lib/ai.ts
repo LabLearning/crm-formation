@@ -550,3 +550,57 @@ Réponds UNIQUEMENT par un tableau JSON d'objets, sans aucun texte autour.`
     })) as VeilleSuggestion[]
   return { success: true, items }
 }
+
+// ── Évaluation POEI : détailler une appréciation ───────────
+// Le formateur écrit peu ; France Travail attend un écrit circonstancié.
+// L'IA REFORMULE et DÉVELOPPE à partir des constats réels de la grille —
+// elle n'invente aucun fait, et le formateur/gestionnaire valide ensuite.
+
+export interface DetaillerParams {
+  champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion'
+  texte: string
+  apprenant: string
+  formation?: string | null
+  posteVise?: string | null
+  avisFinal?: string | null
+  /** Constats de la grille : libellé → niveau (Acquis / En cours / Non acquis) */
+  constats?: { label: string; niveau: string; observation?: string }[]
+}
+
+const CHAMP_CONSIGNE: Record<DetaillerParams['champ'], string> = {
+  points_forts: "Développe les POINTS FORTS du bénéficiaire : ce qu'il maîtrise, avec des exemples concrets tirés des compétences acquises.",
+  a_renforcer: "Développe les COMPÉTENCES À RENFORCER : ce qui reste à consolider, formulé de façon constructive et non disqualifiante.",
+  recommandations: "Développe les RECOMMANDATIONS pour la prise de poste ou l'accompagnement : actions concrètes, tutorat, points de vigilance.",
+  motivation_avis: "Développe la MOTIVATION DE L'AVIS FINAL : justifie l'avis rendu en t'appuyant sur les constats de la grille.",
+  conclusion: "Rédige une CONCLUSION de synthèse sur le parcours du bénéficiaire, à intégrer au bilan remis au financeur.",
+}
+
+export async function detaillerEvaluationPoei(p: DetaillerParams): Promise<{ success: boolean; texte: string; error?: string }> {
+  const system = `Tu es formateur référent dans un organisme de formation français spécialisé dans les métiers de la restauration. Tu rédiges des bilans de POEI (Préparation Opérationnelle à l'Emploi Individuelle) destinés à France Travail et à l'entreprise d'accueil.
+
+RÈGLES ABSOLUES :
+- Tu t'appuies UNIQUEMENT sur les constats fournis (notes de la grille, observations, note du formateur). Tu n'inventes AUCUN fait, chiffre, date, incident ou anecdote.
+- Si l'information est trop mince pour développer, tu restes général et factuel plutôt que d'inventer.
+- Tu écris en français professionnel, à la 3e personne, sans jargon inutile, sans flatterie.
+- Registre : bilan pédagogique lisible par un conseiller France Travail et un employeur.
+- Longueur : 4 à 8 phrases. Pas de titre, pas de liste à puces, pas de formule de politesse. Réponds UNIQUEMENT par le texte final.`
+
+  const constats = (p.constats || []).slice(0, 40)
+  const parNiveau = (n: string) => constats.filter((c) => c.niveau === n).map((c) => `- ${c.label}${c.observation ? ` (observation : ${c.observation})` : ''}`).join('\n')
+  const bloc = (titre: string, contenu: string) => (contenu ? `\n${titre} :\n${contenu}` : '')
+
+  const user = `Bénéficiaire : ${p.apprenant}
+${p.formation ? `Formation : ${p.formation}\n` : ''}${p.posteVise ? `Poste visé : ${p.posteVise}\n` : ''}${p.avisFinal ? `Avis final du formateur : ${p.avisFinal}\n` : ''}
+CONSTATS DE LA GRILLE D'ÉVALUATION${bloc('Compétences ACQUISES', parNiveau('Acquis'))}${bloc('Compétences EN COURS d\'acquisition', parNiveau('En cours'))}${bloc('Compétences NON ACQUISES', parNiveau('Non acquis'))}
+
+NOTE DU FORMATEUR (à développer) :
+${p.texte?.trim() || '(le formateur n\'a rien écrit — appuie-toi uniquement sur les constats ci-dessus)'}
+
+${CHAMP_CONSIGNE[p.champ]}`
+
+  const res = await callClaude(system, user, 1200, { noThinking: true })
+  if (!res.success) return { success: false, texte: '', error: res.error }
+  const texte = (res.content || '').trim().replace(/^```[a-z]*\n?|```$/g, '').trim()
+  if (!texte) return { success: false, texte: '', error: 'Réponse vide de l\'IA' }
+  return { success: true, texte }
+}
