@@ -30,8 +30,8 @@ export default async function MonEspacePoeiPage() {
   }
 
   const [{ data: poeis }, { data: cands }, { data: grilles }] = await Promise.all([
-    supabase.from('poei').select('id, reference, intitule, date_debut, date_fin, statut, client:client_id(raison_sociale, nom_commercial)').in('id', poeiIds).eq('organization_id', organizationId).order('date_debut', { ascending: false }),
-    supabase.from('poei_candidats').select('id, poei_id, apprenant_id, nom, prenom, apprenant:apprenants(id, nom, prenom)').in('poei_id', poeiIds),
+    supabase.from('poei').select('id, numero, poste_vise, date_debut, date_fin, statut, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)').in('id', poeiIds).eq('organization_id', organizationId).order('date_debut', { ascending: false }),
+    supabase.from('poei_candidats').select('id, poei_id, apprenant_id, apprenant:apprenants(id, nom, prenom)').in('poei_id', poeiIds),
     supabase.from('poei_grilles').select('*').in('poei_id', poeiIds).eq('organization_id', organizationId),
   ])
 
