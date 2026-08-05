@@ -23,7 +23,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FolderOpen, PenTool, Receipt, CreditCard, ClipboardCheck, ListChecks,
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
-  CheckSquare, Briefcase, UserCog, Banknote, Store, AlertTriangle, ReceiptText, ReceiptEuro,
+  CheckSquare, Briefcase, UserCog, Banknote, Store, AlertTriangle, Compass, ReceiptText, ReceiptEuro,
 }
 
 // Couleurs Lab Learning uniformes pour toutes les sections

@@ -1,0 +1,168 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save } from 'lucide-react'
+import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
+import { formatDate } from '@/lib/utils'
+import { createVeilleAction, deleteVeilleAction } from './actions'
+import type { VeilleRow } from './page'
+
+const TYPES = [
+  { value: 'legale', label: 'Légale & réglementaire', ind: 23, Icon: Scale, hint: 'Legifrance, OPCO, décrets, RNQ…' },
+  { value: 'metier', label: 'Métier & emploi', ind: 24, Icon: Briefcase, hint: 'Évolutions des métiers de bouche, besoins en compétences' },
+  { value: 'pedagogique', label: 'Pédagogique & techno', ind: 25, Icon: Lightbulb, hint: 'Nouvelles méthodes, outils, LMS, IA…' },
+  { value: 'handicap', label: 'Handicap', ind: 26, Icon: Accessibility, hint: 'Ressources, partenariats, adaptations PSH' },
+] as const
+
+type VeilleType = typeof TYPES[number]['value']
+const typeConf = (t: string) => TYPES.find((x) => x.value === t) || TYPES[0]
+
+export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [filter, setFilter] = useState<VeilleType | 'all'>('all')
+  const [addOpen, setAddOpen] = useState(false)
+  const [defaultType, setDefaultType] = useState<VeilleType>('legale')
+
+  const counts = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const v of veilles) m[v.type] = (m[v.type] || 0) + 1
+    return m
+  }, [veilles])
+
+  const shown = filter === 'all' ? veilles : veilles.filter((v) => v.type === filter)
+
+  async function handleDelete(id: string) {
+    if (!confirm('Supprimer cette entrée de veille ?')) return
+    const r = await deleteVeilleAction(id)
+    if (r.success) { toast('success', 'Entrée supprimée'); router.refresh() }
+    else toast('error', r.error || 'Erreur')
+  }
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading flex items-center gap-2">
+            <Compass className="h-6 w-6 text-brand-500" /> Veille
+          </h1>
+          <p className="text-surface-500 mt-1 text-sm">Critère 6 — indicateurs 23 · 24 · 25 · 26. Registre exigé par Qualiopi.</p>
+        </div>
+        <Button onClick={() => { setDefaultType(filter === 'all' ? 'legale' : filter); setAddOpen(true) }} icon={<Plus className="h-4 w-4" />}>
+          Ajouter une veille
+        </Button>
+      </div>
+
+      {/* Compteurs par type */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {TYPES.map((t) => {
+          const n = counts[t.value] || 0
+          const active = filter === t.value
+          return (
+            <button key={t.value} onClick={() => setFilter(active ? 'all' : t.value)}
+              className={`card p-4 text-left transition-colors ${active ? 'ring-2 ring-brand-400' : 'hover:bg-surface-50/40'}`}>
+              <div className="flex items-center justify-between">
+                <t.Icon className={`h-5 w-5 ${n > 0 ? 'text-brand-600' : 'text-warning-500'}`} />
+                <span className={`text-2xl font-heading font-bold ${n > 0 ? 'text-surface-900' : 'text-warning-500'}`}>{n}</span>
+              </div>
+              <div className="text-xs font-semibold text-surface-800 mt-2">Ind. {t.ind} — {t.label}</div>
+              <div className="text-2xs text-surface-400 mt-0.5 leading-snug">{t.hint}</div>
+            </button>
+          )
+        })}
+      </div>
+
+      {shown.length === 0 ? (
+        <div className="card p-10 text-center">
+          <Compass className="h-10 w-10 text-surface-300 mx-auto mb-3" />
+          <div className="text-sm font-medium text-surface-700">Aucune veille enregistrée{filter !== 'all' ? ' pour ce type' : ''}</div>
+          <p className="text-xs text-surface-500 mt-1 max-w-md mx-auto">
+            L'auditeur vérifie que vous suivez et exploitez une veille. Enregistrez au moins quelques entrées par type
+            (une source suivie, ce que vous en avez tiré, l'action déclenchée).
+          </p>
+          <Button className="mt-4" size="sm" onClick={() => setAddOpen(true)} icon={<Plus className="h-4 w-4" />}>Ajouter une veille</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {shown.map((v) => {
+            const c = typeConf(v.type)
+            return (
+              <div key={v.id} className="card p-4">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 h-9 w-9 rounded-xl bg-brand-50 flex items-center justify-center"><c.Icon className="h-4 w-4 text-brand-600" /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="info">Ind. {c.ind}</Badge>
+                      <span className="text-2xs text-surface-400">{formatDate(v.date_veille, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      {v.source && <span className="text-2xs text-surface-500">· {v.source}</span>}
+                    </div>
+                    <div className="text-sm font-semibold text-surface-900 mt-1">{v.titre}</div>
+                    {v.resume && <div className="text-xs text-surface-600 mt-1">{v.resume}</div>}
+                    <div className="grid sm:grid-cols-2 gap-2 mt-2">
+                      {v.impact && <div className="text-xs text-surface-600 p-2 rounded-lg bg-surface-50"><span className="font-semibold text-surface-700">Impact :</span> {v.impact}</div>}
+                      {v.action && <div className="text-xs text-surface-600 p-2 rounded-lg bg-success-50/60"><span className="font-semibold text-success-700">Action :</span> {v.action}</div>}
+                    </div>
+                    {v.lien && (
+                      <a href={v.lien} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-2xs font-medium text-brand-600 hover:underline">
+                        <ExternalLink className="h-3 w-3" /> Source
+                      </a>
+                    )}
+                  </div>
+                  <button onClick={() => handleDelete(v.id)} className="p-1.5 text-surface-400 hover:text-danger-500 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <Modal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Ajouter une veille" size="lg">
+        <VeilleForm defaultType={defaultType} onDone={() => { setAddOpen(false); router.refresh() }} />
+      </Modal>
+    </div>
+  )
+}
+
+function VeilleForm({ defaultType, onDone }: { defaultType: VeilleType; onDone: () => void }) {
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    const r = await createVeilleAction(new FormData(e.currentTarget))
+    if (r.success) { toast('success', 'Veille enregistrée'); onDone() }
+    else toast('error', r.error || 'Erreur')
+    setLoading(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Select name="type" label="Type de veille *" defaultValue={defaultType}
+          options={TYPES.map((t) => ({ value: t.value, label: `Ind. ${t.ind} — ${t.label}` }))} />
+        <Input name="date_veille" type="date" label="Date" defaultValue={new Date().toISOString().split('T')[0]} />
+      </div>
+      <Input name="titre" label="Titre / sujet *" placeholder="Ex : Nouveau taux de prise en charge OPCO Akto" />
+      <Input name="source" label="Source" placeholder="Legifrance, Akto, presse pro, webinaire…" />
+      <div>
+        <label className="block text-sm font-medium text-surface-700 mb-1">Résumé</label>
+        <textarea name="resume" rows={2} className="input-base resize-none" placeholder="Ce que vous avez observé…" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-surface-700 mb-1">Impact sur nos prestations</label>
+        <textarea name="impact" rows={2} className="input-base resize-none" placeholder="En quoi ça nous concerne…" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-surface-700 mb-1">Action déclenchée</label>
+        <textarea name="action" rows={2} className="input-base resize-none" placeholder="Mise à jour programme, info formateurs…" />
+      </div>
+      <Input name="lien" label="Lien source (optionnel)" placeholder="https://…" />
+      <div className="flex justify-end gap-3 pt-1">
+        <Button type="button" variant="secondary" onClick={onDone}>Annuler</Button>
+        <Button type="submit" isLoading={loading} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>
+      </div>
+    </form>
+  )
+}
