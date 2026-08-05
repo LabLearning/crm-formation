@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { ClipboardList, Save, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { ClipboardList, Save, CheckCircle2, AlertTriangle, Download } from 'lucide-react'
 import { Button, Badge, Select, useToast } from '@/components/ui'
 import { themeOf } from '@/lib/branches'
 import { formatDate } from '@/lib/utils'
@@ -69,9 +69,17 @@ export function SessionRecueil({ sessionId, formationIntitule, templates, initia
           <h3 className="font-heading font-semibold text-surface-900 flex items-center gap-2"><ClipboardList className="h-5 w-5 text-brand-500" /> Recueil du besoin</h3>
           <p className="text-sm text-surface-500 mt-0.5">Analyse du besoin du commanditaire — indicateur Qualiopi 4.</p>
         </div>
-        {statut === 'complete'
-          ? <Badge variant="success">Complété{initial?.date_recueil ? ` le ${formatDate(initial.date_recueil, { day: 'numeric', month: 'short' })}` : ''}</Badge>
-          : <Badge variant="warning">Brouillon</Badge>}
+        <div className="flex items-center gap-2">
+          {statut === 'complete'
+            ? <Badge variant="success">Complété{initial?.date_recueil ? ` le ${formatDate(initial.date_recueil, { day: 'numeric', month: 'short' })}` : ''}</Badge>
+            : <Badge variant="warning">Brouillon</Badge>}
+          {initial && (
+            <a href={`/api/pdf/recueil-besoin/${sessionId}`} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-2.5 py-1.5 text-xs font-medium text-surface-700 hover:bg-surface-50">
+              <Download className="h-3.5 w-3.5" /> PDF
+            </a>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
