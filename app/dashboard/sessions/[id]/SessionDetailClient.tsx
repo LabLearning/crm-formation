@@ -109,25 +109,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   // Prix de vente de la session (→ convention) éditable depuis la fiche
   const [editPrix, setEditPrix] = useState(false)
   const [prixValue, setPrixValue] = useState('')
-  // Rattachement d'un QCM de la banque à la session
-  const [attachQcmId, setAttachQcmId] = useState('')
   const [expandedQcm, setExpandedQcm] = useState<Record<string, boolean>>({})
-
-  function handleAttachQcm() {
-    if (!attachQcmId) return
-    startTransition(async () => {
-      await attachQcmToSessionAction(session.id, attachQcmId)
-      setAttachQcmId('')
-      router.refresh()
-    })
-  }
-
-  function attachSpecificQcm(qcmId: string) {
-    startTransition(async () => {
-      await attachQcmToSessionAction(session.id, qcmId)
-      router.refresh()
-    })
-  }
 
   function cancelSignature(convId: string) {
     if (!confirm('Annuler la demande de signature ? Le lien envoyé au client sera invalidé et la convention repassera en brouillon (vous pourrez la renvoyer avec les infos à jour).')) return
@@ -138,13 +120,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       else toast('error', r.error || 'Erreur')
     })
   }
-
-  // QCM propres à la/aux formation(s) de cette session, pas encore rattachés :
-  // ce sont les questionnaires d'évaluation liés — on les met en avant.
-  const sessionFormationSet = new Set<string>([session.formation_id, ...(sessionFormationIds || [])].filter(Boolean))
-  const formationQcms = (qcmBank || []).filter(
-    (b: any) => b.formation_id && sessionFormationSet.has(b.formation_id) && !qcmSessions.some((qs: any) => qs.qcm_id === b.id),
-  )
 
   function saveCout() {
     const montant = coutValue.trim() === '' ? null : Number(coutValue)
@@ -1089,83 +1064,26 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ═══════════════════════════════════════════════ */}
       {tab === 'qcm' && (
         <div className="space-y-4">
-          {/* Suggestion : QCM d'évaluation de la formation de la session */}
-          {!isFormateur && formationQcms.length > 0 && (
-            <div className="card p-4 border border-brand-100 bg-brand-50/40">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-brand-500" />
-                <span className="text-sm font-semibold text-surface-900">Questionnaire d'évaluation de la formation</span>
-              </div>
-              <p className="text-xs text-surface-500 mb-3">Lié à la formation de cette session — rattachez-le en un clic pour que les apprenants puissent y répondre.</p>
-              <div className="space-y-2">
-                {formationQcms.map((b: any) => (
-                  <div key={b.id} className="flex items-center gap-3 bg-white rounded-xl border border-surface-100 px-3 py-2.5">
-                    <ListChecks className="h-4 w-4 text-brand-500 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-surface-900 truncate">{b.titre}</div>
-                      <div className="text-xs text-surface-500">{QCM_TYPE_LABELS[b.type] || b.type}</div>
-                    </div>
-                    <button onClick={() => attachSpecificQcm(b.id)} disabled={isPending}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors shrink-0">
-                      {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />} Rattacher
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Barre d'actions : rattacher un QCM + QR code à projeter */}
+          {/* Les questionnaires sont liés à la formation : rien à rattacher ici,
+              seul le QR code à projeter reste utile en salle. */}
           {!isFormateur && (
-            <div className="card p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="h-8 w-8 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
-                    <ListChecks className="h-4 w-4 text-brand-500" />
-                  </span>
-                  <div>
-                    <div className="text-sm font-semibold text-surface-900">Rattacher un questionnaire</div>
-                    <div className="text-xs text-surface-500">Choisissez un QCM de la banque : chaque apprenant inscrit pourra y répondre sur son téléphone.</div>
-                  </div>
-                </div>
-                <a
-                  href={`/api/sessions/${session.id}/qr-codes`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-900 text-white text-xs font-semibold hover:bg-surface-800 transition-colors shrink-0"
-                >
-                  <QrCode className="h-3.5 w-3.5" /> QR codes à projeter
-                </a>
-              </div>
+            <div className="card p-4 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <select
-                  value={attachQcmId}
-                  onChange={(e) => setAttachQcmId(e.target.value)}
-                  className="input-base flex-1 text-sm"
-                >
-                  <option value="">Sélectionner un QCM de la banque…</option>
-                  {qcmBank
-                    .filter((b: any) => !qcmSessions.some((qs: any) => qs.qcm_id === b.id))
-                    .map((b: any) => (
-                      <option key={b.id} value={b.id}>
-                        {b.titre}{b.type ? ` — ${QCM_TYPE_LABELS[b.type] || b.type}` : ''}
-                      </option>
-                    ))}
-                </select>
-                <button
-                  onClick={handleAttachQcm}
-                  disabled={!attachQcmId || isPending}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors shrink-0"
-                >
-                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Rattacher
-                </button>
+                <span className="h-8 w-8 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
+                  <ListChecks className="h-4 w-4 text-brand-500" />
+                </span>
+                <div className="text-xs text-surface-500">
+                  Chaque apprenant inscrit répond sur son téléphone en scannant son QR code.
+                </div>
               </div>
-              {qcmBank.filter((b: any) => !qcmSessions.some((qs: any) => qs.qcm_id === b.id)).length === 0 && (
-                <p className="text-xs text-surface-400">
-                  Tous les QCM de la banque sont déjà rattachés, ou aucun QCM n&apos;est encore créé.
-                  <Link href="/dashboard/qcm" className="text-brand-500 hover:underline ml-1">Gérer la banque de QCM</Link>
-                </p>
-              )}
+              <a
+                href={`/api/sessions/${session.id}/qr-codes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-900 text-white text-xs font-semibold hover:bg-surface-800 transition-colors shrink-0"
+              >
+                <QrCode className="h-3.5 w-3.5" /> QR codes à projeter
+              </a>
             </div>
           )}
 
@@ -1174,7 +1092,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <div className="card p-8 text-center">
               <ListChecks className="h-8 w-8 text-surface-300 mx-auto mb-2" />
               <div className="text-sm text-surface-500">Aucun questionnaire rattaché à cette session</div>
-              <div className="text-xs text-surface-400 mt-1">Rattachez un QCM ci-dessus pour permettre aux apprenants d&apos;y répondre.</div>
+              <div className="text-xs text-surface-400 mt-1">Les questionnaires sont créés automatiquement avec la formation.</div>
             </div>
           ) : (
             <div className="space-y-3">
