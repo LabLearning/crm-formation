@@ -377,7 +377,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
-          ...(!isFormateur ? [{ id: 'conventions' as const, label: `Conventions (${conventions.length})`, icon: FileSignature }] : []),
+          ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Documents', icon: FileText }] : []),
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={cn('flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0',
@@ -439,23 +439,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 </button>
               )}
             </div>
-          )}
-          {/* Documents de la session : aperçu, envoi, état de signature */}
-          {!isFormateur && (
-            <SessionDocuments
-              sessionId={session.id}
-              hasClient={!!session.client_id}
-              hasFormateur={!!(formateur?.id || session.formateur_id)}
-              formateurId={formateur?.id || session.formateur_id}
-              formateurNom={formateur ? `${formateur.prenom || ''} ${formateur.nom || ''}`.trim() : null}
-              formateurEmail={formateur?.email || null}
-              clientNom={companyLabel((session as any).client) || null}
-              clientEmail={(session as any).client?.email || null}
-              formationNom={(session as any).formation?.intitule || session.intitule || null}
-              dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}
-              convention={conventions[0] || null}
-              contrat={contratFormateur || null}
-            />
           )}
 
           {/* Mails de la session : trace + gestion par destinataire */}
@@ -1269,6 +1252,23 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       {tab === 'conventions' && !isFormateur && (
         <div className="space-y-4">
           <SessionDocActions sessionId={session.id} hasClient={!!session.client_id} hasFormateur={!!(formateur?.id || session.formateur_id)} />
+          {/* Documents de la session : aperçu, envoi, état de signature */}
+          {!isFormateur && (
+            <SessionDocuments
+              sessionId={session.id}
+              hasClient={!!session.client_id}
+              hasFormateur={!!(formateur?.id || session.formateur_id)}
+              formateurId={formateur?.id || session.formateur_id}
+              formateurNom={formateur ? `${formateur.prenom || ''} ${formateur.nom || ''}`.trim() : null}
+              formateurEmail={formateur?.email || null}
+              clientNom={companyLabel((session as any).client) || null}
+              clientEmail={(session as any).client?.email || null}
+              formationNom={(session as any).formation?.intitule || session.intitule || null}
+              dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}
+              convention={conventions[0] || null}
+              contrat={contratFormateur || null}
+            />
+          )}
 
           {conventions.length === 0 ? (
             <div className="card p-8 text-center">
