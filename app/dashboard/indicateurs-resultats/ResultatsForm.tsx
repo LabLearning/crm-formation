@@ -7,11 +7,13 @@ import { BarChart3, Save, ExternalLink, AlertTriangle, Sparkles, Globe } from 'l
 import { Button, Input, Badge, useToast } from '@/components/ui'
 import { saveResultatsAction } from './actions'
 
-export function ResultatsForm({ current, tableReady, reussiteCalc, nbEvals, nbSessionsTerm }: {
+export function ResultatsForm({ current, tableReady, reussiteCalc, nbEvals, assiduiteCalc, nbAttendees, nbSessionsTerm }: {
   current: any
   tableReady: boolean
   reussiteCalc: number | null
   nbEvals: number
+  assiduiteCalc: number | null
+  nbAttendees: number
   nbSessionsTerm: number
 }) {
   const { toast } = useToast()
@@ -65,7 +67,14 @@ export function ResultatsForm({ current, tableReady, reussiteCalc, nbEvals, nbSe
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input name="taux_assiduite" label="Taux d'assiduité (%)" defaultValue={current?.taux_assiduite ?? ''} placeholder="ex : 96 (à saisir)" />
+          <div>
+            <Input name="taux_assiduite" label="Taux d'assiduité (%)" defaultValue={current?.taux_assiduite ?? (assiduiteCalc ?? '')} placeholder="ex : 96" />
+            {assiduiteCalc != null && (
+              <div className="mt-1 text-2xs text-brand-600 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" /> Calculé sur {nbAttendees} présences réelles (Dendreo) : <strong>{assiduiteCalc}%</strong>
+              </div>
+            )}
+          </div>
           <Input name="taux_insertion" label="Taux d'insertion / retour à l'emploi (%)" defaultValue={current?.taux_insertion ?? ''} placeholder="ex : 70 (POEI)" />
         </div>
 

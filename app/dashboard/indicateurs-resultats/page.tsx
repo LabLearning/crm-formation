@@ -33,6 +33,17 @@ export default async function IndicateursResultatsPage() {
     }
   } catch { /* table absente */ }
 
+  // Assiduité calculée depuis les inscriptions (présence réelle importée de Dendreo)
+  let assiduiteCalc: number | null = null
+  let nbAttendees = 0
+  try {
+    const ins = await fetchAllPaged<any>((from, to) =>
+      supabase.from('inscriptions').select('taux_assiduite, heures_presence').eq('organization_id', orgId).range(from, to))
+    const att = ins.filter((i) => i.heures_presence != null && Number(i.heures_presence) > 0 && i.taux_assiduite != null)
+    nbAttendees = att.length
+    if (att.length > 0) assiduiteCalc = Math.round(att.reduce((s, i) => s + Number(i.taux_assiduite), 0) / att.length)
+  } catch { /* colonnes absentes */ }
+
   // Sessions terminées (suggestion nb_sessions)
   const { count: nbSessionsTerm } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('organization_id', orgId).eq('status', 'terminee')
 
@@ -43,6 +54,8 @@ export default async function IndicateursResultatsPage() {
         tableReady={tableReady}
         reussiteCalc={reussiteCalc}
         nbEvals={nbEvals}
+        assiduiteCalc={assiduiteCalc}
+        nbAttendees={nbAttendees}
         nbSessionsTerm={nbSessionsTerm || 0}
       />
     </div>
