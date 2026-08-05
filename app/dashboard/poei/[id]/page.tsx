@@ -10,6 +10,7 @@ import { PoeiStatusBar } from './PoeiStatusBar'
 import { PoeiEditor } from './PoeiEditor'
 import { PoeiCandidats } from './PoeiCandidats'
 import { PoeiFacturation } from './PoeiFacturation'
+import { PoeiEvaluations } from './PoeiEvaluations'
 import { PoeiEmailHistory } from './PoeiEmailHistory'
 import { PoeiInterventions } from './PoeiInterventions'
 import type { Poei, PoeiCandidat } from '@/lib/types/poei'
@@ -109,6 +110,13 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     .select('id, nom, ville')
     .eq('organization_id', session.organization.id).eq('is_active', true).order('nom')
 
+  // Grilles d'évaluation des candidats (résilient : table absente avant migration 108)
+  const { data: grilles } = await supabase
+    .from('poei_grilles')
+    .select('*')
+    .eq('poei_id', params.id).eq('organization_id', session.organization.id)
+    .order('semaine', { ascending: true, nullsFirst: false })
+
   // Dernier statut d'envoi d'attestation par adresse email (le plus récent gagne)
   const emailStatus: Record<string, { status: string; date: string | null }> = {}
   for (const log of (emailLogs || []).filter((l: any) => l.template === 'attestation_entree')) {
@@ -152,6 +160,12 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       />
 
       <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
+
+      <PoeiEvaluations
+        poeiId={p.id}
+        candidats={candidats.map((c: any) => ({ id: c.id, apprenant_id: c.apprenant?.id || c.apprenant_id || null, nom: `${c.apprenant?.prenom || c.prenom || ''} ${c.apprenant?.nom || c.nom || ''}`.trim() || 'Candidat' }))}
+        grilles={(grilles || []) as any[]}
+      />
 
       <PoeiFacturation
         poeiId={p.id}

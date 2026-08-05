@@ -1,0 +1,180 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { Save, CheckCircle2, ClipboardCheck } from 'lucide-react'
+import { Button, Badge, useToast } from '@/components/ui'
+import { GRILLE_SECTIONS, NIVEAUX, APPRECIATIONS, AVIS_FINAL, grilleProgress, type NiveauAcquis } from '@/lib/poei-grille'
+import { saveGrilleAction } from '@/app/dashboard/poei/grille-actions'
+
+type Items = Record<string, { n?: NiveauAcquis; o?: string }>
+
+export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, initial, onSaved }: {
+  poeiId: string
+  apprenantId: string
+  apprenantNom: string
+  semaine: number | null            // null = évaluation finale
+  initial?: any
+  onSaved?: () => void
+}) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [items, setItems] = useState<Items>(initial?.items || {})
+  const [app, setApp] = useState<Record<string, string>>(initial?.appreciations || {})
+  const [txt, setTxt] = useState({
+    points_forts: initial?.points_forts || '', a_renforcer: initial?.a_renforcer || '',
+    recommandations: initial?.recommandations || '', avis_final: initial?.avis_final || '',
+    motivation_avis: initial?.motivation_avis || '', conclusion: initial?.conclusion || '',
+    duree_realisee: initial?.duree_realisee || '', absences: initial?.absences || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const isFinale = semaine === null
+  const prog = useMemo(() => grilleProgress(items), [items])
+
+  const setN = (id: string, n: NiveauAcquis) => setItems((p) => ({ ...p, [id]: { ...p[id], n: p[id]?.n === n ? undefined : n } }))
+  const setO = (id: string, o: string) => setItems((p) => ({ ...p, [id]: { ...p[id], o } }))
+
+  async function save(statut: 'brouillon' | 'validee') {
+    setSaving(true)
+    const r = await saveGrilleAction({ poeiId, apprenantId, semaine, items, appreciations: app, statut, ...txt })
+    if (r.success) { toast('success', statut === 'validee' ? 'Évaluation validée' : 'Brouillon enregistré'); router.refresh(); onSaved?.() }
+    else toast('error', r.error || 'Erreur')
+    setSaving(false)
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* En-tête + progression */}
+      <div className="rounded-xl border border-surface-200 bg-surface-50/60 p-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <div className="font-heading font-semibold text-surface-900 flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4 text-brand-500" />
+              {apprenantNom}
+            </div>
+            <div className="text-xs text-surface-500 mt-0.5">
+              {isFinale ? 'Évaluation finale post-formation' : `Suivi hebdomadaire — semaine ${semaine}`}
+              {initial?.statut === 'validee' && <Badge variant="success" className="ml-2">Validée</Badge>}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-semibold text-surface-800 tabular-nums">{prog.evalues}/{prog.total} évalués</div>
+            <div className="text-xs text-surface-500 tabular-nums">{prog.acquis} acquis · {prog.encours} en cours</div>
+          </div>
+        </div>
+        <div className="mt-3 h-1.5 rounded-full bg-surface-200 overflow-hidden">
+          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${prog.pctAcquis}%` }} />
+        </div>
+      </div>
+
+      {/* Sections de compétences */}
+      {GRILLE_SECTIONS.map((sec) => (
+        <div key={sec.key}>
+          <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-2">{sec.titre}</div>
+          <div className="card divide-y divide-surface-100">
+            {sec.items.map((it, i) => {
+              const cur = items[it.id]?.n
+              return (
+                <div key={it.id} className="px-3 py-2.5">
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 text-2xs font-mono text-surface-400 mt-1 w-6">{i + 1}</span>
+                    <div className="flex-1 min-w-0 text-sm text-surface-800">{it.label}</div>
+                    <div className="shrink-0 flex gap-1">
+                      {NIVEAUX.map((n) => {
+                        const on = cur === n.value
+                        const cls = n.value === 'A' ? 'bg-emerald-500' : n.value === 'EC' ? 'bg-amber-500' : 'bg-danger-500'
+                        return (
+                          <button key={n.value} type="button" onClick={() => setN(it.id, n.value)} title={n.label}
+                            className={`h-7 w-9 rounded-lg text-2xs font-bold transition-colors ${on ? `${cls} text-white` : 'bg-surface-100 text-surface-500 hover:bg-surface-200'}`}>
+                            {n.short}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {cur && (
+                    <input value={items[it.id]?.o || ''} onChange={(e) => setO(it.id, e.target.value)}
+                      placeholder="Observation (facultatif)…"
+                      className="mt-1.5 ml-9 w-[calc(100%-2.25rem)] text-xs px-2 py-1 rounded-lg border border-surface-200 focus:border-brand-400 focus:outline-none" />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Appréciation globale + avis : uniquement sur la grille finale */}
+      {isFinale && (
+        <>
+          <div>
+            <div className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-2">Appréciation globale</div>
+            <div className="card p-4 space-y-3">
+              {APPRECIATIONS.map((a) => (
+                <div key={a.key} className="flex flex-wrap items-center gap-2">
+                  <div className="text-sm text-surface-700 w-full sm:w-64">{a.label}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {a.options.map((o) => (
+                      <button key={o} type="button" onClick={() => setApp((p) => ({ ...p, [a.key]: p[a.key] === o ? '' : o }))}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${app[a.key] === o ? 'bg-brand-500 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200'}`}>
+                        {o}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card p-4 space-y-3">
+            {([['points_forts', "Points forts de l'apprenant"], ['a_renforcer', 'Compétences ou comportements restant à renforcer'], ['recommandations', "Recommandations pour la prise de poste ou l'accompagnement"]] as const).map(([k, l]) => (
+              <div key={k}>
+                <label className="block text-sm font-medium text-surface-700 mb-1">{l}</label>
+                <textarea rows={2} className="input-base resize-none" value={(txt as any)[k]}
+                  onChange={(e) => setTxt((p) => ({ ...p, [k]: e.target.value }))} />
+              </div>
+            ))}
+          </div>
+
+          <div className="card p-4 space-y-3">
+            <div className="text-sm font-medium text-surface-700">Avis final du formateur</div>
+            <div className="flex flex-wrap gap-2">
+              {AVIS_FINAL.map((a) => (
+                <button key={a} type="button" onClick={() => setTxt((p) => ({ ...p, avis_final: p.avis_final === a ? '' : a }))}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${txt.avis_final === a ? (a.includes('DÉFAVORABLE') ? 'bg-danger-500 text-white' : a.includes('RÉSERVES') ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white') : 'bg-surface-100 text-surface-600 hover:bg-surface-200'}`}>
+                  {a}
+                </button>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-1">Motivation de l'avis <span className="text-danger-500">*</span></label>
+              <textarea rows={2} className="input-base resize-none" value={txt.motivation_avis}
+                onChange={(e) => setTxt((p) => ({ ...p, motivation_avis: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-1">Conclusion personnalisée (reprise dans le bilan)</label>
+              <textarea rows={3} className="input-base resize-none" value={txt.conclusion}
+                onChange={(e) => setTxt((p) => ({ ...p, conclusion: e.target.value }))}
+                placeholder="Au terme de la formation, [Prénom Nom] …" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1">Durée réalisée</label>
+                <input className="input-base" value={txt.duree_realisee} onChange={(e) => setTxt((p) => ({ ...p, duree_realisee: e.target.value }))} placeholder="Ex : 400 h" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-600 mb-1">Absences / retards</label>
+                <input className="input-base" value={txt.absences} onChange={(e) => setTxt((p) => ({ ...p, absences: e.target.value }))} placeholder="Ex : aucune" />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="flex justify-end gap-3 pt-1 border-t border-surface-100">
+        <Button variant="secondary" onClick={() => save('brouillon')} isLoading={saving} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>
+        <Button onClick={() => save('validee')} isLoading={saving} icon={<CheckCircle2 className="h-4 w-4" />}>Valider l'évaluation</Button>
+      </div>
+    </div>
+  )
+}

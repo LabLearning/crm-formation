@@ -282,6 +282,17 @@ export default async function MonEspacePage() {
               </div>
               <ChevronRight className="h-5 w-5 text-surface-300" />
             </Link>
+            <Link href="/mon-espace/poei"
+              className="card p-5 flex items-center gap-4 hover:shadow-card transition-all">
+              <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <ClipboardCheck className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <div className="text-base font-heading font-semibold text-surface-900">Évaluations POEI</div>
+                <div className="text-sm text-surface-500 mt-0.5">Grille par candidat, semaine après semaine</div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-surface-300" />
+            </Link>
           </div>
         )}
 
