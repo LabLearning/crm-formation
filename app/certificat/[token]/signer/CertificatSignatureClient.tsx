@@ -2,18 +2,18 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { CheckCircle2, Eraser, PenTool, ShieldCheck } from 'lucide-react'
-import { Button, useToast } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { signCertificatAction } from './actions'
 
 export function CertificatSignatureClient({ sig, token }: { sig: any; token: string }) {
-  const { toast } = useToast()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawing, setDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
   const [nom, setNom] = useState(`${sig.apprenant?.prenom || ''} ${sig.apprenant?.nom || ''}`.trim())
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(!!sig.signed_at)
+  const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     const c = canvasRef.current
@@ -40,13 +40,14 @@ export function CertificatSignatureClient({ sig, token }: { sig: any; token: str
   const dateAffichee = sig.date_signature || poei.date_fin
 
   async function submit() {
-    if (!hasDrawn) { toast('error', 'Merci de signer dans le cadre'); return }
-    if (!nom.trim()) { toast('error', 'Merci d\'indiquer votre nom'); return }
+    setErr(null)
+    if (!hasDrawn) { setErr('Merci de signer dans le cadre.'); return }
+    if (!nom.trim()) { setErr('Merci d\'indiquer votre nom.'); return }
     setSaving(true)
     const data = canvasRef.current!.toDataURL('image/png')
     const r = await signCertificatAction(token, data, nom.trim())
-    if (r.success) { setDone(true); toast('success', 'Certificat signé') }
-    else toast('error', r.error || 'Erreur')
+    if (r.success) setDone(true)
+    else setErr(r.error || "Une erreur est survenue. Merci de réessayer.")
     setSaving(false)
   }
 
@@ -106,6 +107,10 @@ export function CertificatSignatureClient({ sig, token }: { sig: any; token: str
           <p className="text-xs text-surface-400 mt-2">
             Le certificat sera daté du {formatDate(dateAffichee, { day: 'numeric', month: 'long', year: 'numeric' })} (dernier jour de la formation).
           </p>
+        )}
+
+        {err && (
+          <div className="mt-4 rounded-xl bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">{err}</div>
         )}
 
         <Button className="w-full mt-5" onClick={submit} isLoading={saving} icon={<CheckCircle2 className="h-4 w-4" />}>
