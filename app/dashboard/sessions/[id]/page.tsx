@@ -139,6 +139,17 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .maybeSingle()
   const rapport = rapportRes
 
+  // Recueil du besoin (ind. 4) — modèles par thème + recueil de la session.
+  // Résilient : les tables n'existent qu'après la migration 105.
+  let recueilTemplates: any[] = []
+  let recueil: any = null
+  {
+    const tpls = await supabase.from('recueil_besoin_templates').select('id, theme, nom, questions').eq('organization_id', session.organization.id).eq('is_active', true)
+    if (!tpls.error) recueilTemplates = tpls.data || []
+    const rec = await supabase.from('recueils_besoin').select('template_id, theme, reponses, statut, date_recueil').eq('session_id', params.id).eq('organization_id', session.organization.id).maybeSingle()
+    if (!rec.error) recueil = rec.data || null
+  }
+
   // Contenu pédagogique : supports téléversés + état du positionnement des inscrits
   const { getAllSessionSupports, getPositionnementEtat } = await import('@/lib/session-contenu')
   const inscritsRefs = allInscriptions
@@ -202,6 +213,9 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         isFormateur={isFormateur}
         userRole={session.user.role}
         isPoei={isPoei}
+        recueilTemplates={recueilTemplates as any[]}
+        recueil={recueil as any}
+        formationIntitule={(sessionData as any).formation?.intitule || ''}
       />
     </div>
   )

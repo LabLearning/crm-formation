@@ -7,7 +7,7 @@ import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
-  Star, ListChecks, FileSignature, Award, Euro, BookOpen,
+  Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
@@ -22,6 +22,7 @@ import { SessionDocActions } from './SessionDocActions'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
+import { SessionRecueil } from './SessionRecueil'
 import { SessionForm } from '../SessionForm'
 
 const CONVENTION_STATUS: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'danger' }> = {
@@ -58,6 +59,9 @@ interface Props {
   isFormateur: boolean
   userRole: string
   isPoei?: boolean
+  recueilTemplates?: any[]
+  recueil?: any
+  formationIntitule?: string
 }
 
 const QCM_TYPE_LABELS: Record<string, string> = {
@@ -84,11 +88,11 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '' }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu'>('session')
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
   const [montantValue, setMontantValue] = useState('')
@@ -358,6 +362,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'session' as const, label: 'Session', icon: Calendar },
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
           ...(!isFormateur ? [{ id: 'contenu' as const, label: 'Contenu pédagogique', icon: BookOpen }] : []),
+          ...(!isFormateur ? [{ id: 'recueil' as const, label: recueil?.statut === 'complete' ? 'Recueil du besoin ✓' : 'Recueil du besoin', icon: ClipboardList }] : []),
           { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
           { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
           { id: 'evaluations' as const, label: `Évaluations (${evaluations.length})`, icon: Star },
@@ -594,6 +599,17 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       {/* ═══════════════════════════════════════════════
           ONGLET CONTENU PÉDAGOGIQUE
           ═══════════════════════════════════════════════ */}
+      {tab === 'recueil' && !isFormateur && (
+        <div className="card p-6">
+          <SessionRecueil
+            sessionId={session.id}
+            formationIntitule={formationIntitule}
+            templates={recueilTemplates as any[]}
+            initial={recueil as any}
+          />
+        </div>
+      )}
+
       {tab === 'contenu' && !isFormateur && (
         <SessionContenuPedagogique
           sessionId={session.id}

@@ -103,12 +103,22 @@ export default async function QualiopiPage() {
     if (!error) nbEvalAcquis = count || 0
   } catch { nbEvalAcquis = 0 }
 
+  // Recueils du besoin complétés (ind. 4) — résilient avant migration 105.
+  let nbRecueils = 0
+  try {
+    const { count, error } = await supabase.from('recueils_besoin').select('*', { count: 'exact', head: true }).eq('organization_id', orgId).eq('statut', 'complete')
+    if (!error) nbRecueils = count || 0
+  } catch { nbRecueils = 0 }
+
   // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
   // warn:true = trou à combler avant l'audit.
   const crmEvidence: Record<number, CrmEvidence[]> = {
     1: [{ label: 'Site & catalogue publics', href: '/site/formations', count: nbFormations }],
     2: [{ label: 'Indicateurs de résultats — à publier', href: '/dashboard/reporting', count: 0, warn: true }],
-    4: [{ label: 'Conventions / devis (recueil du besoin)', href: '/dashboard/conventions', count: nbConventions }],
+    4: [
+      { label: 'Recueils du besoin complétés (par session)', href: '/dashboard/sessions', count: nbRecueils, warn: nbRecueils === 0 },
+      { label: 'Conventions / devis', href: '/dashboard/conventions', count: nbConventions },
+    ],
     5: [{ label: 'Programmes avec objectifs', href: '/dashboard/formations', count: nbFormations }],
     6: [{ label: 'Programmes détaillés', href: '/dashboard/formations', count: nbFormations }],
     8: [{ label: 'Positionnement / QCM complétés', href: '/dashboard/qcm', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
