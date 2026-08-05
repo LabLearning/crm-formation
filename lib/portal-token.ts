@@ -22,8 +22,6 @@ export async function getOrCreateApprenantToken(
   if (existing?.token) return existing.token
 
   const token = createHash('sha256').update(randomBytes(32)).digest('hex')
-  const expiresAt = new Date()
-  expiresAt.setFullYear(expiresAt.getFullYear() + 2)
   const { error } = await supabase.from('portal_access_tokens').insert({
     organization_id: organizationId,
     type: 'apprenant',
@@ -31,7 +29,7 @@ export async function getOrCreateApprenantToken(
     email: email || null,
     token,
     is_active: true,
-    expires_at: expiresAt.toISOString(),
+    expires_at: null,   // les liens de portail n'expirent pas
   })
   if (error) { console.error('[portal-token]', error); return null }
   return token

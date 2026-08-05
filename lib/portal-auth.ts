@@ -63,8 +63,8 @@ export const getPortalContext = cache(async function getPortalContext(token: str
 
   if (!tokenData) return null
 
-  // Check expiration
-  if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) return null
+  // Les liens de portail n'expirent pas : seul is_active fait foi (révocation
+  // explicite par l'admin). Une expiration cassait des liens déjà diffusés.
 
   // Maj last_used_at + fetch organization en parallèle (l'update ne bloque plus le rendu)
   const [, { data: org }] = await Promise.all([

@@ -33,7 +33,28 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const assiduite = total > 0 ? Math.round((present / total) * 100) : undefined
   const heuresPresence = formation?.duree_heures && assiduite ? Math.round(formation.duree_heures * assiduite / 100) : undefined
 
-  const buffer = await renderToBuffer(createElement(CertificatRealisationPDF, { apprenant, session, formation, org, assiduite, heuresPresence }) as any)
+  // Signature électronique du bénéficiaire (POEI) : recherchée par apprenant,
+  // sur la POEI liée à la session si elle existe, sinon la plus récente.
+  let signatureCandidat: any = null
+  let dateSignature: string | null = null
+  try {
+    const { data: sigs } = await supabase
+      .from('certificat_signatures')
+      .select('signature_data, signataire_nom, signed_at, date_signature, poei_id, session_id')
+      .eq('organization_id', auth.user.organizationId)
+      .eq('apprenant_id', params.id)
+      .order('signed_at', { ascending: false, nullsFirst: false })
+    const list = sigs || []
+    const match = list.find((x: any) => x.session_id === sessionId) || list[0]
+    if (match) {
+      dateSignature = match.date_signature || null
+      if (match.signature_data) {
+        signatureCandidat = { data: match.signature_data, nom: match.signataire_nom, signedAt: match.signed_at }
+      }
+    }
+  } catch { /* table absente avant migration 109 */ }
+
+  const buffer = await renderToBuffer(createElement(CertificatRealisationPDF, { apprenant, session, formation, org, assiduite, heuresPresence, signatureCandidat, dateSignature }) as any)
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',

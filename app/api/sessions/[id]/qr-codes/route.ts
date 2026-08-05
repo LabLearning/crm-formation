@@ -70,8 +70,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     let token = tokenRow?.token
     if (!token) {
       token = createHash('sha256').update(randomBytes(32)).digest('hex')
-      const expiresAt = new Date()
-      expiresAt.setFullYear(expiresAt.getFullYear() + 2)
       await supabase.from('portal_access_tokens').insert({
         organization_id: sess.organization_id,
         type: 'apprenant',
@@ -79,7 +77,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         email: a.email,
         token,
         is_active: true,
-        expires_at: expiresAt.toISOString(),
+        expires_at: null,   // les liens de portail n'expirent pas
       })
     }
 
