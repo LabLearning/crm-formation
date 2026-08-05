@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Award, GraduationCap, UserCircle, CheckCircle2, UserPlus } from 'lucide-react'
+import { Save, Award, GraduationCap, UserCircle, CheckCircle2, UserPlus, Store } from 'lucide-react'
 import { Button, Input, Select, CompanySearchInput, OpcoSelector } from '@/components/ui'
 import { createClientAction, updateClientAction } from './actions'
 import { createContactAction } from '../contacts/actions'
@@ -16,6 +16,7 @@ interface ClientFormProps {
   onCancel: () => void
   users?: { id: string; first_name: string | null; last_name: string | null }[]
   canAssign?: boolean
+  franchises?: { id: string; nom: string }[]
 }
 
 const typeOptions = Object.entries(CLIENT_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }))
@@ -28,9 +29,14 @@ const tailleOptions = [
   { value: 'GE', label: 'Grande entreprise (5000+)' },
 ]
 
-export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign = false }: ClientFormProps) {
+export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign = false, franchises = [] }: ClientFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [clientType, setClientType] = useState(client?.type || 'entreprise')
+  // Rattachement à un réseau de franchise (repris du lead à la conversion, éditable ici)
+  const [franchiseId, setFranchiseId] = useState((client as any)?.franchise_id || '')
+  const [estFranchise, setEstFranchise] = useState<'' | 'oui' | 'non'>(
+    (client as any)?.franchise_id ? 'oui' : (client ? 'non' : ''),
+  )
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [error, setError] = useState<string | null>(null)
   // Étape référent (après création d'un client entreprise)
@@ -238,6 +244,40 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
             <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
             <Input id="effectif_libelle" name="effectif_libelle" label="Effectif" value={effectifLibelle} onChange={(e) => setEffectifLibelle(e.target.value)} placeholder="Ex: 10 à 19 salariés" />
           </div>
+
+          {/* Rattachement à un réseau de franchise (établissement multi-sites) */}
+          {franchises.length > 0 && (
+            <div className="rounded-xl border border-surface-200 p-3 space-y-2.5 bg-surface-50/50">
+              <div className="flex items-center gap-2 text-sm font-medium text-surface-700">
+                <Store className="h-4 w-4 text-surface-500" />
+                Établissement franchisé ?
+              </div>
+              <div className="flex gap-2">
+                {([{ v: 'oui' as const, l: 'Oui' }, { v: 'non' as const, l: 'Non' }]).map((opt) => {
+                  const active = estFranchise === opt.v
+                  return (
+                    <button
+                      key={opt.v} type="button"
+                      onClick={() => { setEstFranchise(opt.v); if (opt.v === 'non') setFranchiseId('') }}
+                      className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-colors ${
+                        active ? 'border-brand-400 bg-brand-50 text-brand-700 ring-1 ring-brand-200' : 'border-surface-200 text-surface-600 hover:border-surface-300'
+                      }`}
+                    >
+                      {opt.l}
+                    </button>
+                  )
+                })}
+              </div>
+              {estFranchise === 'oui' && (
+                <Select
+                  id="franchise_select" label="Franchise (réseau)"
+                  options={[{ value: '', label: '— Choisir la franchise —' }, ...franchises.map((f) => ({ value: f.id, label: f.nom }))]}
+                  value={franchiseId} onChange={(e) => setFranchiseId(e.target.value)}
+                />
+              )}
+              <input type="hidden" name="franchise_id" value={estFranchise === 'oui' ? franchiseId : ''} />
+            </div>
+          )}
         </>
       ) : (
         <>

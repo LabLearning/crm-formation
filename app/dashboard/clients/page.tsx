@@ -82,7 +82,14 @@ export default async function ClientsPage({
         .order('first_name')
     : Promise.resolve({ data: [] as any[] })
 
-  const [{ data: clients, count }, { data: users }] = await Promise.all([clientsQuery, usersPromise])
+  const franchisesPromise = supabase
+    .from('franchises')
+    .select('id, nom')
+    .eq('organization_id', session.organization.id)
+    .eq('is_active', true)
+    .order('nom')
+
+  const [{ data: clients, count }, { data: users }, { data: franchises }] = await Promise.all([clientsQuery, usersPromise, franchisesPromise])
 
   // Attache le nom de l'assigné pour l'affichage
   const userMap = new Map((users || []).map((u: any) => [u.id, u]))
@@ -98,6 +105,7 @@ export default async function ClientsPage({
       <ClientsList
         clients={clientsWithAssignee as Client[]}
         users={(users || []) as any[]}
+        franchises={(franchises || []) as any[]}
         canAssign={canAssign}
         total={count || 0}
         page={page}

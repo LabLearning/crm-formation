@@ -7,7 +7,7 @@ import { Button, Modal, useToast } from '@/components/ui'
 import { ClientForm } from '../ClientForm'
 import type { Client } from '@/lib/types/crm'
 
-export function ClientEditButton({ client, users = [], canAssign = false }: { client: Client; users?: { id: string; first_name: string | null; last_name: string | null }[]; canAssign?: boolean }) {
+export function ClientEditButton({ client, users = [], canAssign = false, franchises = [] }: { client: Client; users?: { id: string; first_name: string | null; last_name: string | null }[]; canAssign?: boolean; franchises?: { id: string; nom: string }[] }) {
   const router = useRouter()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
@@ -21,6 +21,7 @@ export function ClientEditButton({ client, users = [], canAssign = false }: { cl
         <ClientForm
           client={client}
           users={users}
+          franchises={franchises}
           canAssign={canAssign}
           onSuccess={() => { setOpen(false); toast('success', 'Client mis à jour'); router.refresh() }}
           onCancel={() => setOpen(false)}
