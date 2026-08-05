@@ -371,7 +371,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ...(!isFormateur ? [{ id: 'dossier' as const, label: 'Dossier', icon: FolderCheck }] : []),
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
           ...(!isFormateur ? [{ id: 'contenu' as const, label: 'Contenu pédagogique', icon: BookOpen }] : []),
-          ...(!isFormateur ? [{ id: 'recueil' as const, label: recueil?.statut === 'complete' ? 'Recueil du besoin ✓' : 'Recueil du besoin', icon: ClipboardList }] : []),
+          ...(!isFormateur ? [{ id: 'recueil' as const, label: 'Recueil du besoin', icon: ClipboardList }] : []),
           { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
           { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
           { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
