@@ -41,8 +41,12 @@ export function GrillePoeiPDF(p: Props) {
   const clientNom = p.poei?.client?.nom_commercial || p.poei?.client?.raison_sociale || ''
   const formationNom = p.poei?.formation?.intitule || p.poei?.poste_vise || ''
 
-  const evalues = p.sections.flatMap((s) => s.items).filter((i) => p.items?.[i.id]?.n)
+  const tousItems = p.sections.flatMap((s) => s.items)
+  const total = tousItems.length
+  const evalues = tousItems.filter((i) => p.items?.[i.id]?.n)
   const acquis = evalues.filter((i) => p.items[i.id].n === 'A').length
+  const encours = evalues.filter((i) => p.items[i.id].n === 'EC').length
+  const nonAcquis = evalues.filter((i) => p.items[i.id].n === 'NA').length
 
   return (
     <Document>
@@ -60,7 +64,19 @@ export function GrillePoeiPDF(p: Props) {
           {p.formateurNom ? <View style={shared.row}><Text style={shared.label}>Formateur évaluateur :</Text><Text style={shared.value}>{p.formateurNom}</Text></View> : null}
           {p.dureeRealisee ? <View style={shared.row}><Text style={shared.label}>Durée réalisée :</Text><Text style={shared.value}>{p.dureeRealisee}</Text></View> : null}
           {p.absences ? <View style={shared.row}><Text style={shared.label}>Absences / retards :</Text><Text style={shared.value}>{p.absences}</Text></View> : null}
-          <View style={shared.row}><Text style={shared.label}>Progression :</Text><Text style={shared.value}>{acquis} acquis sur {evalues.length} compétence(s) évaluée(s)</Text></View>
+        </View>
+
+        {/* Bandeau de progression : lecture immédiate du niveau atteint */}
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }} wrap={false}>
+          {([['Acquis', acquis, '#177245', '#e9f5ee'],
+             ['En cours', encours, '#b45309', '#fdf1e3'],
+             ['Non acquis', nonAcquis, '#b4241f', '#fbeceb'],
+             ['Évaluées', `${evalues.length}/${total}`, '#44403c', '#f5f5f4']] as const).map(([l, v, c, bg]) => (
+            <View key={l} style={{ flex: 1, backgroundColor: bg, borderRadius: 6, paddingVertical: 7, paddingHorizontal: 8 }}>
+              <Text style={{ fontSize: 13, fontFamily: 'Satoshi', fontWeight: 700, color: c }}>{v}</Text>
+              <Text style={{ fontSize: 6.5, color: c, marginTop: 1, textTransform: 'uppercase', letterSpacing: 0.3 }}>{l}</Text>
+            </View>
+          ))}
         </View>
 
         {p.sections.map((sec) => (
@@ -130,17 +146,6 @@ export function GrillePoeiPDF(p: Props) {
             )}
           </>
         )}
-
-        <View style={{ marginTop: 18, flexDirection: 'row', gap: 24 }} wrap={false}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Le formateur{p.formateurNom ? ` — ${p.formateurNom}` : ''}</Text>
-            <View style={{ height: 46, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Le bénéficiaire — {nomAppr}</Text>
-            <View style={{ height: 46, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }} />
-          </View>
-        </View>
 
         <PdfDocFooter numero={p.poei?.numero || ''} org={p.org} />
       </Page>
