@@ -76,6 +76,17 @@ export function QualiopiDashboard({ indicateurs, initialized, crmEvidence }: Qua
     return { total, conforme, partiel, nonConforme, nonEvalue, pct }
   }, [indicateurs])
 
+  // Trous à combler avant l'audit : preuves marquées warn + indicateurs non évalués sans preuve.
+  const gaps = useMemo(() => {
+    const out: { indicateur: number; libelle: string; label: string; href: string }[] = []
+    for (const ind of indicateurs) {
+      for (const ev of crmEvidence?.[ind.indicateur] || []) {
+        if (ev.warn) out.push({ indicateur: ind.indicateur, libelle: ind.libelle, label: ev.label, href: ev.href })
+      }
+    }
+    return out.sort((a, b) => a.indicateur - b.indicateur)
+  }, [indicateurs, crmEvidence])
+
   // Stats per critère
   function critereStats(critere: number) {
     const inds = byCritere[critere] || []
@@ -142,6 +153,26 @@ export function QualiopiDashboard({ indicateurs, initialized, crmEvidence }: Qua
         </div>
       </div>
 
+      {/* Trous à combler avant l'audit */}
+      {gaps.length > 0 && (
+        <div className="card p-5 mb-6 border-warning-200 bg-warning-50/40">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-4 w-4 text-warning-600" />
+            <h2 className="text-sm font-heading font-semibold text-surface-900">À combler avant l'audit du 16 août</h2>
+            <Badge variant="warning">{gaps.length}</Badge>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {gaps.map((g) => (
+              <a key={g.indicateur + g.label} href={g.href}
+                className="flex items-start gap-2 p-2.5 rounded-lg bg-white border border-warning-100 hover:border-warning-300 transition-colors">
+                <span className="shrink-0 text-2xs font-mono text-warning-700 bg-warning-100 rounded px-1.5 py-0.5 mt-0.5">Ind. {g.indicateur}</span>
+                <span className="text-xs text-surface-700 leading-snug">{g.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Criteria accordion */}
       <div className="space-y-3">
         {Object.entries(byCritere).map(([critereStr, inds]) => {
@@ -207,11 +238,15 @@ export function QualiopiDashboard({ indicateurs, initialized, crmEvidence }: Qua
                             </span>
                           )}
                         </div>
-                        {/* Preuves vivantes produites par le CRM */}
+                        {/* Preuves vivantes produites par le CRM (bleu = OK, ambre = trou à combler) */}
                         {(crmEvidence?.[ind.indicateur] || []).map((ev) => (
                           <a key={ev.href + ev.label} href={ev.href}
-                            className="inline-flex items-center gap-1.5 mt-1.5 mr-2 px-2 py-1 rounded-lg bg-brand-50 text-brand-700 text-2xs font-medium hover:bg-brand-100 transition-colors">
-                            <Database className="h-3 w-3" /> {ev.label}
+                            className={`inline-flex items-center gap-1.5 mt-1.5 mr-2 px-2 py-1 rounded-lg text-2xs font-medium transition-colors ${
+                              ev.warn
+                                ? 'bg-warning-50 text-warning-700 hover:bg-warning-100'
+                                : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                            }`}>
+                            {ev.warn ? <AlertTriangle className="h-3 w-3" /> : <Database className="h-3 w-3" />} {ev.label}
                             {ev.count > 0 && <span className="font-bold">· {ev.count}</span>}
                           </a>
                         ))}

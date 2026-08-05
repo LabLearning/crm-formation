@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { QualiopiDashboard } from './QualiopiDashboard'
 import type { QualiopiIndicateur } from '@/lib/types/qualiopi'
 
-export interface CrmEvidence { label: string; href: string; count: number }
+export interface CrmEvidence { label: string; href: string; count: number; warn?: boolean }
 
 export default async function QualiopiPage() {
   const session = await getSession()
@@ -38,30 +38,62 @@ export default async function QualiopiPage() {
     })
   }
 
-  // Preuves vivantes déjà produites par le CRM (compteurs par module)
-  const safeCount = async (table: string): Promise<number> => {
+  // Preuves vivantes réelles produites par le CRM.
+  // On distingue les VRAIS compteurs de preuve (émargements signés, QCM complétés,
+  // conventions…) des volumes bruts trompeurs — un auditeur repère le gonflage.
+  const cnt = async (table: string, apply?: (q: any) => any): Promise<number> => {
     try {
-      const { count } = await supabase.from(table).select('*', { count: 'exact', head: true }).eq('organization_id', orgId)
+      let q = supabase.from(table).select('*', { count: 'exact', head: true }).eq('organization_id', orgId)
+      if (apply) q = apply(q)
+      const { count } = await q
       return count || 0
     } catch { return 0 }
   }
-  const [nbEmarg, nbSatis, nbRecla, nbActions, nbDocs] = await Promise.all([
-    safeCount('emargements'),
-    safeCount('evaluations_satisfaction'),
-    safeCount('reclamations'),
-    safeCount('actions_amelioration'),
-    safeCount('documents'),
+  const [
+    nbSessionsTerm, nbEmargSignes, nbQcmComplets, nbConventions, nbContratsForm,
+    nbFormateurs, nbFormations, nbDocs, nbRecla, nbActions, nbApprenants, orgRow,
+  ] = await Promise.all([
+    cnt('sessions', (q) => q.eq('status', 'terminee')),
+    cnt('emargements', (q) => q.not('signed_at', 'is', null)),
+    cnt('qcm_reponses', (q) => q.eq('is_complete', true)),
+    cnt('conventions'),
+    cnt('contrats_formateur'),
+    cnt('formateurs'),
+    cnt('formations'),
+    cnt('documents'),
+    cnt('reclamations'),
+    cnt('actions_amelioration'),
+    cnt('apprenants'),
+    supabase.from('organizations').select('referent_handicap_nom, numero_da, delai_acces').eq('id', orgId).single().then((r) => r.data as any).catch(() => null),
   ])
+  const hasReferentHandicap = !!(orgRow?.referent_handicap_nom)
+  const hasNda = !!(orgRow?.numero_da)
 
+  // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
+  // warn:true = trou à combler avant l'audit.
   const crmEvidence: Record<number, CrmEvidence[]> = {
-    9: [{ label: 'Documents remis (livret, convocations…)', href: '/dashboard/documents', count: nbDocs }],
-    11: [{ label: 'Attestations & évaluations des acquis', href: '/dashboard/evaluations', count: nbDocs }],
-    12: [{ label: 'Émargements signés', href: '/dashboard/sessions', count: nbEmarg }],
-    28: [{ label: 'Questionnaires de satisfaction', href: '/dashboard/evaluations', count: nbSatis }],
-    29: [{ label: 'Réclamations enregistrées', href: '/dashboard/reclamations', count: nbRecla }],
-    30: [{ label: "Actions d'amélioration", href: '/dashboard/reclamations', count: nbActions }],
-    31: [{ label: "Actions d'amélioration", href: '/dashboard/reclamations', count: nbActions }],
-    32: [{ label: "Actions d'amélioration", href: '/dashboard/reclamations', count: nbActions }],
+    1: [{ label: 'Site & catalogue publics', href: '/site/formations', count: nbFormations }],
+    2: [{ label: 'Indicateurs de résultats — à publier', href: '/dashboard/reporting', count: 0, warn: true }],
+    4: [{ label: 'Conventions / devis (recueil du besoin)', href: '/dashboard/conventions', count: nbConventions }],
+    5: [{ label: 'Programmes avec objectifs', href: '/dashboard/formations', count: nbFormations }],
+    6: [{ label: 'Programmes détaillés', href: '/dashboard/formations', count: nbFormations }],
+    8: [{ label: 'Positionnement / QCM complétés', href: '/dashboard/qcm', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
+    9: [{ label: 'Sessions réalisées (convocations, déroulé)', href: '/dashboard/sessions', count: nbSessionsTerm }],
+    11: [{ label: 'Évaluations des acquis (QCM complétés)', href: '/dashboard/evaluations', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
+    12: [{ label: 'Émargements signés', href: '/dashboard/emargement', count: nbEmargSignes, warn: true }],
+    16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
+    17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
+    18: [{ label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm }],
+    21: [{ label: 'Formateurs (CV, diplômes)', href: '/dashboard/formateurs', count: nbFormateurs }],
+    23: [{ label: 'Veille légale — à constituer', href: '/dashboard/qualiopi', count: 0, warn: true }],
+    24: [{ label: 'Veille métier — à constituer', href: '/dashboard/qualiopi', count: 0, warn: true }],
+    25: [{ label: 'Veille pédagogique — à constituer', href: '/dashboard/qualiopi', count: 0, warn: true }],
+    27: [{ label: hasNda ? 'N° DA / Qualiopi / RGPD' : 'N° déclaration d\'activité à renseigner', href: '/dashboard/settings', count: hasNda ? 1 : 0, warn: !hasNda }],
+    28: [{ label: 'Satisfaction (papier — à saisir dans le CRM)', href: '/dashboard/evaluations', count: 0, warn: true }],
+    29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],
+    30: [{ label: "Actions d'amélioration", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
+    31: [{ label: 'Analyse des causes / bilans', href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
+    32: [{ label: "Plan d'amélioration continue", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
   }
 
   return (
