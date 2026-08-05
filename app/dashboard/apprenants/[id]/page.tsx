@@ -80,7 +80,7 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
 
       {/* État civil */}
       <div className="card p-5 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-        {a.date_naissance && <Info icon={Cake} label="Né(e) le" value={`${formatDate(a.date_naissance, { day: 'numeric', month: 'long', year: 'numeric' })}${a.lieu_naissance ? ` à ${a.lieu_naissance}` : ''}`} />}
+        {a.date_naissance && <Info icon={Cake} label="Né(e) le" value={`${formatDate(a.date_naissance, { day: '2-digit', month: '2-digit', year: 'numeric' })}${a.lieu_naissance ? ` à ${a.lieu_naissance}` : ''}`} />}
         {a.sexe && <Info label="Sexe" value={a.sexe === 'H' ? 'Homme' : a.sexe === 'F' ? 'Femme' : a.sexe} />}
         {a.numero_securite_sociale && <Info label="N° sécurité sociale" value={a.numero_securite_sociale} />}
         {a.type_contrat && <Info label="Type de contrat" value={a.type_contrat} />}
