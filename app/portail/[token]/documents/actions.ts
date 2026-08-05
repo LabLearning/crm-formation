@@ -10,22 +10,31 @@ import { revalidatePath } from 'next/cache'
  * Sécurité : la signature doit cibler l'email du porteur du token et être en attente.
  */
 export async function signDocumentAction(
-  token: string,
+  token: string | null,
   signatureId: string,
   signatureBase64: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const context = await getPortalContext(token)
-  if (!context || (context.type !== 'apprenant' && context.type !== 'formateur')) {
-    return { success: false, error: 'Accès non autorisé' }
+  // Deux accès possibles : token de portail (legacy) OU compte connecté
+  // (espace formateur/apprenant — plus de dépendance au token).
+  let email: string | null = null
+  if (token) {
+    const context = await getPortalContext(token)
+    if (!context || (context.type !== 'apprenant' && context.type !== 'formateur')) {
+      return { success: false, error: 'Accès non autorisé' }
+    }
+    email = context.type === 'apprenant' ? context.apprenant.email : (context as any).formateur.email
+  } else {
+    try {
+      const { getSession } = await import('@/lib/auth')
+      const session = await getSession()
+      email = session.user.email || null
+    } catch {
+      return { success: false, error: 'Accès non autorisé' }
+    }
   }
 
-  const email =
-    context.type === 'apprenant'
-      ? context.apprenant.email
-      : (context as any).formateur.email
-
   if (!email) {
-    return { success: false, error: 'Aucune adresse associée à ce portail' }
+    return { success: false, error: 'Aucune adresse associée à ce compte' }
   }
 
   if (!signatureBase64?.startsWith('data:image/')) {
@@ -34,12 +43,12 @@ export async function signDocumentAction(
 
   const supabase = await createServiceRoleClient()
 
-  // Récupérer la signature et vérifier qu'elle appartient bien au porteur du token
+  // Récupérer la signature : le contrôle d'appartenance se fait sur l'email du
+  // signataire (identique pour un accès par token ou par compte connecté).
   const { data: signature } = await supabase
     .from('signatures')
     .select('id, status, signataire_email, expire_at, organization_id')
     .eq('id', signatureId)
-    .eq('organization_id', context.organization.id)
     .single()
 
   if (!signature || signature.signataire_email !== email) {

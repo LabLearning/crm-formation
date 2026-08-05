@@ -13,7 +13,7 @@ interface PendingSignature {
   document: { nom: string; type: string } | null
 }
 
-export function PendingSignatures({ token, signatures }: { token: string; signatures: PendingSignature[] }) {
+export function PendingSignatures({ token, signatures }: { token: string | null; signatures: PendingSignature[] }) {
   const router = useRouter()
   const [signingFor, setSigningFor] = useState<PendingSignature | null>(null)
   const [isPending, startTransition] = useTransition()

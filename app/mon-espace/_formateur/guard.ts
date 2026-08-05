@@ -20,10 +20,17 @@ export async function resolveFormateur() {
     .single()
   if (!formateur) redirect('/mon-espace')
 
-  const token = await getFormateurPortalToken(
-    supabase, session.organization.id, session.user.id, session.user.email,
-  )
-  if (!token) redirect('/mon-espace')
+  // Le token de portail n'est plus requis pour l'espace connecté : il reste
+  // seulement transmis quand il existe (compat portail/QR émargement). Une
+  // erreur de résolution ne doit JAMAIS casser l'accès du formateur connecté.
+  let token = ''
+  try {
+    token = (await getFormateurPortalToken(
+      supabase, session.organization.id, session.user.id, session.user.email,
+    )) || ''
+  } catch (e) {
+    console.error('[resolveFormateur] token portail', e)
+  }
 
   return {
     formateurId: formateur.id as string,

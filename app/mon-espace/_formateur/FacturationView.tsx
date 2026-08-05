@@ -6,7 +6,7 @@ import { FacturationClient } from './FacturationClient'
  * ses factures de prestation envoyées à l'organisme, avec leur statut.
  * Rendu à l'identique en espace connecté et en portail (token transmis).
  */
-export async function FacturationView({ formateurId, token }: { formateurId: string; token: string }) {
+export async function FacturationView({ formateurId, token }: { formateurId: string; token: string | null }) {
   const supabase = await createServiceRoleClient()
 
   const [{ data: sessions }, { data: factures }, { data: formateur }] = await Promise.all([

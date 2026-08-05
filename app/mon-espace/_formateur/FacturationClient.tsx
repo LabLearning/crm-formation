@@ -18,7 +18,7 @@ const STATUT: Record<string, { label: string; cls: string; Icon: any }> = {
 const fmtMontant = (n: any) => `${Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
 export function FacturationClient({ token, facturable, factures, fileUrls, modele = 'epure' }: {
-  token: string
+  token: string | null
   facturable: any[]
   factures: any[]
   fileUrls: Record<string, string>
@@ -59,7 +59,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls, model
     e.preventDefault()
     setLoading(true)
     const fd = new FormData(e.currentTarget)
-    fd.set('token', token)
+    if (token) fd.set('token', token)
     if (preset?.sessionId) fd.set('session_id', preset.sessionId)
     if (file) fd.set('file', file)
     const r = await submitFactureFormateurAction(fd)
@@ -95,7 +95,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls, model
                   {active && <span className="h-5 w-5 rounded-full bg-brand-500 flex items-center justify-center"><Check className="h-3 w-3 text-white" /></span>}
                 </div>
                 <p className="text-xs text-surface-500 mt-0.5">{m.description}</p>
-                <a href={`/api/pdf/facture-modele-apercu?modele=${m.value}&token=${encodeURIComponent(token)}`}
+                <a href={`/api/pdf/facture-modele-apercu?modele=${m.value}${token ? `&token=${encodeURIComponent(token)}` : ''}`}
                   target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-brand-600 hover:underline">
                   <Eye className="h-3.5 w-3.5" /> Aperçu
@@ -164,7 +164,7 @@ export function FacturationClient({ token, facturable, factures, fileUrls, model
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       <a
-                        href={(f.fichier_url && fileUrls[f.fichier_url]) ? fileUrls[f.fichier_url] : `/api/pdf/facture-formateur/${f.id}?token=${encodeURIComponent(token)}`}
+                        href={(f.fichier_url && fileUrls[f.fichier_url]) ? fileUrls[f.fichier_url] : `/api/pdf/facture-formateur/${f.id}${token ? `?token=${encodeURIComponent(token)}` : ''}`}
                         target="_blank" rel="noreferrer" title="Télécharger la facture"
                         className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-100">
                         <Download className="h-4 w-4" />
