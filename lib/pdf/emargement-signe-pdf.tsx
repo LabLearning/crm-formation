@@ -118,10 +118,14 @@ export function EmargementSignePDF({ session, formation, org, formateur, apprena
                       <View key={i} style={{ width: creneauW, borderLeftWidth: 0.5, borderLeftColor: SURFACE_200, alignItems: 'center', justifyContent: 'center', padding: 3 }}>
                         {em?.signature_data ? (
                           <Image src={em.signature_data} style={{ height: 34, maxWidth: creneauW - 8, objectFit: 'contain' }} />
-                        ) : em?.motif_absence || em?.est_present === false ? (
+                        ) : em?.motif_absence ? (
+                          // « Absent » uniquement si l'absence est explicitement documentée (motif).
+                          // Une ligne jamais renseignée (est_present=false par défaut, sans signature
+                          // ni motif) reste VIDE — émargement à recueillir / recueilli sur papier —
+                          // pour ne pas afficher de fausses absences en masse.
                           <View style={{ alignItems: 'center' }}>
                             <Text style={{ fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#b91c1c' }}>Absent</Text>
-                            {em?.motif_absence && <Text style={{ fontSize: 6, color: SURFACE_500, marginTop: 1, textAlign: 'center' }}>{em.motif_absence}</Text>}
+                            <Text style={{ fontSize: 6, color: SURFACE_500, marginTop: 1, textAlign: 'center' }}>{em.motif_absence}</Text>
                           </View>
                         ) : null}
                       </View>
