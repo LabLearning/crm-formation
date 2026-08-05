@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardCheck, Plus, CheckCircle2, Clock } from 'lucide-react'
+import { ClipboardCheck, Plus, CheckCircle2, Clock, Download } from 'lucide-react'
 import { Badge, Modal } from '@/components/ui'
 import { GrilleEvaluation } from '@/components/poei/GrilleEvaluation'
 import { grilleProgress } from '@/lib/poei-grille'
@@ -36,6 +36,12 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
           </h3>
           <p className="text-sm text-surface-500 mt-0.5">Le formateur remplit la grille chaque semaine, puis l'évaluation finale.</p>
         </div>
+        {grilles.length > 0 && (
+          <a href={`/api/pdf/poei-grilles/${poeiId}`} target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-50 shrink-0">
+            <Download className="h-4 w-4" /> Télécharger tout (PDF)
+          </a>
+        )}
       </div>
 
       <div className="card overflow-hidden">
@@ -87,6 +93,13 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                         {fin ? (fin.statut === 'validee' ? <><CheckCircle2 className="h-3.5 w-3.5" /> Validée</> : <><Clock className="h-3.5 w-3.5" /> Brouillon</>) : <><Plus className="h-3.5 w-3.5" /> Remplir</>}
                       </button>
                       {fin?.avis_final && <div className="text-2xs text-surface-500 mt-1">{fin.avis_final}</div>}
+                      {fin && (
+                        <a href={`/api/pdf/poei-grilles/${poeiId}?apprenant=${aid}&semaine=`} target="_blank" rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-2xs text-brand-600 hover:underline mt-1">
+                          <Download className="h-3 w-3" /> PDF
+                        </a>
+                      )}
                     </td>
                   </tr>
                 )
