@@ -1188,54 +1188,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             />
           )}
 
-          {conventions.length === 0 ? (
-            <div className="card p-8 text-center">
-              <FileSignature className="h-8 w-8 text-surface-300 mx-auto mb-2" />
-              <div className="text-sm text-surface-500">Aucune convention pour cette session</div>
-              <div className="text-xs text-surface-400 mt-1">Utilisez « Convention en signature » ci-dessus pour la créer et l'envoyer au client.</div>
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="divide-y divide-surface-100">
-                {conventions.map((c: any) => (
-                  <div key={c.id} className="px-4 py-3 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
-                      <FileSignature className="h-5 w-5 text-brand-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-surface-900">{c.numero}</div>
-                      <div className="text-xs text-surface-500 flex items-center gap-3 flex-wrap">
-                        {c.montant_ttc != null && <span>{Number(c.montant_ttc).toLocaleString('fr-FR')} € TTC</span>}
-                        <span className={c.signature_client_date ? 'text-emerald-600' : 'text-surface-400'}>
-                          Client {c.signature_client_date ? 'signé' : 'en attente'}
-                        </span>
-                        <span className={c.signature_of_date ? 'text-emerald-600' : 'text-surface-400'}>
-                          OF {c.signature_of_date ? 'signé' : 'en attente'}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge variant={CONVENTION_STATUS[c.status]?.variant || 'default'}>
-                      {CONVENTION_STATUS[c.status]?.label || c.status}
-                    </Badge>
-                    {c.signature_token && !c.signature_client_date && (
-                      <button onClick={() => cancelSignature(c.id)} disabled={isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-50 text-danger-600 text-xs font-medium hover:bg-danger-100 disabled:opacity-50 transition-colors shrink-0">
-                        <XCircle className="h-3.5 w-3.5" /> Annuler la signature
-                      </button>
-                    )}
-                    <a href={`/api/pdf/convention/${c.id}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-50 text-surface-600 text-xs font-medium hover:bg-surface-100 transition-colors shrink-0">
-                      <Download className="h-3.5 w-3.5" /> PDF
-                    </a>
-                    <Link href={`/dashboard/conventions/${c.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium hover:bg-brand-100 transition-colors shrink-0">
-                      Ouvrir
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
