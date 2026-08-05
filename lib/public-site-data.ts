@@ -232,3 +232,13 @@ export async function getPublicTeam(): Promise<PublicFormateur[]> {
     zone_intervention: f.zone_intervention || null,
   }))
 }
+
+/** Indicateurs de résultats publiés (indicateur Qualiopi 2). Null si non publiés. */
+export async function getPublicResultats(): Promise<any | null> {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data, error } = await supabase.from('indicateurs_resultats').select('*').eq('organization_id', ORG).eq('publie', true).maybeSingle()
+    if (error) return null
+    return data || null
+  } catch { return null }
+}

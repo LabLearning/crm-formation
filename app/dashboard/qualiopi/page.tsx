@@ -110,11 +110,18 @@ export default async function QualiopiPage() {
     if (!error) nbRecueils = count || 0
   } catch { nbRecueils = 0 }
 
+  // Indicateurs de résultats publiés (ind. 2) — résilient avant migration 106.
+  let resultatsPublies = false
+  try {
+    const { data, error } = await supabase.from('indicateurs_resultats').select('publie').eq('organization_id', orgId).eq('publie', true).maybeSingle()
+    if (!error) resultatsPublies = !!data
+  } catch { resultatsPublies = false }
+
   // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
   // warn:true = trou à combler avant l'audit.
   const crmEvidence: Record<number, CrmEvidence[]> = {
     1: [{ label: 'Site & catalogue publics', href: '/site/formations', count: nbFormations }],
-    2: [{ label: 'Indicateurs de résultats — à publier', href: '/dashboard/reporting', count: 0, warn: true }],
+    2: [{ label: resultatsPublies ? 'Indicateurs de résultats publiés' : 'Indicateurs de résultats — à publier', href: '/dashboard/indicateurs-resultats', count: resultatsPublies ? 1 : 0, warn: !resultatsPublies }],
     4: [
       { label: 'Recueils du besoin complétés (par session)', href: '/dashboard/sessions', count: nbRecueils, warn: nbRecueils === 0 },
       { label: 'Conventions / devis', href: '/dashboard/conventions', count: nbConventions },
