@@ -65,7 +65,7 @@ export async function confirmSessionAction(sessionId: string): Promise<ActionRes
 
   // ── Seed QCM positionnement + évaluation entrée pour les apprenants ──
   const { seedQcmReponsesForSession, notifyApprenantsForQcm } = await import('@/lib/qcm-auto-seed')
-  for (const t of ['positionnement', 'entree'] as const) {
+  for (const t of ['positionnement'] as const) {
     const r = await seedQcmReponsesForSession(supabase, sessionId, t)
     if (r.created > 0) await notifyApprenantsForQcm(supabase, sessionId, t)
   }

@@ -1,7 +1,7 @@
 /**
  * Auto-création des qcm_reponses pour les apprenants d'une session
  * en fonction du moment du cycle :
- *   - confirmation session → 'positionnement' + 'entree'
+ *   - confirmation session → 'positionnement'
  *   - fin de session (terminee) → 'sortie' + 'satisfaction_chaud'
  *   - J+90 après fin session → 'satisfaction_froid' (via cron)
  *
@@ -123,11 +123,15 @@ export async function seedQcmReponsesForQcm(
   return { created: rows.length }
 }
 
+// Le parcours retenu : positionnement (début) → évaluation des acquis (fin)
+// → satisfaction à chaud (fin) → satisfaction à froid (J+90).
+// Le type « entree » (évaluation diagnostique) faisait doublon avec le
+// positionnement : il n'est plus rattaché aux nouvelles sessions.
 const TYPES_BY_STATUS: Record<string, QcmType[]> = {
-  planifiee: ['positionnement', 'entree'],
-  confirmee: ['positionnement', 'entree'],
-  en_cours: ['positionnement', 'entree', 'sortie', 'satisfaction_chaud'],
-  terminee: ['positionnement', 'entree', 'sortie', 'satisfaction_chaud', 'satisfaction_froid'],
+  planifiee: ['positionnement'],
+  confirmee: ['positionnement'],
+  en_cours: ['positionnement', 'sortie', 'satisfaction_chaud'],
+  terminee: ['positionnement', 'sortie', 'satisfaction_chaud', 'satisfaction_froid'],
 }
 
 /**
