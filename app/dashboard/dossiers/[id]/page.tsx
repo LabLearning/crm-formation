@@ -6,7 +6,7 @@ import {
   ArrowLeft, Building2, GraduationCap, Calendar, Users, FileText, Euro, Clock,
   CheckCircle2, AlertCircle, MapPin, User as UserIcon, FilePenLine, Download,
 } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BackLink } from '@/components/ui'
 import { DossierOpcoCard } from '../DossierOpcoCard'
 import { OpcoDetailsCard } from './OpcoDetailsCard'
 import { DOSSIER_STATUS_LABELS, DOSSIER_STATUS_COLORS } from '@/lib/types/dossier'
@@ -76,9 +76,7 @@ export default async function DossierDetailPage({ params }: { params: { id: stri
     <div className="space-y-5 animate-fade-in max-w-5xl">
       {/* Header */}
       <div>
-        <Link href="/dashboard/dossiers" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-3">
-          <ArrowLeft className="h-4 w-4" /> Retour aux dossiers
-        </Link>
+        <BackLink fallbackHref="/dashboard/dossiers" label="Retour aux dossiers" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-3" />
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-heading font-bold text-surface-900">{d.numero}</h1>

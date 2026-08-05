@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, GraduationCap, Calendar } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BackLink } from '@/components/ui'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { PoeiStatusBar } from './PoeiStatusBar'
@@ -136,9 +136,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   return (
     <div className="space-y-5 animate-fade-in max-w-4xl">
       <div>
-        <Link href="/dashboard/poei" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-3">
-          <ArrowLeft className="h-4 w-4" /> Retour aux POEI
-        </Link>
+        <BackLink fallbackHref="/dashboard/poei" label="Retour aux POEI" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-3" />
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-heading font-bold text-surface-900 inline-flex items-center gap-2">

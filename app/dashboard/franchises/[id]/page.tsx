@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BackLink } from '@/components/ui'
 import { notFound } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -110,9 +111,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <Link href="/dashboard/franchises" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-700">
-        <ArrowLeft className="h-4 w-4" /> Franchises
-      </Link>
+      <BackLink fallbackHref="/dashboard/franchises" label="Franchises" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-700" />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">

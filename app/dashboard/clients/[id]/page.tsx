@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Globe, MapPin, Building2, User, FileText,
   Receipt, FolderOpen, Users, Hash, Banknote, Calendar,
 } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BackLink } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'
@@ -133,9 +133,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
   return (
     <div className="max-w-5xl mx-auto space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
-        <Link href="/dashboard/clients" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700">
-          <ArrowLeft className="h-4 w-4" /> Clients
-        </Link>
+        <BackLink fallbackHref="/dashboard/clients" label="Clients" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700" />
         <div className="flex items-center gap-2">
           {isEntreprise && (
             <Link href={`/dashboard/sessions?client=${c.id}`}

@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Building2, Calendar, MapPin, GraduationCap,
   CheckCircle2, Star, Accessibility, Cake, FileText, ListChecks,
 } from 'lucide-react'
-import { Avatar, Badge } from '@/components/ui'
+import { Avatar, Badge, BackLink } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { ApprenantEditButton } from './ApprenantEditButton'
 
@@ -51,9 +51,7 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
-        <Link href="/dashboard/apprenants" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700">
-          <ArrowLeft className="h-4 w-4" /> Apprenants
-        </Link>
+        <BackLink fallbackHref="/dashboard/apprenants" label="Apprenants" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700" />
         <ApprenantEditButton apprenant={a} clients={(clients || []) as any[]} />
       </div>
 

@@ -6,7 +6,7 @@ import {
   ArrowLeft, Clock, Users, GraduationCap, MapPin, Calendar, Tag,
   CheckCircle2, FileText, ListChecks, Euro, Download,
 } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BackLink } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 
 export default async function FormationDetailPage({ params }: { params: { id: string } }) {
@@ -50,9 +50,7 @@ export default async function FormationDetailPage({ params }: { params: { id: st
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Link href="/dashboard/formations" className="mt-1 p-2 rounded-xl hover:bg-surface-100 transition-colors shrink-0">
-          <ArrowLeft className="h-5 w-5 text-surface-500" />
-        </Link>
+        <BackLink fallbackHref="/dashboard/formations" iconOnly className="mt-1 p-2 rounded-xl hover:bg-surface-100 transition-colors shrink-0" />
         <div className="flex-1 min-w-0">
           {formation.reference && <div className="text-xs font-mono text-surface-400 mb-0.5">{formation.reference}</div>}
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">

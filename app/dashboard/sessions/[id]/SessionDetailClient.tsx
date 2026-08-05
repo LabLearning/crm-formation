@@ -10,7 +10,7 @@ import {
   Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles,
 } from 'lucide-react'
-import { Badge, PoeiBadge, useToast, RowMenu, Modal } from '@/components/ui'
+import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
 import { cn, formatDate, companyLabel } from '@/lib/utils'
@@ -254,9 +254,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     <div className="max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Link href="/dashboard/sessions" className="mt-1 p-2 rounded-xl hover:bg-surface-100 transition-colors shrink-0">
-          <ArrowLeft className="h-5 w-5 text-surface-500" />
-        </Link>
+        <BackLink fallbackHref="/dashboard/sessions" iconOnly />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading truncate">

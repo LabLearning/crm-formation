@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LifeBuoy, Star, MapPin, Phone, Mail, ArrowLeft, ShieldCheck, Presentation } from 'lucide-react'
-import { Badge, useToast } from '@/components/ui'
+import { Badge, useToast, BackLink } from '@/components/ui'
 import { toggleFormateurSecoursAction } from '../actions'
 import type { VivierFormateur } from './page'
 
@@ -41,9 +41,7 @@ export function VivierList({ formateurs, branchesMeta }: Props) {
 
   return (
     <div>
-      <Link href="/dashboard/formateurs" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-4">
-        <ArrowLeft className="h-4 w-4" /> Formateurs
-      </Link>
+      <BackLink fallbackHref="/dashboard/formateurs" label="Formateurs" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-4" />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>

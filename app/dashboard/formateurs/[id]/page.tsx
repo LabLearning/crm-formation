@@ -6,7 +6,7 @@ import {
   ArrowLeft, Mail, Phone, Euro, Presentation, Award, Star, Calendar,
   MapPin, Building2, ShieldCheck, FileText,
 } from 'lucide-react'
-import { Avatar, Badge } from '@/components/ui'
+import { Avatar, Badge, BackLink } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
@@ -90,9 +90,7 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fade-in">
-      <Link href="/dashboard/formateurs" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700">
-        <ArrowLeft className="h-4 w-4" /> Formateurs
-      </Link>
+      <BackLink fallbackHref="/dashboard/formateurs" label="Formateurs" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700" />
 
       {/* En-tête */}
       <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-5">
