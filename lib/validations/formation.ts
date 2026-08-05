@@ -18,6 +18,8 @@ export const createFormationSchema = z.object({
   intitule: z.string().min(3, 'Intitulé requis (min. 3 caractères)'),
   sous_titre: z.string().optional(),
   categorie: z.string().optional(),
+  analyse_besoin: z.string().optional(),
+  besoin_valide: z.coerce.boolean().optional(),
   objectifs_pedagogiques: z.string().optional(), // Sera splitté par ligne
   prerequis: z.string().optional(),
   public_vise: z.string().optional(),

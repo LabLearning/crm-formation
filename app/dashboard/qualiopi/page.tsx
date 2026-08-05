@@ -110,6 +110,13 @@ export default async function QualiopiPage() {
     if (!error) nbRecueils = count || 0
   } catch { nbRecueils = 0 }
 
+  // Formations dont le besoin est validé (ind. 4) — résilient avant migration 107.
+  let nbFormBesoin = 0
+  try {
+    const { count, error } = await supabase.from('formations').select('*', { count: 'exact', head: true }).eq('organization_id', orgId).eq('besoin_valide', true)
+    if (!error) nbFormBesoin = count || 0
+  } catch { nbFormBesoin = 0 }
+
   // Indicateurs de résultats publiés (ind. 2) — résilient avant migration 106.
   let resultatsPublies = false
   try {
@@ -123,6 +130,7 @@ export default async function QualiopiPage() {
     1: [{ label: 'Site & catalogue publics', href: '/site/formations', count: nbFormations }],
     2: [{ label: resultatsPublies ? 'Indicateurs de résultats publiés' : 'Indicateurs de résultats — à publier', href: '/dashboard/indicateurs-resultats', count: resultatsPublies ? 1 : 0, warn: !resultatsPublies }],
     4: [
+      { label: 'Formations avec besoin validé', href: '/dashboard/formations', count: nbFormBesoin, warn: nbFormBesoin === 0 },
       { label: 'Recueils du besoin complétés (par session)', href: '/dashboard/sessions', count: nbRecueils, warn: nbRecueils === 0 },
       { label: 'Conventions / devis', href: '/dashboard/conventions', count: nbConventions },
     ],

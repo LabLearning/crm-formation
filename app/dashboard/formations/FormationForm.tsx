@@ -298,6 +298,20 @@ export function FormationForm({ formation, onSuccess, onCancel }: FormationFormP
       <SectionHeader label="Programme & objectifs (Qualiopi C2)" sectionKey="programme" />
       {sections.programme && (
         <div className="space-y-3 pl-5 border-l-2 border-brand-100">
+          <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-3 space-y-2.5">
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-1">Analyse du besoin — à quel besoin répond cette formation ? <span className="text-2xs font-mono text-surface-400">Ind. 4</span></label>
+              <textarea id="analyse_besoin" name="analyse_besoin" rows={3} className="input-base resize-none"
+                placeholder="Ex : Répondre à l'obligation de formation hygiène (Paquet Hygiène) des personnels de restauration ; besoin de maîtrise HACCP identifié chez les établissements de restauration rapide…"
+                defaultValue={(formation as any)?.analyse_besoin || ''} />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
+              <input type="checkbox" name="besoin_valide" value="true" defaultChecked={(formation as any)?.besoin_valide || false}
+                className="h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
+              Besoin identifié et validé pour cette formation
+              {(formation as any)?.besoin_valide && <span className="text-2xs text-emerald-600">✓ validé</span>}
+            </label>
+          </div>
           <BulletTextarea id="objectifs_pedagogiques" name="objectifs_pedagogiques" label="Objectifs pédagogiques" rows={4}
             placeholder="Un objectif par ligne..." defaultValue={formation?.objectifs_pedagogiques?.join('\n') || ''}
             hint="Un objectif par ligne. Commencer par un verbe d'action." />
