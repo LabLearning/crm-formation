@@ -95,6 +95,8 @@ export async function detaillerReponseAction(params: {
   texte: string
   items: Record<string, { n?: string; o?: string }>
   avisFinal?: string | null
+  /** Les autres champs déjà rédigés, pour éviter les redites d'un champ à l'autre */
+  autres?: Record<string, string>
 }): Promise<ActionResult & { data?: { texte: string } }> {
   const session = await getSession()
   if (session.user.role === 'apprenant') return { success: false, error: 'Accès non autorisé' }
@@ -117,9 +119,18 @@ export async function detaillerReponseAction(params: {
     })
     .filter(Boolean) as { label: string; niveau: string; observation?: string }[]
 
+  const LABELS: Record<string, string> = {
+    points_forts: 'Points forts', a_renforcer: 'À renforcer', recommandations: 'Recommandations',
+    motivation_avis: "Motivation de l'avis", conclusion: 'Conclusion',
+  }
+  const autresRubriques = Object.entries(params.autres || {})
+    .filter(([k, v]) => k !== params.champ && (v || '').trim())
+    .map(([k, v]) => ({ label: LABELS[k] || k, texte: v }))
+
   const { detaillerEvaluationPoei } = await import('@/lib/ai')
   const r = await detaillerEvaluationPoei({
     champ: params.champ,
+    autresRubriques,
     texte: params.texte || '',
     apprenant: `${appr?.prenom || ''} ${appr?.nom || ''}`.trim() || 'Le bénéficiaire',
     formation: (poei as any)?.formation?.intitule || null,

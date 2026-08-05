@@ -565,14 +565,18 @@ export interface DetaillerParams {
   avisFinal?: string | null
   /** Constats de la grille : libellé → niveau (Acquis / En cours / Non acquis) */
   constats?: { label: string; niveau: string; observation?: string }[]
+  /** Rubriques déjà rédigées, pour éviter de répéter la même chose */
+  autresRubriques?: { label: string; texte: string }[]
 }
 
+// Chaque champ a un ANGLE distinct : sans cela, l'avis final et la conclusion
+// disent la même chose et le lecteur lit deux fois le même paragraphe.
 const CHAMP_CONSIGNE: Record<DetaillerParams['champ'], string> = {
-  points_forts: "Développe les POINTS FORTS du bénéficiaire : ce qu'il maîtrise, avec des exemples concrets tirés des compétences acquises.",
-  a_renforcer: "Développe les COMPÉTENCES À RENFORCER : ce qui reste à consolider, formulé de façon constructive et non disqualifiante.",
-  recommandations: "Développe les RECOMMANDATIONS pour la prise de poste ou l'accompagnement : actions concrètes, tutorat, points de vigilance.",
-  motivation_avis: "Développe la MOTIVATION DE L'AVIS FINAL : justifie l'avis rendu en t'appuyant sur les constats de la grille.",
-  conclusion: "Rédige une CONCLUSION de synthèse sur le parcours du bénéficiaire, à intégrer au bilan remis au financeur.",
+  points_forts: "Rédige les POINTS FORTS : uniquement ce que le bénéficiaire maîtrise, appuyé sur les compétences acquises. Ne mentionne AUCUN point faible ni axe de progrès (ils figurent dans un autre champ).",
+  a_renforcer: "Rédige les COMPÉTENCES À RENFORCER : uniquement ce qui reste à consolider, de façon constructive et non disqualifiante. Ne rappelle PAS les points forts.",
+  recommandations: "Rédige les RECOMMANDATIONS OPÉRATIONNELLES pour la prise de poste : actions concrètes (tutorat, binôme, montée en charge progressive, points de vigilance à surveiller). Formule des ACTIONS, pas un bilan des compétences.",
+  motivation_avis: "Rédige la MOTIVATION DE L'AVIS : explique POURQUOI cet avis est rendu, en citant les constats de la grille qui le fondent. C'est une justification, pas une synthèse du parcours ni une projection.",
+  conclusion: "Rédige la CONCLUSION, tournée vers l'APRÈS-FORMATION : le bénéficiaire est-il apte au poste visé, dans quelles conditions, et avec quel accompagnement à la prise de fonction. NE RÉSUME PAS à nouveau les compétences acquises ni la motivation de l'avis — apporte la projection professionnelle.",
 }
 
 export async function detaillerEvaluationPoei(p: DetaillerParams): Promise<{ success: boolean; texte: string; error?: string }> {
@@ -583,6 +587,8 @@ RÈGLES ABSOLUES :
 - Si l'information est trop mince pour développer, tu restes général et factuel plutôt que d'inventer.
 - Tu écris en français professionnel, à la 3e personne, sans jargon inutile, sans flatterie.
 - Registre : bilan pédagogique lisible par un conseiller France Travail et un employeur.
+- Désigne le bénéficiaire par son NOM COMPLET à la première mention, puis par son prénom ou « le bénéficiaire ».
+- NE RÉPÈTE PAS ce qui appartient aux autres rubriques du bilan : chaque champ doit apporter une information nouvelle. Tiens compte des rubriques déjà rédigées qui te sont fournies.
 - LONGUEUR : 3 à 5 phrases maximum, environ 60 à 90 mots. Reste CONCIS : un conseiller France Travail doit pouvoir le lire en quelques secondes. Va à l'essentiel, pas de remplissage, pas de répétition, pas de reformulation de la même idée.
 - Pas de titre, pas de liste à puces, pas de formule de politesse. Réponds UNIQUEMENT par le texte final.`
 
@@ -596,7 +602,9 @@ CONSTATS DE LA GRILLE D'ÉVALUATION${bloc('Compétences ACQUISES', parNiveau('Ac
 
 NOTE DU FORMATEUR (à développer) :
 ${p.texte?.trim() || '(le formateur n\'a rien écrit — appuie-toi uniquement sur les constats ci-dessus)'}
-
+${(p.autresRubriques || []).filter((r) => r.texte?.trim()).length
+  ? `\nRUBRIQUES DÉJÀ RÉDIGÉES DANS CE BILAN — n'en répète pas le contenu :\n${(p.autresRubriques || []).filter((r) => r.texte?.trim()).map((r) => `[${r.label}] ${r.texte.trim()}`).join('\n')}\n`
+  : ''}
 ${CHAMP_CONSIGNE[p.champ]}`
 
   const res = await callClaude(system, user, 1200, { noThinking: true })

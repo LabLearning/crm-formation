@@ -37,6 +37,11 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
     setDetail(champ)
     const r = await detaillerReponseAction({
       poeiId, apprenantId, champ, texte: (txt as any)[champ] || '', items, avisFinal: txt.avis_final || null,
+      autres: {
+        points_forts: txt.points_forts, a_renforcer: txt.a_renforcer,
+        recommandations: txt.recommandations, motivation_avis: txt.motivation_avis,
+        conclusion: txt.conclusion,
+      },
     })
     if (r.success && r.data?.texte) setTxt((p) => ({ ...p, [champ]: r.data!.texte }))
     else toast('error', r.error || 'Erreur')
