@@ -44,6 +44,17 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .map((a: any) => ({ ...a, entreprise: a.entreprise || entrepriseNom }))
   if (apprenants.length === 0) return NextResponse.json({ error: 'Aucun stagiaire à certifier' }, { status: 404 })
 
+  // Signatures électroniques des candidats (si déjà signées) — la date portée
+  // sur le certificat est celle de la POEI (dernier jour), pas celle du jour.
+  const sigByAppr = new Map<string, any>()
+  try {
+    const { data: sigs } = await supabase.from('certificat_signatures')
+      .select('apprenant_id, signature_data, signataire_nom, signed_at, date_signature')
+      .eq('poei_id', params.id).eq('organization_id', poei.organization_id)
+    for (const s of sigs || []) sigByAppr.set(String(s.apprenant_id), s)
+  } catch { /* table absente avant migration 109 */ }
+  const datePoei = (poei as any).date_fin || (poei as any).date_debut || null
+
   const files: Record<string, Uint8Array> = {}
   const usedNames = new Set<string>()
   for (const a of apprenants) {
@@ -55,7 +66,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const heuresPresence = formation?.duree_heures && assiduite ? Math.round(formation.duree_heures * assiduite / 100) : undefined
 
     const buffer = await renderToBuffer(
-      createElement(CertificatRealisationPDF, { apprenant: a, session: sess, formation, org, assiduite, heuresPresence }) as any,
+      createElement(CertificatRealisationPDF, {
+        apprenant: a, session: sess, formation, org, assiduite, heuresPresence,
+        signatureCandidat: (() => { const g = sigByAppr.get(String(a.id)); return g ? { data: g.signature_data, nom: g.signataire_nom, signedAt: g.signed_at } : null })(),
+        dateSignature: sigByAppr.get(String(a.id))?.date_signature || datePoei,
+      }) as any,
     )
     let base = `Certificat realisation - ${safeName(`${a.prenom || ''} ${a.nom || ''}`)}`
     let name = `${base}.pdf`

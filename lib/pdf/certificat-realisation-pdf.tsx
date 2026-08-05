@@ -9,10 +9,18 @@ interface CertificatRealisationProps {
   org: any
   assiduite?: number
   heuresPresence?: number
+  /** Signature électronique du bénéficiaire (candidat POEI) */
+  signatureCandidat?: { data?: string | null; nom?: string | null; signedAt?: string | null } | null
+  /** Date portée sur le certificat (ex. dernier jour de la POEI) */
+  dateSignature?: string | null
 }
 
-export function CertificatRealisationPDF({ apprenant, session, formation, org, assiduite, heuresPresence }: CertificatRealisationProps) {
+export function CertificatRealisationPDF({ apprenant, session, formation, org, assiduite, heuresPresence, signatureCandidat, dateSignature }: CertificatRealisationProps) {
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  // La date portée sur le certificat prime sur la date du jour (dernier jour de POEI)
+  const dateSignatureAffichee = dateSignature
+    ? new Date(dateSignature).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
   const numero = `CR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`
   const duree = formation.duree_heures || 0
   const heuresRealisees = heuresPresence != null ? heuresPresence : duree
@@ -66,15 +74,35 @@ export function CertificatRealisationPDF({ apprenant, session, formation, org, a
         </View>
 
         <View style={{ marginTop: 30 }}>
-          <Text style={{ fontSize: 8, color: SURFACE_500 }}>Fait à {org.city || '___________'}, le {today}, pour faire valoir ce que de droit.</Text>
-          <View style={{ marginTop: 12 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org.name} — {representant}</Text>
-            <View style={{ height: 60, width: 220, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
-              {org.tampon_signature_url ? (
-                <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 150, height: 75, objectFit: 'contain' }} />
-              ) : null}
+          <Text style={{ fontSize: 8, color: SURFACE_500 }}>
+            Fait à {org.city || '___________'}, le {dateSignatureAffichee || today}, pour faire valoir ce que de droit.
+          </Text>
+          {/* Deux signatures : le dispensateur (tampon) et le bénéficiaire */}
+          <View style={{ flexDirection: 'row', gap: 24, marginTop: 12 }} wrap={false}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org.name} — {representant}</Text>
+              <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+                {org.tampon_signature_url ? (
+                  <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 150, height: 75, objectFit: 'contain' }} />
+                ) : null}
+              </View>
+              <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet du dispensateur</Text>
             </View>
-            <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet du dispensateur</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>
+                Le bénéficiaire — {signatureCandidat?.nom || `${apprenant.prenom} ${apprenant.nom}`}
+              </Text>
+              <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+                {signatureCandidat?.data ? (
+                  <Image src={signatureCandidat.data} style={{ position: 'absolute', top: 0, left: 0, width: 140, height: 60, objectFit: 'contain' }} />
+                ) : null}
+              </View>
+              <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>
+                {signatureCandidat?.data
+                  ? `Signé électroniquement${signatureCandidat.signedAt ? ` le ${new Date(signatureCandidat.signedAt).toLocaleDateString('fr-FR')}` : ''}`
+                  : 'Signature du bénéficiaire'}
+              </Text>
+            </View>
           </View>
         </View>
 

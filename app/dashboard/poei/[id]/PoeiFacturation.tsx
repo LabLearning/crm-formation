@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, Download, FileText, Award, Clock, Building2, Plus } from 'lucide-react'
+import { Receipt, Download, FileText, Award, Clock, Building2, Plus, PenLine, CheckCircle2, Send } from 'lucide-react'
 import { Button, useToast, Modal, Input } from '@/components/ui'
 import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction } from '../actions'
+import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
 interface Candidat {
   id: string
@@ -25,12 +26,13 @@ const FACT_STATUS: Record<string, { label: string; cls: string }> = {
 interface Agence { id: string; nom: string; ville?: string | null }
 
 export function PoeiFacturation({
-  poeiId, sessionId, sessionTerminee, candidats, facturesByCandidat, agences = [], currentAgenceId = null,
+  poeiId, sessionId, sessionTerminee, candidats, facturesByCandidat, agences = [], currentAgenceId = null, signatures = {},
 }: {
   poeiId: string
   sessionId: string | null
   sessionTerminee: boolean
   candidats: Candidat[]
+  signatures?: Record<string, { signed_at: string | null; sent_at: string | null }>
   facturesByCandidat: Record<string, FactureInfo>
   agences?: Agence[]
   currentAgenceId?: string | null
@@ -41,6 +43,24 @@ export function PoeiFacturation({
   const [agenceId, setAgenceId] = useState(currentAgenceId || '')
   const [createOpen, setCreateOpen] = useState(false)
   const [savingAg, setSavingAg] = useState(false)
+  const [sending, setSending] = useState<string | null>(null)
+  const [sendingAll, setSendingAll] = useState(false)
+
+  async function sendSignature(apprenantId: string) {
+    setSending(apprenantId)
+    const r = await sendCertificatSignatureAction(poeiId, apprenantId)
+    if (r.success) { toast('success', `Lien de signature envoyé à ${r.data?.email || 'le candidat'}`); router.refresh() }
+    else toast('error', r.error || 'Erreur')
+    setSending(null)
+  }
+
+  async function sendAllSignatures() {
+    setSendingAll(true)
+    const r = await sendAllCertificatSignaturesAction(poeiId)
+    if (r.success) { toast('success', `${r.data?.sent || 0} lien(s) envoyé(s)${r.data?.skipped ? ` · ${r.data.skipped} ignoré(s)` : ''}`); router.refresh() }
+    else toast('error', r.error || 'Erreur')
+    setSendingAll(false)
+  }
 
   async function chooseAgence(id: string) {
     setAgenceId(id)
@@ -92,6 +112,10 @@ export function PoeiFacturation({
             <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
               {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
             </Button>
+            <button onClick={sendAllSignatures} disabled={sendingAll}
+              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm disabled:opacity-50">
+              <Send className="h-4 w-4" /> {sendingAll ? 'Envoi…' : 'Envoyer les signatures'}
+            </button>
             <a href={`/api/pdf/poei-certificats/${poeiId}`} className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
               <Download className="h-4 w-4" /> Certificats (ZIP)
             </a>
@@ -154,6 +178,20 @@ export function PoeiFacturation({
                       <Award className="h-3.5 w-3.5" /> Certificat
                     </a>
                   )}
+                  {c.apprenant?.id && (() => {
+                    const sg = signatures[c.apprenant.id]
+                    if (sg?.signed_at) return (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Signé
+                      </span>
+                    )
+                    return (
+                      <button onClick={() => sendSignature(c.apprenant!.id)} disabled={sending === c.apprenant.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-50">
+                        <PenLine className="h-3.5 w-3.5" /> {sg?.sent_at ? 'Relancer' : 'Faire signer'}
+                      </button>
+                    )
+                  })()}
                 </div>
               </div>
             )

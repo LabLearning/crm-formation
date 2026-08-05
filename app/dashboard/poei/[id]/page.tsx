@@ -110,6 +110,15 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     .select('id, nom, ville')
     .eq('organization_id', session.organization.id).eq('is_active', true).order('nom')
 
+  // Signatures des certificats par les candidats (résilient : migration 109)
+  const sigMap: Record<string, { signed_at: string | null; sent_at: string | null }> = {}
+  {
+    const r = await supabase.from('certificat_signatures')
+      .select('apprenant_id, signed_at, sent_at')
+      .eq('poei_id', params.id).eq('organization_id', session.organization.id)
+    if (!r.error) for (const x of r.data || []) sigMap[String((x as any).apprenant_id)] = { signed_at: (x as any).signed_at, sent_at: (x as any).sent_at }
+  }
+
   // Grilles d'évaluation des candidats (résilient : table absente avant migration 108)
   const { data: grilles } = await supabase
     .from('poei_grilles')
@@ -174,6 +183,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         candidats={candidats as any[]}
         facturesByCandidat={facturesByCandidat}
         agences={(agencesFt || []) as any[]}
+        signatures={sigMap}
         currentAgenceId={(p as any).agence_ft_id || null}
       />
 
