@@ -33,6 +33,7 @@ export const navigation: NavSection[] = [
       { label: 'Apporteurs', href: '/dashboard/apporteurs', icon: 'Handshake', module: 'apporteurs' },
       { label: 'Franchises', href: '/dashboard/franchises', icon: 'Store', module: 'apporteurs' },
       { label: 'Formateurs', href: '/dashboard/formateurs', icon: 'Presentation', module: 'formateurs' },
+      { label: 'Vivier de secours', href: '/dashboard/formateurs/vivier', icon: 'LifeBuoy', module: 'formateurs' },
       { label: 'Commerciaux', href: '/dashboard/users?role=commercial', icon: 'Briefcase', module: 'users' },
       { label: 'Gestionnaires', href: '/dashboard/users?role=gestionnaire', icon: 'UserCog', module: 'users' },
     ],

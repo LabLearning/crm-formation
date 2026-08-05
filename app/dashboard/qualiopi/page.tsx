@@ -88,6 +88,14 @@ export default async function QualiopiPage() {
     cntVeilleValid('legale'), cntVeilleValid('metier'), cntVeilleValid('pedagogique'), cntVeilleValid('handicap'),
   ])
 
+  // Vivier de formateurs de secours (plan de continuité) — résilient avant migration 103.
+  let nbSecours = 0
+  try {
+    const { count, error } = await supabase.from('formateurs').select('*', { count: 'exact', head: true })
+      .eq('organization_id', orgId).eq('formateur_secours', true)
+    if (!error) nbSecours = count || 0
+  } catch { nbSecours = 0 }
+
   // Mapping indicateur → preuves réelles du CRM (compteurs honnêtes).
   // warn:true = trou à combler avant l'audit.
   const crmEvidence: Record<number, CrmEvidence[]> = {
@@ -102,7 +110,10 @@ export default async function QualiopiPage() {
     12: [{ label: 'Émargements signés', href: '/dashboard/emargement', count: nbEmargSignes, warn: true }],
     16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
     17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
-    18: [{ label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm }],
+    18: [
+      { label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm },
+      { label: 'Vivier de formateurs de secours (plan de continuité)', href: '/dashboard/formateurs/vivier', count: nbSecours, warn: nbSecours === 0 },
+    ],
     21: [{ label: 'Formateurs (CV, diplômes)', href: '/dashboard/formateurs', count: nbFormateurs }],
     23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
     24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],

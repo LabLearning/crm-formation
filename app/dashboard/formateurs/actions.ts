@@ -336,6 +336,21 @@ export async function toggleFormateurAction(id: string, isActive: boolean): Prom
   return { success: true }
 }
 
+/** Ajoute/retire un formateur du vivier de secours (remplacement de dernière minute). */
+export async function toggleFormateurSecoursAction(id: string, value: boolean): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('formateurs')
+    .update({ formateur_secours: value })
+    .eq('id', id)
+    .eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Erreur' }
+  revalidatePath('/dashboard/formateurs/vivier')
+  revalidatePath('/dashboard/qualiopi')
+  return { success: true }
+}
+
 export async function deleteFormateurAction(id: string): Promise<ActionResult> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
