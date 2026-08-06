@@ -14,7 +14,7 @@ export default async function AuditPage({
 
   const leadId = searchParams?.lead || null
 
-  const [auditsRes, leadRes] = await Promise.all([
+  const [auditsRes, leadRes, terrainRes] = await Promise.all([
     supabase
       .from('audits_conformite')
       .select('*')
@@ -29,6 +29,13 @@ export default async function AuditPage({
           .eq('organization_id', session.organization.id)
           .maybeSingle()
       : Promise.resolve({ data: null } as any),
+    // Audits hygiène réalisés sur le terrain (miroir d'AuditHygiène Pro)
+    supabase
+      .from('ah_audits')
+      .select('id, num_rapport, date_audit, type_audit, formateur_nom, score_global, mention, nb_non_conformes, etablissement:ah_etablissements(id, nom, ville, client_id)')
+      .eq('organization_id', session.organization.id)
+      .order('date_audit', { ascending: false })
+      .limit(200),
   ])
 
   // Table absente (migration 113 non appliquée) : l'outil reste utilisable sans historique.
@@ -50,9 +57,17 @@ export default async function AuditPage({
 
   const commercial = [session.user.first_name, session.user.last_name].filter(Boolean).join(' ')
 
+  const terrain = ((terrainRes.data as any[]) || []).map((a) => ({
+    ...a,
+    _etabNom: (a.etablissement as any)?.nom || null,
+    _etabVille: (a.etablissement as any)?.ville || null,
+    _clientId: (a.etablissement as any)?.client_id || null,
+  }))
+
   return (
     <AuditClient
       audits={(auditsRes.data as any[]) || []}
+      auditsTerrain={terrain}
       prefill={prefill}
       commercialDefaut={commercial || session.user.email || ''}
       tableManquante={tableManquante}

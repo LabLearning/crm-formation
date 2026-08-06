@@ -51,13 +51,14 @@ interface Prefill {
 
 interface AuditClientProps {
   audits: any[]
+  auditsTerrain: any[]
   prefill: Prefill | null
   commercialDefaut: string
   tableManquante: boolean
   auditIdOuvert: string | null
 }
 
-export function AuditClient({ audits, prefill, commercialDefaut, tableManquante, auditIdOuvert }: AuditClientProps) {
+export function AuditClient({ audits, auditsTerrain = [], prefill, commercialDefaut, tableManquante, auditIdOuvert }: AuditClientProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [phase, setPhase] = useState<Phase>('questionnaire')
@@ -66,6 +67,7 @@ export function AuditClient({ audits, prefill, commercialDefaut, tableManquante,
   const [clientId, setClientId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [sourceHisto, setSourceHisto] = useState<'commercial' | 'terrain'>('commercial')
 
   // Questionnaire
   const [etabNom, setEtabNom] = useState('')
@@ -348,7 +350,7 @@ export function AuditClient({ audits, prefill, commercialDefaut, tableManquante,
           { id: 'questionnaire' as const, label: '1. Questionnaire' },
           { id: 'script' as const, label: '2. Script commercial' },
           { id: 'rapport' as const, label: '3. Rapport' },
-          { id: 'historique' as const, label: `Historique${audits.length ? ` (${audits.length})` : ''}` },
+          { id: 'historique' as const, label: `Historique${audits.length + auditsTerrain.length ? ` (${audits.length + auditsTerrain.length})` : ''}` },
         ]).map(p => (
           <button key={p.id} onClick={() => setPhase(p.id)}
             className={cn('px-4 py-2 rounded-md text-sm font-medium transition-colors', phase === p.id ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700')}>
@@ -360,13 +362,78 @@ export function AuditClient({ audits, prefill, commercialDefaut, tableManquante,
       {/* ═══ HISTORIQUE ═══ */}
       {phase === 'historique' && (
         <div className="space-y-3">
-          {audits.length === 0 && (
+          {/* Deux sources : le diagnostic commercial saisi ici, et les audits
+              hygiène réalisés sur le terrain avec AuditHygiène Pro. */}
+          <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5 w-fit">
+            {([
+              { key: 'commercial' as const, label: `Diagnostics commerciaux (${audits.length})` },
+              { key: 'terrain' as const, label: `Audits hygiène terrain (${auditsTerrain.length})` },
+            ]).map((o) => (
+              <button key={o.key} onClick={() => setSourceHisto(o.key)}
+                className={cn('px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                  sourceHisto === o.key ? 'bg-white shadow-xs text-surface-900' : 'text-surface-500 hover:text-surface-700')}>
+                {o.label}
+              </button>
+            ))}
+          </div>
+
+          {sourceHisto === 'terrain' && (
+            <>
+              {auditsTerrain.length === 0 && (
+                <div className="card p-10 text-center">
+                  <ShieldAlert className="h-10 w-10 text-surface-300 mx-auto mb-3" />
+                  <div className="text-sm text-surface-500">
+                    Aucun audit terrain — lancez une synchronisation depuis{' '}
+                    <Link href="/dashboard/audits-hygiene" className="text-brand-600 hover:underline">Audits hygiène &amp; DUERP</Link>.
+                  </div>
+                </div>
+              )}
+              {auditsTerrain.map((a) => {
+                const sc = Number(a.score_global) || 0
+                const coul = sc >= 80 ? '#16a34a' : sc >= 60 ? '#d97706' : '#dc2626'
+                return (
+                  <div key={a.id} className="card p-4 flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-heading font-bold shrink-0"
+                      style={{ backgroundColor: `${coul}1a`, color: coul }}>
+                      {a.score_global ?? '--'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-heading font-semibold text-surface-900 truncate">
+                        {a._etabNom || 'Etablissement inconnu'}
+                      </div>
+                      <div className="text-xs text-surface-500 truncate">
+                        {a.date_audit ? formatDate(a.date_audit) : '--'}
+                        {a.type_audit ? ` · ${a.type_audit}` : ''}
+                        {a.formateur_nom ? ` · ${a.formateur_nom}` : ''}
+                        {a._etabVille ? ` · ${a._etabVille}` : ''}
+                        {a.nb_non_conformes ? ` · ${a.nb_non_conformes} non-conformites` : ''}
+                      </div>
+                    </div>
+                    {a.mention && (
+                      <Badge variant={a.mention === 'SATISFAISANT' ? 'success' : a.mention === 'INSUFFISANT' ? 'danger' : 'warning'}>
+                        {a.mention}
+                      </Badge>
+                    )}
+                    {a._clientId ? (
+                      <Link href={`/dashboard/clients/${a._clientId}`} className="text-xs text-brand-600 hover:underline shrink-0 hidden sm:block">
+                        Fiche client
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-surface-400 shrink-0 hidden sm:block">Non rattaché</span>
+                    )}
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {sourceHisto === 'commercial' && audits.length === 0 && (
             <div className="card p-10 text-center">
               <History className="h-10 w-10 text-surface-300 mx-auto mb-3" />
               <div className="text-sm text-surface-500">Aucun audit enregistré pour le moment.</div>
             </div>
           )}
-          {audits.map(a => (
+          {sourceHisto === 'commercial' && audits.map(a => (
             <div key={a.id} className="card p-4 flex items-center gap-4">
               <div
                 className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-heading font-bold shrink-0"
