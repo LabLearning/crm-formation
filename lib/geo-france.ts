@@ -115,3 +115,9 @@ export const TEMPO_META: Record<Temporalite, { label: string; color: string; bg:
   a_venir: { label: 'À venir', color: '#2563eb', bg: 'bg-blue-50', text: 'text-blue-700' },
   passee: { label: 'Passée', color: '#a8a29e', bg: 'bg-surface-100', text: 'text-surface-600' },
 }
+
+/** Couleurs distinctes attribuées aux enseignes sur la carte. */
+export const PALETTE_FRANCHISES = [
+  '#2563eb', '#dc2626', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#db2777', '#65a30d',
+]
+export const couleurFranchise = (index: number) => PALETTE_FRANCHISES[index % PALETTE_FRANCHISES.length]
