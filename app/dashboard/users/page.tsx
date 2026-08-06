@@ -4,16 +4,17 @@ import { isAdmin as checkAdmin, isSuperAdmin as checkSuperAdmin } from '@/lib/pe
 import { UsersList } from './UsersList'
 import type { User } from '@/lib/types'
 
-export default async function UsersPage() {
+export default async function UsersPage({ searchParams }: { searchParams?: { role?: string } }) {
   const session = await getSession()
+  // Filtre par type, alimenté par les entrées « Commerciaux » / « Gestionnaires »
+  // de la barre latérale (/dashboard/users?role=…)
+  const roleFiltre = searchParams?.role || null
   const supabase = await createServiceRoleClient()
 
   const [{ data: users }, { data: invitations }, { data: franchises }] = await Promise.all([
-    supabase
-      .from('users')
-      .select('*')
-      .eq('organization_id', session.organization.id)
-      .order('created_at', { ascending: true }),
+    (roleFiltre
+      ? supabase.from('users').select('*').eq('organization_id', session.organization.id).eq('role', roleFiltre).order('created_at', { ascending: true })
+      : supabase.from('users').select('*').eq('organization_id', session.organization.id).order('created_at', { ascending: true })),
     supabase
       .from('invitations')
       .select('*')
@@ -36,6 +37,7 @@ export default async function UsersPage() {
         invitations={(invitations || []) as any[]}
         franchises={(franchises || []) as any[]}
         currentUserId={session.user.id}
+        roleFiltre={roleFiltre}
         isAdmin={checkAdmin(session.user.role)}
         isSuperAdmin={checkSuperAdmin(session.user.role)}
       />

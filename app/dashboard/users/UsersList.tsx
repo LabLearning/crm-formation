@@ -30,11 +30,18 @@ interface UsersListProps {
   currentUserId: string
   isAdmin: boolean
   isSuperAdmin: boolean
+  roleFiltre?: string | null
 }
 
 const roleOptions = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))
+// Les utilisateurs sont regroupés par type, du plus interne au plus externe :
+// on repère ainsi d'un coup d'œil qui compose l'équipe.
+const ORDRE_ROLES: UserRole[] = [
+  'super_admin', 'gestionnaire', 'directeur_commercial', 'commercial',
+  'formateur', 'apporteur_affaires', 'franchise', 'apprenant',
+]
 
-export function UsersList({ users, invitations, franchises = [], currentUserId, isAdmin, isSuperAdmin }: UsersListProps) {
+export function UsersList({ users, invitations, franchises = [], currentUserId, isAdmin, isSuperAdmin, roleFiltre = null }: UsersListProps) {
   const { toast } = useToast()
   const [inviteOpen, setInviteOpen] = useState(false)
   const [isInviting, setIsInviting] = useState(false)
@@ -147,9 +154,12 @@ export function UsersList({ users, invitations, franchises = [], currentUserId, 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Utilisateurs</h1>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">
+            {roleFiltre ? `${ROLE_LABELS[roleFiltre as UserRole] || 'Utilisateurs'}${users.length > 1 ? 's' : ''}` : 'Utilisateurs'}
+          </h1>
           <p className="text-surface-500 mt-1 text-sm">
-            {users.length} membre{users.length > 1 ? 's' : ''} dans l&apos;organisme
+            {users.length} membre{users.length > 1 ? 's' : ''}
+            {roleFiltre ? <> · <a href="/dashboard/users" className="text-brand-600 hover:underline">voir tous les utilisateurs</a></> : " dans l'organisme"}
           </p>
         </div>
         {isAdmin && (
@@ -188,7 +198,18 @@ export function UsersList({ users, invitations, franchises = [], currentUserId, 
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100">
-              {users.map((user) => (
+              {ORDRE_ROLES.flatMap((role) => {
+                const groupe = users.filter((u) => u.role === role)
+                if (groupe.length === 0) return []
+                return [
+                  <tr key={`grp-${role}`} className="bg-surface-50/70">
+                    <td colSpan={isAdmin ? 5 : 4} className="px-6 py-2">
+                      <span className="text-2xs font-semibold text-surface-500 uppercase tracking-wider">
+                        {ROLE_LABELS[role]}{groupe.length > 1 ? 's' : ''} ({groupe.length})
+                      </span>
+                    </td>
+                  </tr>,
+                  ...groupe.map((user) => (
                 <tr
                   key={user.id}
                   className="hover:bg-surface-50/50 transition-colors"
@@ -260,7 +281,9 @@ export function UsersList({ users, invitations, franchises = [], currentUserId, 
                     </td>
                   )}
                 </tr>
-              ))}
+                  )),
+                ]
+              })}
             </tbody>
           </table>
         </div>

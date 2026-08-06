@@ -27,11 +27,14 @@ export default async function TachesPage() {
       .is('archived_at', null)
       .order('status')
       .order('position'),
+    // Seule l'équipe interne peut se voir assigner une tâche : les formateurs,
+    // apporteurs, franchisés et apprenants n'ont pas accès à ce module.
     supabase
       .from('users')
       .select('id, first_name, last_name, email, role')
       .eq('organization_id', session.organization.id)
       .eq('status', 'active')
+      .in('role', ['super_admin', 'gestionnaire', 'directeur_commercial', 'commercial'])
       .order('first_name'),
   ])
 
