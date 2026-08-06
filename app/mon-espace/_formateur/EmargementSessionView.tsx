@@ -59,11 +59,9 @@ export async function EmargementSessionView({
       .from('emargement_feuilles')
       .select('id, date, creneau, mode, scan_storage_path, formateur_signature_data, validated_at')
       .eq('session_id', session.id),
-    supabase
-      .from('inscriptions')
-      .select('apprenant:apprenants(id, prenom, nom)')
-      .eq('session_id', session.id)
-      .not('status', 'in', '("annule","abandonne")'),
+    // Même règle que la feuille d'émargement PDF : inscrits actifs + toute
+    // personne ayant déjà signé (cf. lib/emargement-participants).
+    import('@/lib/emargement-participants').then((m) => m.participantsFeuille(supabase, session.id)),
     // Pointage du formateur pour cette session, jour courant
     supabase
       .from('pointages_formateur')
@@ -77,10 +75,7 @@ export async function EmargementSessionView({
 
   const emargements = (emRes.data || []) as any[]
   const feuilles = (fRes.data || []) as any[]
-  const stagiaires = (insRes.data || [])
-    .map((i: any) => i.apprenant)
-    .filter(Boolean)
-    .sort((a: any, b: any) => `${a.nom}`.localeCompare(`${b.nom}`))
+  const stagiaires = (insRes as any[]) || []
 
   // Un seul appel signé pour tous les scans plutôt qu'un par feuille
   const scanPaths = feuilles.map((f) => f.scan_storage_path).filter(Boolean) as string[]

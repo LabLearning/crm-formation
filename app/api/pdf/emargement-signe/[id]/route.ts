@@ -43,12 +43,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
-  const [{ data: inscriptions }, { data: emargements }, { data: feuilles }] = await Promise.all([
-    supabase
-      .from('inscriptions')
-      .select('apprenant:apprenants(id, prenom, nom, entreprise)')
-      .eq('session_id', params.id)
-      .not('status', 'in', '("annule","abandonne")'),
+  const { participantsFeuille } = await import('@/lib/emargement-participants')
+  const [apprenants, { data: emargements }, { data: feuilles }] = await Promise.all([
+    participantsFeuille(supabase, params.id),
     supabase
       .from('emargements')
       .select('apprenant_id, date, creneau, est_present, signature_data, signed_at, motif_absence')
@@ -59,8 +56,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       .select('date, creneau, formateur_signature_data, validated_at')
       .eq('session_id', params.id),
   ])
-
-  const apprenants = (inscriptions || []).map((i: any) => i.apprenant).filter(Boolean)
 
   const buffer = await renderToBuffer(
     createElement(EmargementSignePDF, {

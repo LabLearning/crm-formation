@@ -33,12 +33,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
-  const { data: inscriptions } = await supabase
-    .from('inscriptions')
-    .select('apprenant:apprenants(prenom, nom, entreprise)')
-    .eq('session_id', params.id)
-    .not('status', 'in', '("annule","abandonne")')
-  const apprenants = (inscriptions || []).map((i: any) => i.apprenant).filter(Boolean)
+  const { participantsFeuille } = await import('@/lib/emargement-participants')
+  const apprenants = await participantsFeuille(supabase, params.id)
 
   const buffer = await renderToBuffer(
     createElement(EmargementPDF, { session, formation, org, formateur: (session as any).formateur, apprenants }) as any

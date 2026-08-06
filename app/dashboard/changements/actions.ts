@@ -30,6 +30,23 @@ export async function validateChangeAction(id: string, reponse?: string): Promis
   if (!d) return { success: false, error: 'Demande introuvable' }
   if (d.statut !== 'en_attente') return { success: false, error: 'Demande déjà traitée' }
 
+  // Un stagiaire qui a déjà signé était présent : on ne peut plus l'annuler,
+  // sinon il disparaît de la feuille d'émargement alors que sa signature existe.
+  if (['retrait', 'remplacement'].includes(d.type) && d.apprenant_id) {
+    const { count } = await supabase
+      .from('emargements')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', d.session_id)
+      .eq('apprenant_id', d.apprenant_id)
+      .not('signature_data', 'is', null)
+    if ((count || 0) > 0) {
+      return {
+        success: false,
+        error: `Ce stagiaire a déjà signé ${count} émargement(s) sur cette session : il était présent, son inscription ne peut pas être annulée. Refusez la demande ou corrigez l'émargement.`,
+      }
+    }
+  }
+
   // Retrait de l'ancien participant
   const removeOld = async () => {
     if (!d.apprenant_id) return

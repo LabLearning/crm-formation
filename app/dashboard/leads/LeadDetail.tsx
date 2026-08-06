@@ -95,13 +95,8 @@ export function LeadDetail({ lead, users, gestionnaires, formateurs = [], format
   }
 
   function prefillAudit() {
-    const data = {
-      etabNom: lead.entreprise || '', effectif: lead.nombre_stagiaires || '',
-      contactNom: (lead.contact_prenom || '') + ' ' + lead.contact_nom,
-      contactEmail: lead.contact_email || '', contactTel: lead.contact_telephone || '',
-    }
-    localStorage.setItem('ll_prefill_audit', JSON.stringify(data))
-    router.push('/dashboard/audit')
+    // L'audit est rattaché au lead côté serveur : le préremplissage vient de la base.
+    router.push(`/dashboard/audit?lead=${lead.id}`)
   }
 
   function prefillMailing() {
