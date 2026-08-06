@@ -266,10 +266,11 @@ export function ManagerClient({ stats }: { stats: ManagerStats }) {
             <div className="text-sm font-heading font-semibold text-surface-900 tracking-tight mb-4">Statut sessions</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
+                // Même convention de couleur que partout ailleurs (cf. SESSION_STATUS_COLORS)
                 { label: 'Planifiées', count: sc('planifiee'), color: 'bg-blue-50 text-blue-700' },
-                { label: 'Confirmées', count: sc('confirmee'), color: 'bg-violet-50 text-violet-700' },
-                { label: 'En cours', count: sc('en_cours'), color: 'bg-amber-50 text-amber-700' },
-                { label: 'Terminées', count: sc('terminee'), color: 'bg-emerald-50 text-emerald-700' },
+                { label: 'Confirmées', count: sc('confirmee'), color: 'bg-blue-50 text-blue-700' },
+                { label: 'En cours', count: sc('en_cours'), color: 'bg-emerald-50 text-emerald-700' },
+                { label: 'Terminées', count: sc('terminee'), color: 'bg-violet-50 text-violet-700' },
               ].map(s => (
                 <div key={s.label} className={cn('p-4 rounded-xl text-center', s.color)}>
                   <div className="text-2xl font-heading font-bold">{s.count}</div>

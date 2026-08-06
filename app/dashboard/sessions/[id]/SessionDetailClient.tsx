@@ -25,6 +25,7 @@ import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
 import { SessionDossier } from './SessionDossier'
 import { SessionForm } from '../SessionForm'
+import type { BadgeVariant } from '@/lib/types'
 
 const CONVENTION_STATUS: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'danger' }> = {
   brouillon: { label: 'Brouillon', variant: 'default' },
@@ -74,11 +75,12 @@ const QCM_TYPE_LABELS: Record<string, string> = {
   satisfaction_froid: 'Satisfaction à froid',
 }
 
-const SESSION_STATUS: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'danger' }> = {
-  planifiee: { label: 'Planifiée', variant: 'default' },
+// Convention de couleur commune (cf. SESSION_STATUS_COLORS)
+const SESSION_STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
+  planifiee: { label: 'Planifiée', variant: 'info' },
   confirmee: { label: 'Confirmée', variant: 'info' },
   en_cours: { label: 'En cours', variant: 'success' },
-  terminee: { label: 'Terminée', variant: 'default' },
+  terminee: { label: 'Terminée', variant: 'purple' },
   annulee: { label: 'Annulée', variant: 'danger' },
 }
 

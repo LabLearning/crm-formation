@@ -135,7 +135,7 @@ export interface ActionResult<T = unknown> {
 
 // ---- UI ----
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple'
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',

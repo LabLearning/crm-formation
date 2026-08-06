@@ -214,11 +214,14 @@ export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
   annulee: 'Annulée',
 }
 
+// Convention de couleur des statuts de session, valable sur TOUTE la plateforme
+// (listes, fiches, carte, agenda) : bleu = planifiée/confirmée, vert = en cours,
+// violet = terminée, rouge = annulée.
 export const SESSION_STATUS_COLORS: Record<SessionStatus, BadgeVariant> = {
-  planifiee: 'default',
+  planifiee: 'info',
   confirmee: 'info',
   en_cours: 'success',
-  terminee: 'default',
+  terminee: 'purple',
   annulee: 'danger',
 }
 

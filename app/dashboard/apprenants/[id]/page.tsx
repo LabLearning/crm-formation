@@ -117,7 +117,7 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
                     {i.session?.client && ` · ${companyLabel(i.session.client)}`}
                   </div>
                 </div>
-                <Badge variant={i.session?.status === 'terminee' ? 'success' : 'default'}>{i.session?.status === 'terminee' ? 'Terminée' : (i.status || 'inscrit')}</Badge>
+                <Badge variant={i.session?.status === 'terminee' ? 'purple' : 'default'}>{i.session?.status === 'terminee' ? 'Terminée' : (i.status || 'inscrit')}</Badge>
               </Link>
             ))}
           </div>

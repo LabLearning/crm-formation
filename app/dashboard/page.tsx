@@ -1,3 +1,4 @@
+import type { BadgeVariant } from '@/lib/types'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -112,11 +113,13 @@ export default async function DashboardPage() {
     team: (uCnt.count || 0) > 1,
   }
 
-  const SESSION_STATUS: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' }> = {
-    planifiee: { label: 'Planifiée', variant: 'default' },
+  // Convention de couleur commune (cf. SESSION_STATUS_COLORS)
+  const SESSION_STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
+    planifiee: { label: 'Planifiée', variant: 'info' },
     confirmee: { label: 'Confirmée', variant: 'info' },
     en_cours: { label: 'En cours', variant: 'success' },
-    terminee: { label: 'Terminée', variant: 'default' },
+    terminee: { label: 'Terminée', variant: 'purple' },
+    annulee: { label: 'Annulée', variant: 'danger' },
   }
 
   const getGreeting = () => {

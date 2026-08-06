@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Badge, BackLink } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
+import type { BadgeVariant } from '@/lib/types'
 
 export default async function FormationDetailPage({ params }: { params: { id: string } }) {
   const session = await getSession()
@@ -39,8 +40,8 @@ export default async function FormationDetailPage({ params }: { params: { id: st
   const STATUS_LABELS: Record<string, string> = {
     planifiee: 'Planifiée', confirmee: 'Confirmée', en_cours: 'En cours', terminee: 'Terminée', annulee: 'Annulée',
   }
-  const STATUS_VARIANTS: Record<string, 'default' | 'info' | 'success' | 'warning' | 'danger'> = {
-    planifiee: 'default', confirmee: 'info', en_cours: 'success', terminee: 'default', annulee: 'danger',
+  const STATUS_VARIANTS: Record<string, BadgeVariant> = {
+    planifiee: 'info', confirmee: 'info', en_cours: 'success', terminee: 'purple', annulee: 'danger',
   }
 
   const objectifs = formation.objectifs_pedagogiques || []

@@ -42,7 +42,7 @@ export function CarteClient({ sessions, franchises = [], etablissements = [] }: 
   // Temporalité + localisation calculées une fois
   const enrichies = useMemo(() => sessions.map((s) => ({
     ...s,
-    _tempo: temporalite(s.date_debut, s.date_fin),
+    _tempo: temporalite(s.date_debut, s.date_fin, undefined, s.status),
     _pos: localiserSession(s),
   })), [sessions])
 
@@ -51,6 +51,7 @@ export function CarteClient({ sessions, franchises = [], etablissements = [] }: 
     en_cours: enrichies.filter((s) => s._tempo === 'en_cours').length,
     a_venir: enrichies.filter((s) => s._tempo === 'a_venir').length,
     passee: enrichies.filter((s) => s._tempo === 'passee').length,
+    annulee: enrichies.filter((s) => s._tempo === 'annulee').length,
   }), [enrichies])
 
   const filtrees = useMemo(() => {
@@ -99,8 +100,9 @@ export function CarteClient({ sessions, franchises = [], etablissements = [] }: 
   const ONGLETS: { key: Filtre; label: string; color?: string }[] = [
     { key: 'tous', label: 'Toutes' },
     { key: 'en_cours', label: 'En cours', color: TEMPO_META.en_cours.color },
-    { key: 'a_venir', label: 'À venir', color: TEMPO_META.a_venir.color },
-    { key: 'passee', label: 'Passées', color: TEMPO_META.passee.color },
+    { key: 'a_venir', label: 'Planifiées', color: TEMPO_META.a_venir.color },
+    { key: 'passee', label: 'Terminées', color: TEMPO_META.passee.color },
+    { key: 'annulee', label: 'Annulées', color: TEMPO_META.annulee.color },
   ]
 
   return (

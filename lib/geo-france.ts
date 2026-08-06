@@ -99,10 +99,19 @@ export function localiserSession(s: {
   return null
 }
 
-export type Temporalite = 'passee' | 'en_cours' | 'a_venir'
+export type Temporalite = 'passee' | 'en_cours' | 'a_venir' | 'annulee'
 
-/** Temporalité d'une session d'après ses seules dates. */
-export function temporalite(dateDebut: string, dateFin?: string | null, today = new Date().toISOString().slice(0, 10)): Temporalite {
+/**
+ * Temporalité d'une session : les dates font foi, sauf pour une session
+ * annulée qui garde son propre état quelles que soient ses dates.
+ */
+export function temporalite(
+  dateDebut: string,
+  dateFin?: string | null,
+  today = new Date().toISOString().slice(0, 10),
+  status?: string | null,
+): Temporalite {
+  if (status === 'annulee') return 'annulee'
   const fin = (dateFin || dateDebut).slice(0, 10)
   const debut = dateDebut.slice(0, 10)
   if (fin < today) return 'passee'
@@ -112,8 +121,9 @@ export function temporalite(dateDebut: string, dateFin?: string | null, today = 
 
 export const TEMPO_META: Record<Temporalite, { label: string; color: string; bg: string; text: string }> = {
   en_cours: { label: 'En cours', color: '#16a34a', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  a_venir: { label: 'À venir', color: '#2563eb', bg: 'bg-blue-50', text: 'text-blue-700' },
-  passee: { label: 'Passée', color: '#a8a29e', bg: 'bg-surface-100', text: 'text-surface-600' },
+  a_venir: { label: 'Planifiée', color: '#2563eb', bg: 'bg-blue-50', text: 'text-blue-700' },
+  passee: { label: 'Terminée', color: '#7c3aed', bg: 'bg-violet-50', text: 'text-violet-700' },
+  annulee: { label: 'Annulée', color: '#dc2626', bg: 'bg-red-50', text: 'text-red-700' },
 }
 
 /** Couleurs distinctes attribuées aux enseignes sur la carte. */

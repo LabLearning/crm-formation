@@ -14,6 +14,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   warning: 'bg-warning-50 text-warning-700 border-warning-100',
   danger: 'bg-danger-50 text-danger-700 border-danger-100',
   info: 'bg-brand-50 text-brand-700 border-brand-100',
+  purple: 'bg-violet-50 text-violet-700 border-violet-100',
 }
 
 const dotStyles: Record<BadgeVariant, string> = {
@@ -22,6 +23,7 @@ const dotStyles: Record<BadgeVariant, string> = {
   warning: 'bg-warning-500',
   danger: 'bg-danger-500',
   info: 'bg-brand-500',
+  purple: 'bg-violet-500',
 }
 
 export function Badge({ variant = 'default', children, className, dot }: BadgeProps) {
