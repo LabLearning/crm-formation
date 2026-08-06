@@ -7,7 +7,7 @@ import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
-  Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck,
+  Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck, Mails,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
@@ -94,7 +94,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'dossier'>('session')
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'dossier' | 'mails'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
   const [montantValue, setMontantValue] = useState('')
@@ -351,6 +351,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Documents', icon: FileText }] : []),
+          ...(!isFormateur ? [{ id: 'mails' as const, label: `Mails (${emailLogs.length})`, icon: Mails }] : []),
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={cn('flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0',
@@ -412,17 +413,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 </button>
               )}
             </div>
-          )}
-
-          {/* Mails de la session : trace + gestion par destinataire */}
-          {!isFormateur && (
-            <SessionMails
-              sessionId={session.id}
-              formateur={formateur ? { prenom: formateur.prenom, nom: formateur.nom, email: formateur.email } : null}
-              apprenants={inscriptions.map((i: any) => ({ id: i.apprenant?.id, nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), email: i.apprenant?.email || null }))}
-              contacts={clientContacts as any[]}
-              emailLogs={emailLogs as any[]}
-            />
           )}
 
           {/* Formateur */}
@@ -1165,6 +1155,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       {/* ═══════════════════════════════════════════════
           ONGLET CONVENTIONS
           ═══════════════════════════════════════════════ */}
+      {tab === 'mails' && !isFormateur && (
+        <SessionMails
+          sessionId={session.id}
+          formateur={formateur ? { prenom: formateur.prenom, nom: formateur.nom, email: formateur.email } : null}
+          apprenants={inscriptions.map((i: any) => ({ id: i.apprenant?.id, nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), email: i.apprenant?.email || null }))}
+          contacts={clientContacts as any[]}
+          emailLogs={emailLogs as any[]}
+        />
+      )}
+
       {tab === 'conventions' && !isFormateur && (
         <div className="space-y-4">
           <SessionDocActions sessionId={session.id} hasClient={!!session.client_id} hasFormateur={!!(formateur?.id || session.formateur_id)} />
