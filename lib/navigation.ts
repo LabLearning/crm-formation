@@ -93,6 +93,7 @@ export const navigation: NavSection[] = [
       { label: 'Qualiopi', href: '/dashboard/qualiopi', icon: 'ShieldCheck', module: 'qualiopi' },
       { label: 'Indicateurs de résultats', href: '/dashboard/indicateurs-resultats', icon: 'BarChart3', module: 'qualiopi' },
       { label: 'Veille', href: '/dashboard/veille', icon: 'Compass', module: 'qualiopi' },
+      { label: 'Audits hygiène & DUERP', href: '/dashboard/audits-hygiene', icon: 'ClipboardCheck', module: 'qualiopi' },
       { label: 'Réclamations', href: '/dashboard/reclamations', icon: 'MessageSquareWarning', module: 'reclamations' },
       { label: 'Incidents', href: '/dashboard/incidents', icon: 'AlertTriangle', module: 'sessions' },
     ],
