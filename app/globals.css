@@ -279,3 +279,34 @@
 .ll-legal li { margin: .25rem 0; }
 .ll-legal a { color: #195144; text-decoration: underline; }
 .ll-legal strong { color: #14110F; font-weight: 600; }
+
+/* ── Carte des sessions (Leaflet) ────────────────────────── */
+.ll-pin-dot {
+  display: block; width: 16px; height: 16px; border-radius: 9999px;
+  background: var(--c); border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.28);
+}
+.ll-pin-pulse::after {
+  content: ''; position: absolute; inset: -6px; border-radius: 9999px;
+  background: var(--c); opacity: .35; animation: ll-pulse 2.2s ease-out infinite;
+}
+@keyframes ll-pulse {
+  0%   { transform: scale(.6); opacity: .45; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.ll-cluster-wrap { background: transparent; border: none; }
+.ll-cluster {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 9999px; color: #fff; font-weight: 700; font-size: 13px;
+  background: var(--c); border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.ll-pop-wrap .leaflet-popup-content-wrap { border-radius: 14px; padding: 2px; }
+.ll-pop-wrap .leaflet-popup-content { margin: 12px 14px; }
+.ll-pop-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; margin-bottom: 6px; }
+.ll-pop-title { display: block; font-weight: 600; color: #1c1917; text-decoration: none; font-size: 13.5px; line-height: 1.35; }
+.ll-pop-title:hover { color: #195144; text-decoration: underline; }
+.ll-pop-line { font-size: 12px; color: #57534e; margin-top: 3px; }
+.ll-pop-approx { font-size: 10.5px; color: #a8a29e; margin-top: 5px; font-style: italic; }
+@media (prefers-reduced-motion: reduce) { .ll-pin-pulse::after { animation: none; } }

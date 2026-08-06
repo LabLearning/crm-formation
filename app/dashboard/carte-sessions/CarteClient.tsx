@@ -6,7 +6,18 @@ import { MapPin, Calendar, Users, GraduationCap, List, Map as MapIcon, Search, A
 import { Badge, Input } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { localiserSession, temporalite, TEMPO_META, type Temporalite } from '@/lib/geo-france'
-import MapView, { type SessionPin } from './MapView'
+import dynamic from 'next/dynamic'
+import type { SessionPin } from './types'
+
+// Leaflet manipule le DOM : jamais de rendu côté serveur.
+const LeafletMap = dynamic(() => import('./LeafletMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-surface-200 bg-surface-50 flex items-center justify-center text-sm text-surface-400" style={{ height: 600 }}>
+      Chargement de la carte…
+    </div>
+  ),
+})
 
 type Filtre = 'tous' | Temporalite
 
@@ -100,7 +111,7 @@ export function CarteClient({ sessions }: { sessions: any[] }) {
 
       {vue === 'carte' ? (
         <>
-          <MapView pins={pins} />
+          <LeafletMap pins={pins} />
           {nonLocalisees > 0 && (
             <div className="mt-3 flex items-start gap-2 text-xs text-surface-500 bg-surface-50 rounded-xl px-3 py-2.5">
               <AlertTriangle className="h-4 w-4 text-warning-500 shrink-0 mt-0.5" />
