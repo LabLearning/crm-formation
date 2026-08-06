@@ -159,6 +159,7 @@ export function ImportParticipantsModal({
             <Button type="button" variant="secondary" onClick={handleClose}>Annuler</Button>
             <Button
               type="button"
+              className="btn-ia"
               onClick={handleAnalyze}
               disabled={!text.trim()}
               isLoading={analyzing}

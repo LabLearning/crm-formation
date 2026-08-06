@@ -305,7 +305,7 @@ function QCMBuilder({ qcm }: { qcm: QCM }) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAiForm(!showAiForm)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 transition-all"
           >
             <Sparkles className="h-3.5 w-3.5" /> Générer avec l'IA
           </button>
@@ -317,8 +317,8 @@ function QCMBuilder({ qcm }: { qcm: QCM }) {
 
       {/* Formulaire IA */}
       {showAiForm && (
-        <div className="card p-4 space-y-3 border-violet-200 border bg-violet-50/30">
-          <div className="flex items-center gap-2 text-sm font-semibold text-violet-700">
+        <div className="card p-4 space-y-3 border-blue-200 border bg-blue-50/30">
+          <div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
             <Sparkles className="h-4 w-4" /> Génération automatique par IA
           </div>
           <input
@@ -349,7 +349,7 @@ function QCMBuilder({ qcm }: { qcm: QCM }) {
             <button
               onClick={handleAIGenerate}
               disabled={aiGenerating || !aiTheme.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 disabled:opacity-50"
             >
               {aiGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {aiGenerating ? 'Génération en cours...' : 'Générer'}

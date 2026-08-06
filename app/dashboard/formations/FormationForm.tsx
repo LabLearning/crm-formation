@@ -284,7 +284,7 @@ export function FormationForm({ formation, onSuccess, onCancel }: FormationFormP
           type="button"
           onClick={handleAIGenerate}
           disabled={aiLoading || pdfLoading}
-          className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600 disabled:opacity-50 transition-all"
+          className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 disabled:opacity-50 transition-all"
         >
           {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {aiLoading ? 'Génération en cours…' : 'Générer depuis l\'intitulé'}

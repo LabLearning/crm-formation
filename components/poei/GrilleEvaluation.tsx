@@ -153,7 +153,7 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
                 Rédigez librement (même quelques mots) : l'IA développe les cinq rubriques à partir de la grille.
               </div>
               <button type="button" onClick={detaillerBilan} disabled={detailling}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors shrink-0">
+                className="btn-ia !px-3 !py-2 !text-xs shrink-0">
                 {detailling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                 {detailling ? 'Rédaction…' : 'Détailler le bilan'}
               </button>

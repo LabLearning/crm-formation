@@ -70,7 +70,7 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
           <p className="text-surface-500 mt-1 text-sm">Critère 6 — indicateurs 23 · 24 · 25 · 26. Registre exigé par Qualiopi.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={handleGenerate} isLoading={generating} icon={<Sparkles className="h-4 w-4" />}>
+          <Button className="btn-ia" onClick={handleGenerate} isLoading={generating} icon={<Sparkles className="h-4 w-4" />}>
             Suggérer par IA
           </Button>
           <Button onClick={() => { setDefaultType(filter === 'all' ? 'legale' : filter); setAddOpen(true) }} icon={<Plus className="h-4 w-4" />}>

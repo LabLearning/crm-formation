@@ -29,7 +29,7 @@ export function AIGenerateButton({ label = 'Générer avec l\'IA', onClick, clas
       disabled={loading}
       className={cn(
         'flex items-center gap-2 font-medium rounded-xl transition-all',
-        'bg-gradient-to-r from-violet-500 to-brand-500 text-white hover:from-violet-600 hover:to-brand-600',
+        'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700',
         'disabled:opacity-60 disabled:cursor-not-allowed',
         size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-sm',
         className
