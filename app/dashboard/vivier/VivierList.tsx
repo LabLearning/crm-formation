@@ -66,7 +66,9 @@ function TargetSelect({ value, poeis, previsions, name, disabled, onChange, clas
       <option value="">Aucun projet</option>
       {poeis.length > 0 && (
         <optgroup label="Projets POEI">
-          {poeis.map((p) => <option key={p.id} value={`poei:${p.id}`}>{`${p.numero || 'POEI'} — ${p.formation?.intitule || companyLabel(p.client) || ''}`.trim()}</option>)}
+          {/* On identifie un projet par son entreprise, pas par l'intitulé de
+              formation qui est le même pour tous les projets POEI. */}
+          {poeis.map((p) => <option key={p.id} value={`poei:${p.id}`}>{`${p.numero || 'POEI'} — ${companyLabel(p.client) || p.formation?.intitule || ''}`.trim()}</option>)}
         </optgroup>
       )}
       {previsions.length > 0 && (

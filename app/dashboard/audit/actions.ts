@@ -161,7 +161,9 @@ export async function creerLeadDepuisAuditAction(id: string): Promise<ActionResu
       contact_prenom: prenom,
       contact_email: audit.contact_email,
       contact_telephone: audit.contact_telephone,
-      source: 'audit_conformite',
+      // lead_source est un enum : pas de valeur dédiée à l'audit, l'origine
+      // est tracée dans le commentaire ci-dessous.
+      source: 'autre',
       status: 'nouveau',
       nombre_stagiaires: audit.effectif,
       convention_collective: audit.convention,
