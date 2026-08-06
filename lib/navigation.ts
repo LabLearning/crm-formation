@@ -39,15 +39,18 @@ export const navigation: NavSection[] = [
     ],
   },
   // ── OUTILS ────────────────────────────────────────────────
-  {
-    title: 'Outils',
-    items: [
-      { label: 'Mailing', href: '/dashboard/mailing', icon: 'Mails', module: 'leads' },
-      { label: 'Simulateur OPCO', href: '/dashboard/simulateur', icon: 'Calculator', module: 'leads' },
-      { label: 'Audit Conformité', href: '/dashboard/audit', icon: 'ClipboardList', module: 'leads' },
-      { label: 'Prospection Email', href: '/dashboard/prospection', icon: 'Send', module: 'leads' },
-    ],
-  },
+  // ── OUTILS (masqué) ──────────────────────────────────────
+  // Section mise de côté à la demande : les pages restent accessibles par URL
+  // directe, seule l'entrée de menu est retirée. Décommenter pour la réactiver.
+  // {
+  //   title: 'Outils',
+  //   items: [
+  //     { label: 'Mailing', href: '/dashboard/mailing', icon: 'Mails', module: 'leads' },
+  //     { label: 'Simulateur OPCO', href: '/dashboard/simulateur', icon: 'Calculator', module: 'leads' },
+  //     { label: 'Audit Conformité', href: '/dashboard/audit', icon: 'ClipboardList', module: 'leads' },
+  //     { label: 'Prospection Email', href: '/dashboard/prospection', icon: 'Send', module: 'leads' },
+  //   ],
+  // },
   // ── FORMATIONS ───────────────────────────────────────────
   {
     title: 'Formations',
