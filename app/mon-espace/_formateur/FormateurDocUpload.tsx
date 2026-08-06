@@ -8,14 +8,14 @@ import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/docu
 import { uploadFormateurDocAction, deleteFormateurDocAction } from './documents-actions'
 
 /** Bouton de suppression d'un document déposé par le formateur */
-export function FormateurDocDelete({ docId, token }: { docId: string; token: string }) {
+export function FormateurDocDelete({ docId, token, formateurId }: { docId: string; token: string; formateurId?: string }) {
   const { toast } = useToast()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   async function remove() {
     if (!confirm('Supprimer ce document ?')) return
     setLoading(true)
-    const r = await deleteFormateurDocAction(docId, token)
+    const r = await deleteFormateurDocAction(docId, token, formateurId)
     setLoading(false)
     if (r.success) { toast('success', 'Document supprimé'); router.refresh() }
     else toast('error', r.error || 'Erreur')
@@ -33,7 +33,7 @@ export function FormateurDocDelete({ docId, token }: { docId: string; token: str
  * responsabilité civile, régularité fiscale…). Fonctionne en espace connecté
  * comme en portail (le token identifie le formateur côté action).
  */
-export function FormateurDocUpload({ token }: { token: string }) {
+export function FormateurDocUpload({ token, formateurId }: { token: string; formateurId?: string }) {
   const { toast } = useToast()
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -46,6 +46,7 @@ export function FormateurDocUpload({ token }: { token: string }) {
     setLoading(true)
     const fd = new FormData()
     fd.set('token', token)
+    if (formateurId) fd.set('formateur_id', formateurId)
     fd.set('type', type)
     fd.set('file', file)
     fd.set('nom', DOCUMENT_TYPE_LABELS[type as keyof typeof DOCUMENT_TYPE_LABELS] || file.name)

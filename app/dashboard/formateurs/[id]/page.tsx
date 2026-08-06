@@ -12,6 +12,7 @@ import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/format
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
 import { Download } from 'lucide-react'
 import { FormateurFacturesAdmin } from './FormateurFacturesAdmin'
+import { FormateurDocUpload, FormateurDocDelete } from '@/app/mon-espace/_formateur/FormateurDocUpload'
 
 export const dynamic = 'force-dynamic'
 
@@ -166,11 +167,14 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
       {/* Factures de prestation envoyées par le formateur */}
       <FormateurFacturesAdmin factures={factures} fileUrls={facUrls} />
 
-      {/* Pièces administratives déposées par le formateur */}
+      {/* Pièces administratives — déposées par le formateur ou par l'administration */}
       <div className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-brand-500" />
           <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Pièces administratives ({docs.length})</span>
+        </div>
+        <div className="px-4 py-3 border-b border-surface-100 bg-surface-50/40">
+          <FormateurDocUpload token="" formateurId={params.id} />
         </div>
         {docs.length === 0 ? (
           <div className="text-center py-10 text-sm text-surface-400">Aucune pièce déposée par le formateur (URSSAF, Kbis, NDA, responsabilité civile, régularité fiscale…)</div>
@@ -192,6 +196,7 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
                     <Download className="h-3.5 w-3.5" /> Télécharger
                   </a>
                 )}
+                <FormateurDocDelete docId={d.id} token="" formateurId={params.id} />
               </div>
             ))}
           </div>

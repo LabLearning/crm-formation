@@ -8,9 +8,15 @@ import type { ActionResult } from '@/lib/types'
 
 const DOSSIERS_BUCKET = 'dossiers'
 
-// Résout le formateur depuis son token de portail (présent en login comme en
-// portail) ; repli sur le compte connecté.
-async function resolveFormateur(token: string | null) {
+// Trois accès possibles :
+//  • le formateur via son token de portail,
+//  • le formateur via son compte connecté,
+//  • un gestionnaire de l'organisation qui dépose POUR un formateur donné
+//    (formateurId transmis) — les pièces administratives arrivent souvent par
+//    mail à l'administration plutôt que déposées par le formateur lui-même.
+const ROLES_GESTION = ['super_admin', 'gestionnaire', 'directeur_commercial']
+
+async function resolveFormateur(token: string | null, formateurIdParam?: string | null) {
   const supabase = await createServiceRoleClient()
   if (token) {
     const ctx = await getPortalContext(token)
@@ -20,10 +26,19 @@ async function resolveFormateur(token: string | null) {
   }
   try {
     const session = await getSession()
-    if (session.user.role !== 'formateur') return null
-    const { data: f } = await supabase.from('formateurs').select('id').eq('user_id', session.user.id).single()
-    if (!f) return null
-    return { supabase, formateurId: f.id as string, orgId: session.organization.id, userId: session.user.id as string | null }
+    if (session.user.role === 'formateur') {
+      const { data: f } = await supabase.from('formateurs').select('id').eq('user_id', session.user.id).single()
+      if (!f) return null
+      return { supabase, formateurId: f.id as string, orgId: session.organization.id, userId: session.user.id as string | null }
+    }
+    if (formateurIdParam && ROLES_GESTION.includes(session.user.role)) {
+      // Contrôle d'org : le formateur ciblé doit appartenir à l'organisation
+      const { data: f } = await supabase.from('formateurs').select('id')
+        .eq('id', formateurIdParam).eq('organization_id', session.organization.id).maybeSingle()
+      if (!f) return null
+      return { supabase, formateurId: f.id as string, orgId: session.organization.id, userId: session.user.id as string | null }
+    }
+    return null
   } catch {
     return null
   }
@@ -31,7 +46,7 @@ async function resolveFormateur(token: string | null) {
 
 export async function uploadFormateurDocAction(formData: FormData): Promise<ActionResult> {
   const token = (formData.get('token') as string) || null
-  const ctx = await resolveFormateur(token)
+  const ctx = await resolveFormateur(token, (formData.get('formateur_id') as string) || null)
   if (!ctx) return { success: false, error: 'Accès non autorisé' }
   const { supabase, formateurId, orgId, userId } = ctx
 
@@ -68,8 +83,8 @@ export async function uploadFormateurDocAction(formData: FormData): Promise<Acti
   return { success: true }
 }
 
-export async function deleteFormateurDocAction(docId: string, token: string | null): Promise<ActionResult> {
-  const ctx = await resolveFormateur(token)
+export async function deleteFormateurDocAction(docId: string, token: string | null, cibleFormateurId?: string | null): Promise<ActionResult> {
+  const ctx = await resolveFormateur(token, cibleFormateurId || null)
   if (!ctx) return { success: false, error: 'Accès non autorisé' }
   const { supabase, formateurId } = ctx
 
