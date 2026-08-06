@@ -256,7 +256,7 @@ export async function synchroniserAuditHygiene(
   try {
     const [etabs, audits, duerps, unites, risques, actions] = await Promise.all([
       sourceAll(source, 'etablissements'),
-      sourceAll(source, 'audits', 'id, etablissement_id, formateur_nom, date_audit, heure_debut, heure_fin, type_audit, num_rapport, personnes_presentes, score_global, nb_conformes, nb_partiels, nb_non_conformes, mention, obs_bilan, obs_actions, obs_reco, obs_next, obs_delai, statut, email_envoye_at, created_at, updated_at'),
+      sourceAll(source, 'audits', 'id, etablissement_id, formateur_nom, date_audit, heure_debut, heure_fin, type_audit, num_rapport, personnes_presentes, score_global, nb_conformes, nb_partiels, nb_non_conformes, mention, obs_bilan, obs_actions, obs_reco, obs_next, obs_delai, statut, email_envoye_at, created_at, updated_at, answers, checklist'),
       sourceAll(source, 'duerps', 'id, etablissement_id, formateur_nom, date_evaluation, effectif, num_document, statut, raison_sociale, enseigne, activite, dirigeant_signataire, preventeur, perimetre, version_int, email_envoye_at, created_at, updated_at'),
       sourceAll(source, 'duerp_unites_travail', 'id, duerp_id'),
       sourceAll(source, 'duerp_risques', 'id, unite_id, gravite, probabilite'),
@@ -343,6 +343,8 @@ export async function synchroniserAuditHygiene(
       obs_delai: a.obs_delai || null,
       statut: a.statut || null,
       email_envoye_at: a.email_envoye_at || null,
+      answers: a.answers ?? null,
+      checklist: a.checklist ?? null,
       source_created_at: a.created_at || null,
       source_updated_at: a.updated_at || null,
       synced_at: new Date().toISOString(),

@@ -392,7 +392,7 @@ export function AuditClient({ audits, auditsTerrain = [], prefill, commercialDef
                 const sc = Number(a.score_global) || 0
                 const coul = sc >= 80 ? '#16a34a' : sc >= 60 ? '#d97706' : '#dc2626'
                 return (
-                  <div key={a.id} className="card p-4 flex items-center gap-4">
+                  <Link key={a.id} href={`/dashboard/audits-hygiene/${a.id}`} className="card p-4 flex items-center gap-4 hover:border-surface-300 transition-colors">
                     <div className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-heading font-bold shrink-0"
                       style={{ backgroundColor: `${coul}1a`, color: coul }}>
                       {a.score_global ?? '--'}
@@ -415,13 +415,11 @@ export function AuditClient({ audits, auditsTerrain = [], prefill, commercialDef
                       </Badge>
                     )}
                     {a._clientId ? (
-                      <Link href={`/dashboard/clients/${a._clientId}`} className="text-xs text-brand-600 hover:underline shrink-0 hidden sm:block">
-                        Fiche client
-                      </Link>
+                      <span className="text-xs text-brand-600 shrink-0 hidden sm:block">Client rattaché</span>
                     ) : (
                       <span className="text-xs text-surface-400 shrink-0 hidden sm:block">Non rattaché</span>
                     )}
-                  </div>
+                  </Link>
                 )
               })}
             </>

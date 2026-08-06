@@ -188,7 +188,7 @@ export function AuditsHygieneClient({
         <div className="space-y-2">
           {filtrer(audits).length === 0 && <VideMessage tableManquante={tableManquante} quoi="audit" />}
           {filtrer(audits).map((a) => (
-            <div key={a.id} className="card p-4 flex items-center gap-4">
+            <Link key={a.id} href={`/dashboard/audits-hygiene/${a.id}`} className="card p-4 flex items-center gap-4 hover:border-surface-300 transition-colors">
               <div className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-heading font-bold shrink-0"
                 style={{ backgroundColor: `${scoreCouleur(Number(a.score_global) || 0)}1a`, color: scoreCouleur(Number(a.score_global) || 0) }}>
                 {a.score_global ?? '—'}
@@ -211,15 +211,13 @@ export function AuditsHygieneClient({
               </div>
               {a.mention && <Badge variant={MENTION_VARIANT[a.mention] || 'default'}>{a.mention}</Badge>}
               {a._client ? (
-                <Link href={`/dashboard/clients/${a._client.id}`} className="text-xs text-brand-600 hover:underline shrink-0 hidden sm:block">
-                  {a._client.raison_sociale}
-                </Link>
+                <span className="text-xs text-brand-600 shrink-0 hidden sm:block">{a._client.raison_sociale}</span>
               ) : a._franchise ? (
                 <span className="text-xs text-brand-600 shrink-0 hidden sm:block">Réseau {a._franchise.nom}</span>
               ) : (
                 <span className="text-xs text-surface-400 shrink-0 hidden sm:block">Non rattaché</span>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}
