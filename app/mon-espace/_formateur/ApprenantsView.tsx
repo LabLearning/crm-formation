@@ -5,6 +5,7 @@ import { Accessibility, Mail, Building2 } from 'lucide-react'
 import type { InscriptionStatus } from '@/lib/types/formation'
 import { DeclareChangeButton } from '@/app/portail/[token]/apprenants/DeclareChangeButton'
 import { AddApprenantButton } from '@/app/portail/[token]/apprenants/AddApprenantButton'
+import { sessionsFormateur } from '@/lib/formateur-sessions'
 
 /**
  * Vue « Mes apprenants » du formateur, partagée entre l'espace connecté et
@@ -15,12 +16,10 @@ export async function ApprenantsView({ formateurId, token }: { formateurId: stri
   const supabase = await createServiceRoleClient()
 
   // Get all sessions for this formateur
-  const { data: sessions } = await supabase
-    .from('sessions')
-    .select('id, reference, date_debut, date_fin, formation:formation_id(intitule)')
-    .eq('formateur_id', formateurId)
-    .in('status', ['confirmee', 'en_cours', 'planifiee'])
-    .order('date_debut', { ascending: true })
+  const sessions = await sessionsFormateur(
+    supabase, formateurId,
+    'id, reference, status, date_debut, date_fin, formation:formation_id(intitule)',
+  )
 
   const sessionIds = (sessions || []).map((s) => s.id)
   let inscriptions: any[] = []

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui'
 import { CalendarDays, MapPin, Users, ChevronRight, CheckCircle2, CheckSquare } from 'lucide-react'
 import { formatShortDate, todayISO } from '@/app/portail/[token]/emargement/helpers'
+import { sessionsFormateur } from '@/lib/formateur-sessions'
 
 /**
  * Liste des sessions à émarger, partagée entre l'espace connecté et le portail.
@@ -14,12 +15,12 @@ export async function EmargementListView({ formateurId, basePath }: { formateurI
   // Sessions actives du formateur. « planifiee » est incluse : une session
   // POEI d'intervention le reste jusqu'à son démarrage, et le formateur doit
   // pouvoir émarger dès le premier jour.
-  const { data: sessions } = await supabase
-    .from('sessions')
-    .select('id, reference, intitule, date_debut, date_fin, lieu, ville, organization_id, formation:formation_id(intitule)')
-    .eq('formateur_id', formateurId)
-    .in('status', ['planifiee', 'confirmee', 'en_attente_signatures', 'validee', 'en_cours'])
-    .order('date_debut', { ascending: true })
+  // Les sessions terminées restent listées : une feuille peut devoir être
+  // complétée ou validée après la fin de la formation.
+  const sessions = await sessionsFormateur(
+    supabase, formateurId,
+    'id, reference, intitule, status, date_debut, date_fin, lieu, ville, organization_id, formation:formation_id(intitule)',
+  )
 
   const sessionIds = (sessions || []).map((s) => s.id)
 

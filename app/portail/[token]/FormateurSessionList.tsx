@@ -10,6 +10,7 @@ interface SessionRow {
   date_fin: string
   lieu?: string | null
   ville?: string | null
+  status?: string | null
   formation?: { intitule?: string | null } | null
 }
 
@@ -35,9 +36,21 @@ export function FormateurSessionList({
   emptyLabel: string
 }) {
   const today = todayISO()
+  // Séance du jour d'abord, puis les sessions à venir par ordre chronologique,
+  // puis les terminées de la plus récente à la plus ancienne.
   const cards = [...sessions]
-    .map((s) => ({ ...s, _isToday: s.date_debut <= today && s.date_fin >= today }))
-    .sort((a, b) => Number(b._isToday) - Number(a._isToday))
+    .map((s) => ({
+      ...s,
+      _isToday: s.date_debut <= today && s.date_fin >= today,
+      _terminee: s.status === 'terminee' || s.date_fin < today,
+    }))
+    .sort((a, b) => {
+      if (a._isToday !== b._isToday) return Number(b._isToday) - Number(a._isToday)
+      if (a._terminee !== b._terminee) return Number(a._terminee) - Number(b._terminee)
+      return a._terminee
+        ? b.date_debut.localeCompare(a.date_debut)
+        : a.date_debut.localeCompare(b.date_debut)
+    })
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -70,6 +83,11 @@ export function FormateurSessionList({
                   {s._isToday && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">
                       Séance du jour
+                    </span>
+                  )}
+                  {s._terminee && !s._isToday && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-50 text-violet-700">
+                      Terminée
                     </span>
                   )}
                   {s.reference && (
