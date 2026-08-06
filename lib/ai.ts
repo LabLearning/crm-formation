@@ -613,3 +613,79 @@ ${CHAMP_CONSIGNE[p.champ]}`
   if (!texte) return { success: false, texte: '', error: 'Réponse vide de l\'IA' }
   return { success: true, texte }
 }
+
+/**
+ * Rédige EN UNE PASSE les cinq rubriques du bilan POEI à partir des notes du
+ * formateur et des constats de la grille. Générer d'un bloc garantit que chaque
+ * rubrique apporte un angle différent (pas de redite d'un champ à l'autre).
+ */
+export interface BilanPoeiTextes {
+  points_forts: string
+  a_renforcer: string
+  recommandations: string
+  motivation_avis: string
+  conclusion: string
+}
+
+export async function detaillerBilanPoei(p: {
+  apprenant: string
+  formation?: string | null
+  posteVise?: string | null
+  avisFinal?: string | null
+  constats?: { label: string; niveau: string; observation?: string }[]
+  notes: Partial<BilanPoeiTextes>
+}): Promise<{ success: boolean; textes?: BilanPoeiTextes; error?: string }> {
+  const system = `Tu es formateur référent dans un organisme de formation français spécialisé dans les métiers de la restauration. Tu rédiges le bilan d'une POEI (Préparation Opérationnelle à l'Emploi Individuelle) destiné à France Travail et à l'entreprise d'accueil.
+
+RÈGLES ABSOLUES :
+- Tu t'appuies UNIQUEMENT sur les constats fournis (niveaux de la grille, observations, notes du formateur). Tu n'inventes AUCUN fait, chiffre, date, incident ou anecdote.
+- Si une note est vide ou très courte, tu développes à partir des constats de la grille, sans rien inventer.
+- Français professionnel, 3e personne, sans jargon, sans flatterie.
+- CHAQUE RUBRIQUE APPORTE UN ANGLE DIFFÉRENT — aucune ne doit répéter le contenu d'une autre :
+  • points_forts : uniquement ce qui est maîtrisé. Aucun axe de progrès.
+  • a_renforcer : uniquement ce qui reste à consolider, de façon constructive. Ne rappelle pas les points forts.
+  • recommandations : des ACTIONS concrètes pour la prise de poste (tutorat, binôme, montée en charge progressive, points de vigilance). Pas un bilan de compétences.
+  • motivation_avis : POURQUOI cet avis est rendu, en citant les constats qui le fondent. Ni synthèse du parcours, ni projection.
+  • conclusion : la PROJECTION après la formation — aptitude au poste visé, conditions de réussite, accompagnement recommandé. Ne re-résume pas les compétences.
+- LONGUEUR : chaque rubrique fait 3 à 5 phrases maximum (60 à 90 mots). Concis, sans remplissage ni répétition.
+- Désigne le bénéficiaire par son NOM COMPLET à la première mention de la première rubrique, puis par son prénom.
+
+FORMAT DE RÉPONSE : uniquement un objet JSON, sans texte autour, avec exactement ces clés :
+{"points_forts":"…","a_renforcer":"…","recommandations":"…","motivation_avis":"…","conclusion":"…"}`
+
+  const constats = (p.constats || []).slice(0, 40)
+  const parNiveau = (n: string) => constats.filter((c) => c.niveau === n).map((c) => `- ${c.label}${c.observation ? ` (observation : ${c.observation})` : ''}`).join('\n')
+  const bloc = (t: string, c: string) => (c ? `\n${t} :\n${c}` : '')
+  const note = (l: string, v?: string) => (v?.trim() ? `\n[${l}] ${v.trim()}` : '')
+
+  const user = `Bénéficiaire : ${p.apprenant}
+${p.formation ? `Formation : ${p.formation}\n` : ''}${p.posteVise ? `Poste visé : ${p.posteVise}\n` : ''}${p.avisFinal ? `Avis final retenu par le formateur : ${p.avisFinal}\n` : ''}
+CONSTATS DE LA GRILLE D'ÉVALUATION${bloc('Compétences ACQUISES', parNiveau('Acquis'))}${bloc("Compétences EN COURS d'acquisition", parNiveau('En cours'))}${bloc('Compétences NON ACQUISES', parNiveau('Non acquis'))}
+
+NOTES DU FORMATEUR (à développer ; certaines peuvent être vides) :${note('Points forts', p.notes.points_forts)}${note('À renforcer', p.notes.a_renforcer)}${note('Recommandations', p.notes.recommandations)}${note("Motivation de l'avis", p.notes.motivation_avis)}${note('Conclusion', p.notes.conclusion)}${Object.values(p.notes).every((v) => !v?.trim()) ? '\n(aucune note : appuie-toi uniquement sur les constats ci-dessus)' : ''}
+
+Rédige les cinq rubriques du bilan.`
+
+  const res = await callClaude(system, user, 2500, { noThinking: true })
+  if (!res.success) return { success: false, error: res.error }
+
+  let raw = (res.content || '').trim().replace(/```(?:json)?/gi, '').trim()
+  const start = raw.indexOf('{'); const end = raw.lastIndexOf('}')
+  if (start === -1 || end === -1) return { success: false, error: "L'IA n'a pas renvoyé un bilan exploitable" }
+  try {
+    const o = JSON.parse(raw.slice(start, end + 1))
+    const str = (v: any) => (typeof v === 'string' ? v.trim() : '')
+    return {
+      success: true,
+      textes: {
+        points_forts: str(o.points_forts),
+        a_renforcer: str(o.a_renforcer),
+        recommandations: str(o.recommandations),
+        motivation_avis: str(o.motivation_avis),
+        conclusion: str(o.conclusion),
+      },
+    }
+  } catch {
+    return { success: false, error: 'Réponse de l\'IA illisible' }
+  }
+}

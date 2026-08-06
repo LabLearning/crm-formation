@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Save, CheckCircle2, ClipboardCheck, Sparkles, Loader2 } from 'lucide-react'
 import { Button, Badge, useToast } from '@/components/ui'
 import { GRILLE_SECTIONS, NIVEAUX, APPRECIATIONS, AVIS_FINAL, grilleProgress, type NiveauAcquis } from '@/lib/poei-grille'
-import { saveGrilleAction, detaillerReponseAction } from '@/app/dashboard/poei/grille-actions'
+import { saveGrilleAction, detaillerBilanAction } from '@/app/dashboard/poei/grille-actions'
 
 type Items = Record<string, { n?: NiveauAcquis; o?: string }>
 
@@ -28,33 +28,28 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
     duree_realisee: initial?.duree_realisee || '', absences: initial?.absences || '',
   })
   const [saving, setSaving] = useState(false)
-  const [detail, setDetail] = useState<string | null>(null)   // champ en cours de génération
+  const [detailling, setDetailling] = useState(false)
   const isFinale = semaine === null
 
-  // Développe une appréciation à partir des constats réels de la grille.
-  // L'IA propose : le texte reste modifiable avant enregistrement.
-  async function detailler(champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion') {
-    setDetail(champ)
-    const r = await detaillerReponseAction({
-      poeiId, apprenantId, champ, texte: (txt as any)[champ] || '', items, avisFinal: txt.avis_final || null,
-      autres: {
+  // Rédige les cinq rubriques en une passe, à partir des notes du formateur et
+  // des constats de la grille. Le texte reste modifiable avant enregistrement.
+  async function detaillerBilan() {
+    setDetailling(true)
+    const r = await detaillerBilanAction({
+      poeiId, apprenantId, items, avisFinal: txt.avis_final || null,
+      notes: {
         points_forts: txt.points_forts, a_renforcer: txt.a_renforcer,
         recommandations: txt.recommandations, motivation_avis: txt.motivation_avis,
         conclusion: txt.conclusion,
       },
     })
-    if (r.success && r.data?.texte) setTxt((p) => ({ ...p, [champ]: r.data!.texte }))
-    else toast('error', r.error || 'Erreur')
-    setDetail(null)
+    if (r.success && r.data) {
+      setTxt((p) => ({ ...p, ...r.data }))
+      toast('success', 'Bilan rédigé — relisez et ajustez si besoin')
+    } else toast('error', r.error || 'Erreur')
+    setDetailling(false)
   }
 
-  const BoutonIA = ({ champ }: { champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion' }) => (
-    <button type="button" onClick={() => detailler(champ)} disabled={detail !== null}
-      title="Développer à partir des compétences évaluées"
-      className="inline-flex items-center gap-1 text-2xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-40">
-      {detail === champ ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Détailler
-    </button>
-  )
   const prog = useMemo(() => grilleProgress(items), [items])
 
   const setN = (id: string, n: NiveauAcquis) => setItems((p) => ({ ...p, [id]: { ...p[id], n: p[id]?.n === n ? undefined : n } }))
@@ -153,12 +148,19 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
           </div>
 
           <div className="card p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap pb-2 border-b border-surface-100">
+              <div className="text-xs text-surface-500">
+                Rédigez librement (même quelques mots) : l'IA développe les cinq rubriques à partir de la grille.
+              </div>
+              <button type="button" onClick={detaillerBilan} disabled={detailling}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors shrink-0">
+                {detailling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {detailling ? 'Rédaction…' : 'Détailler le bilan'}
+              </button>
+            </div>
             {([['points_forts', "Points forts de l'apprenant"], ['a_renforcer', 'Compétences ou comportements restant à renforcer'], ['recommandations', "Recommandations pour la prise de poste ou l'accompagnement"]] as const).map(([k, l]) => (
               <div key={k}>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-surface-700">{l}</label>
-                  <BoutonIA champ={k} />
-                </div>
+                <label className="block text-sm font-medium text-surface-700 mb-1">{l}</label>
                 <textarea rows={3} className="input-base resize-none" value={(txt as any)[k]}
                   onChange={(e) => setTxt((p) => ({ ...p, [k]: e.target.value }))} />
               </div>
@@ -176,18 +178,12 @@ export function GrilleEvaluation({ poeiId, apprenantId, apprenantNom, semaine, i
               ))}
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-surface-700">Motivation de l'avis <span className="text-danger-500">*</span></label>
-                <BoutonIA champ="motivation_avis" />
-              </div>
+                <label className="block text-sm font-medium text-surface-700 mb-1">Motivation de l'avis <span className="text-danger-500">*</span></label>
               <textarea rows={3} className="input-base resize-none" value={txt.motivation_avis}
                 onChange={(e) => setTxt((p) => ({ ...p, motivation_avis: e.target.value }))} />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-surface-700">Conclusion personnalisée (reprise dans le bilan)</label>
-                <BoutonIA champ="conclusion" />
-              </div>
+                <label className="block text-sm font-medium text-surface-700 mb-1">Conclusion personnalisée (reprise dans le bilan)</label>
               <textarea rows={4} className="input-base resize-none" value={txt.conclusion}
                 onChange={(e) => setTxt((p) => ({ ...p, conclusion: e.target.value }))}
                 placeholder="Au terme de la formation, [Prénom Nom] …" />

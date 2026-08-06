@@ -84,20 +84,17 @@ export async function saveGrilleAction(p: GrillePayload): Promise<ActionResult> 
 }
 
 /**
- * Développe une appréciation de la grille POEI à partir des constats réels
- * (niveaux acquis / en cours / non acquis + observations). L'IA propose, le
- * formateur ou le gestionnaire relit et valide avant enregistrement.
+ * Rédige EN UNE PASSE les cinq rubriques du bilan à partir des notes du
+ * formateur et des constats réels de la grille. L'IA propose : le gestionnaire
+ * ou le formateur relit et ajuste avant enregistrement.
  */
-export async function detaillerReponseAction(params: {
+export async function detaillerBilanAction(params: {
   poeiId: string
   apprenantId: string
-  champ: 'points_forts' | 'a_renforcer' | 'recommandations' | 'motivation_avis' | 'conclusion'
-  texte: string
   items: Record<string, { n?: string; o?: string }>
   avisFinal?: string | null
-  /** Les autres champs déjà rédigés, pour éviter les redites d'un champ à l'autre */
-  autres?: Record<string, string>
-}): Promise<ActionResult & { data?: { texte: string } }> {
+  notes: Record<string, string>
+}): Promise<ActionResult & { data?: Record<string, string> }> {
   const session = await getSession()
   if (session.user.role === 'apprenant') return { success: false, error: 'Accès non autorisé' }
   const supabase = await createServiceRoleClient()
@@ -111,7 +108,7 @@ export async function detaillerReponseAction(params: {
 
   const { GRILLE_SECTIONS } = await import('@/lib/poei-grille')
   const NIVEAU: Record<string, string> = { A: 'Acquis', EC: 'En cours', NA: 'Non acquis' }
-  const constats = GRILLE_SECTIONS.flatMap((s) => s.items)
+  const constats = GRILLE_SECTIONS.flatMap((sec) => sec.items)
     .map((it) => {
       const v = params.items?.[it.id]
       if (!v?.n) return null
@@ -119,27 +116,21 @@ export async function detaillerReponseAction(params: {
     })
     .filter(Boolean) as { label: string; niveau: string; observation?: string }[]
 
-  const LABELS: Record<string, string> = {
-    points_forts: 'Points forts', a_renforcer: 'À renforcer', recommandations: 'Recommandations',
-    motivation_avis: "Motivation de l'avis", conclusion: 'Conclusion',
+  if (constats.length === 0) {
+    return { success: false, error: "Évaluez d'abord les compétences : l'IA s'appuie sur la grille." }
   }
-  const autresRubriques = Object.entries(params.autres || {})
-    .filter(([k, v]) => k !== params.champ && (v || '').trim())
-    .map(([k, v]) => ({ label: LABELS[k] || k, texte: v }))
 
-  const { detaillerEvaluationPoei } = await import('@/lib/ai')
-  const r = await detaillerEvaluationPoei({
-    champ: params.champ,
-    autresRubriques,
-    texte: params.texte || '',
+  const { detaillerBilanPoei } = await import('@/lib/ai')
+  const r = await detaillerBilanPoei({
     apprenant: `${appr?.prenom || ''} ${appr?.nom || ''}`.trim() || 'Le bénéficiaire',
     formation: (poei as any)?.formation?.intitule || null,
     posteVise: (poei as any)?.poste_vise || null,
     avisFinal: params.avisFinal || null,
     constats,
+    notes: params.notes || {},
   })
-  if (!r.success) return { success: false, error: r.error || 'Échec de la génération' }
+  if (!r.success || !r.textes) return { success: false, error: r.error || 'Échec de la génération' }
 
-  await logAudit({ action: 'ai_detail', entity_type: 'poei_grille', entity_id: params.apprenantId, details: { champ: params.champ } })
-  return { success: true, data: { texte: r.texte } }
+  await logAudit({ action: 'ai_bilan', entity_type: 'poei_grille', entity_id: params.apprenantId })
+  return { success: true, data: r.textes as any }
 }
