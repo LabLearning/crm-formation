@@ -8,10 +8,10 @@ export default async function CarteSessionsPage() {
 
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, status, date_debut, date_fin, lieu, formation:formation_id(intitule, duree_heures, categorie), formateur:formateurs(prenom, nom)')
+    .select('id, reference, intitule, status, date_debut, date_fin, lieu, ville, code_postal, formation:formation_id(intitule, duree_heures, categorie), formateur:formateurs(prenom, nom), client:client_id(raison_sociale, nom_commercial, sigle)')
     .eq('organization_id', session.organization.id)
     .not('status', 'eq', 'annulee')
-    .order('date_debut', { ascending: true })
+    .order('date_debut', { ascending: false })
 
   return (
     <div className="animate-fade-in">
