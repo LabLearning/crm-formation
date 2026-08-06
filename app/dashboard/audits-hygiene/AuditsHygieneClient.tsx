@@ -50,6 +50,7 @@ export function AuditsHygieneClient({
       nonConformes: audits.filter((a) => a.mention === 'INSUFFISANT').length,
       rattaches: etablissements.filter((e) => e.client_id).length,
       actionsEnRetard: enRetard,
+      prospectsReseau: etablissements.filter((e) => !e.client_id && e._franchise && !e.ignore_rapprochement).length,
     }
   }, [audits, duerps, actions, etablissements])
 
@@ -142,13 +143,14 @@ export function AuditsHygieneClient({
       )}
 
       {/* Chiffres clés */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-3 mb-6">
         {[
           { label: 'Audits', valeur: stats.audits, icone: <ClipboardCheck className="h-4 w-4" /> },
           { label: 'DUERP', valeur: stats.duerps, icone: <FileWarning className="h-4 w-4" /> },
           { label: 'Score moyen', valeur: stats.moyenne ? `${stats.moyenne}%` : '—', icone: null },
           { label: 'Insuffisants', valeur: stats.nonConformes, icone: null, alerte: stats.nonConformes > 0 },
           { label: 'Rattachés', valeur: `${stats.rattaches}/${etablissements.length}`, icone: <Link2 className="h-4 w-4" /> },
+          { label: 'Prospects réseau', valeur: stats.prospectsReseau, icone: <Building2 className="h-4 w-4" /> },
           { label: 'Actions en retard', valeur: stats.actionsEnRetard, icone: null, alerte: stats.actionsEnRetard > 0 },
         ].map((s) => (
           <div key={s.label} className="card p-4">
@@ -212,6 +214,8 @@ export function AuditsHygieneClient({
                 <Link href={`/dashboard/clients/${a._client.id}`} className="text-xs text-brand-600 hover:underline shrink-0 hidden sm:block">
                   {a._client.raison_sociale}
                 </Link>
+              ) : a._franchise ? (
+                <span className="text-xs text-brand-600 shrink-0 hidden sm:block">Réseau {a._franchise.nom}</span>
               ) : (
                 <span className="text-xs text-surface-400 shrink-0 hidden sm:block">Non rattaché</span>
               )}
@@ -279,8 +283,16 @@ export function AuditsHygieneClient({
                     <Building2 className="h-4 w-4 text-surface-400 shrink-0" />
                     <span className="text-sm font-heading font-semibold text-surface-900 truncate">{e.nom}</span>
                   </div>
-                  <div className="text-xs text-surface-500 mt-0.5 pl-6">
-                    {[e.ville, e.code_postal, e.siret ? `SIRET ${e.siret}` : null].filter(Boolean).join(' · ') || 'Aucune information de localisation'}
+                  <div className="flex flex-wrap items-center gap-2 mt-1 pl-6">
+                    {e._franchise && (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">
+                        {e._franchise.logo_url && <img src={e._franchise.logo_url} alt="" className="h-3.5 w-3.5 rounded-sm object-contain" />}
+                        Réseau {e._franchise.nom}
+                      </span>
+                    )}
+                    <span className="text-xs text-surface-500">
+                      {[e.ville, e.code_postal, e.siret ? `SIRET ${e.siret}` : null].filter(Boolean).join(' · ') || 'Aucune information de localisation'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

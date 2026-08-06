@@ -17,6 +17,7 @@ export interface ResumeSync {
   actions: number
   rapproches_auto: number
   orphelins: number
+  franchises_reconnues: number
 }
 
 export function auditHygieneClient() {
@@ -90,26 +91,140 @@ export function rapprocher(
   return { client_id: null, methode: null }
 }
 
-/** Clients les plus proches d'un établissement orphelin, pour l'écran de rapprochement. */
+/**
+ * Franchise d'un établissement audité, déduite de son nom.
+ * Beaucoup d'établissements audités appartiennent à un réseau connu sans être
+ * clients en propre : les identifier en fait des prospects qualifiés.
+ */
+export function rapprocherFranchise(
+  etab: { nom?: string | null },
+  franchises: { id: string; nom: string }[],
+): string | null {
+  const nom = normaliser(etab.nom)
+  if (!nom) return null
+  const mots = nom.split(' ')
+  let meilleur: { id: string; longueur: number } | null = null
+  for (const f of franchises) {
+    const fn = normaliser(f.nom)
+    if (!fn) continue
+    // Le nom du réseau apparaît dans celui de l'établissement, à l'orthographe
+    // près : l'outil terrain est saisi au clavier sur le terrain
+    // (« Chiken street », « Crous't wok »).
+    const nbMotsFr = fn.split(' ').length
+    // Comparaison sans espaces : « Crous't wok » saisi en trois morceaux doit
+    // rejoindre « Croust Wok ».
+    const colle = (x: string) => x.replace(/ /g, '')
+    let trouve = nom.includes(fn) || colle(nom).includes(colle(fn)) || proche(colle(nom), colle(fn))
+    for (let i = 0; !trouve && i + nbMotsFr <= mots.length; i++) {
+      trouve = proche(mots.slice(i, i + nbMotsFr).join(' '), fn)
+    }
+    if (trouve && (!meilleur || fn.length > meilleur.longueur)) meilleur = { id: f.id, longueur: fn.length }
+  }
+  return meilleur?.id || null
+}
+
+/** Deux libellés à deux fautes de frappe près (et d'au moins 5 caractères). */
+function proche(a: string, b: string) {
+  if (a === b) return true
+  if (Math.min(a.length, b.length) < 5) return false
+  if (Math.abs(a.length - b.length) > 2) return false
+  return distance(a, b) <= 2
+}
+
+function distance(a: string, b: string) {
+  const d = Array.from({ length: b.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0]
+    d[0] = i
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = d[j]
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1))
+      prev = tmp
+    }
+  }
+  return d[b.length]
+}
+
+/**
+ * Clients les plus proches d'un établissement orphelin.
+ *
+ * Un simple recouvrement de mots donne des suggestions fausses : dans un
+ * portefeuille de restauration rapide, « tacos », « chicken », « street » ou
+ * « food » ne distinguent rien. Chaque mot est donc pondéré par sa rareté dans
+ * le portefeuille (IDF) : ce sont les mots rares qui identifient réellement un
+ * établissement. Les mots qui ne sont que le nom de la ville sont ignorés.
+ */
+const MOTS_VIDES = new Set(['sas', 'sarl', 'sasu', 'eurl', 'snc', 'sa', 'ste', 'societe', 'restaurant', 'le', 'la', 'les', 'du', 'de', 'des'])
+
+const motsDe = (s: unknown) =>
+  normaliser(s).split(' ').filter((m) => m.length > 2 && !MOTS_VIDES.has(m))
+
+let cacheIdf: { clients: any[]; idf: Map<string, number> } | null = null
+
+function idfPortefeuille(clients: any[]) {
+  if (cacheIdf && cacheIdf.clients === clients) return cacheIdf.idf
+  const freq = new Map<string, number>()
+  for (const c of clients) {
+    for (const m of new Set([...motsDe(c.raison_sociale), ...motsDe(c.nom_commercial)])) {
+      freq.set(m, (freq.get(m) || 0) + 1)
+    }
+  }
+  const n = Math.max(1, clients.length)
+  const idf = new Map<string, number>()
+  for (const [m, f] of freq) idf.set(m, Math.log(n / f))
+  cacheIdf = { clients, idf }
+  return idf
+}
+
 export function suggestions(
   etab: { nom?: string | null; ville?: string | null },
   clients: any[],
   max = 5,
+  seuil = 0.55,
 ) {
-  const nom = normaliser(etab.nom)
+  const idf = idfPortefeuille(clients)
   const ville = villeSeule(etab.ville)
-  const mots = new Set(nom.split(' ').filter((m) => m.length > 2))
+  const motsVille = new Set(ville.split(' '))
+  // Un mot inconnu du portefeuille est très discriminant s'il correspond.
+  const poids = (m: string) => idf.get(m) ?? Math.log(Math.max(1, clients.length))
+
+  const mots = motsDe(etab.nom).filter((m) => !motsVille.has(m))
+  if (mots.length === 0) return []
+  const total = mots.reduce((s, m) => s + poids(m), 0)
+  if (total === 0) return []
+
+  // Un mot ne vaut d'être proposé que s'il est rare : présent chez 3 clients au
+  // plus. « food », « tacos » ou « street » ne désignent personne.
+  const seuilRare = Math.log(Math.max(2, clients.length) / 3)
+
   const notes = clients.map((c) => {
-    const cn = normaliser(c.raison_sociale || c.nom_commercial)
-    const cmots = new Set(cn.split(' ').filter((m) => m.length > 2))
-    let communs = 0
-    for (const m of mots) if (cmots.has(m)) communs++
-    let note = mots.size ? communs / mots.size : 0
-    if (cn.includes(nom) || nom.includes(cn)) note += 0.4
-    if (ville && villeSeule(c.ville) === ville) note += 0.5
-    return { client: c, note }
+    const cmots = new Set([...motsDe(c.raison_sociale), ...motsDe(c.nom_commercial)])
+    const communs = mots.filter((m) => cmots.has(m))
+    const distinctif = communs.length >= 2 || communs.some((m) => poids(m) >= seuilRare)
+    if (!distinctif) return { client: c, note: 0, base: 0, memeVille: false }
+
+    const base = communs.reduce((s, m) => s + poids(m), 0) / total
+    const memeVille = !!ville && villeSeule(c.ville) === ville
+    // Ville différente et connue des deux côtés : indice contraire, pas neutre.
+    const villeContraire = !!ville && !!villeSeule(c.ville) && !memeVille
+    let note = memeVille ? base + 0.15 : villeContraire ? base * 0.6 : base
+    return { client: c, note: Math.min(1, note), base, memeVille }
   })
-  return notes.filter((n) => n.note >= 0.4).sort((a, b) => b.note - a.note).slice(0, max)
+
+  // Réseaux de franchise : « Chicken Street » ou « Chamas Tacos » désignent des
+  // dizaines d'établissements. Quand plusieurs clients atteignent le meilleur
+  // score sur le seul nom d'enseigne et qu'aucun n'est dans la bonne ville, ce
+  // sont des pistes, pas des réponses — la note est abaissée pour le dire.
+  const meilleure = Math.max(...notes.map((n) => n.base))
+  const exAequo = notes.filter((n) => n.base >= meilleure - 0.001 && n.base > 0)
+  const ambigu = exAequo.length > 1 && !exAequo.some((n) => n.memeVille)
+
+  return notes
+    .map((n) => (ambigu && n.base >= meilleure - 0.001 ? { ...n, note: n.note * 0.6 } : n))
+    .filter((n) => n.note >= seuil)
+    .sort((a, b) => b.note - a.note)
+    .slice(0, max)
+    .map(({ client, note }) => ({ client, note }))
 }
 
 // ── Synchronisation ─────────────────────────────────────────────────────────
@@ -157,6 +272,9 @@ export async function synchroniserAuditHygiene(
     )
     const idx = indexerClients(clients as any[])
 
+    const { data: franchises } = await crm
+      .from('franchises').select('id, nom').eq('organization_id', organizationId).eq('is_active', true)
+
     // Rapprochements déjà validés à la main : on ne les écrase jamais
     const { data: existants } = await crm
       .from('ah_etablissements')
@@ -165,11 +283,14 @@ export async function synchroniserAuditHygiene(
     const dejaLa = new Map((existants || []).map((e: any) => [e.source_id, e]))
 
     let rapprochesAuto = 0
+    let franchisesReconnues = 0
     const lignesEtab = etabs.map((e) => {
       const anterieur: any = dejaLa.get(e.id)
       const manuel = anterieur?.match_valide_at || anterieur?.ignore_rapprochement
       const auto = manuel ? null : rapprocher(e, idx)
       if (auto?.client_id) rapprochesAuto++
+      const franchiseId = rapprocherFranchise(e, (franchises || []) as any[])
+      if (franchiseId) franchisesReconnues++
       return {
         organization_id: organizationId,
         source_id: e.id,
@@ -186,6 +307,7 @@ export async function synchroniserAuditHygiene(
         longitude: e.longitude ?? null,
         client_id: manuel ? anterieur.client_id : auto!.client_id,
         match_methode: manuel ? anterieur.match_methode : auto!.methode,
+        franchise_id: franchiseId,
         source_created_at: e.created_at || null,
         synced_at: new Date().toISOString(),
       }
@@ -299,6 +421,7 @@ export async function synchroniserAuditHygiene(
       actions: actions.length,
       rapproches_auto: rapprochesAuto,
       orphelins,
+      franchises_reconnues: franchisesReconnues,
     }
     await finir(true, resume)
     return { success: true, resume }

@@ -19,6 +19,10 @@ export default async function AuditsHygienePage() {
     supabase.from('ah_syncs').select('*').eq('organization_id', orgId).order('demarre_at', { ascending: false }).limit(1),
   ])
 
+  const { data: franchisesRows } = await supabase
+    .from('franchises').select('id, nom, logo_url').eq('organization_id', orgId)
+  const franchises = new Map(((franchisesRows as any[]) || []).map((f) => [f.id, f]))
+
   // Migration 114 non appliquée : la page reste lisible et l'explique.
   const tableManquante = !!etabRes.error
   if (etabRes.error) console.error('[audits-hygiene]', etabRes.error.message)
@@ -37,6 +41,7 @@ export default async function AuditsHygienePage() {
     .filter((e) => !e.client_id && !e.ignore_rapprochement)
     .map((e) => ({
       ...e,
+      _franchise: e.franchise_id ? franchises.get(e.franchise_id) || null : null,
       _suggestions: suggestions(e, clients as any[]).map((s) => ({
         id: s.client.id,
         label: s.client.raison_sociale || s.client.nom_commercial,
@@ -52,6 +57,7 @@ export default async function AuditsHygienePage() {
         ...r,
         _etab: etab ? { id: etab.id, nom: etab.nom, ville: etab.ville, client_id: etab.client_id } : null,
         _client: etab?.client_id ? parClient.get(etab.client_id) || null : null,
+        _franchise: etab?.franchise_id ? franchises.get(etab.franchise_id) || null : null,
       }
     })
 
@@ -60,7 +66,7 @@ export default async function AuditsHygienePage() {
       audits={enrichir((auditRes.data as any[]) || [])}
       duerps={enrichir((duerpRes.data as any[]) || [])}
       actions={(actionRes.data as any[]) || []}
-      etablissements={etablissements}
+      etablissements={etablissements.map((e) => ({ ...e, _franchise: e.franchise_id ? franchises.get(e.franchise_id) || null : null }))}
       orphelins={orphelins}
       clients={clients as any[]}
       derniereSync={(syncRes.data as any[])?.[0] || null}
