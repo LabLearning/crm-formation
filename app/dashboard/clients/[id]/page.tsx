@@ -17,6 +17,7 @@ import { ClientParticipants } from './ClientParticipants'
 import { ClientSessionsList } from './ClientSessionsList'
 import { ClientOpcoVault } from './ClientOpcoVault'
 import { ClientDocuments } from './ClientDocuments'
+import { ClientAuditsHygiene } from './ClientAuditsHygiene'
 import { ClientContacts } from './ClientContacts'
 
 export const dynamic = 'force-dynamic'
@@ -79,6 +80,34 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
     supabase.from('franchises').select('id, nom').eq('organization_id', session.organization.id).eq('is_active', true).order('nom'),
   ])
   const sessionsList = (sessions || []) as any[]
+
+  // Audits hygiène / DUERP réalisés sur les établissements de ce client
+  // (miroir d'AuditHygiène Pro — absent tant que la migration 114 n'est pas passée).
+  let ahAudits: any[] = []
+  let ahDuerps: any[] = []
+  let ahActionsEnRetard = 0
+  {
+    const { data: etabs } = await supabase
+      .from('ah_etablissements').select('id, nom').eq('client_id', params.id)
+    const etabIds = (etabs || []).map((e: any) => e.id)
+    if (etabIds.length > 0) {
+      const nomEtab = Object.fromEntries((etabs || []).map((e: any) => [e.id, e.nom]))
+      const [{ data: a }, { data: d }] = await Promise.all([
+        supabase.from('ah_audits').select('*').in('etablissement_id', etabIds).order('date_audit', { ascending: false }),
+        supabase.from('ah_duerps').select('*').in('etablissement_id', etabIds).order('date_evaluation', { ascending: false }),
+      ])
+      ahAudits = (a || []).map((x: any) => ({ ...x, _etabNom: nomEtab[x.etablissement_id] }))
+      ahDuerps = (d || []).map((x: any) => ({ ...x, _etabNom: nomEtab[x.etablissement_id] }))
+      if (ahDuerps.length > 0) {
+        const { data: act } = await supabase
+          .from('ah_duerp_actions').select('echeance, statut').in('duerp_id', ahDuerps.map((x) => x.id))
+        const today = new Date().toISOString().slice(0, 10)
+        ahActionsEnRetard = (act || []).filter(
+          (x: any) => x.echeance && x.echeance < today && !['realise', 'annule'].includes(x.statut),
+        ).length
+      }
+    }
+  }
 
   // Nb d'apprenants inscrits par session (pour les dossiers liés à une session)
   const dossierSessionIds = (dossiers || []).map((d: any) => d.session?.id).filter(Boolean)
@@ -299,6 +328,8 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
 
           {/* Employés / participants de l'entreprise */}
           {isEntreprise && <ClientParticipants clientId={c.id} clientNom={c.raison_sociale || ''} participants={(participants || []) as any[]} />}
+
+          <ClientAuditsHygiene audits={ahAudits} duerps={ahDuerps} actionsEnRetard={ahActionsEnRetard} />
 
           <ClientDocuments clientId={c.id} documents={(documents || []) as any[]} />
 
