@@ -266,7 +266,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />
               {formatDate(session.date_debut, { day: 'numeric', month: 'long' })} — {formatDate(session.date_fin, { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
-            {etablissement && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{etablissement}</span>}
+            {etablissement && (
+              session.client_id ? (
+                <Link href={`/dashboard/clients/${session.client_id}`}
+                  className="flex items-center gap-1 hover:text-brand-600 hover:underline transition-colors">
+                  <Building2 className="h-3.5 w-3.5" />{etablissement}
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{etablissement}</span>
+              )
+            )}
             {adresseComplete && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{adresseComplete}</span>}
             {formation?.duree_heures && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formation.duree_heures}h</span>}
             <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{inscriptions.length} apprenant{inscriptions.length > 1 ? 's' : ''}</span>

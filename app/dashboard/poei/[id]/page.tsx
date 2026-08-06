@@ -141,7 +141,11 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           <div>
             <h1 className="text-2xl font-heading font-bold text-surface-900 inline-flex items-center gap-2">
               <Building2 className="h-5 w-5 text-sky-500" />
-              {companyLabel(p.client) || 'Projet POEI'}
+              {p.client_id ? (
+                <Link href={`/dashboard/clients/${p.client_id}`} className="hover:text-brand-600 hover:underline transition-colors">
+                  {companyLabel(p.client) || 'Projet POEI'}
+                </Link>
+              ) : (companyLabel(p.client) || 'Projet POEI')}
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-surface-500">
               <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs font-semibold">POEI</span>

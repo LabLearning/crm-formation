@@ -4,7 +4,8 @@
 
 import type { BadgeVariant } from '@/lib/types'
 
-export type DocumentType = 'devis' | 'convention' | 'contrat' | 'convocation' | 'programme' | 'reglement_interieur' | 'emargement' | 'attestation_fin' | 'attestation_assiduite' | 'certificat_realisation' | 'facture' | 'avoir' | 'kbis' | 'courrier_opco' | 'attestation_urssaf' | 'rib' | 'piece_identite' | 'assurance' | 'statuts' | 'nda' | 'responsabilite_civile' | 'attestation_fiscale' | 'support_pedagogique' | 'diaporama' | 'exercice' | 'ressource' | 'autre'
+export type DocumentType = 'devis' | 'convention' | 'contrat' | 'convocation' | 'programme' | 'reglement_interieur' | 'emargement' | 'attestation_fin' | 'attestation_assiduite' | 'certificat_realisation' | 'facture' | 'avoir' | 'kbis' | 'courrier_opco' | 'attestation_urssaf' | 'rib' | 'piece_identite' | 'assurance' | 'statuts' | 'nda' | 'responsabilite_civile' | 'attestation_fiscale'
+  | 'cv' | 'diplome' | 'habilitation' | 'attestation_formation_continue' | 'support_pedagogique' | 'diaporama' | 'exercice' | 'ressource' | 'autre'
 export type SignatureStatus = 'en_attente' | 'signe' | 'refuse' | 'expire'
 
 /** Qui peut consulter un document rattaché à une session */
@@ -53,6 +54,10 @@ export interface Signature {
 }
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
+  cv: 'CV',
+  diplome: 'Diplôme',
+  habilitation: 'Habilitation',
+  attestation_formation_continue: 'Attestation de formation continue',
   devis: 'Devis', convention: 'Convention', contrat: 'Contrat', convocation: 'Convocation',
   programme: 'Programme', reglement_interieur: 'Règlement intérieur', emargement: 'Émargement',
   attestation_fin: 'Attestation de fin', attestation_assiduite: 'Attestation d\'assiduité',
@@ -87,6 +92,7 @@ export const DOCUMENT_TYPES_ENTREPRISE: DocumentType[] = [
 
 /** Pièces administratives que le formateur dépose lui-même (sous-traitance Qualiopi) */
 export const DOCUMENT_TYPES_FORMATEUR: DocumentType[] = [
+  'cv', 'diplome', 'habilitation', 'attestation_formation_continue',
   'attestation_urssaf', 'kbis', 'nda', 'responsabilite_civile', 'attestation_fiscale', 'rib', 'piece_identite', 'autre',
 ]
 
