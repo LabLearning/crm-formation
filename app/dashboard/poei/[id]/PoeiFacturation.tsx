@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, FileText, Clock, Download } from 'lucide-react'
+import { ReceiptEuro, FileText, Clock, Download } from 'lucide-react'
 import { PoeiSection } from './PoeiSection'
 import { Button, useToast, Modal, Input } from '@/components/ui'
 import { generateFacturesPerCandidatPoeiAction, setCandidatNumeroEngagementAction } from '../actions'
@@ -99,7 +99,7 @@ export function PoeiFacturation({
 
   return (
     <PoeiSection
-      icone={Receipt}
+      icone={ReceiptEuro}
       titre="Facturation"
       sous="Une facture par candidat, adressée à France Travail."
       actions={sessionTerminee ? (
@@ -110,7 +110,7 @@ export function PoeiFacturation({
               <Download className="h-4 w-4" /> Toutes les factures (ZIP)
             </a>
           )}
-          <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
+          <Button onClick={generate} isLoading={gen} size="sm" icon={<ReceiptEuro className="h-4 w-4" />}>
             {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
           </Button>
         </>
@@ -121,7 +121,7 @@ export function PoeiFacturation({
       {!sessionTerminee ? (
         <div className="flex items-center gap-2 rounded-xl bg-surface-50 border border-surface-200/70 px-4 py-3 text-sm text-surface-500">
           <Clock className="h-4 w-4 shrink-0" />
-          Facturation et certificats disponibles une fois la <strong className="mx-1 text-surface-700">session terminée</strong>.
+          Les factures pourront être générées une fois la <strong className="mx-1 text-surface-700">session terminée</strong>.
         </div>
       ) : candidats.length === 0 ? (
         <div className="text-sm text-surface-500">Aucun candidat.</div>

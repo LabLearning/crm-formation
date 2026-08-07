@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, Receipt, Mails, FileStack } from 'lucide-react'
+import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, ReceiptEuro, Mails, FileStack } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type Onglet = 'pilotage' | 'documents' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'cloture' | 'mails'
+type Onglet = 'pilotage' | 'documents' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'facturation' | 'mails'
 
 /**
  * Fiche d'un dossier POEI organisée en parcours plutôt qu'en empilement.
@@ -13,7 +13,7 @@ type Onglet = 'pilotage' | 'documents' | 'dossier' | 'candidats' | 'intervention
  */
 export function PoeiShell({
   nbCandidats, nbInterventions, nbMails, alertes,
-  pilotage, documents, dossier, candidats, interventions, evaluations, cloture, mails,
+  pilotage, documents, dossier, candidats, interventions, evaluations, facturation, mails,
 }: {
   nbCandidats: number
   nbInterventions: number
@@ -26,7 +26,7 @@ export function PoeiShell({
   candidats: React.ReactNode
   interventions: React.ReactNode
   evaluations: React.ReactNode
-  cloture: React.ReactNode
+  facturation: React.ReactNode
   mails: React.ReactNode
 }) {
   const [onglet, setOnglet] = useState<Onglet>('pilotage')
@@ -37,13 +37,13 @@ export function PoeiShell({
     { id: 'interventions', label: 'Interventions', icon: CalendarRange, n: nbInterventions },
     { id: 'evaluations', label: 'Évaluations', icon: ClipboardCheck },
     { id: 'documents', label: 'Documents', icon: FileStack },
-    { id: 'cloture', label: 'Facturation & clôture', icon: Receipt },
+    { id: 'facturation', label: 'Facturation', icon: ReceiptEuro },
     { id: 'mails', label: 'Mails', icon: Mails, n: nbMails },
     { id: 'dossier', label: 'Paramètres', icon: Settings },
   ]
 
   const contenu: Record<Onglet, React.ReactNode> = {
-    pilotage, documents, dossier, candidats, interventions, evaluations, cloture, mails,
+    pilotage, documents, dossier, candidats, interventions, evaluations, facturation, mails,
   }
 
   return (

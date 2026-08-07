@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Euro, FileText, GraduationCap, ClipboardCheck, Award, Receipt,
+  Euro, FileText, GraduationCap, ClipboardCheck, Award, ReceiptEuro,
   Download, Loader2, Check,
 } from 'lucide-react'
 import { useToast } from '@/components/ui'
@@ -117,7 +117,7 @@ export function PoeiDocuments({
     },
     {
       cle: 'factures',
-      icone: Receipt,
+      icone: ReceiptEuro,
       titre: 'Factures',
       sous: formationTerminee ? 'Une par candidat, adressée à France Travail' : 'Disponibles une fois la formation terminée',
       compte: `${nbFactures}/${nb}`,

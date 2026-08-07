@@ -306,7 +306,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         nbMails={(emailLogs || []).length}
         alertes={{
           candidats: candidats.length === 0 ? 1 : 0,
-          cloture: formationTerminee && nbFactures < candidats.length ? 1 : 0,
+          facturation: formationTerminee && nbFactures < candidats.length ? 1 : 0,
         }}
         dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} agences={(agencesFt || []) as any[]} />}
         candidats={
@@ -330,7 +330,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
             grilles={(grilles || []) as any[]}
           />
         }
-        cloture={
+        facturation={
           <PoeiFacturation
             poeiId={p.id}
             sessionId={(p as any).session?.id || null}
