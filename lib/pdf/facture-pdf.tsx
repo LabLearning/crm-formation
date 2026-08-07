@@ -119,9 +119,9 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
         {/* Object */}
         {facture.objet && (
-          <View style={{ ...shared.infoBox, marginBottom: 10 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 2 }}>Objet</Text>
-            <Text style={shared.infoBoxText}>{facture.objet}</Text>
+          <View style={{ ...shared.infoBox, marginBottom: 10, flexDirection: 'row' }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700 }}>Objet : </Text>
+            <Text style={{ ...shared.infoBoxText, flex: 1 }}>{facture.objet}</Text>
           </View>
         )}
 
