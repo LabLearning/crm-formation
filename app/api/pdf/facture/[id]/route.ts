@@ -57,7 +57,7 @@ export async function GET(
     const { data: poei } = await supabase.from('poei').select(CHAMPS_POEI).eq('id', marker[1]).maybeSingle()
     const { data: cand } = await supabase
       .from('poei_candidats')
-      .select('numero_engagement, apprenant:apprenant_id(prenom, nom)')
+      .select('numero_engagement, numero_convention, apprenant:apprenant_id(prenom, nom)')
       .eq('id', marker[2])
       .maybeSingle()
 
@@ -82,6 +82,8 @@ export async function GET(
     // Celui figé sur la facture prime (elle a pu être émise depuis).
     const engagement = (facture as any).numero_engagement || (cand as any)?.numero_engagement
     if (engagement) detail.push({ label: "N° d'engagement", valeur: String(engagement) })
+    const convention = (cand as any)?.numero_convention
+    if (convention) detail.push({ label: 'N° de convention', valeur: String(convention) })
   }
 
   const buffer = await renderToBuffer(

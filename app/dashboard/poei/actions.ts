@@ -683,7 +683,7 @@ export async function generateFacturesPerCandidatPoeiAction(
   const montantHt = Math.round(duree * taux * 100) / 100
   const formationNom = (poei as any).formation?.intitule || 'Formation POEI'
   const today = new Date().toISOString().slice(0, 10)
-  const echeance = new Date(); echeance.setDate(echeance.getDate() + 30)
+  const echeance = new Date(); echeance.setDate(echeance.getDate() + 60)
 
   const applyLigneEtTotaux = async (factureId: string, nom: string) => {
     await supabase.from('facture_lignes').delete().eq('facture_id', factureId)
@@ -748,7 +748,7 @@ export async function generateFacturesPerCandidatPoeiAction(
       agence_ft_id: agenceFtId,
       subrogation: true,
       ...((c as any).numero_engagement ? { numero_engagement: (c as any).numero_engagement } : {}),
-      conditions_paiement: 'à 30 jours, date de facture',
+      conditions_paiement: 'à 60 jours à compter de la date de facture',
       notes_internes: `Facture POEI (candidat ${nom}). ${marker}`,
       created_by: session.user.id,
     }).select('id').single()

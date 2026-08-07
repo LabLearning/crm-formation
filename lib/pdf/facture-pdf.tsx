@@ -60,7 +60,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
   return (
     <Document title={`${docTitle} ${facture.numero}`} author="Lab Learning">
-      <Page size="A4" style={shared.page}>
+      <Page size="A4" style={{ ...shared.page, paddingTop: 38, paddingBottom: 44, paddingHorizontal: 40 }}>
         <PdfDocHeader
           docTitle={docTitle === 'FACTURE' ? 'Facture' : docTitle === 'AVOIR' ? 'Avoir' : docTitle === 'FACTURE D\'ACOMPTE' ? 'Facture d\'acompte' : docTitle === 'FACTURE DE SOLDE' ? 'Facture de solde' : docTitle}
           numero={facture.numero}
@@ -70,7 +70,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         />
 
         {/* Émetteur (OF) + Facturer à */}
-        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 18 }}>
+        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 12 }}>
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Émetteur</PdfSectionTitle>
             <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{ofNom}</Text>
@@ -119,7 +119,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
         {/* Object */}
         {facture.objet && (
-          <View style={{ ...shared.infoBox, marginBottom: 16 }}>
+          <View style={{ ...shared.infoBox, marginBottom: 10 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 2 }}>Objet</Text>
             <Text style={shared.infoBoxText}>{facture.objet}</Text>
           </View>
@@ -128,7 +128,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         {/* Détail de l'action de formation — attendu par les financeurs
             (France Travail, OPCO) pour rapprocher la facture du dossier. */}
         {detail && detail.length > 0 && (
-          <View style={{ marginBottom: 16 }}>
+          <View style={{ marginBottom: 10 }}>
             {detail.map((d) => (
               <View key={d.label} style={{ flexDirection: 'row', marginBottom: 2 }}>
                 <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, width: 92 }}>{d.label} :</Text>
@@ -139,8 +139,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         )}
 
         {/* Lines */}
-        <View style={shared.section}>
-          <PdfSectionTitle>Détail des prestations</PdfSectionTitle>
+        <View style={{ ...shared.section, marginBottom: 10 }}>
           <View style={shared.table}>
             <View style={shared.tableHeader}>
               <Text style={{ ...shared.tableHeaderCell, flex: 4 }}>Désignation</Text>
@@ -179,7 +178,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         </View>
 
         {/* Totals */}
-        <View style={shared.totalsBox}>
+        <View style={{ ...shared.totalsBox, marginBottom: 8 }}>
           {facture.remise_montant > 0 && (
             <View style={shared.totalRow}>
               <Text style={shared.totalLabel}>Remise ({facture.remise_pourcent}%)</Text>
@@ -218,7 +217,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
         {/* Paiements history */}
         {paiements.length > 0 && (
-          <View style={shared.section}>
+          <View style={{ ...shared.section, marginBottom: 10 }}>
             <PdfSectionTitle>Règlements reçus</PdfSectionTitle>
             {paiements.map((p) => (
               <View key={p.id} style={{ ...shared.row, marginBottom: 4 }}>
@@ -236,7 +235,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         {/* Reste à régler — attendu par les financeurs. Quand un règlement a
             déjà été reçu, l'information figure déjà dans le bloc des totaux. */}
         {!(facture.montant_paye > 0) && Number(facture.montant_restant ?? facture.montant_ttc) > 0 && (
-          <View style={{ marginTop: 4, marginBottom: 8, alignItems: 'flex-end' }}>
+          <View style={{ marginTop: 0, marginBottom: 6, alignItems: 'flex-end' }}>
             <Text style={{ fontSize: 9.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#1c1917' }}>
               Reste à régler : {fmt(facture.montant_restant ?? facture.montant_ttc)} €
             </Text>
@@ -245,14 +244,14 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
         {/* Conditions */}
         {facture.conditions_paiement && (
-          <View style={shared.section}>
-            <PdfSectionTitle>Conditions de paiement</PdfSectionTitle>
-            <Text style={{ fontSize: 8, color: '#57534e', lineHeight: 1.5 }}>{facture.conditions_paiement}</Text>
+          <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+            <Text style={{ fontSize: 8.5, fontFamily: 'Satoshi', fontWeight: 700 }}>Modalité de paiement : </Text>
+            <Text style={{ fontSize: 8.5, color: '#44403c' }}>{facture.conditions_paiement}</Text>
           </View>
         )}
 
         {/* OPCO / Subrogation */}
-        {facture.subrogation && facture.financeur_nom && (
+        {facture.subrogation && facture.financeur_nom && !affacture && (
           <View style={{ ...shared.infoBox, marginTop: 8 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 2 }}>Subrogation de paiement</Text>
             <Text style={shared.infoBoxText}>
@@ -265,21 +264,21 @@ export function FacturePDF({ facture, org, agence, detail }: {
             l'organisme. Imprimer notre IBAN ici ferait payer le mauvais compte. */}
         {affacture ? (
           <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>
+            <Text style={{ fontSize: 10.5, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 4, color: '#1c1917' }}>
               Cession de créance — règlement à {org?.affacturage_societe}
             </Text>
-            <Text style={{ fontSize: 7.5, color: '#57534e', lineHeight: 1.5 }}>
+            <Text style={{ fontSize: 8.5, color: '#44403c', lineHeight: 1.45 }}>
               {org?.affacturage_mention
                 || `Pour être libératoire, votre règlement doit être effectué directement à l'ordre de ${org?.affacturage_societe}${org?.affacturage_compte ? `, sur le compte : ${org.affacturage_compte}` : ''} qui le reçoit par subrogation dans le cadre d'un contrat d'affacturage. ${org?.affacturage_societe} devra être avisé de toute demande de renseignement ou réclamation.`}
             </Text>
             {org?.affacturage_iban && (
-              <Text style={{ fontSize: 7.5, color: '#57534e', marginTop: 3 }}>
+              <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, color: '#1c1917', marginTop: 4 }}>
                 IBAN : {org.affacturage_iban}{org?.affacturage_bic ? `   Swift : ${org.affacturage_bic}` : ''}
               </Text>
             )}
           </View>
         ) : iban ? (
-          <View wrap={false} style={shared.section}>
+          <View wrap={false} style={{ ...shared.section, marginBottom: 10 }}>
             <PdfSectionTitle>Règlement par virement</PdfSectionTitle>
             <View style={shared.row}><Text style={shared.label}>Bénéficiaire</Text><Text style={shared.value}>{titulaire}</Text></View>
             {banque && <View style={shared.row}><Text style={shared.label}>Banque</Text><Text style={shared.value}>{banque}</Text></View>}
@@ -290,8 +289,8 @@ export function FacturePDF({ facture, org, agence, detail }: {
         ) : null}
 
         {/* Mentions légales (art. L441-9, L441-10, D441-5) */}
-        <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
-          <Text style={{ fontSize: 7, color: '#78716c', lineHeight: 1.5 }}>
+        <View wrap={false} style={{ ...shared.infoBox, marginTop: 6, paddingVertical: 6 }}>
+          <Text style={{ fontSize: 6.5, color: '#78716c', lineHeight: 1.35 }}>
             {ofExonereTVA
               ? `TVA non applicable, art. 261-4-4° a du Code général des impôts (action de formation professionnelle continue dispensée par un organisme déclaré sous le n° ${org?.numero_da || '—'}).\n`
               : 'TVA acquittée sur les encaissements (prestations de services).\n'}
