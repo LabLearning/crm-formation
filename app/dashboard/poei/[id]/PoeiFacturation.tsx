@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Receipt, Download, FileText, Award, Clock, Building2, Plus, PenLine, CheckCircle2, Send } from 'lucide-react'
 import { Button, useToast, Modal, Input } from '@/components/ui'
-import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction, setPoeiNumeroEngagementAction } from '../actions'
+import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction, setPoeiNumeroEngagementAction, setCandidatNumeroEngagementAction } from '../actions'
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
 interface Candidat {
   id: string
+  numero_engagement?: string | null
   apprenant?: { id: string; prenom: string | null; nom: string | null } | null
 }
 interface FactureInfo { id: string; numero: string | null; status: string; montant_ttc: number | null }
@@ -24,6 +25,35 @@ const FACT_STATUS: Record<string, { label: string; cls: string }> = {
 }
 
 interface Agence { id: string; nom: string; ville?: string | null }
+
+/** N° d'engagement France Travail d'un candidat, saisi puis reporté sur sa facture. */
+function EngagementCandidat({ candidatId, valeur, verrouille }: { candidatId: string; valeur: string; verrouille: boolean }) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [v, setV] = useState(valeur)
+  const [busy, setBusy] = useState(false)
+
+  async function save() {
+    if (v.trim() === valeur.trim()) return
+    setBusy(true)
+    const r = await setCandidatNumeroEngagementAction(candidatId, v)
+    setBusy(false)
+    if (r.success) { toast('success', 'N° d’engagement enregistré'); router.refresh() }
+    else { toast('error', r.error || 'Erreur'); setV(valeur) }
+  }
+
+  return (
+    <input
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={save}
+      disabled={verrouille || busy}
+      placeholder="N° engagement"
+      title={verrouille ? 'Facture déjà émise : numéro figé' : 'N° d’engagement France Travail de ce candidat'}
+      className={`input-base !py-1 !px-2 text-xs font-mono w-36 ${!v ? 'border-amber-300 bg-amber-50/40' : ''} disabled:opacity-60`}
+    />
+  )
+}
 
 export function PoeiFacturation({
   poeiId, sessionId, sessionTerminee, candidats, facturesByCandidat, agences = [], currentAgenceId = null,
@@ -162,7 +192,7 @@ export function PoeiFacturation({
       {/* Numéro d'engagement France Travail — figure sur chaque facture */}
       <div className="rounded-xl bg-surface-50 border border-surface-200/70 p-3 flex items-center gap-3 flex-wrap">
         <FileText className="h-4 w-4 text-surface-500 shrink-0" />
-        <span className="text-sm text-surface-700">N° d’engagement France Travail <span className="text-surface-400">(un seul pour tout le dossier)</span> :</span>
+        <span className="text-sm text-surface-700">N° d’engagement par défaut <span className="text-surface-400">(utilisé si un candidat n’a pas le sien)</span> :</span>
         <input
           value={engagement}
           onChange={(e) => setEngagement(e.target.value)}
@@ -171,9 +201,7 @@ export function PoeiFacturation({
           className="input-base !py-1.5 text-sm font-mono max-w-[16rem]"
         />
         <Button size="sm" variant="secondary" onClick={saveEngagement} isLoading={savingEng}>Enregistrer</Button>
-        {!engagement && (
-          <span className="text-xs text-amber-600">Sans ce numéro, France Travail peut rejeter la facture.</span>
-        )}
+        <span className="text-xs text-surface-500">France Travail engage chaque candidat séparément : renseignez le numéro de chacun ci-dessous.</span>
       </div>
 
       {!sessionTerminee ? (
@@ -202,6 +230,11 @@ export function PoeiFacturation({
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  <EngagementCandidat
+                    candidatId={c.id}
+                    valeur={c.numero_engagement || ''}
+                    verrouille={!!fac && fac.status !== 'brouillon'}
+                  />
                   {fac ? (
                     <a href={`/api/pdf/facture/${fac.id}`} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-2.5 py-1.5 text-xs font-medium text-surface-700 hover:bg-surface-50">

@@ -66,7 +66,7 @@ export async function GET(
     }
     const { data: cand } = await supabase
       .from('poei_candidats')
-      .select('apprenant:apprenant_id(prenom, nom)')
+      .select('numero_engagement, apprenant:apprenant_id(prenom, nom)')
       .eq('id', marker[2])
       .maybeSingle()
 
@@ -87,10 +87,11 @@ export async function GET(
     if (p.date_debut) detail.push({ label: 'Dates', valeur: `du ${fr(p.date_debut)} au ${fr(p.date_fin)}` })
     if (heures) detail.push({ label: 'Durée', valeur: `${heures}h${jours ? ` (${jours} jours)` : ''}` })
     if (lieu) detail.push({ label: 'Lieu', valeur: lieu })
-    // Le n° d'engagement est celui du DOSSIER, pas du candidat : toutes les
-    // factures d'une même POEI portent le même. On prend celui figé sur la
-    // facture, sinon celui du dossier.
-    const engagement = (facture as any).numero_engagement || p.numero_engagement || p.numero_dossier_ft
+    // France Travail engage chaque candidat séparément : le numéro est le sien.
+    // On prend celui figé sur la facture, puis celui du candidat, et à défaut
+    // celui du dossier.
+    const engagement = (facture as any).numero_engagement
+      || (cand as any)?.numero_engagement || p.numero_engagement || p.numero_dossier_ft
     if (engagement) detail.push({ label: "N° d'engagement", valeur: String(engagement) })
   }
 

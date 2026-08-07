@@ -593,7 +593,42 @@ export async function setPoeiAgenceFtAction(poeiId: string, agenceId: string | n
   return { success: true }
 }
 
-/** Numéro d'engagement France Travail du dossier (repris sur les factures). */
+/**
+ * Numéro d'engagement France Travail d'un CANDIDAT, reporté sur sa facture.
+ * France Travail engage chaque candidat séparément.
+ */
+export async function setCandidatNumeroEngagementAction(candidatId: string, numero: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const valeur = numero.trim() || null
+
+  const { data: cand, error } = await supabase.from('poei_candidats')
+    .update({ numero_engagement: valeur })
+    .eq('id', candidatId).eq('organization_id', session.organization.id)
+    .select('id, poei_id').single()
+  if (error || !cand) {
+    console.error('[engagement candidat]', error)
+    if ((error as any)?.code === '42703') return { success: false, error: 'Colonne absente : appliquer la migration 120' }
+    return { success: false, error: "Impossible d'enregistrer le numéro d'engagement" }
+  }
+
+  // Report sur sa facture tant qu'elle n'est pas émise.
+  const { data: fac } = await supabase.from('factures')
+    .select('id, status')
+    .eq('organization_id', session.organization.id)
+    .ilike('notes_internes', `%[POEI-FACT:${cand.poei_id}:${candidatId}]%`)
+    .maybeSingle()
+  if (fac && (fac as any).status === 'brouillon') {
+    await supabase.from('factures').update({ numero_engagement: valeur }).eq('id', (fac as any).id)
+  }
+
+  await logAudit({ action: 'update', entity_type: 'poei_candidat', entity_id: candidatId, details: { numero_engagement: valeur } })
+  revalidatePath(`/dashboard/poei/${cand.poei_id}`)
+  return { success: true }
+}
+
+/** Numéro d'engagement par défaut du dossier (utilisé quand un candidat n'a pas le sien). */
 export async function setPoeiNumeroEngagementAction(poeiId: string, numero: string): Promise<ActionResult> {
   const session = await getSession()
   if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
@@ -669,7 +704,7 @@ export async function generateFacturesPerCandidatPoeiAction(
 
   const { data: candidats } = await supabase
     .from('poei_candidats')
-    .select('id, apprenant:apprenants(nom, prenom)')
+    .select('id, numero_engagement, apprenant:apprenants(nom, prenom)')
     .eq('poei_id', poeiId).order('created_at', { ascending: true })
   if (!candidats || candidats.length === 0) return { success: false, error: 'Aucun candidat à facturer' }
 
@@ -742,7 +777,9 @@ export async function generateFacturesPerCandidatPoeiAction(
       taux_tva: 0, financeur_type: 'france_travail',
       agence_ft_id: agenceFtId,
       subrogation: true,
-      ...((poei as any).numero_engagement ? { numero_engagement: (poei as any).numero_engagement } : {}),
+      ...(((c as any).numero_engagement || (poei as any).numero_engagement)
+        ? { numero_engagement: (c as any).numero_engagement || (poei as any).numero_engagement }
+        : {}),
       conditions_paiement: 'à 30 jours, date de facture',
       notes_internes: `Facture POEI (candidat ${nom}). ${marker}`,
       created_by: session.user.id,

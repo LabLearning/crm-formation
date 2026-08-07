@@ -56,6 +56,7 @@ export interface PoeiCandidat {
   apprenant_id: string | null
   inscription_id: string | null
   identifiant_ft: string | null
+  numero_engagement: string | null
   poste_vise: string | null
   type_contrat: TypeContrat | null
   date_embauche_prevue: string | null
