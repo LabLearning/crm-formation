@@ -64,7 +64,7 @@ export default async function FranchiseDashboard() {
         <div className="card p-5 lg:col-span-2">
           <div className="flex items-center gap-2 mb-4">
             <Banknote className="h-4 w-4 text-amber-600" />
-            <h2 className="text-sm font-heading font-semibold text-surface-900">Vos commissions</h2>
+            <h2 className="text-sm font-heading font-semibold text-surface-900">Vos commissions <span className="font-normal text-surface-400">(TTC)</span></h2>
             <span className="text-[11px] text-surface-400 inline-flex items-center gap-1 ml-auto">
               <Percent className="h-3 w-3" /> {franchise.taux_commission}% · {commissionTypeLabel(franchise.commission_type)}
             </span>

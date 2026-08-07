@@ -111,7 +111,7 @@ export default async function FranchiseEtablissementDetail({ params }: { params:
         <Stat icon={GraduationCap} tint="brand" value={String(ds.length)} label="Formations" />
         <Stat icon={Users} tint="violet" value={String(apps.length)} label="Stagiaires" />
         <Stat icon={FileText} tint="blue" value={fmtEuro(pec)} label="Prise en charge" />
-        <Stat icon={Banknote} tint="amber" value={fmtEuro(comm)} label="Commission générée" />
+        <Stat icon={Banknote} tint="amber" value={fmtEuro(comm)} label="Commission générée TTC" />
       </div>
 
       {/* Dossiers détaillés */}

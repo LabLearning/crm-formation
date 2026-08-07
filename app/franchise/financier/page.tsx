@@ -50,7 +50,7 @@ export default async function FranchiseFinancierPage() {
     <div className="space-y-5 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Financier</h1>
-        <p className="text-surface-500 text-sm mt-1">Vos commissions, dossier par dossier.</p>
+        <p className="text-surface-500 text-sm mt-1">Vos commissions, dossier par dossier. Les montants indiqués sont des montants TTC.</p>
       </div>
 
       {/* Mode de commission */}
@@ -86,7 +86,7 @@ export default async function FranchiseFinancierPage() {
               <th className="px-4 py-3 text-left">Établissement</th>
               <th className="px-4 py-3 text-right">Prise en charge</th>
               {isNet && <th className="px-4 py-3 text-right">Frais formateur</th>}
-              <th className="px-4 py-3 text-right">Commission</th>
+              <th className="px-4 py-3 text-right">Commission TTC</th>
               <th className="px-4 py-3 text-left">Statut</th>
             </tr>
           </thead>

@@ -4,6 +4,9 @@
  * Deux modes (configurés par franchise via apporteurs_affaires.commission_type) :
  *   - 'budget_debloque' : taux% × montant_prise_en_charge        (ex: 10%)
  *   - 'budget_net'      : taux% × (prise_en_charge - cout_formateur) (ex: 40%)
+ *
+ * Le montant obtenu est un montant TTC : c'est ce que la franchise facture,
+ * elle n'ajoute pas de TVA par-dessus.
  */
 
 export type CommissionType = 'budget_debloque' | 'budget_net'
@@ -29,9 +32,13 @@ export function computeCommission(params: {
   return { base: pec, montant: round2(pec * (taux / 100)) }
 }
 
+/**
+ * Les montants de commission sont des montants TTC : la franchise les facture
+ * tels quels, sans ajouter de TVA par-dessus.
+ */
 export function commissionTypeLabel(type: CommissionType | string | null): string {
-  if (type === 'budget_net') return '40% du budget net (après frais formateur)'
-  return '10% du budget débloqué'
+  if (type === 'budget_net') return '40% TTC du budget net (après frais formateur)'
+  return '10% TTC du budget débloqué'
 }
 
 export function commissionStatusLabel(status: CommissionStatus | string | null): string {

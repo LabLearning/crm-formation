@@ -302,7 +302,7 @@ export default function FranchiseDetailClient({
                       <div className="text-sm tabular-nums text-surface-500">{fmtEuro(g.cout)}</div>
                     </div>
                     <div className="text-right shrink-0 w-24">
-                      <div className="text-[10px] uppercase tracking-wider text-surface-400">Commission</div>
+                      <div className="text-[10px] uppercase tracking-wider text-surface-400">Commission TTC</div>
                       <div className="text-sm font-bold text-amber-600 tabular-nums">{fmtEuro(g.commission)}</div>
                     </div>
                   </button>

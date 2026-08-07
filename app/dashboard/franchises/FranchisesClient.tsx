@@ -62,8 +62,8 @@ export default function FranchisesClient({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi icon={Store} tint="brand" label="Franchises" value={String(franchises.length)} />
         <Kpi icon={Building2} tint="blue" label="Établissements" value={String(totalEtabs)} />
-        <Kpi icon={Banknote} tint="amber" label="Commissions à verser" value={fmtEuro(totalCommAVenir)} />
-        <Kpi icon={TrendingUp} tint="emerald" label="Commissions payées" value={fmtEuro(totalCommPayee)} />
+        <Kpi icon={Banknote} tint="amber" label="Commissions à verser TTC" value={fmtEuro(totalCommAVenir)} />
+        <Kpi icon={TrendingUp} tint="emerald" label="Commissions payées TTC" value={fmtEuro(totalCommPayee)} />
       </div>
 
       {franchises.length === 0 ? (
@@ -197,7 +197,7 @@ function CreateFranchiseModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="pt-2 border-t border-surface-200">
-              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Commission</div>
+              <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Commission TTC</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button type="button" onClick={() => setCommType('budget_debloque')}
                   className={`text-left p-3 rounded-xl border transition-all ${commType === 'budget_debloque' ? 'border-brand-400 bg-brand-50/50 ring-1 ring-brand-200' : 'border-surface-200 hover:border-surface-300'}`}>

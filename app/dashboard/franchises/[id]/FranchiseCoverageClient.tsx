@@ -118,7 +118,7 @@ export default function FranchiseCoverageClient({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Pot icon={Building2} tint="blue" label="CA potentiel" value={fmtEuro(caPotentiel)} sub={`~${fmtEuro(caMoyen)} / étab.`} />
               <Pot icon={TrendingUp} tint="emerald" label="Prise en charge potentielle" value={fmtEuro(pecPotentiel)} sub={`~${fmtEuro(pecMoyen)} / étab.`} />
-              <Pot icon={Banknote} tint="amber" label={`Commission potentielle (${taux}%)`} value={fmtEuro(commPotentielle)} sub={`actuelle : ${fmtEuro(commTotal)}`} highlight />
+              <Pot icon={Banknote} tint="amber" label={`Commission potentielle TTC (${taux}%)`} value={fmtEuro(commPotentielle)} sub={`actuelle : ${fmtEuro(commTotal)}`} highlight />
             </div>
             <p className="text-[11px] text-surface-400 mt-3">Estimation basée sur la moyenne par établissement déjà formé.</p>
           </div>

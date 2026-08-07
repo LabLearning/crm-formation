@@ -348,15 +348,15 @@ export async function updateCommissionStatusAction(
       await notifyFranchiseUsers(supabase, d.franchise_id, session.organization.id, {
         titre: status === 'payee' ? 'Commission versée' : 'Commission validée',
         message: status === 'payee'
-          ? `Votre commission de ${montant} (${etab}) a été versée.`
-          : `Votre commission de ${montant} (${etab}) a été validée et sera bientôt versée.`,
+          ? `Votre commission de ${montant} TTC (${etab}) a été versée.`
+          : `Votre commission de ${montant} TTC (${etab}) a été validée et sera bientôt versée.`,
         type: status === 'payee' ? 'success' : 'info',
         lienUrl: '/franchise/financier',
         lienLabel: 'Voir mes commissions',
         entityType: 'dossier_formation',
         entityId: dossierId,
         email: {
-          subject: status === 'payee' ? `Versement de commission — ${montant}` : `Commission validée — ${montant}`,
+          subject: status === 'payee' ? `Versement de commission — ${montant} TTC` : `Commission validée — ${montant} TTC`,
           docTitle: status === 'payee' ? 'Votre commission a été versée' : 'Votre commission a été validée',
           intro: status === 'payee'
             ? `Bonne nouvelle : votre commission liée à la formation chez ${etab} vient d'être versée.`
@@ -432,7 +432,7 @@ export async function payAllValidatedAction(franchiseId: string): Promise<Result
   if (total > 0) {
     await notifyFranchiseUsers(supabase, franchiseId, session.organization.id, {
       titre: 'Commissions versées',
-      message: `Un versement de ${fmtEuro(total)} de commissions a été effectué.`,
+      message: `Un versement de ${fmtEuro(total)} TTC de commissions a été effectué.`,
       type: 'success',
       lienUrl: '/franchise/financier',
       lienLabel: 'Voir mes commissions',
