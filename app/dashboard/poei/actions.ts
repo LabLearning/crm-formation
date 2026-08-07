@@ -629,7 +629,7 @@ export async function setPoeiNumeroEngagementAction(poeiId: string, numero: stri
  */
 export async function generateFacturesPerCandidatPoeiAction(
   poeiId: string,
-): Promise<ActionResult & { data?: { created: number; updated: number; skipped: number } }> {
+): Promise<ActionResult & { data?: { created: number; updated: number; skipped: number; supprimees?: number; orphelinesEmises?: number } }> {
   const session = await getSession()
   if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
   const orgId = session.organization.id
@@ -698,6 +698,27 @@ export async function generateFacturesPerCandidatPoeiAction(
     }).eq('id', factureId)
   }
 
+  // Un candidat retiré du dossier ne doit pas laisser sa facture derrière lui.
+  // Tant qu'elle est en brouillon on la supprime ; émise, on la laisse (elle a
+  // une existence légale) et on le signale à l'appelant.
+  let supprimees = 0, orphelinesEmises = 0
+  {
+    const vivants = new Set((candidats || []).map((c: any) => c.id))
+    const { data: existantes } = await supabase.from('factures')
+      .select('id, status, notes_internes')
+      .eq('organization_id', orgId)
+      .ilike('notes_internes', `%[POEI-FACT:${poeiId}:%`)
+    for (const f of existantes || []) {
+      const m = String((f as any).notes_internes).match(/\[POEI-FACT:[0-9a-f-]+:([0-9a-f-]+)\]/i)
+      if (!m || vivants.has(m[1])) continue
+      if ((f as any).status === 'brouillon') {
+        await supabase.from('facture_lignes').delete().eq('facture_id', (f as any).id)
+        await supabase.from('factures').delete().eq('id', (f as any).id)
+        supprimees++
+      } else orphelinesEmises++
+    }
+  }
+
   let created = 0, updated = 0, skipped = 0
   for (const c of candidats) {
     const nom = `${(c as any).apprenant?.prenom || ''} ${(c as any).apprenant?.nom || ''}`.trim() || 'Candidat'
@@ -734,7 +755,7 @@ export async function generateFacturesPerCandidatPoeiAction(
   await logAudit({ action: 'generate_factures_poei', entity_type: 'poei', entity_id: poeiId, details: { created, updated, skipped } })
   revalidatePath('/dashboard/factures')
   revalidatePath(`/dashboard/poei/${poeiId}`)
-  return { success: true, data: { created, updated, skipped } }
+  return { success: true, data: { created, updated, skipped, supprimees, orphelinesEmises } }
 }
 
 /**

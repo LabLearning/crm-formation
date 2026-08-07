@@ -104,11 +104,16 @@ export function PoeiFacturation({
     const r = await generateFacturesPerCandidatPoeiAction(poeiId)
     setGen(false)
     if (r.success) {
-      const { created, updated, skipped } = (r.data || {}) as { created: number; updated: number; skipped: number }
+      const { created, updated, skipped, supprimees, orphelinesEmises } = (r.data || {}) as
+        { created: number; updated: number; skipped: number; supprimees?: number; orphelinesEmises?: number }
       const parts: string[] = []
       if (created) parts.push(`${created} générée${created > 1 ? 's' : ''}`)
       if (updated) parts.push(`${updated} mise${updated > 1 ? 's' : ''} à jour`)
       if (skipped) parts.push(`${skipped} déjà émise${skipped > 1 ? 's' : ''}`)
+      if (supprimees) parts.push(`${supprimees} supprimée${supprimees > 1 ? 's' : ''} (candidat retiré)`)
+      if (orphelinesEmises) {
+        toast('error', `${orphelinesEmises} facture(s) émise(s) concernent un candidat retiré du dossier — à annuler manuellement`)
+      }
       toast('success', parts.length ? `Factures : ${parts.join(', ')}` : 'Aucune facture modifiée')
       router.refresh()
     } else toast('error', r.error || 'Erreur')
