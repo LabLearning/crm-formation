@@ -97,9 +97,11 @@ export function FacturePDF({ facture, org, agence, detail }: {
                 {agence.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {agence.tva_intra}</Text>}
                 <View style={{ marginTop: 6 }}>
                   <Text style={{ fontSize: 7.5, color: '#78716c' }}>Pour le compte de :</Text>
-                  <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{clientName}</Text>
-                  {client.adresse && <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{client.adresse}</Text>}
-                  {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e', fontStyle: 'italic' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                  {/* Pas d'italique : la police embarquée n'a pas cette variante
+                      et react-pdf fait alors échouer TOUT le document. */}
+                  <Text style={{ fontSize: 8, color: '#44403c' }}>{clientName}</Text>
+                  {client.adresse && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.adresse}</Text>}
+                  {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
                 </View>
               </>
             ) : (
