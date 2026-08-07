@@ -106,13 +106,17 @@ export async function checkConventionData(
     warn(S3, 'Aucune session liée : horaires détaillés non vérifiables')
   }
 
-  // ── 4. Participants — BLOQUANT : la convention ne se génère pas tant
-  // que tous les participants ne sont pas inscrits sur la session ──
+  // ── 4. Participants ──
+  // Bloquant seulement s'il n'y a AUCUN participant : une convention sans
+  // stagiaire nommé n'a pas d'objet. En revanche un effectif inférieur au
+  // prévisionnel est normal (désistement, place non pourvue) et ne rend pas la
+  // convention irrégulière : simple avertissement, sinon on empêche d'éditer une
+  // convention parfaitement valable.
   const S4 = 'Participants'
   if (participants.length === 0) {
     miss(S4, 'Aucun participant inscrit sur la session (inscrivez les stagiaires avant de générer la convention)')
   } else if (Number(convention.nombre_stagiaires) > participants.length) {
-    miss(S4, `Participants incomplets : ${participants.length} inscrit${participants.length > 1 ? 's' : ''} sur ${convention.nombre_stagiaires} prévus`)
+    warn(S4, `${participants.length} participant${participants.length > 1 ? 's' : ''} inscrit${participants.length > 1 ? 's' : ''} sur ${convention.nombre_stagiaires} prévus — la convention sera éditée pour l'effectif réel`)
   }
 
   // ── 5. Modalités pédagogiques et encadrement ──

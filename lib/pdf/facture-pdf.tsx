@@ -231,6 +231,16 @@ export function FacturePDF({ facture, org, agence, detail }: {
           </View>
         )}
 
+        {/* Reste à régler — attendu par les financeurs. Quand un règlement a
+            déjà été reçu, l'information figure déjà dans le bloc des totaux. */}
+        {!(facture.montant_paye > 0) && Number(facture.montant_restant ?? facture.montant_ttc) > 0 && (
+          <View style={{ marginTop: 4, marginBottom: 8, alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: 9.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#1c1917' }}>
+              Reste à régler : {fmt(facture.montant_restant ?? facture.montant_ttc)} €
+            </Text>
+          </View>
+        )}
+
         {/* Conditions */}
         {facture.conditions_paiement && (
           <View style={shared.section}>
