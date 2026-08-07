@@ -6,7 +6,6 @@ import { ArrowLeft, Building2, GraduationCap, Calendar } from 'lucide-react'
 import { Badge, BackLink } from '@/components/ui'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
 import { formatDate, companyLabel } from '@/lib/utils'
-import { PoeiStatusBar } from './PoeiStatusBar'
 import { PoeiEditor } from './PoeiEditor'
 import { PoeiCandidats } from './PoeiCandidats'
 import { PoeiFacturation } from './PoeiFacturation'
@@ -67,7 +66,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
 
   // Statut déduit des faits (candidats, dépôt/accord FT, dates de session) et
   // ce qui empêche le dossier d'avancer.
-  const { statutAttenduPoei, blocagesPoei } = await import('@/lib/poei-statut')
+  const { statutAttenduPoei } = await import('@/lib/poei-statut')
   const faits = {
     statut: (poei as any).statut,
     nb_candidats: candidats.length,
@@ -79,13 +78,6 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     date_fin: (poei as any).date_fin,
   }
   const statutCalcule = statutAttenduPoei(faits)
-  const blocages = blocagesPoei({
-    ...faits,
-    duree_heures: (poei as any).duree_heures,
-    montant_horaire: (poei as any).montant_horaire,
-    session_id: (poei as any).session_id,
-    client_id: (poei as any).client_id,
-  })
 
   // Interventions formateurs (plusieurs formateurs possibles sur un POEI)
   const [{ data: interventions }, { data: formateursList }] = await Promise.all([
@@ -201,13 +193,6 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           </div>
         ))}
       </div>
-
-      <PoeiStatusBar
-        poeiId={p.id}
-        statut={statutCalcule}
-        statutEnregistre={p.statut}
-        blocages={blocages}
-      />
 
       <PoeiShell
         nbCandidats={candidats.length}

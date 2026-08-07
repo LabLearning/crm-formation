@@ -51,7 +51,8 @@ export function blocagesPoei(f: FaitsPoei & { duree_heures?: number | null; mont
   if (!f.session_id) out.push('Aucune session de formation planifiée')
   if (!f.duree_heures) out.push('Durée de formation non renseignée')
   if (!f.montant_horaire) out.push('Taux horaire non renseigné')
-  if (!f.date_depot_ft) out.push('Dossier non déposé à France Travail')
-  else if (!f.date_accord_ft) out.push("Accord France Travail non enregistré")
+  // Le dépôt et l'accord France Travail ne sont pas saisis dans le CRM
+  // (aucun dossier ne les renseigne) : les compter comme blocage rendrait
+  // l'alerte permanente, donc inutile.
   return out
 }
