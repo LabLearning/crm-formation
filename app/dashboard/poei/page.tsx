@@ -49,6 +49,11 @@ export default async function PoeiPage() {
   // Le statut affiché est déduit des faits (candidats, dépôt FT, dates de
   // session) : un dossier ne peut plus rester « en montage » alors que la
   // formation est en cours.
+  const { data: agencesFt } = await supabase
+    .from('agences_france_travail')
+    .select('id, nom, ville')
+    .eq('organization_id', session.organization.id).eq('is_active', true).order('nom')
+
   const { statutAttenduPoei, blocagesPoei } = await import('@/lib/poei-statut')
   const poei = (poeiRaw || []).map((p: any) => {
     const nb = (p.candidats || []).length
@@ -88,6 +93,7 @@ export default async function PoeiPage() {
         formations={formations}
         hasPoeiCatalog={onlyPoei.length > 0}
         vivierCandidats={(vivierCandidats || []) as any[]}
+        agences={(agencesFt || []) as any[]}
       />
     </div>
   )

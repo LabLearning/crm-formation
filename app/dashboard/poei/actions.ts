@@ -100,6 +100,9 @@ export async function createPoeiAction(formData: FormData): Promise<ActionResult
       date_fin,
       montant_horaire: montantHoraire,
       numero_dossier_ft: str(formData, 'numero_dossier_ft'),
+      // L'agence qui finance est declaree des la creation : c'est elle qui
+      // sera facturee, la choisir plus tard exposait a facturer l'entreprise.
+      agence_ft_id: str(formData, 'agence_ft_id'),
       statut: str(formData, 'statut') || 'montage',
       notes: str(formData, 'notes'),
       created_by: session.user.id,
@@ -158,6 +161,7 @@ export async function updatePoeiAction(id: string, formData: FormData): Promise<
       montant_horaire: montantHoraire,
       // montant_total est recalculé juste après (taux × heures × nb candidats)
       numero_dossier_ft: str(formData, "numero_dossier_ft"),
+      agence_ft_id: str(formData, 'agence_ft_id'),
       date_depot_ft: str(formData, "date_depot_ft"),
       date_accord_ft: str(formData, "date_accord_ft"),
       date_mise_en_paiement: str(formData, "date_mise_en_paiement"),

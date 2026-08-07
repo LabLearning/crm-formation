@@ -15,9 +15,10 @@ interface Props {
   nbCandidats?: number
   /** Chiffres réels du dossier, issus des factures. */
   finances: { total: number; encaisse: number; nbFactures: number }
+  agences?: { id: string; nom: string; ville?: string | null }[]
 }
 
-export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finances }: Props) {
+export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finances, agences = [] }: Props) {
   const { toast } = useToast()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -52,11 +53,19 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finance
       <div className="card p-5">
         <div className="section-label mb-3">Financement France Travail</div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          {/* Destinataire des factures du dossier. */}
+          <Select
+            id="agence_ft_id"
+            name="agence_ft_id"
+            label="Agence France Travail facturée"
+            defaultValue={(poei as any).agence_ft_id || ''}
+            options={[{ value: '', label: '— À préciser —' }, ...agences.map((a) => ({ value: a.id, label: a.ville ? `${a.nom} (${a.ville})` : a.nom }))]}
+          />
           <Input id="montant_horaire" name="montant_horaire" type="number" label="Taux horaire (€)" defaultValue={poei.montant_horaire != null ? String(poei.montant_horaire) : ''} />
           {/* Le montant et l'encaissement viennent des FACTURES du dossier :
               les saisir ici créait une seconde vérité qui divergeait. */}
-          <div className="sm:col-span-2 flex items-end pb-2.5 text-sm text-surface-600">
+          <div className="sm:col-span-2 flex items-end pb-1 text-sm text-surface-600">
             {finances.nbFactures > 0 ? (
               <span>
                 <span className="font-medium text-surface-800">{finances.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>

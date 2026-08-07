@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Receipt, Download, FileText, Award, Clock, Building2, Plus, PenLine, CheckCircle2, Send } from 'lucide-react'
 import { Button, useToast, Modal, Input } from '@/components/ui'
-import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction, setCandidatNumeroEngagementAction } from '../actions'
+import { generateFacturesPerCandidatPoeiAction, setCandidatNumeroEngagementAction } from '../actions'
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
 interface Candidat {
@@ -71,9 +71,6 @@ export function PoeiFacturation({
   const { toast } = useToast()
   const router = useRouter()
   const [gen, setGen] = useState(false)
-  const [agenceId, setAgenceId] = useState(currentAgenceId || '')
-  const [createOpen, setCreateOpen] = useState(false)
-  const [savingAg, setSavingAg] = useState(false)
   const [sending, setSending] = useState<string | null>(null)
   const [sendingAll, setSendingAll] = useState(false)
 
@@ -93,26 +90,8 @@ export function PoeiFacturation({
     setSendingAll(false)
   }
 
-  async function chooseAgence(id: string) {
-    setAgenceId(id)
-    const r = await setPoeiAgenceFtAction(poeiId, id || null)
-    if (r.success) { toast('success', 'Agence rattachée'); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-  }
 
-  async function createAgence(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSavingAg(true)
-    const fd = new FormData(e.currentTarget)
-    const r = await createAgenceFtAction(fd)
-    if (r.success && (r.data as any)?.id) {
-      await setPoeiAgenceFtAction(poeiId, (r.data as any).id)
-      toast('success', 'Agence créée et rattachée')
-      setCreateOpen(false)
-      router.refresh()
-    } else toast('error', r.error || 'Erreur')
-    setSavingAg(false)
-  }
+
 
   async function generate() {
     setGen(true)
@@ -157,21 +136,6 @@ export function PoeiFacturation({
             </a>
           </div>
         )}
-      </div>
-
-      {/* Destinataire de facturation : agence France Travail */}
-      <div className="rounded-xl bg-sky-50/60 border border-sky-100 p-3 flex items-center gap-3 flex-wrap">
-        <Building2 className="h-4 w-4 text-sky-600 shrink-0" />
-        <span className="text-sm text-surface-700">Facturé à <strong>France Travail</strong> :</span>
-        <select value={agenceId} onChange={(e) => chooseAgence(e.target.value)}
-          className="input-base !py-1.5 text-sm max-w-xs">
-          <option value="">— Choisir une agence —</option>
-          {agences.map((a) => <option key={a.id} value={a.id}>{a.nom}{a.ville ? ` (${a.ville})` : ''}</option>)}
-        </select>
-        <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 hover:text-sky-800">
-          <Plus className="h-3.5 w-3.5" /> Nouvelle agence
-        </button>
-        {!agenceId && <span className="text-xs text-amber-600">La facture sera adressée à l’entreprise tant qu’aucune agence n’est choisie.</span>}
       </div>
 
       {!sessionTerminee ? (
@@ -240,24 +204,6 @@ export function PoeiFacturation({
         </div>
       )}
 
-      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle agence France Travail" size="md">
-        <form onSubmit={createAgence} className="space-y-3">
-          <Input name="nom" label="Nom de l’agence *" placeholder="FRANCE TRAVAIL DR OCCITANIE" required />
-          <Input name="adresse" label="Adresse" placeholder="33/43 Avenue Georges Pompidou" />
-          <div className="grid grid-cols-2 gap-3">
-            <Input name="code_postal" label="Code postal" placeholder="31131" />
-            <Input name="ville" label="Ville" placeholder="BALMA Cedex" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input name="siret" label="SIRET" placeholder="13000548116990" />
-            <Input name="tva_intra" label="TVA intra" placeholder="FR19130005481" />
-          </div>
-          <div className="flex justify-end gap-2 pt-1">
-            <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>Annuler</Button>
-            <Button type="submit" isLoading={savingAg} icon={<Plus className="h-4 w-4" />}>Créer &amp; rattacher</Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   )
 }

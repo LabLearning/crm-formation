@@ -23,6 +23,7 @@ interface Props {
   formations: { id: string; intitule: string; duree_heures?: number | null }[]
   hasPoeiCatalog: boolean
   vivierCandidats?: any[]
+  agences?: { id: string; nom: string; ville?: string | null }[]
 }
 
 
@@ -42,7 +43,7 @@ function PaiementBadge({ p }: { p: any }) {
 
 const statusOptions = Object.entries(POEI_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }))
 
-export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog, vivierCandidats = [] }: Props) {
+export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog, vivierCandidats = [], agences = [] }: Props) {
   const { toast } = useToast()
   const router = useRouter()
   const [tab, setTab] = useState<'projets' | 'vivier' | 'planifier' | 'documentation'>('projets')
@@ -288,7 +289,15 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
             <div className="section-label mb-2">Financement France Travail</div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input id="montant_horaire" name="montant_horaire" type="number" label="Taux horaire (€)" placeholder="8.00" />
-              <Select id="statut" name="statut" label="Statut" options={statusOptions} defaultValue="montage" />
+              {/* L'agence est le destinataire de la facture : elle se déclare
+                  ici, pas au moment de facturer. */}
+              <Select
+                id="agence_ft_id"
+                name="agence_ft_id"
+                label="Agence France Travail"
+                options={[{ value: '', label: '— À préciser —' }, ...agences.map((a: any) => ({ value: a.id, label: a.ville ? `${a.nom} (${a.ville})` : a.nom }))]}
+                defaultValue={agences.length === 1 ? agences[0].id : ''}
+              />
             </div>
           </div>
 

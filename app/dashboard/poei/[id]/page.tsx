@@ -308,7 +308,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           candidats: candidats.length === 0 ? 1 : 0,
           cloture: formationTerminee && nbFactures < candidats.length ? 1 : 0,
         }}
-        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} />}
+        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} agences={(agencesFt || []) as any[]} />}
         candidats={
           <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
         }
