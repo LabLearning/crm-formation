@@ -7,6 +7,9 @@ import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
 import type { ActionResult } from '@/lib/types'
 
+/** Délai de règlement standard Lab Learning, appliqué à toutes les factures. */
+export const CONDITIONS_PAIEMENT_DEFAUT = 'à 60 jours à compter de la date de facture'
+
 export async function createFactureAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession()
   const raw: Record<string, unknown> = {}
@@ -31,7 +34,7 @@ export async function createFactureAction(formData: FormData): Promise<ActionRes
       facture_origine_id: parsed.data.facture_origine_id || null,
       objet: parsed.data.objet,
       date_echeance: parsed.data.date_echeance,
-      conditions_paiement: parsed.data.conditions_paiement || 'Paiement à 30 jours',
+      conditions_paiement: parsed.data.conditions_paiement || CONDITIONS_PAIEMENT_DEFAUT,
       remise_pourcent: parsed.data.remise_pourcent,
       taux_tva: parsed.data.taux_tva,
       financeur_type: parsed.data.financeur_type || null,

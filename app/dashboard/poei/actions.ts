@@ -384,7 +384,7 @@ export async function sendAttestationsEntreeAction(
       apprenant: a, formation, org,
       dateDebut: p.date_debut, dateFin: p.date_fin, dureeHeures: p.duree_heures,
       lieu: null, formateurNom: null,
-      poei: { identifiant_ft: c.identifiant_ft || p.candidat_identifiant_ft, poste_vise: c.poste_vise || p.poste_vise, employeur },
+      poei: { identifiant_ft: c.identifiant_ft, poste_vise: c.poste_vise, employeur },
     }) as any)
 
     const result = await sendDocumentEmail({
@@ -996,7 +996,7 @@ export async function sendGroupEmailToCandidatsAction(
           apprenant: a, formation, org,
           dateDebut: p.date_debut, dateFin: p.date_fin, dureeHeures: p.duree_heures,
           lieu: null, formateurNom: null,
-          poei: { identifiant_ft: c.identifiant_ft || p.candidat_identifiant_ft, poste_vise: c.poste_vise || p.poste_vise, employeur },
+          poei: { identifiant_ft: c.identifiant_ft, poste_vise: c.poste_vise, employeur },
         }) as any)
         pdfBuffer = Buffer.from(buf)
         pdfFilename = `attestation-entree-${a.nom || 'candidat'}.pdf`

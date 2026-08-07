@@ -37,9 +37,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       const { data: f } = await supabase.from('formations').select('*').eq('id', p.formation_id).single()
       formation = f
     }
-    // Infos spécifiques au candidat (identifiant FT, poste) si fourni
-    let identifiantFt = p.candidat_identifiant_ft || null
-    let posteVise = p.poste_vise || null
+    // Identifiant France Travail et poste visé sont portés par le CANDIDAT.
+    let identifiantFt: string | null = null
+    let posteVise: string | null = null
     if (candidatId) {
       const { data: c } = await supabase.from('poei_candidats').select('identifiant_ft, poste_vise').eq('id', candidatId).single()
       if (c) { identifiantFt = c.identifiant_ft || identifiantFt; posteVise = c.poste_vise || posteVise }

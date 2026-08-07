@@ -10,19 +10,8 @@ export interface Poei {
   id: string
   organization_id: string
   numero: string | null
-  candidat_civilite: string | null
-  candidat_nom: string
-  candidat_prenom: string | null
-  candidat_email: string | null
-  candidat_telephone: string | null
-  candidat_identifiant_ft: string | null
-  apprenant_id: string | null
   client_id: string | null
-  poste_vise: string | null
-  type_contrat: TypeContrat | null
-  date_embauche_prevue: string | null
   numero_convention?: string | null
-  tuteur_nom: string | null
   formation_id: string | null
   session_id: string | null
   duree_heures: number | null

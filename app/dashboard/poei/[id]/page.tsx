@@ -64,6 +64,28 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   ])
   const candidats = (candidatsRaw || []) as PoeiCandidat[]
 
+  // Statut déduit des faits (candidats, dépôt/accord FT, dates de session) et
+  // ce qui empêche le dossier d'avancer.
+  const { statutAttenduPoei, blocagesPoei } = await import('@/lib/poei-statut')
+  const faits = {
+    statut: (poei as any).statut,
+    nb_candidats: candidats.length,
+    date_depot_ft: (poei as any).date_depot_ft,
+    date_accord_ft: (poei as any).date_accord_ft,
+    session_date_debut: (poei as any).session?.date_debut,
+    session_date_fin: (poei as any).session?.date_fin,
+    date_debut: (poei as any).date_debut,
+    date_fin: (poei as any).date_fin,
+  }
+  const statutCalcule = statutAttenduPoei(faits)
+  const blocages = blocagesPoei({
+    ...faits,
+    duree_heures: (poei as any).duree_heures,
+    montant_horaire: (poei as any).montant_horaire,
+    session_id: (poei as any).session_id,
+    client_id: (poei as any).client_id,
+  })
+
   // Interventions formateurs (plusieurs formateurs possibles sur un POEI)
   const [{ data: interventions }, { data: formateursList }] = await Promise.all([
     supabase
@@ -158,7 +180,12 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         </div>
       </div>
 
-      <PoeiStatusBar poeiId={p.id} statut={p.statut} />
+      <PoeiStatusBar
+        poeiId={p.id}
+        statut={statutCalcule}
+        statutEnregistre={p.statut}
+        blocages={blocages}
+      />
 
       <PoeiInterventions
         poeiId={p.id}

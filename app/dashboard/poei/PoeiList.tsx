@@ -231,9 +231,21 @@ export function PoeiList({ poei, previsions, clients, formations, hasPoeiCatalog
                     <span className="inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded-full bg-surface-100 text-surface-700 text-xs font-semibold">{p.candidats_count || 0}</span>
                   </td>
                   <td className="px-5 py-3">
-                    <div><select value={p.statut} onChange={(e) => handleStatut(p.id, e.target.value)} className="text-xs rounded-lg border border-surface-200 px-2 py-1 bg-white">
-                      {statusOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select><div><PaiementBadge p={p} /></div></div>
+                    {/* Statut déduit du dossier : plus de sélecteur qui laisse
+                        croire qu'on maîtrise l'avancement à la main. */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-medium text-surface-800">{POEI_STATUS_LABELS[p.statut] || p.statut}</span>
+                      {(p as any).nb_blocages > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-danger-700 bg-danger-50 border border-danger-100 rounded-full px-1.5 py-0.5"
+                          title="Points à compléter sur le dossier"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-danger-500" />
+                          {(p as any).nb_blocages}
+                        </span>
+                      )}
+                    </div>
+                    <div><PaiementBadge p={p} /></div>
                   </td>
                   <td className="px-5 py-3 text-right">
                     <div className="inline-flex items-center gap-1">

@@ -46,7 +46,35 @@ export default async function PoeiPage() {
       .order('created_at', { ascending: false }),
   ])
 
-  const poei = (poeiRaw || []).map((p: any) => ({ ...p, candidats_count: (p.candidats || []).length })) as Poei[]
+  // Le statut affiché est déduit des faits (candidats, dépôt FT, dates de
+  // session) : un dossier ne peut plus rester « en montage » alors que la
+  // formation est en cours.
+  const { statutAttenduPoei, blocagesPoei } = await import('@/lib/poei-statut')
+  const poei = (poeiRaw || []).map((p: any) => {
+    const nb = (p.candidats || []).length
+    const faits = {
+      statut: p.statut,
+      nb_candidats: nb,
+      date_depot_ft: p.date_depot_ft,
+      date_accord_ft: p.date_accord_ft,
+      session_date_debut: p.session?.date_debut,
+      session_date_fin: p.session?.date_fin,
+      date_debut: p.date_debut,
+      date_fin: p.date_fin,
+    }
+    return {
+      ...p,
+      candidats_count: nb,
+      statut: statutAttenduPoei(faits),
+      nb_blocages: blocagesPoei({
+        ...faits,
+        duree_heures: p.duree_heures,
+        montant_horaire: p.montant_horaire,
+        session_id: p.session_id,
+        client_id: p.client_id,
+      }).length,
+    }
+  }) as Poei[]
 
   const onlyPoei = (formationsPoei || []).filter((f: any) => f.is_poei)
   const formations = (onlyPoei.length > 0 ? onlyPoei : (formationsPoei || [])) as any[]
