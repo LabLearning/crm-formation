@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckCircle2, AlertCircle, MinusCircle, FileText, ExternalLink } from 'lucide-react'
+import { CheckCircle2, AlertCircle, MinusCircle, FileText, ExternalLink, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { PoeiSection, PoeiVide } from './PoeiSection'
 
 /**
  * Cockpit du dossier POEI : une ligne par candidat, une colonne par jalon de
@@ -56,14 +57,7 @@ const COULEUR: Record<Etat, string> = {
 
 export function PoeiPilotage({ lignes }: { lignes: LigneCandidat[] }) {
   if (lignes.length === 0) {
-    return (
-      <div className="card p-10 text-center">
-        <FileText className="h-10 w-10 text-surface-300 mx-auto mb-3" />
-        <div className="text-sm text-surface-500">
-          Aucun candidat sur ce dossier — ajoutez-les depuis l&apos;onglet Candidats.
-        </div>
-      </div>
-    )
+    return <PoeiVide icone={FileText} texte="Aucun candidat sur ce dossier — ajoutez-les depuis l'onglet Candidats." />
   }
 
   // Compteur par jalon : c'est la ligne qui dit où en est le dossier.
@@ -74,7 +68,11 @@ export function PoeiPilotage({ lignes }: { lignes: LigneCandidat[] }) {
   }))
 
   return (
-    <div className="space-y-4">
+    <PoeiSection
+      icone={LayoutGrid}
+      titre="Pilotage du dossier"
+      sous="Où en est chaque candidat, jalon par jalon."
+    >
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {avancement.map((a) => {
           const complet = a.total > 0 && a.faits === a.total
@@ -146,6 +144,6 @@ export function PoeiPilotage({ lignes }: { lignes: LigneCandidat[] }) {
           </table>
         </div>
       </div>
-    </div>
+    </PoeiSection>
   )
 }

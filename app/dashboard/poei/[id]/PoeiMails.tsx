@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine } from 'lucide-react'
 import { Button, Modal, Input, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
+import { PoeiSection } from './PoeiSection'
 import { sendAttestationsEntreeAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction } from '../actions'
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
@@ -103,7 +104,11 @@ export function PoeiMails({
   }
 
   return (
-    <div className="space-y-5">
+    <PoeiSection
+      icone={Mail}
+      titre="Envois aux candidats"
+      sous="Choisissez un type d'envoi, puis les destinataires."
+    >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {TYPES.map((t) => {
           const Icone = t.icone
@@ -225,6 +230,6 @@ export function PoeiMails({
           </div>
         </div>
       </Modal>
-    </div>
+    </PoeiSection>
   )
 }

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { PoeiSection } from './PoeiSection'
 import {
   generateDevisPerCandidatAction,
   generateDevisPrevisionnelPoeiAction,
@@ -130,7 +131,12 @@ export function PoeiDocuments({
   ]
 
   return (
-    <div className="space-y-3">
+    <PoeiSection
+      icone={FileText}
+      titre="Documents du dossier"
+      sous="Produits et téléchargés ici ; leur état se lit dans l'onglet Pilotage."
+    >
+      <div className="space-y-3">
       {devisPrevisionnel && (
         <div className="card p-4 flex items-center gap-3">
           <Euro className="h-4 w-4 text-surface-500 shrink-0" />
@@ -192,6 +198,7 @@ export function PoeiDocuments({
           </div>
         )
       })}
-    </div>
+      </div>
+    </PoeiSection>
   )
 }

@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, Download, FileText, Award, Clock, Building2, Plus, PenLine, CheckCircle2, Send } from 'lucide-react'
+import { Receipt, FileText, Clock } from 'lucide-react'
+import { PoeiSection } from './PoeiSection'
 import { Button, useToast, Modal, Input } from '@/components/ui'
 import { generateFacturesPerCandidatPoeiAction, setCandidatNumeroEngagementAction } from '../actions'
-import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
 interface Candidat {
   id: string
@@ -71,24 +71,6 @@ export function PoeiFacturation({
   const { toast } = useToast()
   const router = useRouter()
   const [gen, setGen] = useState(false)
-  const [sending, setSending] = useState<string | null>(null)
-  const [sendingAll, setSendingAll] = useState(false)
-
-  async function sendSignature(apprenantId: string) {
-    setSending(apprenantId)
-    const r = await sendCertificatSignatureAction(poeiId, apprenantId)
-    if (r.success) { toast('success', `Lien de signature envoyé à ${r.data?.email || 'le candidat'}`); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-    setSending(null)
-  }
-
-  async function sendAllSignatures() {
-    setSendingAll(true)
-    const r = await sendAllCertificatSignaturesAction(poeiId)
-    if (r.success) { toast('success', `${r.data?.sent || 0} lien(s) envoyé(s)${r.data?.skipped ? ` · ${r.data.skipped} ignoré(s)` : ''}`); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-    setSendingAll(false)
-  }
 
 
 
@@ -116,27 +98,17 @@ export function PoeiFacturation({
   const nbFactures = Object.keys(facturesByCandidat).length
 
   return (
-    <div className="card p-4 sm:p-5 space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-brand-500" />
-          <span className="text-sm font-heading font-semibold text-surface-900">Facturation & documents de clôture</span>
-        </div>
-        {sessionTerminee && (
-          <div className="flex items-center gap-2">
-            <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
-              {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
-            </Button>
-            <button onClick={sendAllSignatures} disabled={sendingAll}
-              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm disabled:opacity-50">
-              <Send className="h-4 w-4" /> {sendingAll ? 'Envoi…' : 'Envoyer les signatures'}
-            </button>
-            <a href={`/api/pdf/poei-certificats/${poeiId}`} className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
-              <Download className="h-4 w-4" /> Certificats (ZIP)
-            </a>
-          </div>
-        )}
-      </div>
+    <PoeiSection
+      icone={Receipt}
+      titre="Facturation"
+      sous="Une facture par candidat, adressée à France Travail."
+      actions={sessionTerminee ? (
+        <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
+          {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
+        </Button>
+      ) : undefined}
+    >
+      <div className="card p-4 sm:p-5 space-y-4">
 
       {!sessionTerminee ? (
         <div className="flex items-center gap-2 rounded-xl bg-surface-50 border border-surface-200/70 px-4 py-3 text-sm text-surface-500">
@@ -177,33 +149,13 @@ export function PoeiFacturation({
                   ) : (
                     <span className="text-xs text-surface-300 px-2.5">Pas de facture</span>
                   )}
-                  {c.apprenant?.id && sessionId && (
-                    <a href={`/api/pdf/certificat-realisation/${c.apprenant.id}?session=${sessionId}`} target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-2.5 py-1.5 text-xs font-medium text-surface-700 hover:bg-surface-50">
-                      <Award className="h-3.5 w-3.5" /> Certificat
-                    </a>
-                  )}
-                  {c.apprenant?.id && (() => {
-                    const sg = signatures[c.apprenant.id]
-                    if (sg?.signed_at) return (
-                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Signé
-                      </span>
-                    )
-                    return (
-                      <button onClick={() => sendSignature(c.apprenant!.id)} disabled={sending === c.apprenant.id}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-50">
-                        <PenLine className="h-3.5 w-3.5" /> {sg?.sent_at ? 'Relancer' : 'Faire signer'}
-                      </button>
-                    )
-                  })()}
                 </div>
               </div>
             )
           })}
         </div>
       )}
-
-    </div>
+      </div>
+    </PoeiSection>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { UserPlus, Trash2, Users, FileText, GraduationCap, Pencil, Mail, Send, CheckCircle2, XCircle, Paperclip, Euro, Download } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast, SearchSelect, RowMenu } from '@/components/ui'
 import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction } from '../actions'
+import { PoeiSection } from './PoeiSection'
 import { CANDIDAT_STATUT_LABELS, TYPE_CONTRAT_LABELS } from '@/lib/types/poei'
 import type { PoeiCandidat } from '@/lib/types/poei'
 
@@ -235,16 +236,17 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
   const nom = (c: PoeiCandidat) => `${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || '—'
 
   return (
-    <div className="card p-5 space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <span className="section-label">Candidats</span>
-          <Badge variant="default" className="!bg-sky-100 !text-sky-700 !border-transparent">{candidats.length}</Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => { setErrors({}); setMode('new'); setOpen(true) }} size="sm" icon={<UserPlus className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">Ajouter</Button>
-        </div>
-      </div>
+    <PoeiSection
+      icone={Users}
+      titre={`Candidats (${candidats.length})`}
+      sous="Les personnes du dossier. Documents et envois ont leurs propres onglets."
+      actions={
+        <>
+          <Button onClick={() => { setErrors({}); setMode('new'); setOpen(true) }} size="sm" icon={<UserPlus className="h-4 w-4" />}>Ajouter</Button>
+        </>
+      }
+    >
+      <div className="card p-5">
 
       {candidats.length === 0 ? (
         <div className="text-center py-8 text-sm text-surface-500">
@@ -283,6 +285,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           })}
         </div>
       )}
+      </div>
 
       {/* Mail groupé personnalisé */}
       <Modal isOpen={mailOpen} onClose={() => setMailOpen(false)} title="Mail groupé aux candidats" size="lg">
@@ -614,6 +617,6 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           </form>
         )}
       </Modal>
-    </div>
+    </PoeiSection>
   )
 }
