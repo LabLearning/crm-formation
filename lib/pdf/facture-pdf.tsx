@@ -130,12 +130,18 @@ export function FacturePDF({ facture, org, agence, detail }: {
 
         {/* Détail de l'action de formation — attendu par les financeurs
             (France Travail, OPCO) pour rapprocher la facture du dossier. */}
+        {/* Deux colonnes : huit lignes de détail faisaient déborder la facture
+            sur une seconde page. */}
         {detail && detail.length > 0 && (
-          <View style={{ marginBottom: 10 }}>
-            {detail.map((d) => (
-              <View key={d.label} style={{ flexDirection: 'row', marginBottom: 2 }}>
-                <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, width: 92 }}>{d.label} :</Text>
-                <Text style={{ fontSize: 8, color: '#57534e', flex: 1 }}>{d.valeur}</Text>
+          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 10 }}>
+            {[detail.filter((_, i) => i % 2 === 0), detail.filter((_, i) => i % 2 === 1)].map((colonne, ci) => (
+              <View key={ci} style={{ flex: 1 }}>
+                {colonne.map((d) => (
+                  <View key={d.label} style={{ flexDirection: 'row', marginBottom: 2 }}>
+                    <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, width: 82 }}>{d.label} :</Text>
+                    <Text style={{ fontSize: 8, color: '#57534e', flex: 1 }}>{d.valeur}</Text>
+                  </View>
+                ))}
               </View>
             ))}
           </View>
