@@ -6,9 +6,7 @@ import { createFactureSchema, createPaiementSchema } from '@/lib/validations/fac
 import { logAudit } from '@/lib/audit'
 import { getSession } from '@/lib/auth'
 import type { ActionResult } from '@/lib/types'
-
-/** Délai de règlement standard Lab Learning, appliqué à toutes les factures. */
-export const CONDITIONS_PAIEMENT_DEFAUT = 'à 60 jours à compter de la date de facture'
+import { CONDITIONS_PAIEMENT_DEFAUT } from '@/lib/facturation'
 
 export async function createFactureAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession()
