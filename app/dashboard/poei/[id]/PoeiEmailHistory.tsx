@@ -48,7 +48,7 @@ export function PoeiEmailHistory({ logs }: { logs: EmailLog[] }) {
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-surface-50/60 transition-colors"
       >
         {open ? <ChevronDown className="h-4 w-4 text-surface-400 shrink-0" /> : <ChevronRight className="h-4 w-4 text-surface-400 shrink-0" />}
-        <Mail className="h-4 w-4 text-sky-500 shrink-0" />
+        <Mail className="h-4 w-4 text-brand-500 shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-surface-900">
             Historique des emails
@@ -70,7 +70,7 @@ export function PoeiEmailHistory({ logs }: { logs: EmailLog[] }) {
               <div key={l.id} className="flex items-start gap-3 px-5 py-3">
                 <div className="mt-0.5 shrink-0">
                   {ok
-                    ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ? <CheckCircle2 className="h-4 w-4 text-success-500" />
                     : <XCircle className="h-4 w-4 text-danger-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -87,7 +87,7 @@ export function PoeiEmailHistory({ logs }: { logs: EmailLog[] }) {
                   {l.template && (
                     <span className={cn(
                       'inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
-                      l.template === 'poei_groupe' ? 'bg-sky-50 text-sky-700' : 'bg-surface-100 text-surface-500',
+                      l.template === 'poei_groupe' ? 'bg-brand-50 text-brand-700' : 'bg-surface-100 text-surface-500',
                     )}>
                       {TEMPLATE_LABELS[l.template] || l.template}
                     </span>

@@ -260,7 +260,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
             return (
               <div key={c.id} className="flex items-center gap-2.5 py-2.5">
                 <button onClick={() => setEditCand(c)} className="flex-1 min-w-0 text-left group">
-                  <div className="text-sm font-medium text-surface-900 truncate group-hover:text-sky-700 transition-colors">{nom(c)}</div>
+                  <div className="text-sm font-medium text-surface-900 truncate group-hover:text-brand-600 transition-colors">{nom(c)}</div>
                   <div className="text-xs text-surface-500 truncate">
                     {[c.apprenant?.email, c.poste_vise, c.type_contrat ? TYPE_CONTRAT_LABELS[c.type_contrat] : null, c.identifiant_ft ? `FT ${c.identifiant_ft}` : null, (c as any).numero_convention ? `Conv. ${(c as any).numero_convention}` : null].filter(Boolean).join(' · ') || '—'}
                   </div>
@@ -307,7 +307,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                     title={sansEmail ? 'Pas d\'email renseigné' : c.apprenant?.email || ''}
                     className={`px-2 py-1 rounded-full text-xs font-medium border transition-colors ${
                       sansEmail ? 'bg-surface-50 text-surface-300 border-surface-200 line-through'
-                        : on ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-white text-surface-500 border-surface-200'
+                        : on ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-white text-surface-500 border-surface-200'
                     }`}
                   >
                     {`${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || 'Candidat'}
@@ -316,7 +316,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
               })}
             </div>
             {mailSansEmail.length > 0 && (
-              <p className="text-xs text-amber-600 mt-1.5">
+              <p className="text-xs text-warning-600 mt-1.5">
                 {mailSansEmail.length} candidat{mailSansEmail.length > 1 ? 's' : ''} sans email : ils ne recevront rien.
               </p>
             )}
@@ -328,7 +328,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
               <span className="text-xs font-semibold text-sky-800">Modèle :</span>
               {templates.map((t) => (
                 <button key={t.slug} type="button" onClick={() => applyTemplate(t.slug)}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-sky-200 text-xs font-medium text-sky-700 hover:bg-sky-100 transition-colors">
+                  className="px-2.5 py-1 rounded-lg bg-white border border-brand-200 text-xs font-medium text-brand-700 hover:bg-brand-50 transition-colors">
                   {t.nom}
                 </button>
               ))}
@@ -361,7 +361,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm text-surface-700">
               <input type="checkbox" checked={mailJoindre} onChange={(e) => setMailJoindre(e.target.checked)}
-                className="rounded border-surface-300 text-sky-600 focus:ring-sky-500" />
+                className="rounded border-surface-300 text-brand-600 focus:ring-brand-500" />
               <Paperclip className="h-3.5 w-3.5 text-surface-400" />
               Joindre l&apos;attestation d&apos;entrée de chaque candidat
             </label>
@@ -380,7 +380,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                 }}
               />
               <button type="button" onClick={() => mailFileRef.current?.click()}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700">
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
                 <Paperclip className="h-3.5 w-3.5" /> Ajouter une pièce jointe
               </button>
               {mailFiles.length > 0 && (
@@ -429,7 +429,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
             <Button variant="secondary" onClick={() => setMailOpen(false)}>Annuler</Button>
             <Button onClick={handleSendGroupMail} isLoading={mailSending}
               disabled={!mailSubject.trim() || !mailMessage.trim()}
-              icon={<Send className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">
+              icon={<Send className="h-4 w-4" />} className="">
               Envoyer à {mailRecipients.filter((c) => c.apprenant?.email).length} candidat{mailRecipients.filter((c) => c.apprenant?.email).length > 1 ? 's' : ''}
             </Button>
             </div>
@@ -440,9 +440,9 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
       {/* Confirmation génération des devis */}
       <Modal isOpen={genDevisOpen} onClose={() => setGenDevisOpen(false)} title="Générer les devis" size="md">
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
+          <div className="flex items-start gap-3 rounded-xl bg-warning-50 border border-warning-200 p-4">
             <div className="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-              <Euro className="h-4 w-4 text-amber-600" />
+              <Euro className="h-4 w-4 text-warning-600" />
             </div>
             <div className="text-sm text-surface-700">
               Un devis va être créé pour <strong>chacun des {candidats.length} candidat{candidats.length > 1 ? 's' : ''}</strong> du projet
@@ -452,7 +452,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           </div>
           <div className="flex justify-end gap-3 pt-1">
             <Button variant="secondary" onClick={() => setGenDevisOpen(false)}>Annuler</Button>
-            <Button onClick={handleGenerateDevis} isLoading={genDevis} icon={<Euro className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">
+            <Button onClick={handleGenerateDevis} isLoading={genDevis} icon={<Euro className="h-4 w-4" />} className="">
               Générer {candidats.length} devis
             </Button>
           </div>
@@ -470,8 +470,8 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {previewTargets.map((c) => c.apprenant?.email ? (
-                  <span key={c.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs border border-emerald-100">
-                    {nom(c)} <span className="text-emerald-500">({c.apprenant.email})</span>
+                  <span key={c.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success-50 text-success-700 text-xs border border-success-100">
+                    {nom(c)} <span className="text-success-500">({c.apprenant.email})</span>
                   </span>
                 ) : (
                   <span key={c.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-danger-50 text-danger-600 text-xs border border-danger-100" title="Sans email — ne recevra pas l'attestation">
@@ -498,9 +498,9 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                     Bonjour <strong>{previewTargets.length === 1 ? nom(previewTargets[0]) : 'Prénom Nom'}</strong>,<br />
                     {message}
                   </p>
-                  <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2">
+                  <div className="flex items-center gap-2 rounded-lg bg-success-50 border border-success-100 px-3 py-2">
                     <Paperclip className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <span className="text-xs font-medium text-emerald-700">
+                    <span className="text-xs font-medium text-success-700">
                       attestation-entree-{previewTargets.length === 1 ? (previewTargets[0].apprenant?.nom || 'NOM') : 'NOM'}.pdf
                     </span>
                     <span className="text-2xs text-surface-400">— personnalisée pour chaque candidat</span>
@@ -581,7 +581,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
 
           <div className="flex justify-end gap-3 pt-1">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button type="submit" isLoading={saving} icon={<UserPlus className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">Ajouter</Button>
+            <Button type="submit" isLoading={saving} icon={<UserPlus className="h-4 w-4" />} className="">Ajouter</Button>
           </div>
         </form>
       </Modal>

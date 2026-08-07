@@ -9,6 +9,7 @@ import {
 import { Button, Modal, Input, useToast, RowMenu, SearchSelect } from '@/components/ui'
 import { addPoeiInterventionAction, updatePoeiInterventionAction, removePoeiInterventionAction } from '../actions'
 import { cn, formatDate } from '@/lib/utils'
+import { PoeiSection } from './PoeiSection'
 
 interface Intervention {
   id: string
@@ -35,9 +36,9 @@ interface Props {
 }
 
 const MISSION_META: Record<string, { label: string; cls: string; Icon: any }> = {
-  pending: { label: 'En attente de réponse', cls: 'bg-amber-50 text-amber-700', Icon: Clock },
-  accepted: { label: 'Acceptée', cls: 'bg-emerald-50 text-emerald-700', Icon: CheckCircle2 },
-  refused: { label: 'Refusée', cls: 'bg-rose-50 text-rose-700', Icon: XCircle },
+  pending: { label: 'En attente de réponse', cls: 'bg-warning-50 text-warning-700', Icon: Clock },
+  accepted: { label: 'Acceptée', cls: 'bg-success-50 text-success-700', Icon: CheckCircle2 },
+  refused: { label: 'Refusée', cls: 'bg-danger-50 text-danger-700', Icon: XCircle },
   not_required: { label: 'Formateur à affecter', cls: 'bg-surface-100 text-surface-500', Icon: AlertCircle },
 }
 
@@ -154,34 +155,29 @@ export function PoeiInterventions({ poeiId, interventions, formateurs, dureeTota
   }
 
   return (
-    <div className="card overflow-hidden">
-      <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <UserCog className="h-4 w-4 text-sky-500" />
-          <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">
-            Formateurs & interventions ({interventions.length})
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
+    <PoeiSection
+      icone={UserCog}
+      titre={`Formateurs & interventions (${interventions.length})`}
+      sous="Découpez le parcours en périodes et affectez un formateur à chacune."
+      actions={
+        <>
           {dureeTotale != null && (
             <span className={cn(
               'text-xs font-medium px-2 py-1 rounded-lg',
-              reste === 0 ? 'bg-emerald-50 text-emerald-700'
-                : reste! < 0 ? 'bg-rose-50 text-rose-700'
-                : 'bg-amber-50 text-amber-700',
+              reste === 0 ? 'bg-success-50 text-success-700'
+                : reste! < 0 ? 'bg-danger-50 text-danger-700'
+                : 'bg-warning-50 text-warning-700',
             )}>
               {heuresAffectees}h / {dureeTotale}h affectées
               {reste! > 0 && ` · ${reste}h à couvrir`}
               {reste! < 0 && ` · ${Math.abs(reste!)}h en trop`}
             </span>
           )}
-          <button onClick={() => setAddOpen(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700">
-            <Plus className="h-3.5 w-3.5" /> Ajouter
-          </button>
-        </div>
-      </div>
-
+          <Button size="sm" onClick={() => setAddOpen(true)} icon={<Plus className="h-4 w-4" />}>Ajouter</Button>
+        </>
+      }
+    >
+      <div className="card overflow-hidden">
       {interventions.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-surface-400">
           Aucune intervention. Découpez le parcours en périodes et affectez un formateur à chacune
@@ -223,7 +219,7 @@ export function PoeiInterventions({ poeiId, interventions, formateurs, dureeTota
                 {contrat && (
                   <span className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0',
-                    signe ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700',
+                    signe ? 'bg-success-50 text-success-700' : 'bg-blue-50 text-blue-700',
                   )}>
                     <CheckCircle2 className="h-3 w-3" /> Contrat {signe ? 'signé' : 'envoyé'}
                   </span>
@@ -245,6 +241,7 @@ export function PoeiInterventions({ poeiId, interventions, formateurs, dureeTota
           })}
         </div>
       )}
+      </div>
 
       <Modal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Ajouter une intervention" size="md">
         <InterventionForm poeiId={poeiId} formateurs={formateurs} onDone={() => { setAddOpen(false); router.refresh() }} />
@@ -252,6 +249,6 @@ export function PoeiInterventions({ poeiId, interventions, formateurs, dureeTota
       <Modal isOpen={!!editIv} onClose={() => setEditIv(null)} title="Modifier l'intervention" size="md">
         {editIv && <InterventionForm poeiId={poeiId} intervention={editIv} formateurs={formateurs} onDone={() => { setEditIv(null); router.refresh() }} />}
       </Modal>
-    </div>
+    </PoeiSection>
   )
 }

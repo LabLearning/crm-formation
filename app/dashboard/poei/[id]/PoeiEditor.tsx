@@ -97,7 +97,7 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finance
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">Enregistrer</Button>
+        <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />} >Enregistrer</Button>
       </div>
     </form>
   )

@@ -43,16 +43,16 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-surface-100 text-left text-xs text-surface-400">
-                <th className="px-4 py-3 font-medium">Candidat</th>
-                {semaines.map((s) => <th key={s} className="px-3 py-3 font-medium text-center whitespace-nowrap">S{s}</th>)}
-                <th className="px-4 py-3 font-medium text-center">Évaluation finale</th>
+              <tr className="border-b border-surface-200 bg-surface-50/60 text-left">
+                <th className="px-4 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider">Candidat</th>
+                {semaines.map((s) => <th key={s} className="px-3 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider text-center whitespace-nowrap">S{s}</th>)}
+                <th className="px-4 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider text-center">Évaluation finale</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-surface-100">
               {candidats.map((c) => {
                 if (!c.apprenant_id) return (
-                  <tr key={c.id} className="border-b border-surface-50">
+                  <tr key={c.id}>
                     <td className="px-4 py-3 text-surface-800">{c.nom}</td>
                     <td colSpan={semaines.length + 1} className="px-4 py-3 text-xs text-surface-400">Candidat non rattaché à une fiche apprenant</td>
                   </tr>
@@ -60,7 +60,7 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                 const aid = c.apprenant_id
                 const fin = gridOf(aid, null)
                 return (
-                  <tr key={c.id} className="border-b border-surface-50 hover:bg-surface-50/40">
+                  <tr key={c.id} className="hover:bg-surface-50/60 transition-colors">
                     <td className="px-4 py-2 font-medium text-surface-800">{c.nom}</td>
                     {semaines.map((s) => {
                       const g = gridOf(aid, s)
@@ -69,7 +69,7 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                         <td key={s} className="px-3 py-2 text-center">
                           {g ? (
                             <button onClick={() => setOpen({ apprenantId: aid, nom: c.nom, semaine: s })}
-                              className={`inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-2xs transition-colors ${g.statut === 'validee' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}>
+                              className={`inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-2xs transition-colors ${g.statut === 'validee' ? 'bg-success-50 text-success-700 hover:bg-emerald-100' : 'bg-warning-50 text-warning-700 hover:bg-amber-100'}`}>
                               {g.statut === 'validee' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                               {p && <span className="tabular-nums">{p.pctAcquis}%</span>}
                             </button>
@@ -82,13 +82,13 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                     <td className="px-4 py-2">
                       <div className="flex items-center justify-end gap-2">
                         {fin?.avis_final && (
-                          <span className={`hidden sm:inline text-2xs font-medium ${fin.avis_final.includes('DÉFAVORABLE') ? 'text-danger-600' : fin.avis_final.includes('RÉSERVES') ? 'text-amber-600' : 'text-emerald-700'}`}>
+                          <span className={`hidden sm:inline text-2xs font-medium ${fin.avis_final.includes('DÉFAVORABLE') ? 'text-danger-600' : fin.avis_final.includes('RÉSERVES') ? 'text-warning-600' : 'text-success-700'}`}>
                             {fin.avis_final.replace('AVIS ', '')}
                           </span>
                         )}
                         {fin ? (
                           <button onClick={() => setOpen({ apprenantId: aid, nom: c.nom, semaine: null })}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${fin.statut === 'validee' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}>
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${fin.statut === 'validee' ? 'bg-success-50 text-success-700 hover:bg-emerald-100' : 'bg-warning-50 text-warning-700 hover:bg-amber-100'}`}>
                             {fin.statut === 'validee' ? <><CheckCircle2 className="h-3.5 w-3.5" /> Validée</> : <><Clock className="h-3.5 w-3.5" /> Brouillon</>}
                           </button>
                         ) : (

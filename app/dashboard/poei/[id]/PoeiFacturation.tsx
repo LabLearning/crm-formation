@@ -18,9 +18,9 @@ const FACT_STATUS: Record<string, { label: string; cls: string }> = {
   brouillon: { label: 'Brouillon', cls: 'bg-surface-100 text-surface-600' },
   emise: { label: 'Émise', cls: 'bg-blue-100 text-blue-700' },
   envoyee: { label: 'Envoyée', cls: 'bg-indigo-100 text-indigo-700' },
-  payee_partiellement: { label: 'Payée en partie', cls: 'bg-amber-100 text-amber-700' },
-  payee: { label: 'Payée', cls: 'bg-emerald-100 text-emerald-700' },
-  en_retard: { label: 'En retard', cls: 'bg-rose-100 text-rose-700' },
+  payee_partiellement: { label: 'Payée en partie', cls: 'bg-amber-100 text-warning-700' },
+  payee: { label: 'Payée', cls: 'bg-emerald-100 text-success-700' },
+  en_retard: { label: 'En retard', cls: 'bg-rose-100 text-danger-700' },
   annulee: { label: 'Annulée', cls: 'bg-surface-100 text-surface-400' },
 }
 
@@ -50,7 +50,7 @@ function EngagementCandidat({ candidatId, valeur, verrouille }: { candidatId: st
       disabled={verrouille || busy}
       placeholder="N° engagement"
       title={verrouille ? 'Facture déjà émise : numéro figé' : 'N° d’engagement France Travail de ce candidat'}
-      className={`input-base !py-1 !px-2 text-xs font-mono w-36 ${!v ? 'border-amber-300 bg-amber-50/40' : ''} disabled:opacity-60`}
+      className={`input-base !py-1 !px-2 text-xs font-mono w-36 ${!v ? 'border-amber-300 bg-warning-50/40' : ''} disabled:opacity-60`}
     />
   )
 }
