@@ -643,12 +643,6 @@ export async function generateFacturesPerCandidatPoeiAction(
   const today = new Date().toISOString().slice(0, 10)
   const echeance = new Date(); echeance.setDate(echeance.getDate() + 30)
 
-  // Numéro de départ (max des factures de l'année + 1)
-  const { data: nums } = await supabase.from('factures').select('numero')
-    .eq('organization_id', orgId).like('numero', `FAC-${new Date().getFullYear()}-%`)
-  let maxNum = 0
-  for (const r of nums || []) { const m = String(r.numero || '').match(/(\d+)$/); if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10)) }
-
   const applyLigneEtTotaux = async (factureId: string, nom: string) => {
     await supabase.from('facture_lignes').delete().eq('facture_id', factureId)
     await supabase.from('facture_lignes').insert({
@@ -676,9 +670,10 @@ export async function generateFacturesPerCandidatPoeiAction(
       updated++
       continue
     }
-    const numero = `FAC-${new Date().getFullYear()}-${String(++maxNum).padStart(3, '0')}`
+    // Numéro laissé au trigger : une seule série FA-<année>-<4 chiffres>,
+    // continue avec celle reprise de Dendreo (cf. migration 117).
     const { data: fac, error } = await supabase.from('factures').insert({
-      organization_id: orgId, numero, type: 'facture', client_id: poei.client_id,
+      organization_id: orgId, type: 'facture', client_id: poei.client_id,
       session_id: poei.session_id || null,
       objet: `POEI — ${nom} — ${formationNom}`,
       status: 'brouillon', date_emission: today, date_echeance: echeance.toISOString().slice(0, 10),
