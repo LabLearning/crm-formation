@@ -27,6 +27,8 @@ ALTER TABLE organizations
   ADD COLUMN IF NOT EXISTS affacturage_compte  text,
   ADD COLUMN IF NOT EXISTS affacturage_mention text;
 
+-- Valeurs de depart reprises des factures Dendreo ; elles restent modifiables
+-- dans Parametres > Affacturage.
 UPDATE organizations SET
   affacturage_actif   = true,
   affacturage_societe = COALESCE(affacturage_societe, 'Bibby Factor'),

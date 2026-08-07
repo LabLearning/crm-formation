@@ -30,6 +30,12 @@ interface ExtendedOrganization extends Organization {
   banque_iban?: string | null
   banque_bic?: string | null
   banque_titulaire?: string | null
+  affacturage_actif?: boolean | null
+  affacturage_societe?: string | null
+  affacturage_compte?: string | null
+  affacturage_iban?: string | null
+  affacturage_bic?: string | null
+  affacturage_mention?: string | null
   email_contact?: string | null
   telephone_contact?: string | null
   referent_handicap_nom?: string | null
@@ -422,6 +428,47 @@ export function SettingsForm({ organization, canEdit }: SettingsFormProps) {
           <Input id="banque_titulaire" name="banque_titulaire" label="Titulaire du compte" defaultValue={organization.banque_titulaire || ''} disabled={!canEdit} />
           <Input id="banque_iban" name="banque_iban" label="IBAN" placeholder="FR76 1234 5678 9012 3456 7890 123" defaultValue={organization.banque_iban || ''} disabled={!canEdit} />
           <Input id="banque_bic" name="banque_bic" label="BIC / SWIFT" defaultValue={organization.banque_bic || ''} disabled={!canEdit} />
+        </div>
+      </section>
+
+      {/* Affacturage */}
+      <section className="card p-6">
+        <SectionHeader
+          icon={Landmark}
+          title="Affacturage"
+          subtitle="Quand les créances sont cédées à un factor, c'est SON compte qui doit figurer sur les factures — pas celui de l'organisme"
+        />
+        <label className="flex items-center gap-2 mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            name="affacturage_actif"
+            defaultChecked={!!organization.affacturage_actif}
+            disabled={!canEdit}
+            className="h-4 w-4 rounded border-surface-300 text-brand-600"
+          />
+          <span className="text-sm text-surface-700">
+            Les factures sont cédées à un factor : imprimer ses coordonnées et la clause de subrogation
+          </span>
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input id="affacturage_societe" name="affacturage_societe" label="Société d'affacturage" placeholder="Bibby Factor" defaultValue={organization.affacturage_societe || ''} disabled={!canEdit} />
+          <Input id="affacturage_compte" name="affacturage_compte" label="Compte (libellé imprimé)" placeholder="LCL N° 30002 01958 0000062140E 87" defaultValue={organization.affacturage_compte || ''} disabled={!canEdit} />
+          <Input id="affacturage_iban" name="affacturage_iban" label="IBAN du factor" placeholder="FR77 3000 2019 5800 0006 2140 E87" defaultValue={organization.affacturage_iban || ''} disabled={!canEdit} />
+          <Input id="affacturage_bic" name="affacturage_bic" label="BIC / SWIFT du factor" placeholder="CRLYFRPP" defaultValue={organization.affacturage_bic || ''} disabled={!canEdit} />
+        </div>
+        <div className="mt-4">
+          <label htmlFor="affacturage_mention" className="block text-sm font-medium text-surface-700 mb-1.5">
+            Clause imprimée sur la facture
+          </label>
+          <textarea
+            id="affacturage_mention"
+            name="affacturage_mention"
+            rows={3}
+            disabled={!canEdit}
+            defaultValue={organization.affacturage_mention || ''}
+            placeholder="Laissez vide pour la clause type : « Pour être libératoire, votre règlement doit être effectué directement à l'ordre de … »"
+            className="input-base w-full text-sm"
+          />
         </div>
       </section>
 
