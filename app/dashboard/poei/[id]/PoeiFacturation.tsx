@@ -162,7 +162,7 @@ export function PoeiFacturation({
       {/* Numéro d'engagement France Travail — figure sur chaque facture */}
       <div className="rounded-xl bg-surface-50 border border-surface-200/70 p-3 flex items-center gap-3 flex-wrap">
         <FileText className="h-4 w-4 text-surface-500 shrink-0" />
-        <span className="text-sm text-surface-700">N° d’engagement France Travail :</span>
+        <span className="text-sm text-surface-700">N° d’engagement France Travail <span className="text-surface-400">(un seul pour tout le dossier)</span> :</span>
         <input
           value={engagement}
           onChange={(e) => setEngagement(e.target.value)}
