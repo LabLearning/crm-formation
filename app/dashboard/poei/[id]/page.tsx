@@ -187,6 +187,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         agences={(agencesFt || []) as any[]}
         signatures={sigMap}
         currentAgenceId={(p as any).agence_ft_id || null}
+        numeroEngagement={(p as any).numero_engagement || null}
       />
 
       <PoeiEmailHistory logs={(emailLogs || []) as any[]} />

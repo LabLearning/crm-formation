@@ -32,7 +32,16 @@ const PAIEMENT_LABELS: Record<string, string> = {
   autre: 'Autre',
 }
 
-export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: any; agence?: any }) {
+export interface DetailAction { label: string; valeur: string }
+
+export function FacturePDF({ facture, org, agence, detail }: {
+  facture: Facture
+  org?: any
+  agence?: any
+  /** Type, référence, participant, dates, durée, lieu, n° d'engagement… */
+  detail?: DetailAction[]
+}) {
+  const affacture = !!org?.affacturage_actif && !!org?.affacturage_societe
   const clientName = facture.client?.raison_sociale
     || (facture.client?.nom ? `${facture.client.prenom || ''} ${facture.client.nom}`.trim() : '—')
   const client: any = facture.client || {}
@@ -111,6 +120,19 @@ export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: a
           <View style={{ ...shared.infoBox, marginBottom: 16 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 2 }}>Objet</Text>
             <Text style={shared.infoBoxText}>{facture.objet}</Text>
+          </View>
+        )}
+
+        {/* Détail de l'action de formation — attendu par les financeurs
+            (France Travail, OPCO) pour rapprocher la facture du dossier. */}
+        {detail && detail.length > 0 && (
+          <View style={{ marginBottom: 16 }}>
+            {detail.map((d) => (
+              <View key={d.label} style={{ flexDirection: 'row', marginBottom: 2 }}>
+                <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, width: 92 }}>{d.label} :</Text>
+                <Text style={{ fontSize: 8, color: '#57534e', flex: 1 }}>{d.valeur}</Text>
+              </View>
+            ))}
           </View>
         )}
 
@@ -227,8 +249,24 @@ export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: a
           </View>
         )}
 
-        {/* Coordonnées bancaires (paiement par virement) */}
-        {iban && (
+        {/* Facture cédée à un factor : le règlement lui est adressé, pas à
+            l'organisme. Imprimer notre IBAN ici ferait payer le mauvais compte. */}
+        {affacture ? (
+          <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
+            <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>
+              Cession de créance — règlement à {org?.affacturage_societe}
+            </Text>
+            <Text style={{ fontSize: 7.5, color: '#57534e', lineHeight: 1.5 }}>
+              {org?.affacturage_mention
+                || `Pour être libératoire, votre règlement doit être effectué directement à l'ordre de ${org?.affacturage_societe}${org?.affacturage_compte ? `, sur le compte : ${org.affacturage_compte}` : ''} qui le reçoit par subrogation dans le cadre d'un contrat d'affacturage. ${org?.affacturage_societe} devra être avisé de toute demande de renseignement ou réclamation.`}
+            </Text>
+            {org?.affacturage_iban && (
+              <Text style={{ fontSize: 7.5, color: '#57534e', marginTop: 3 }}>
+                IBAN : {org.affacturage_iban}{org?.affacturage_bic ? `   Swift : ${org.affacturage_bic}` : ''}
+              </Text>
+            )}
+          </View>
+        ) : iban ? (
           <View wrap={false} style={shared.section}>
             <PdfSectionTitle>Règlement par virement</PdfSectionTitle>
             <View style={shared.row}><Text style={shared.label}>Bénéficiaire</Text><Text style={shared.value}>{titulaire}</Text></View>
@@ -237,7 +275,7 @@ export function FacturePDF({ facture, org, agence }: { facture: Facture; org?: a
             {bic && <View style={shared.row}><Text style={shared.label}>BIC</Text><Text style={shared.value}>{bic}</Text></View>}
             <Text style={{ fontSize: 7, color: '#78716c', marginTop: 4 }}>Merci d'indiquer le numéro de facture {facture.numero} en référence du virement.</Text>
           </View>
-        )}
+        ) : null}
 
         {/* Mentions légales (art. L441-9, L441-10, D441-5) */}
         <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
