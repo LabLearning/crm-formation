@@ -1,0 +1,82 @@
+'use client'
+
+import { useState } from 'react'
+import { FolderCheck, Users, CalendarRange, ClipboardCheck, Receipt, Mails } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type Onglet = 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'cloture' | 'mails'
+
+/**
+ * Fiche d'un dossier POEI organisée en parcours plutôt qu'en empilement.
+ * Les blocs sont rendus côté serveur et passés en emplacements : la coquille
+ * ne fait que choisir lequel afficher.
+ */
+export function PoeiShell({
+  nbCandidats, nbInterventions, nbMails, alertes,
+  dossier, candidats, interventions, evaluations, cloture, mails,
+}: {
+  nbCandidats: number
+  nbInterventions: number
+  nbMails: number
+  /** Nombre de points à compléter par onglet, affichés en pastille rouge. */
+  alertes?: Partial<Record<Onglet, number>>
+  dossier: React.ReactNode
+  candidats: React.ReactNode
+  interventions: React.ReactNode
+  evaluations: React.ReactNode
+  cloture: React.ReactNode
+  mails: React.ReactNode
+}) {
+  const [onglet, setOnglet] = useState<Onglet>('dossier')
+
+  const ONGLETS: { id: Onglet; label: string; icon: React.ElementType; n?: number }[] = [
+    { id: 'dossier', label: 'Dossier', icon: FolderCheck },
+    { id: 'candidats', label: 'Candidats', icon: Users, n: nbCandidats },
+    { id: 'interventions', label: 'Interventions', icon: CalendarRange, n: nbInterventions },
+    { id: 'evaluations', label: 'Évaluations', icon: ClipboardCheck },
+    { id: 'cloture', label: 'Facturation & clôture', icon: Receipt },
+    { id: 'mails', label: 'Mails', icon: Mails, n: nbMails },
+  ]
+
+  const contenu: Record<Onglet, React.ReactNode> = {
+    dossier, candidats, interventions, evaluations, cloture, mails,
+  }
+
+  return (
+    <>
+      <div className="border-b border-surface-200 mb-5 -mx-1 px-1 overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
+          {ONGLETS.map((o) => {
+            const Icone = o.icon
+            const alerte = alertes?.[o.id] || 0
+            return (
+              <button
+                key={o.id}
+                onClick={() => setOnglet(o.id)}
+                className={cn(
+                  'inline-flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
+                  onglet === o.id
+                    ? 'border-surface-900 text-surface-900'
+                    : 'border-transparent text-surface-500 hover:text-surface-800',
+                )}
+              >
+                <Icone className="h-4 w-4" />
+                {o.label}
+                {typeof o.n === 'number' && o.n > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-full bg-surface-100 text-surface-600 text-[11px] font-semibold">
+                    {o.n}
+                  </span>
+                )}
+                {alerte > 0 && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-danger-500" aria-label={`${alerte} point(s) à compléter`} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-5">{contenu[onglet]}</div>
+    </>
+  )
+}

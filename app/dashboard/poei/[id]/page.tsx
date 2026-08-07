@@ -13,6 +13,7 @@ import { PoeiFacturation } from './PoeiFacturation'
 import { PoeiEvaluations } from './PoeiEvaluations'
 import { PoeiEmailHistory } from './PoeiEmailHistory'
 import { PoeiInterventions } from './PoeiInterventions'
+import { PoeiShell } from './PoeiShell'
 import type { Poei, PoeiCandidat } from '@/lib/types/poei'
 
 export const dynamic = 'force-dynamic'
@@ -155,12 +156,16 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     if (key && !emailStatus[key]) emailStatus[key] = { status: log.status, date: log.sent_at || log.created_at }
   }
 
+  const montantTotal = (Number(p.duree_heures) || 0) * (Number(p.montant_horaire) || 0)
+  const nbFactures = Object.keys(facturesByCandidat).length
+  const nbSignes = Object.values(sigMap).filter((s) => s.signed_at).length
+
   return (
-    <div className="space-y-5 animate-fade-in max-w-4xl">
+    <div className="space-y-5 animate-fade-in max-w-5xl">
       <div>
         <BackLink fallbackHref="/dashboard/poei" label="Retour aux POEI" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-800 mb-3" />
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
             <h1 className="text-2xl font-heading font-bold text-surface-900 inline-flex items-center gap-2">
               <Building2 className="h-5 w-5 text-sky-500" />
               {p.client_id ? (
@@ -172,12 +177,29 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
             <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-surface-500">
               <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs font-semibold">POEI</span>
               <span className="font-mono">{p.numero}</span>
-              <Badge variant={POEI_STATUS_COLORS[p.statut]} dot>{POEI_STATUS_LABELS[p.statut]}</Badge>
+              <Badge variant={POEI_STATUS_COLORS[statutCalcule]} dot>{POEI_STATUS_LABELS[statutCalcule]}</Badge>
               {p.formation?.intitule && <span className="inline-flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> {p.formation.intitule}</span>}
               {p.date_debut && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {formatDate(p.date_debut, { day: '2-digit', month: 'short' })}{p.date_fin ? ' → ' + formatDate(p.date_fin, { day: '2-digit', month: 'short', year: 'numeric' }) : ''}</span>}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Chiffres clés du dossier, visibles quel que soit l'onglet */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Candidats', valeur: candidats.length, alerte: candidats.length === 0 },
+          { label: 'Durée', valeur: p.duree_heures ? `${p.duree_heures} h` : '—', alerte: !p.duree_heures },
+          { label: 'Taux horaire', valeur: p.montant_horaire ? `${Number(p.montant_horaire).toLocaleString('fr-FR')} €` : '—', alerte: !p.montant_horaire },
+          { label: 'Montant par candidat', valeur: montantTotal ? `${montantTotal.toLocaleString('fr-FR')} €` : '—' },
+          { label: 'Factures', valeur: `${nbFactures}/${candidats.length}` },
+          { label: 'Certificats signés', valeur: `${nbSignes}/${candidats.length}` },
+        ].map((k) => (
+          <div key={k.label} className="card p-3.5">
+            <div className="text-[11px] text-surface-500">{k.label}</div>
+            <div className={`text-lg font-heading font-bold ${k.alerte ? 'text-danger-600' : 'text-surface-900'}`}>{k.valeur}</div>
+          </div>
+        ))}
       </div>
 
       <PoeiStatusBar
@@ -187,38 +209,50 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         blocages={blocages}
       />
 
-      <PoeiInterventions
-        poeiId={p.id}
-        interventions={((interventions || []) as any[]).map((iv) => ({
-          ...iv,
-          contrat: Array.isArray(iv.contrat) ? iv.contrat[0] || null : iv.contrat || null,
-        }))}
-        formateurs={(formateursList || []) as any[]}
-        dureeTotale={p.duree_heures}
+      <PoeiShell
+        nbCandidats={candidats.length}
+        nbInterventions={(interventions || []).length}
+        nbMails={(emailLogs || []).length}
+        alertes={{
+          candidats: candidats.length === 0 ? 1 : 0,
+          cloture: formationTerminee && nbFactures < candidats.length ? 1 : 0,
+        }}
+        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} />}
+        candidats={
+          <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
+        }
+        interventions={
+          <PoeiInterventions
+            poeiId={p.id}
+            interventions={((interventions || []) as any[]).map((iv) => ({
+              ...iv,
+              contrat: Array.isArray(iv.contrat) ? iv.contrat[0] || null : iv.contrat || null,
+            }))}
+            formateurs={(formateursList || []) as any[]}
+            dureeTotale={p.duree_heures}
+          />
+        }
+        evaluations={
+          <PoeiEvaluations
+            poeiId={p.id}
+            candidats={candidats.map((c: any) => ({ id: c.id, apprenant_id: c.apprenant?.id || c.apprenant_id || null, nom: `${c.apprenant?.prenom || c.prenom || ''} ${c.apprenant?.nom || c.nom || ''}`.trim() || 'Candidat' }))}
+            grilles={(grilles || []) as any[]}
+          />
+        }
+        cloture={
+          <PoeiFacturation
+            poeiId={p.id}
+            sessionId={(p as any).session?.id || null}
+            sessionTerminee={formationTerminee}
+            candidats={candidats as any[]}
+            facturesByCandidat={facturesByCandidat}
+            agences={(agencesFt || []) as any[]}
+            signatures={sigMap}
+            currentAgenceId={(p as any).agence_ft_id || null}
+          />
+        }
+        mails={<PoeiEmailHistory logs={(emailLogs || []) as any[]} />}
       />
-
-      <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
-
-      <PoeiEvaluations
-        poeiId={p.id}
-        candidats={candidats.map((c: any) => ({ id: c.id, apprenant_id: c.apprenant?.id || c.apprenant_id || null, nom: `${c.apprenant?.prenom || c.prenom || ''} ${c.apprenant?.nom || c.nom || ''}`.trim() || 'Candidat' }))}
-        grilles={(grilles || []) as any[]}
-      />
-
-      <PoeiFacturation
-        poeiId={p.id}
-        sessionId={(p as any).session?.id || null}
-        sessionTerminee={formationTerminee}
-        candidats={candidats as any[]}
-        facturesByCandidat={facturesByCandidat}
-        agences={(agencesFt || []) as any[]}
-        signatures={sigMap}
-        currentAgenceId={(p as any).agence_ft_id || null}
-      />
-
-      <PoeiEmailHistory logs={(emailLogs || []) as any[]} />
-
-      <PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} />
     </div>
   )
 }
