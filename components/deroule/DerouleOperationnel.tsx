@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle2, Circle, MinusCircle, ChevronDown, AlertTriangle, Wrench } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
-import { ETAPES, TRACABILITE, POSTURE, DPO_TITRE, DPO_VERSION, etatDeroule } from '@/lib/dpo'
+import { ETAPES, SOCLE, TRACABILITE, POSTURE, DPO_TITRE, DPO_VERSION, etatDeroule } from '@/lib/dpo'
 import { validerEtapeDerouleAction } from '@/app/dashboard/sessions/[id]/deroule-actions'
 
 interface Validation { etape_cle: string; statut: string; commentaire?: string | null; validated_at?: string | null }
@@ -14,13 +14,19 @@ interface Validation { etape_cle: string; statut: string; commentaire?: string |
  * Déroulé opérationnel d'une session : les 7 étapes de la méthode terrain,
  * validées une par une par le formateur. Ce qui manque est signalé en rouge.
  */
+export interface EtatSocle { cle: string; fait: boolean; detail: string }
+
 export function DerouleOperationnel({
-  sessionId, validations, canValidate, tableManquante,
+  sessionId, validations, canValidate, tableManquante, socle = [], estHygiene = false,
 }: {
   sessionId: string
   validations: Validation[]
   canValidate: boolean
   tableManquante?: boolean
+  /** État calculé des 4 jalons communs à toutes les sessions. */
+  socle?: EtatSocle[]
+  /** Le déroulé terrain ne s'affiche que pour les formations hygiène. */
+  estHygiene?: boolean
 }) {
   const router = useRouter()
   const { toast } = useToast()
@@ -39,8 +45,51 @@ export function DerouleOperationnel({
     router.refresh()
   }
 
+  const socleParCle = new Map(socle.map((s) => [s.cle, s]))
+  const socleManquants = SOCLE.filter((j) => !socleParCle.get(j.cle)?.fait)
+
   return (
     <div className="space-y-4">
+      {/* Socle commun — vaut pour toutes les sessions. L'état est calculé à
+          partir des questionnaires réellement remplis, pas déclaré. */}
+      <div className="card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-sm font-heading font-semibold text-surface-900">Parcours qualité de la session</h2>
+            <p className="text-xs text-surface-500 mt-0.5">
+              Les quatre jalons attendus sur toute formation, quel qu&apos;en soit le sujet
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <div className={cn('text-2xl font-heading font-bold', socleManquants.length === 0 ? 'text-success-600' : 'text-danger-600')}>
+              {SOCLE.length - socleManquants.length}/{SOCLE.length}
+            </div>
+            <div className="text-[11px] text-surface-500">jalons couverts</div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {SOCLE.map((j) => {
+            const e = socleParCle.get(j.cle)
+            return (
+              <div key={j.cle} className={cn('rounded-xl border p-3 flex items-start gap-3', e?.fait ? 'border-surface-200' : 'border-danger-200 bg-danger-50/30')}>
+                <span className="shrink-0 mt-0.5">
+                  {e?.fait ? <CheckCircle2 className="h-4.5 w-4.5 text-success-500" /> : <Circle className="h-4.5 w-4.5 text-danger-400" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className={cn('text-sm font-medium', e?.fait ? 'text-surface-800' : 'text-danger-700')}>{j.titre}</div>
+                  <div className="text-xs text-surface-500">{j.quand} · {j.description}</div>
+                  <div className="text-xs text-surface-400 mt-0.5">{e?.detail || j.ou}</div>
+                </div>
+                {!e?.fait && <span className="shrink-0 h-2 w-2 rounded-full bg-danger-500 mt-1.5" aria-label="Manquant" />}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {!estHygiene ? null : (
+      <>
       <div className="card p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -183,7 +232,7 @@ export function DerouleOperationnel({
         })}
       </div>
 
-      {/* Traçabilité attendue autour de l'intervention */}
+      {/* Traçabilité propre à l'intervention terrain */}
       <div className="card p-5">
         <h3 className="text-sm font-heading font-semibold text-surface-900 mb-3">Traçabilité et évaluations</h3>
         <div className="space-y-4">
@@ -202,6 +251,8 @@ export function DerouleOperationnel({
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

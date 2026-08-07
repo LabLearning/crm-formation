@@ -139,6 +139,32 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .maybeSingle()
   const rapport = rapportRes
 
+  // Socle qualité : état RÉEL des 4 jalons, calculé sur les questionnaires
+  // rattachés et les réponses effectivement complétées.
+  const { SOCLE, estFormationHygiene } = await import('@/lib/dpo')
+  const typeParJalon: Record<string, string[]> = {
+    positionnement: ['positionnement', 'entree'],
+    evaluation_acquis: ['sortie', 'evaluation'],
+    satisfaction_chaud: ['satisfaction_chaud'],
+    satisfaction_froid: ['satisfaction_froid'],
+  }
+  const socleEtat = SOCLE.map((j) => {
+    const types = typeParJalon[j.cle] || []
+    const qs = (qcmSessions || []).filter((q: any) => types.includes(q.qcm?.type))
+    if (qs.length === 0) return { cle: j.cle, fait: false, detail: 'Aucun questionnaire rattaché à la session' }
+    const ids = qs.map((q: any) => q.qcm_id)
+    const repondu = (qcmReponses || []).filter((r: any) => ids.includes(r.qcm_id) && r.is_complete).length
+    const attendus = (inscriptions || []).length
+    return {
+      cle: j.cle,
+      fait: repondu > 0,
+      detail: repondu > 0
+        ? `${repondu} réponse${repondu > 1 ? 's' : ''} complétée${repondu > 1 ? 's' : ''}${attendus ? ` sur ${attendus} inscrit${attendus > 1 ? 's' : ''}` : ''}`
+        : 'Questionnaire rattaché mais aucune réponse complétée',
+    }
+  })
+  const estHygiene = estFormationHygiene((sessionData as any).formation?.intitule || (sessionData as any).intitule)
+
   // Déroulé opérationnel : validations des 7 étapes (migration 119)
   const derouleRes = await supabase
     .from('session_deroule_etapes')
@@ -234,6 +260,8 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         nbEvalAcquis={nbEvalAcquis}
         derouleValidations={derouleValidations}
         derouleTableManquante={derouleTableManquante}
+        socleEtat={socleEtat}
+        estHygiene={estHygiene}
       />
     </div>
   )

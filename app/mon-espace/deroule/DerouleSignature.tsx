@@ -44,6 +44,11 @@ export function DerouleSignature({
         </h1>
         <p className="text-surface-500 mt-1 text-sm">{DPO_TITRE}</p>
         <p className="text-surface-400 mt-0.5 text-xs">Audit → Actions → Formation → Audit de sortie · version {DPO_VERSION}</p>
+        <p className="text-surface-500 mt-3 text-sm rounded-xl bg-surface-50 border border-surface-200/70 p-3">
+          Ce déroulé est propre aux <strong className="text-surface-700">formations hygiène (HACCP / PMS)</strong>. Sur toute
+          session, quel qu&apos;en soit le sujet, s&apos;ajoutent les quatre jalons du parcours qualité : positionnement,
+          évaluation des acquis, satisfaction à chaud puis à froid à trois mois.
+        </p>
       </div>
 
       {signature ? (

@@ -1,17 +1,72 @@
 /**
- * Déroulé Pédagogique Opérationnel (DPO) — Hygiène alimentaire & prévention
- * des risques, méthodes HACCP & PMS.
+ * Déroulé opérationnel des sessions.
  *
- * Méthode d'intervention terrain de Lab Learning : Audit → Actions →
- * Formation → Audit de sortie. Chaque formateur s'engage sur ce déroulé en le
- * signant, et valide ses étapes session par session.
+ * Deux niveaux, à ne pas confondre :
  *
- * La version est utilisée pour les signatures : si le déroulé évolue, les
- * formateurs doivent re-signer la nouvelle version.
+ *   1. LE SOCLE COMMUN — s'applique à TOUTE session, quelle que soit la
+ *      formation : positionnement en amont, évaluation des acquis en fin de
+ *      parcours, satisfaction à chaud, puis à froid à trois mois. Ces quatre
+ *      jalons sont déjà tracés dans le CRM : leur état est CALCULÉ à partir des
+ *      questionnaires réellement remplis, pas déclaré par le formateur.
+ *
+ *   2. LE DÉROULÉ TERRAIN HYGIÈNE — propre aux formations hygiène / HACCP /
+ *      PMS. C'est la méthode d'intervention de Lab Learning : audit d'entrée →
+ *      actions → formation → audit de sortie. Le formateur s'y engage par
+ *      signature et valide ses étapes session par session.
+ *
+ * La version sert aux signatures : si la méthode évolue, les formateurs
+ * doivent re-signer.
  */
+import { themeOf } from '@/lib/branches'
 
 export const DPO_VERSION = '2026-08'
 export const DPO_TITRE = 'Hygiène alimentaire et prévention des risques — Méthodes HACCP & PMS'
+
+/** Le déroulé terrain ne concerne que les formations hygiène / HACCP / PMS. */
+export function estFormationHygiene(intitule?: string | null): boolean {
+  return themeOf(intitule || '') === 'hygiene'
+}
+
+// ── 1. Socle commun à toutes les sessions ───────────────────────────────────
+
+export interface JalonSocle {
+  cle: string
+  titre: string
+  quand: string
+  description: string
+  ou: string
+}
+
+export const SOCLE: JalonSocle[] = [
+  {
+    cle: 'positionnement',
+    titre: 'Questionnaire de positionnement',
+    quand: 'Avant la formation',
+    description: "Évalue le niveau initial de chaque participant et permet d'adapter la formation.",
+    ou: 'Onglet QCM de la session',
+  },
+  {
+    cle: 'evaluation_acquis',
+    titre: "Questionnaire d'évaluation des acquis",
+    quand: 'À la fin de la formation',
+    description: 'Mesure ce que chaque participant a réellement acquis.',
+    ou: 'Onglet QCM de la session',
+  },
+  {
+    cle: 'satisfaction_chaud',
+    titre: 'Questionnaire de satisfaction à chaud',
+    quand: 'À l\'issue de la formation',
+    description: "Recueille l'appréciation des participants immédiatement après la session.",
+    ou: 'Onglet Évaluations de la session',
+  },
+  {
+    cle: 'satisfaction_froid',
+    titre: 'Questionnaire de satisfaction à froid',
+    quand: 'Trois mois après la formation',
+    description: "Mesure l'impact durable de la formation sur les pratiques.",
+    ou: 'Envoi automatique à J+90',
+  },
+]
 
 export interface EtapeDpo {
   cle: string
@@ -39,6 +94,7 @@ export const PHILOSOPHIE = [
 export const POSTURE =
   "Le formateur n'est pas uniquement un « transmetteur de savoir », mais un acteur de la mise en conformité."
 
+/** Les 7 étapes du déroulé terrain — formations hygiène uniquement. */
 export const ETAPES: EtapeDpo[] = [
   {
     cle: 'audit_initial',
@@ -199,12 +255,14 @@ export const ETAPES: EtapeDpo[] = [
   },
 ]
 
-/** Traçabilité et évaluations attendues autour de l'intervention. */
+/**
+ * Traçabilité propre à l'intervention terrain (le socle commun est traité
+ * à part : voir SOCLE).
+ */
 export const TRACABILITE: { moment: string; items: { cle: string; label: string; outil: string }[] }[] = [
   {
     moment: "Avant l'intervention",
     items: [
-      { cle: 'positionnement', label: 'Test de positionnement des participants', outil: 'CRM — onglet QCM de la session' },
       { cle: 'recueil_besoin', label: 'Recueil du besoin de la session', outil: 'CRM — onglet Recueil du besoin' },
     ],
   },
@@ -213,13 +271,6 @@ export const TRACABILITE: { moment: string; items: { cle: string; label: string;
     items: [
       { cle: 'emargement', label: 'Émargement signé de chaque demi-journée', outil: 'CRM — onglet Émargement' },
       { cle: 'compte_rendu', label: 'Compte rendu de passage : constats initiaux, actions mises en place, documents créés ou mis à jour, modifications de pratiques observées', outil: 'CRM — onglet Rapport' },
-    ],
-  },
-  {
-    moment: "Après l'intervention",
-    items: [
-      { cle: 'evaluation_acquis', label: 'Évaluation finale des acquis', outil: 'CRM — onglet QCM' },
-      { cle: 'satisfaction', label: 'Questionnaire de satisfaction à chaud', outil: 'CRM — onglet Évaluations' },
     ],
   },
 ]

@@ -69,6 +69,8 @@ interface Props {
   nbEvalAcquis?: number
   derouleValidations?: any[]
   derouleTableManquante?: boolean
+  socleEtat?: any[]
+  estHygiene?: boolean
 }
 
 const QCM_TYPE_LABELS: Record<string, string> = {
@@ -96,11 +98,13 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
-  const derouleIncomplet = etatDeroule(derouleValidations).manquantes.length || 0
+  // Pastille de l'onglet : jalons du socle non couverts + étapes terrain manquantes
+  const socleManquants = socleEtat.filter((s: any) => !s.fait).length
+  const derouleIncomplet = socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
 
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
@@ -594,6 +598,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           validations={derouleValidations}
           canValidate
           tableManquante={derouleTableManquante}
+          socle={socleEtat}
+          estHygiene={estHygiene}
         />
       )}
 
