@@ -139,6 +139,14 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .maybeSingle()
   const rapport = rapportRes
 
+  // Déroulé opérationnel : validations des 7 étapes (migration 119)
+  const derouleRes = await supabase
+    .from('session_deroule_etapes')
+    .select('etape_cle, statut, commentaire, validated_at')
+    .eq('session_id', params.id)
+  const derouleValidations = (derouleRes.data as any[]) || []
+  const derouleTableManquante = !!derouleRes.error
+
   // Recueil du besoin (ind. 4) — modèles par thème + recueil de la session.
   // Résilient : les tables n'existent qu'après la migration 105.
   let recueilTemplates: any[] = []
@@ -224,6 +232,8 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         recueil={recueil as any}
         formationIntitule={(sessionData as any).formation?.intitule || ''}
         nbEvalAcquis={nbEvalAcquis}
+        derouleValidations={derouleValidations}
+        derouleTableManquante={derouleTableManquante}
       />
     </div>
   )

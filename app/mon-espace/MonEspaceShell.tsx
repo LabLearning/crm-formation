@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck, Calendar,
   ListChecks, Star, Users, CheckSquare, Receipt, UserPlus, Building2,
-  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro,
+  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro, Route,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -27,6 +27,7 @@ const apprenantNav: NavItem[] = [
 const formateurNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Mes sessions', short: 'Sessions', href: '/sessions', icon: Calendar },
+  { label: 'Déroulé opérationnel', short: 'Déroulé', href: '/deroule', icon: Route },
   { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
   { label: 'Émargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
   { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
