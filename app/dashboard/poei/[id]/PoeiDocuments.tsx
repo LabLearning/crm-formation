@@ -125,7 +125,7 @@ export function PoeiDocuments({
       action: formationTerminee && nb > 0
         ? { label: nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures', onClick: () => lancer('factures', () => generateFacturesPerCandidatPoeiAction(poeiId), 'Factures à jour') }
         : undefined,
-      zip: null,
+      zip: nbFactures > 0 ? `/api/pdf/poei-factures/${poeiId}` : null,
       lien: (c: CandidatDoc) => (c.facture ? { href: `/api/pdf/facture/${c.facture.id}`, texte: c.facture.numero || 'Facture' } : null),
     },
   ]

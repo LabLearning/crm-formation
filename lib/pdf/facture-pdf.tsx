@@ -102,6 +102,9 @@ export function FacturePDF({ facture, org, agence, detail }: {
                   <Text style={{ fontSize: 8, color: '#44403c' }}>{clientName}</Text>
                   {client.adresse && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.adresse}</Text>}
                   {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                  {/* SIRET de l'entreprise bénéficiaire : France Travail le
+                      demande pour rattacher la facture au bon employeur. */}
+                  {client.siret && <Text style={{ fontSize: 8, color: '#78716c' }}>SIRET : {client.siret}</Text>}
                 </View>
               </>
             ) : (

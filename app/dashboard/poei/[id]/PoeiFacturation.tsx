@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Receipt, FileText, Clock } from 'lucide-react'
+import { Receipt, FileText, Clock, Download } from 'lucide-react'
 import { PoeiSection } from './PoeiSection'
 import { Button, useToast, Modal, Input } from '@/components/ui'
 import { generateFacturesPerCandidatPoeiAction, setCandidatNumeroEngagementAction } from '../actions'
@@ -103,9 +103,17 @@ export function PoeiFacturation({
       titre="Facturation"
       sous="Une facture par candidat, adressée à France Travail."
       actions={sessionTerminee ? (
-        <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
-          {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
-        </Button>
+        <>
+          {nbFactures > 0 && (
+            <a href={`/api/pdf/poei-factures/${poeiId}`}
+              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
+              <Download className="h-4 w-4" /> Toutes les factures (ZIP)
+            </a>
+          )}
+          <Button onClick={generate} isLoading={gen} size="sm" icon={<Receipt className="h-4 w-4" />}>
+            {nbFactures > 0 ? 'Mettre à jour les factures' : 'Générer les factures'}
+          </Button>
+        </>
       ) : undefined}
     >
       <div className="card p-4 sm:p-5 space-y-4">
