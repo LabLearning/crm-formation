@@ -15,6 +15,8 @@ import { PoeiInterventions } from './PoeiInterventions'
 import { PoeiShell } from './PoeiShell'
 import { PoeiPilotage } from './PoeiPilotage'
 import { PoeiDocuments } from './PoeiDocuments'
+import { PoeiMails } from './PoeiMails'
+import type { CandidatMail } from './PoeiMails'
 import type { CandidatDoc } from './PoeiDocuments'
 import type { LigneCandidat, Etat } from './PoeiPilotage'
 import type { Poei, PoeiCandidat } from '@/lib/types/poei'
@@ -223,6 +225,20 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     }
   })
 
+  const candidatsMails: CandidatMail[] = candidats.map((c: any) => {
+    const aid = c.apprenant?.id || c.apprenant_id || null
+    const sig = aid ? sigMap[String(aid)] : undefined
+    return {
+      id: c.id,
+      nom: `${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || 'Candidat',
+      email: c.apprenant?.email || null,
+      apprenantId: aid,
+      attestationEnvoyeeLe: emailStatus[(c.apprenant?.email || '').toLowerCase()]?.date || null,
+      certificatEnvoyeLe: sig?.sent_at || null,
+      certificatSigneLe: sig?.signed_at || null,
+    }
+  })
+
   const montantTotal = (Number(p.duree_heures) || 0) * (Number(p.montant_horaire) || 0)
   // Vérité financière unique : les factures du dossier.
   const finances = {
@@ -326,7 +342,13 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
             currentAgenceId={(p as any).agence_ft_id || null}
           />
         }
-        mails={<PoeiEmailHistory logs={(emailLogs || []) as any[]} />}
+        mails={
+          <PoeiMails
+            poeiId={p.id}
+            candidats={candidatsMails}
+            historique={<PoeiEmailHistory logs={(emailLogs || []) as any[]} />}
+          />
+        }
       />
     </div>
   )

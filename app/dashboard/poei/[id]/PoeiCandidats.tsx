@@ -242,14 +242,6 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           <Badge variant="default" className="!bg-sky-100 !text-sky-700 !border-transparent">{candidats.length}</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <RowMenu
-            width={280}
-            trigger={<span className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">Envois groupés</span>}
-            items={[
-              { label: 'Mail groupé aux candidats', icon: <Mail className="h-4 w-4" />, onClick: openGroupMail, hidden: candidats.length === 0 },
-              { label: "Envoyer les attestations d'entrée à tous", icon: <Send className="h-4 w-4" />, onClick: () => openPreview(candidats), hidden: candidats.length === 0 },
-            ]}
-          />
           <Button onClick={() => { setErrors({}); setMode('new'); setOpen(true) }} size="sm" icon={<UserPlus className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">Ajouter</Button>
         </div>
       </div>
@@ -282,8 +274,6 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                 <RowMenu
                   width={260}
                   items={[
-                    { label: c.apprenant?.email ? "Envoyer l'attestation d'entrée" : 'Pas d\'email renseigné', icon: <Mail className="h-4 w-4" />,
-                      onClick: () => c.apprenant?.email ? openPreview([c]) : toast('error', 'Ce candidat n\'a pas d\'email — modifiez sa fiche d\'abord') },
                     { label: 'Modifier les informations', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditCand(c) },
                     { label: 'Retirer du projet', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleRemove(c.id), danger: true },
                   ]}
