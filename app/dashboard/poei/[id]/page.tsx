@@ -112,7 +112,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   // Factures POEI existantes → map candidat_id → facture (section Facturation)
   const { data: facturesPoei } = await supabase
     .from('factures')
-    .select('id, numero, status, montant_ttc, notes_internes')
+    .select('id, numero, status, montant_ttc, montant_paye, notes_internes')
     .eq('organization_id', session.organization.id)
     .ilike('notes_internes', `%[POEI-FACT:${params.id}:%`)
   const facturesByCandidat: Record<string, { id: string; numero: string | null; status: string; montant_ttc: number | null }> = {}
@@ -209,6 +209,12 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
   })
 
   const montantTotal = (Number(p.duree_heures) || 0) * (Number(p.montant_horaire) || 0)
+  // Vérité financière unique : les factures du dossier.
+  const finances = {
+    total: (facturesPoei || []).reduce((a: number, f: any) => a + Number(f.montant_ttc || 0), 0),
+    encaisse: (facturesPoei || []).reduce((a: number, f: any) => a + Number(f.montant_paye || 0), 0),
+    nbFactures: (facturesPoei || []).length,
+  }
   const nbFactures = Object.keys(facturesByCandidat).length
   const nbSignes = Object.values(sigMap).filter((s) => s.signed_at).length
 
@@ -263,7 +269,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           candidats: candidats.length === 0 ? 1 : 0,
           cloture: formationTerminee && nbFactures < candidats.length ? 1 : 0,
         }}
-        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} />}
+        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} />}
         candidats={
           <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
         }

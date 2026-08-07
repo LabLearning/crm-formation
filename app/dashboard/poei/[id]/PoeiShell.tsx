@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutGrid, FolderCheck, Users, CalendarRange, ClipboardCheck, Receipt, Mails } from 'lucide-react'
+import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, Receipt, Mails } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Onglet = 'pilotage' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'cloture' | 'mails'
@@ -32,12 +32,12 @@ export function PoeiShell({
 
   const ONGLETS: { id: Onglet; label: string; icon: React.ElementType; n?: number }[] = [
     { id: 'pilotage', label: 'Pilotage', icon: LayoutGrid },
-    { id: 'dossier', label: 'Dossier', icon: FolderCheck },
     { id: 'candidats', label: 'Candidats', icon: Users, n: nbCandidats },
     { id: 'interventions', label: 'Interventions', icon: CalendarRange, n: nbInterventions },
     { id: 'evaluations', label: 'Évaluations', icon: ClipboardCheck },
     { id: 'cloture', label: 'Facturation & clôture', icon: Receipt },
     { id: 'mails', label: 'Mails', icon: Mails, n: nbMails },
+    { id: 'dossier', label: 'Paramètres', icon: Settings },
   ]
 
   const contenu: Record<Onglet, React.ReactNode> = {

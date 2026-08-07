@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Trash2, Users, FileText, GraduationCap, Pencil, Mail, Send, CheckCircle2, XCircle, Paperclip, Euro, Download } from 'lucide-react'
-import { Button, Badge, Modal, Input, Select, useToast, SearchSelect } from '@/components/ui'
+import { Button, Badge, Modal, Input, Select, useToast, SearchSelect, RowMenu } from '@/components/ui'
 import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction } from '../actions'
 import { CANDIDAT_STATUT_LABELS, TYPE_CONTRAT_LABELS } from '@/lib/types/poei'
 import type { PoeiCandidat } from '@/lib/types/poei'
@@ -242,36 +242,18 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
           <Badge variant="default" className="!bg-sky-100 !text-sky-700 !border-transparent">{candidats.length}</Badge>
         </div>
         <div className="flex items-center gap-2">
-          {/* Devis prévisionnel (sans candidat, France Travail) : générer ou télécharger */}
-          {!devisByCandidat['previsionnel'] && candidats.length === 0 && (
-            <Button onClick={handleGenerateDevisPrevisionnel} disabled={genPrev} size="sm" variant="secondary" icon={<Euro className="h-4 w-4" />}>
-              {genPrev ? 'Génération…' : 'Devis prévisionnel (France Travail)'}
-            </Button>
-          )}
-          {devisByCandidat['previsionnel'] && (
-            <a href={`/api/pdf/devis/${devisByCandidat['previsionnel'].id}`} target="_blank" rel="noreferrer"
-              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
-              <Download className="h-4 w-4" /> Devis prévisionnel{devisByCandidat['previsionnel'].numero ? ` ${devisByCandidat['previsionnel'].numero}` : ''}
-            </a>
-          )}
-          {candidats.length > 0 && (
-            <>
-              <Button onClick={() => setGenDevisOpen(true)} size="sm" variant="secondary" icon={<Euro className="h-4 w-4" />}>
-                Générer les devis
-              </Button>
-              {Object.keys(devisByCandidat).length > 0 && (
-                <a href={`/api/pdf/poei-devis/${poeiId}`} className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
-                  <Download className="h-4 w-4" /> Télécharger les devis (ZIP)
-                </a>
-              )}
-              <Button onClick={openGroupMail} size="sm" variant="secondary" icon={<Mail className="h-4 w-4" />}>
-                Mail groupé
-              </Button>
-              <Button onClick={() => openPreview(candidats)} size="sm" variant="secondary" icon={<Send className="h-4 w-4" />}>
-                Envoyer attestations d&apos;entrée à tous
-              </Button>
-            </>
-          )}
+          <RowMenu
+            width={280}
+            trigger={<span className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">Actions groupées</span>}
+            items={[
+              { label: 'Devis prévisionnel France Travail', icon: <Euro className="h-4 w-4" />, onClick: handleGenerateDevisPrevisionnel, hidden: candidats.length > 0 || !!devisByCandidat['previsionnel'] },
+              { label: `Devis prévisionnel ${devisByCandidat['previsionnel']?.numero || ''}`.trim(), icon: <Download className="h-4 w-4" />, href: devisByCandidat['previsionnel'] ? `/api/pdf/devis/${devisByCandidat['previsionnel'].id}` : undefined, target: '_blank', hidden: !devisByCandidat['previsionnel'] },
+              { label: 'Générer les devis des candidats', icon: <Euro className="h-4 w-4" />, onClick: () => setGenDevisOpen(true), hidden: candidats.length === 0 },
+              { label: 'Télécharger tous les devis (ZIP)', icon: <Download className="h-4 w-4" />, href: `/api/pdf/poei-devis/${poeiId}`, hidden: Object.keys(devisByCandidat).length === 0 },
+              { label: 'Mail groupé aux candidats', icon: <Mail className="h-4 w-4" />, onClick: openGroupMail, hidden: candidats.length === 0 },
+              { label: "Envoyer les attestations d'entrée à tous", icon: <Send className="h-4 w-4" />, onClick: () => openPreview(candidats), hidden: candidats.length === 0 },
+            ]}
+          />
           <Button onClick={() => { setErrors({}); setMode('new'); setOpen(true) }} size="sm" icon={<UserPlus className="h-4 w-4" />} className="!bg-sky-500 hover:!bg-sky-600">Ajouter</Button>
         </div>
       </div>
@@ -294,44 +276,25 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                   </div>
                 </button>
 
-                {/* Statut d'envoi de l'attestation */}
-                {st?.status === 'sent' ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-2xs font-medium shrink-0" title={`Attestation envoyée le ${fmtDateTime(st.date)}`}>
-                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Envoyée
-                  </span>
-                ) : st?.status === 'failed' ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-50 text-danger-700 text-2xs font-medium shrink-0" title="Le dernier envoi a échoué">
-                    <XCircle className="h-3 w-3 shrink-0" /> Échec
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-100 text-surface-400 text-2xs font-medium shrink-0" title={c.apprenant?.email ? 'Attestation pas encore envoyée' : 'Pas d\'email renseigné'}>
-                    Non envoyée
-                  </span>
-                )}
-
-                <IconAction label={c.apprenant?.email ? "Envoyer l'attestation par email" : 'Pas d\'email — cliquez sur le nom pour en ajouter un'} onClick={() => c.apprenant?.email ? openPreview([c]) : toast('error', 'Ce candidat n\'a pas d\'email — modifiez sa fiche d\'abord')} className="hover:bg-emerald-50 hover:text-emerald-600">
-                  <Mail className="h-4 w-4" />
-                </IconAction>
-                <IconAction label="Télécharger l'attestation d'entrée" href={`/api/pdf/attestation-entree/${c.apprenant_id}?poei=${poeiId}&candidat=${c.id}`} className="hover:bg-emerald-50 hover:text-emerald-600">
-                  <GraduationCap className="h-4 w-4" />
-                </IconAction>
-                {devisByCandidat[c.id] && (
-                  <IconAction label={`Télécharger le devis ${devisByCandidat[c.id].numero || ''}`} href={`/api/pdf/devis/${devisByCandidat[c.id].id}`} className="hover:bg-amber-50 hover:text-amber-600">
-                    <Euro className="h-4 w-4" />
-                  </IconAction>
-                )}
-                <IconAction label="Plan de développement des compétences (France Travail)" href={`/api/pdf/pdc/${c.id}`} className="hover:bg-sky-50 hover:text-sky-600">
-                  <FileText className="h-4 w-4" />
-                </IconAction>
-                <IconAction label="Modifier les informations" onClick={() => setEditCand(c)}>
-                  <Pencil className="h-4 w-4" />
-                </IconAction>
-                <select value={c.statut} onChange={(e) => handleStatut(c.id, e.target.value)} className="text-xs rounded-lg border border-surface-200 px-2 py-1 bg-white" title="Statut du candidat">
+                <select value={c.statut} onChange={(e) => handleStatut(c.id, e.target.value)} className="text-xs rounded-lg border border-surface-200 px-2 py-1 bg-white shrink-0" title="Statut du candidat">
                   {statutOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                <IconAction label="Retirer du projet" onClick={() => handleRemove(c.id)} className="hover:bg-danger-50 hover:text-danger-600">
-                  <Trash2 className="h-4 w-4" />
-                </IconAction>
+
+                {/* Six icônes par ligne × neuf candidats saturaient l'écran :
+                    les documents et envois passent dans un menu, l'état de
+                    chacun se lit dans l'onglet Pilotage. */}
+                <RowMenu
+                  width={260}
+                  items={[
+                    { label: c.apprenant?.email ? "Envoyer l'attestation d'entrée" : 'Pas d\'email renseigné', icon: <Mail className="h-4 w-4" />,
+                      onClick: () => c.apprenant?.email ? openPreview([c]) : toast('error', 'Ce candidat n\'a pas d\'email — modifiez sa fiche d\'abord') },
+                    { label: "Attestation d'entrée (PDF)", icon: <GraduationCap className="h-4 w-4" />, href: `/api/pdf/attestation-entree/${c.apprenant_id}?poei=${poeiId}&candidat=${c.id}`, target: '_blank' },
+                    { label: 'Plan de développement des compétences', icon: <FileText className="h-4 w-4" />, href: `/api/pdf/pdc/${c.id}`, target: '_blank' },
+                    { label: `Devis ${devisByCandidat[c.id]?.numero || ''}`.trim(), icon: <Euro className="h-4 w-4" />, href: devisByCandidat[c.id] ? `/api/pdf/devis/${devisByCandidat[c.id].id}` : undefined, target: '_blank', hidden: !devisByCandidat[c.id] },
+                    { label: 'Modifier les informations', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditCand(c) },
+                    { label: 'Retirer du projet', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleRemove(c.id), danger: true },
+                  ]}
+                />
               </div>
             )
           })}

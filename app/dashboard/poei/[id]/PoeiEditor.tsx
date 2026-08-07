@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, CheckCircle2 } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { updatePoeiAction } from '../actions'
 import { companyLabel } from '@/lib/utils'
@@ -13,9 +13,11 @@ interface Props {
   clients: { id: string; raison_sociale: string | null; nom_commercial?: string | null; sigle?: string | null }[]
   formations: { id: string; intitule: string }[]
   nbCandidats?: number
+  /** Chiffres réels du dossier, issus des factures. */
+  finances: { total: number; encaisse: number; nbFactures: number }
 }
 
-export function PoeiEditor({ poei, clients, formations, nbCandidats = 0 }: Props) {
+export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finances }: Props) {
   const { toast } = useToast()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -50,36 +52,24 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0 }: Props
       <div className="card p-5">
         <div className="section-label mb-3">Financement France Travail</div>
 
-        {/* Tracker : Demandé → Accordé → Mise en paiement → Paiement reçu */}
-        <div className="flex items-center gap-0 mb-4 overflow-x-auto">
-          {[
-            { label: 'Demandé', date: poei.date_depot_ft },
-            { label: 'Accordé', date: poei.date_accord_ft },
-            { label: 'Mise en paiement', date: (poei as any).date_mise_en_paiement },
-            { label: 'Paiement reçu', date: (poei as any).date_paiement },
-          ].map((step, i, arr) => {
-            const done = !!step.date
-            return (
-              <div key={step.label} className="flex items-center shrink-0">
-                <div className="flex flex-col items-center px-1.5">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center ${done ? 'bg-emerald-500 text-white' : 'bg-surface-100 text-surface-400'}`}>
-                    {done ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
-                  </div>
-                  <div className={`text-[10px] mt-1 font-medium whitespace-nowrap ${done ? 'text-emerald-700' : 'text-surface-400'}`}>{step.label}</div>
-                  <div className="text-[9px] text-surface-400 h-3">{step.date ? new Date(step.date).toLocaleDateString('fr-FR') : ''}</div>
-                </div>
-                {i < arr.length - 1 && <div className={`h-0.5 w-8 sm:w-14 mb-6 ${done ? 'bg-emerald-300' : 'bg-surface-200'}`} />}
-              </div>
-            )
-          })}
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           <Input id="montant_horaire" name="montant_horaire" type="number" label="Taux horaire (€)" defaultValue={poei.montant_horaire != null ? String(poei.montant_horaire) : ''} />
-          <div className="flex items-end text-sm text-surface-500 pb-2.5">
-            {poei.montant_total != null
-              ? `Total : ${Number(poei.montant_total).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} € (${poei.montant_horaire ?? "?"} € × ${poei.duree_heures ?? "?"} h × ${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""})`
-              : `Total = taux × durée × nb candidats (${nbCandidats} candidat${nbCandidats > 1 ? "s" : ""} actuellement)`}
+          {/* Le montant et l'encaissement viennent des FACTURES du dossier :
+              les saisir ici créait une seconde vérité qui divergeait. */}
+          <div className="sm:col-span-2 flex items-end pb-2.5 text-sm text-surface-600">
+            {finances.nbFactures > 0 ? (
+              <span>
+                <span className="font-medium text-surface-800">{finances.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                {' '}facturés sur {finances.nbFactures} facture{finances.nbFactures > 1 ? 's' : ''} ·{' '}
+                {finances.encaisse > 0
+                  ? <span className="text-success-600 font-medium">{finances.encaisse.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € encaissés</span>
+                  : <span className="text-warning-600 font-medium">aucun encaissement</span>}
+              </span>
+            ) : (
+              <span className="text-surface-400">
+                Montant calculé à la facturation : taux × durée × nombre de candidats ({nbCandidats} actuellement)
+              </span>
+            )}
           </div>
         </div>
 
@@ -90,20 +80,6 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0 }: Props
           <Input id="date_paiement" name="date_paiement" type="date" label="Paiement reçu le" defaultValue={d((poei as any).date_paiement)} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 items-end">
-          <Input id="montant_paye" name="montant_paye" type="number" label="Montant encaissé (€)" defaultValue={(poei as any).montant_paye != null ? String((poei as any).montant_paye) : ''} />
-          {poei.montant_total != null && (
-            <div className="text-sm pb-2.5">
-              {(() => {
-                const paye = Number((poei as any).montant_paye) || 0
-                const reste = Math.max(0, Number(poei.montant_total) - paye)
-                return reste > 0
-                  ? <span className="text-warning-600 font-medium">{`Reste à percevoir : ${reste.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`}</span>
-                  : <span className="text-emerald-600 font-medium">Totalité encaissée</span>
-              })()}
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="card p-5">
