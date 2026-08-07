@@ -244,12 +244,8 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
         <div className="flex items-center gap-2">
           <RowMenu
             width={280}
-            trigger={<span className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">Actions groupées</span>}
+            trigger={<span className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">Envois groupés</span>}
             items={[
-              { label: 'Devis prévisionnel France Travail', icon: <Euro className="h-4 w-4" />, onClick: handleGenerateDevisPrevisionnel, hidden: candidats.length > 0 || !!devisByCandidat['previsionnel'] },
-              { label: `Devis prévisionnel ${devisByCandidat['previsionnel']?.numero || ''}`.trim(), icon: <Download className="h-4 w-4" />, href: devisByCandidat['previsionnel'] ? `/api/pdf/devis/${devisByCandidat['previsionnel'].id}` : undefined, target: '_blank', hidden: !devisByCandidat['previsionnel'] },
-              { label: 'Générer les devis des candidats', icon: <Euro className="h-4 w-4" />, onClick: () => setGenDevisOpen(true), hidden: candidats.length === 0 },
-              { label: 'Télécharger tous les devis (ZIP)', icon: <Download className="h-4 w-4" />, href: `/api/pdf/poei-devis/${poeiId}`, hidden: Object.keys(devisByCandidat).length === 0 },
               { label: 'Mail groupé aux candidats', icon: <Mail className="h-4 w-4" />, onClick: openGroupMail, hidden: candidats.length === 0 },
               { label: "Envoyer les attestations d'entrée à tous", icon: <Send className="h-4 w-4" />, onClick: () => openPreview(candidats), hidden: candidats.length === 0 },
             ]}
@@ -288,9 +284,6 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                   items={[
                     { label: c.apprenant?.email ? "Envoyer l'attestation d'entrée" : 'Pas d\'email renseigné', icon: <Mail className="h-4 w-4" />,
                       onClick: () => c.apprenant?.email ? openPreview([c]) : toast('error', 'Ce candidat n\'a pas d\'email — modifiez sa fiche d\'abord') },
-                    { label: "Attestation d'entrée (PDF)", icon: <GraduationCap className="h-4 w-4" />, href: `/api/pdf/attestation-entree/${c.apprenant_id}?poei=${poeiId}&candidat=${c.id}`, target: '_blank' },
-                    { label: 'Plan de développement des compétences', icon: <FileText className="h-4 w-4" />, href: `/api/pdf/pdc/${c.id}`, target: '_blank' },
-                    { label: `Devis ${devisByCandidat[c.id]?.numero || ''}`.trim(), icon: <Euro className="h-4 w-4" />, href: devisByCandidat[c.id] ? `/api/pdf/devis/${devisByCandidat[c.id].id}` : undefined, target: '_blank', hidden: !devisByCandidat[c.id] },
                     { label: 'Modifier les informations', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditCand(c) },
                     { label: 'Retirer du projet', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleRemove(c.id), danger: true },
                   ]}
