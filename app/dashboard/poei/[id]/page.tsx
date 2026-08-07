@@ -13,6 +13,8 @@ import { PoeiEvaluations } from './PoeiEvaluations'
 import { PoeiEmailHistory } from './PoeiEmailHistory'
 import { PoeiInterventions } from './PoeiInterventions'
 import { PoeiShell } from './PoeiShell'
+import { PoeiPilotage } from './PoeiPilotage'
+import type { LigneCandidat, Etat } from './PoeiPilotage'
 import type { Poei, PoeiCandidat } from '@/lib/types/poei'
 
 export const dynamic = 'force-dynamic'
@@ -148,6 +150,64 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     if (key && !emailStatus[key]) emailStatus[key] = { status: log.status, date: log.sent_at || log.created_at }
   }
 
+  // ── Cockpit : une ligne par candidat, un jalon par colonne ──
+  const grillesParApprenant: Record<string, any[]> = {}
+  for (const g of (grilles || []) as any[]) {
+    const k = String(g.apprenant_id)
+    ;(grillesParApprenant[k] = grillesParApprenant[k] || []).push(g)
+  }
+  const FACT_LABEL: Record<string, string> = {
+    brouillon: 'Brouillon', emise: 'Émise', envoyee: 'Envoyée',
+    payee_partiellement: 'Payée en partie', payee: 'Payée', en_retard: 'En retard', annulee: 'Annulée',
+  }
+
+  const lignesPilotage: LigneCandidat[] = candidats.map((c: any) => {
+    const apprenantId = c.apprenant?.id || c.apprenant_id || null
+    const nom = `${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || 'Candidat'
+
+    const refs = [c.identifiant_ft, c.numero_convention, c.numero_engagement].filter(Boolean).length
+    const references = refs === 3
+      ? { etat: 'ok' as const, texte: 'Complètes' }
+      : { etat: (refs === 0 ? 'manque' : 'partiel') as Etat, texte: `${refs}/3 renseignées` }
+
+    const mail = emailStatus[(c.apprenant?.email || '').toLowerCase()]
+    const attestation = mail
+      ? { etat: (mail.status === 'sent' ? 'ok' : 'partiel') as Etat, texte: mail.status === 'sent' ? 'Envoyée' : mail.status }
+      : { etat: 'manque' as const, texte: 'Non envoyée' }
+
+    const devis = devisByCandidat[c.id]
+    const planCharge = devis
+      ? { etat: 'ok' as const, texte: devis.numero || 'Généré', href: `/api/pdf/pdc/${c.id}` }
+      : { etat: 'manque' as const, texte: 'À générer' }
+
+    const gs = grillesParApprenant[String(apprenantId)] || []
+    const finale = gs.some((g) => g.semaine == null)
+    const hebdo = gs.filter((g) => g.semaine != null).length
+    const evaluations = finale
+      ? { etat: 'ok' as const, texte: `Bilan final${hebdo ? ` + ${hebdo} sem.` : ''}` }
+      : hebdo > 0
+        ? { etat: 'partiel' as const, texte: `${hebdo} semaine${hebdo > 1 ? 's' : ''}, pas de bilan` }
+        : { etat: 'manque' as const, texte: 'Aucune' }
+
+    const sig = apprenantId ? sigMap[String(apprenantId)] : undefined
+    const certificat = sig?.signed_at
+      ? { etat: 'ok' as const, texte: 'Signé' }
+      : sig?.sent_at
+        ? { etat: 'partiel' as const, texte: 'Envoyé, non signé' }
+        : { etat: 'manque' as const, texte: 'Non envoyé' }
+
+    const fac = facturesByCandidat[c.id]
+    const facture = fac
+      ? {
+          etat: (['payee', 'envoyee', 'emise'].includes(fac.status) ? 'ok' : 'partiel') as Etat,
+          texte: `${fac.numero || ''} ${FACT_LABEL[fac.status] || fac.status}`.trim(),
+          href: `/api/pdf/facture/${fac.id}`,
+        }
+      : { etat: (formationTerminee ? 'manque' : 'na') as Etat, texte: formationTerminee ? 'À générer' : 'En fin de formation' }
+
+    return { id: c.id, nom, apprenantId, references, attestation, planCharge, evaluations, certificat, facture }
+  })
+
   const montantTotal = (Number(p.duree_heures) || 0) * (Number(p.montant_horaire) || 0)
   const nbFactures = Object.keys(facturesByCandidat).length
   const nbSignes = Object.values(sigMap).filter((s) => s.signed_at).length
@@ -195,6 +255,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       </div>
 
       <PoeiShell
+        pilotage={<PoeiPilotage lignes={lignesPilotage} />}
         nbCandidats={candidats.length}
         nbInterventions={(interventions || []).length}
         nbMails={(emailLogs || []).length}

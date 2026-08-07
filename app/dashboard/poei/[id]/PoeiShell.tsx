@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { FolderCheck, Users, CalendarRange, ClipboardCheck, Receipt, Mails } from 'lucide-react'
+import { LayoutGrid, FolderCheck, Users, CalendarRange, ClipboardCheck, Receipt, Mails } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type Onglet = 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'cloture' | 'mails'
+type Onglet = 'pilotage' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'cloture' | 'mails'
 
 /**
  * Fiche d'un dossier POEI organisée en parcours plutôt qu'en empilement.
@@ -13,13 +13,14 @@ type Onglet = 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'clotu
  */
 export function PoeiShell({
   nbCandidats, nbInterventions, nbMails, alertes,
-  dossier, candidats, interventions, evaluations, cloture, mails,
+  pilotage, dossier, candidats, interventions, evaluations, cloture, mails,
 }: {
   nbCandidats: number
   nbInterventions: number
   nbMails: number
   /** Nombre de points à compléter par onglet, affichés en pastille rouge. */
   alertes?: Partial<Record<Onglet, number>>
+  pilotage: React.ReactNode
   dossier: React.ReactNode
   candidats: React.ReactNode
   interventions: React.ReactNode
@@ -27,9 +28,10 @@ export function PoeiShell({
   cloture: React.ReactNode
   mails: React.ReactNode
 }) {
-  const [onglet, setOnglet] = useState<Onglet>('dossier')
+  const [onglet, setOnglet] = useState<Onglet>('pilotage')
 
   const ONGLETS: { id: Onglet; label: string; icon: React.ElementType; n?: number }[] = [
+    { id: 'pilotage', label: 'Pilotage', icon: LayoutGrid },
     { id: 'dossier', label: 'Dossier', icon: FolderCheck },
     { id: 'candidats', label: 'Candidats', icon: Users, n: nbCandidats },
     { id: 'interventions', label: 'Interventions', icon: CalendarRange, n: nbInterventions },
@@ -39,7 +41,7 @@ export function PoeiShell({
   ]
 
   const contenu: Record<Onglet, React.ReactNode> = {
-    dossier, candidats, interventions, evaluations, cloture, mails,
+    pilotage, dossier, candidats, interventions, evaluations, cloture, mails,
   }
 
   return (
