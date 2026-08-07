@@ -53,17 +53,8 @@ export async function GET(
   const detail: { label: string; valeur: string }[] = []
   const marker = String((facture as any).notes_internes || '').match(/\[POEI-FACT:([0-9a-f-]+):([0-9a-f-]+)\]/i)
   if (marker) {
-    const CHAMPS_POEI = 'numero, duree_heures, date_debut, date_fin, numero_dossier_ft, session:session_id(reference, adresse, code_postal, ville, lieu), client:client_id(raison_sociale, adresse, code_postal, ville)'
-    // `numero_engagement` n'existe qu'à partir de la migration 118 : sans repli,
-    // toute la génération de factures tomberait tant qu'elle n'est pas appliquée.
-    let poei: any = null
-    {
-      const r = await supabase.from('poei').select(`${CHAMPS_POEI}, numero_engagement`).eq('id', marker[1]).maybeSingle()
-      if (r.error) {
-        const r2 = await supabase.from('poei').select(CHAMPS_POEI).eq('id', marker[1]).maybeSingle()
-        poei = r2.data
-      } else poei = r.data
-    }
+    const CHAMPS_POEI = 'numero, duree_heures, date_debut, date_fin, session:session_id(reference, adresse, code_postal, ville, lieu), client:client_id(raison_sociale, adresse, code_postal, ville)'
+    const { data: poei } = await supabase.from('poei').select(CHAMPS_POEI).eq('id', marker[1]).maybeSingle()
     const { data: cand } = await supabase
       .from('poei_candidats')
       .select('numero_engagement, apprenant:apprenant_id(prenom, nom)')
@@ -88,10 +79,8 @@ export async function GET(
     if (heures) detail.push({ label: 'Durée', valeur: `${heures}h${jours ? ` (${jours} jours)` : ''}` })
     if (lieu) detail.push({ label: 'Lieu', valeur: lieu })
     // France Travail engage chaque candidat séparément : le numéro est le sien.
-    // On prend celui figé sur la facture, puis celui du candidat, et à défaut
-    // celui du dossier.
-    const engagement = (facture as any).numero_engagement
-      || (cand as any)?.numero_engagement || p.numero_engagement || p.numero_dossier_ft
+    // Celui figé sur la facture prime (elle a pu être émise depuis).
+    const engagement = (facture as any).numero_engagement || (cand as any)?.numero_engagement
     if (engagement) detail.push({ label: "N° d'engagement", valeur: String(engagement) })
   }
 

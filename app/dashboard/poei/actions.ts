@@ -628,36 +628,6 @@ export async function setCandidatNumeroEngagementAction(candidatId: string, nume
   return { success: true }
 }
 
-/** Numéro d'engagement par défaut du dossier (utilisé quand un candidat n'a pas le sien). */
-export async function setPoeiNumeroEngagementAction(poeiId: string, numero: string): Promise<ActionResult> {
-  const session = await getSession()
-  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
-  const supabase = await createServiceRoleClient()
-  const valeur = numero.trim() || null
-
-  const { error } = await supabase.from('poei')
-    .update({ numero_engagement: valeur })
-    .eq('id', poeiId).eq('organization_id', session.organization.id)
-  if (error) {
-    console.error('[numero engagement]', error)
-    if ((error as any).code === '42703') return { success: false, error: 'Colonne absente : appliquer la migration 118' }
-    return { success: false, error: "Impossible d'enregistrer le numéro d'engagement" }
-  }
-
-  // Report sur les factures du dossier qui ne sont pas encore émises.
-  const { data: facs } = await supabase.from('factures')
-    .select('id, status').ilike('notes_internes', `%[POEI-FACT:${poeiId}:%`)
-    .eq('organization_id', session.organization.id)
-  const modifiables = (facs || []).filter((f: any) => f.status === 'brouillon').map((f: any) => f.id)
-  if (modifiables.length > 0) {
-    await supabase.from('factures').update({ numero_engagement: valeur }).in('id', modifiables)
-  }
-
-  await logAudit({ action: 'update', entity_type: 'poei', entity_id: poeiId, details: { numero_engagement: valeur } })
-  revalidatePath(`/dashboard/poei/${poeiId}`)
-  return { success: true, data: { factures_mises_a_jour: modifiables.length } as any }
-}
-
 /**
  * Génère une FACTURE par candidat d'un projet POEI dont la session est terminée.
  * Idempotent (marqueur dans notes_internes). TVA 0 (financeur France Travail).
@@ -777,9 +747,7 @@ export async function generateFacturesPerCandidatPoeiAction(
       taux_tva: 0, financeur_type: 'france_travail',
       agence_ft_id: agenceFtId,
       subrogation: true,
-      ...(((c as any).numero_engagement || (poei as any).numero_engagement)
-        ? { numero_engagement: (c as any).numero_engagement || (poei as any).numero_engagement }
-        : {}),
+      ...((c as any).numero_engagement ? { numero_engagement: (c as any).numero_engagement } : {}),
       conditions_paiement: 'à 30 jours, date de facture',
       notes_internes: `Facture POEI (candidat ${nom}). ${marker}`,
       created_by: session.user.id,

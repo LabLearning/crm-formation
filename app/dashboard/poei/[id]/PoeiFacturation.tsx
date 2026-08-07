@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Receipt, Download, FileText, Award, Clock, Building2, Plus, PenLine, CheckCircle2, Send } from 'lucide-react'
 import { Button, useToast, Modal, Input } from '@/components/ui'
-import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction, setPoeiNumeroEngagementAction, setCandidatNumeroEngagementAction } from '../actions'
+import { generateFacturesPerCandidatPoeiAction, setPoeiAgenceFtAction, createAgenceFtAction, setCandidatNumeroEngagementAction } from '../actions'
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 
 interface Candidat {
@@ -57,7 +57,7 @@ function EngagementCandidat({ candidatId, valeur, verrouille }: { candidatId: st
 
 export function PoeiFacturation({
   poeiId, sessionId, sessionTerminee, candidats, facturesByCandidat, agences = [], currentAgenceId = null,
-  signatures = {}, numeroEngagement = null,
+  signatures = {},
 }: {
   poeiId: string
   sessionId: string | null
@@ -67,7 +67,6 @@ export function PoeiFacturation({
   facturesByCandidat: Record<string, FactureInfo>
   agences?: Agence[]
   currentAgenceId?: string | null
-  numeroEngagement?: string | null
 }) {
   const { toast } = useToast()
   const router = useRouter()
@@ -77,20 +76,6 @@ export function PoeiFacturation({
   const [savingAg, setSavingAg] = useState(false)
   const [sending, setSending] = useState<string | null>(null)
   const [sendingAll, setSendingAll] = useState(false)
-  const [engagement, setEngagement] = useState(numeroEngagement || '')
-  const [savingEng, setSavingEng] = useState(false)
-
-  async function saveEngagement() {
-    if (engagement.trim() === (numeroEngagement || '')) return
-    setSavingEng(true)
-    const r = await setPoeiNumeroEngagementAction(poeiId, engagement)
-    setSavingEng(false)
-    if (r.success) {
-      const n = (r.data as any)?.factures_mises_a_jour || 0
-      toast('success', n ? `Numéro d'engagement enregistré · ${n} facture(s) mise(s) à jour` : "Numéro d'engagement enregistré")
-      router.refresh()
-    } else toast('error', r.error || 'Erreur')
-  }
 
   async function sendSignature(apprenantId: string) {
     setSending(apprenantId)
@@ -187,21 +172,6 @@ export function PoeiFacturation({
           <Plus className="h-3.5 w-3.5" /> Nouvelle agence
         </button>
         {!agenceId && <span className="text-xs text-amber-600">La facture sera adressée à l’entreprise tant qu’aucune agence n’est choisie.</span>}
-      </div>
-
-      {/* Numéro d'engagement France Travail — figure sur chaque facture */}
-      <div className="rounded-xl bg-surface-50 border border-surface-200/70 p-3 flex items-center gap-3 flex-wrap">
-        <FileText className="h-4 w-4 text-surface-500 shrink-0" />
-        <span className="text-sm text-surface-700">N° d’engagement par défaut <span className="text-surface-400">(utilisé si un candidat n’a pas le sien)</span> :</span>
-        <input
-          value={engagement}
-          onChange={(e) => setEngagement(e.target.value)}
-          onBlur={saveEngagement}
-          placeholder="ex. 40A462603C85"
-          className="input-base !py-1.5 text-sm font-mono max-w-[16rem]"
-        />
-        <Button size="sm" variant="secondary" onClick={saveEngagement} isLoading={savingEng}>Enregistrer</Button>
-        <span className="text-xs text-surface-500">France Travail engage chaque candidat séparément : renseignez le numéro de chacun ci-dessous.</span>
       </div>
 
       {!sessionTerminee ? (
