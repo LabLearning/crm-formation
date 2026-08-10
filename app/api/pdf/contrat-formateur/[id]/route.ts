@@ -72,7 +72,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   if (sessionId) {
     const { data } = await supabase
       .from('sessions')
-      .select('*, formation:formation_id(intitule, duree_heures, reference, sous_titre, objectifs_pedagogiques, programme_detaille, prerequis, public_vise, methodes_pedagogiques, moyens_techniques, modalites_evaluation)')
+      .select('*, formation:formation_id(intitule, duree_heures, reference, sous_titre, objectifs_pedagogiques, programme_detaille, prerequis, public_vise, methodes_pedagogiques, moyens_techniques, modalites_evaluation), client:client_id(raison_sociale, adresse, code_postal, ville)')
       .eq('id', sessionId).single()
     session = data
   }

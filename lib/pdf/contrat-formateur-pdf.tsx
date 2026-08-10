@@ -16,6 +16,18 @@ interface ContratFormateurProps {
 const fmtLong = (d: string | Date) =>
   new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
+/** Adresse d'intervention lisible par le formateur. */
+function lieuComplet(session: any): string {
+  const lieu = String(session?.lieu || '').trim()
+  if (/\b\d{5}\b/.test(lieu)) return lieu
+
+  const adresse = session?.adresse || session?.client?.adresse
+  const cp = session?.code_postal || session?.client?.code_postal
+  const ville = session?.ville || session?.client?.ville
+  const suite = [adresse, [cp, ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  return [lieu, suite].filter(Boolean).join(', ')
+}
+
 export function ContratFormateurPDF({ formateur, org, session, contrat, intervention }: ContratFormateurProps) {
   const today = fmtLong(new Date())
   // Le numéro doit rester stable d'un rendu à l'autre : on prend celui du contrat
@@ -35,7 +47,14 @@ export function ContratFormateurPDF({ formateur, org, session, contrat, interven
         intitule: session.formation?.intitule || session.reference,
         reference: session.reference,
         dateDebut: session.date_debut, dateFin: session.date_fin,
-        lieu: session.lieu, duree: session.formation?.duree_heures,
+        // `session.lieu` ne contient souvent que le nom de l'établissement
+        // (« LEARNEXA », « CT LE HAVRE ») : le formateur doit savoir OÙ se
+        // rendre. On le complète alors avec l'adresse de la session, et à
+        // défaut avec celle du client. Si le lieu porte déjà un code postal,
+        // c'est une adresse complète : on n'en accole pas une seconde, au
+        // risque d'en afficher deux qui se contredisent.
+        lieu: lieuComplet(session),
+        duree: session.formation?.duree_heures,
         montant: session.cout_formateur,
       }
     : intervention
