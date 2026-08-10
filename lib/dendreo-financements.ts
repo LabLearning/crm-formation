@@ -35,14 +35,24 @@ async function dendreo(chemin: string): Promise<any[]> {
   throw new Error(`Dendreo : ${chemin} injoignable`)
 }
 
-/** Correspondance code financeur Dendreo → OPCO du CRM, par nom. */
-function trouverOpco(nomFinanceur: string, opcos: any[]): string | null {
-  const n = String(nomFinanceur || '').toUpperCase()
+/**
+ * Correspondance financeur Dendreo → OPCO du CRM.
+ *
+ * Le financement ne porte qu'un `id_financeur` ; c'est `financeurs.php` qui
+ * donne la raison sociale, et elle désigne une délégation régionale
+ * (« AKTO - ILE DE FRANCE », « AKTO - Réseau OPCALIA Occitanie »). On rattache
+ * donc à l'OPCO national dont le nom est contenu dans cette raison sociale.
+ */
+function trouverOpco(raisonSociale: string, opcos: any[]): string | null {
+  const n = String(raisonSociale || '').toUpperCase()
   if (!n) return null
-  for (const o of opcos) {
-    const code = String(o.code || '').replace(/_/g, ' ').toUpperCase()
-    const nom = String(o.nom || '').toUpperCase()
-    if (n.includes(code) || n.includes(nom)) return o.id
+  // Le libellé le plus long d'abord : « OPCO EP » ne doit pas gagner sur
+  // « OPCOMMERCE » par un préfixe commun.
+  const candidats = opcos
+    .map((o) => ({ id: o.id, cles: [String(o.code || '').replace(/_/g, ' '), String(o.nom || '')].filter(Boolean).map((x) => x.toUpperCase()) }))
+    .sort((a, b) => Math.max(...b.cles.map((c) => c.length)) - Math.max(...a.cles.map((c) => c.length)))
+  for (const c of candidats) {
+    if (c.cles.some((cle) => cle.length >= 3 && n.includes(cle))) return c.id
   }
   return null
 }
@@ -51,7 +61,12 @@ export async function importerFinancementsDendreo(
   supabase: any,
   organizationId: string,
 ): Promise<ResumeFinancements> {
-  const financements = await dendreo('/financements.php?per_page=5000')
+  const [financements, financeurs] = await Promise.all([
+    dendreo('/financements.php?per_page=5000'),
+    dendreo('/financeurs.php?per_page=5000'),
+  ])
+  // Le financeur se retrouve par `id_opca`, pas par un champ `id_financeur`.
+  const parFinanceur = new Map(financeurs.map((f: any) => [String(f.id_opca), f]))
 
   const { data: opcos } = await supabase.from('opco').select('id, code, nom')
 
@@ -88,7 +103,8 @@ export async function importerFinancementsDendreo(
     const finance = fs.reduce((a, f) => a + Number(f.montant_total_finance || 0), 0)
     const facture = fs.reduce((a, f) => a + Number(f.montant_total_facture || 0), 0)
     const dossier = fs.map((f) => f.numero_dossier).find(Boolean) || null
-    const opcoId = trouverOpco(fs[0]?.raison_sociale || fs[0]?.nom_financeur || '', opcos || [])
+    const financeur: any = parFinanceur.get(String(fs[0]?.id_financeur || ''))
+    const opcoId = trouverOpco(financeur?.raison_sociale || '', opcos || [])
 
     const { error } = await supabase.from('sessions').update({
       ...(opcoId ? { opco_id: opcoId } : {}),
