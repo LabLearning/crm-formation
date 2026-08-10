@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, ReceiptEuro, Mails, FileStack } from 'lucide-react'
+import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, ReceiptEuro, Mails, FileStack, ShieldAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type Onglet = 'pilotage' | 'documents' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'facturation' | 'mails'
+type Onglet = 'pilotage' | 'documents' | 'incidents' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'facturation' | 'mails'
 
 /**
  * Fiche d'un dossier POEI organisée en parcours plutôt qu'en empilement.
@@ -12,16 +12,18 @@ type Onglet = 'pilotage' | 'documents' | 'dossier' | 'candidats' | 'intervention
  * ne fait que choisir lequel afficher.
  */
 export function PoeiShell({
-  nbCandidats, nbInterventions, nbMails, alertes,
-  pilotage, documents, dossier, candidats, interventions, evaluations, facturation, mails,
+  nbCandidats, nbInterventions, nbMails, nbIncidents = 0, alertes,
+  pilotage, documents, incidents, dossier, candidats, interventions, evaluations, facturation, mails,
 }: {
   nbCandidats: number
   nbInterventions: number
   nbMails: number
+  nbIncidents?: number
   /** Nombre de points à compléter par onglet, affichés en pastille rouge. */
   alertes?: Partial<Record<Onglet, number>>
   pilotage: React.ReactNode
   documents: React.ReactNode
+  incidents: React.ReactNode
   dossier: React.ReactNode
   candidats: React.ReactNode
   interventions: React.ReactNode
@@ -37,13 +39,14 @@ export function PoeiShell({
     { id: 'interventions', label: 'Interventions', icon: CalendarRange, n: nbInterventions },
     { id: 'evaluations', label: 'Évaluations', icon: ClipboardCheck },
     { id: 'documents', label: 'Documents', icon: FileStack },
+    { id: 'incidents', label: 'Incidents', icon: ShieldAlert, n: nbIncidents },
     { id: 'facturation', label: 'Facturation', icon: ReceiptEuro },
     { id: 'mails', label: 'Mails', icon: Mails, n: nbMails },
     { id: 'dossier', label: 'Paramètres', icon: Settings },
   ]
 
   const contenu: Record<Onglet, React.ReactNode> = {
-    pilotage, documents, dossier, candidats, interventions, evaluations, facturation, mails,
+    pilotage, documents, incidents, dossier, candidats, interventions, evaluations, facturation, mails,
   }
 
   return (

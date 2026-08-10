@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { resolveFormateur } from '../_formateur/guard'
 import { PoeiGrillesFormateur } from './PoeiGrillesFormateur'
+import { PoeiIncidentsFormateur } from './PoeiIncidentsFormateur'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +30,16 @@ export default async function MonEspacePoeiPage() {
     )
   }
 
+  // Incidents des dossiers du formateur (résilient : migration 123)
+  let incidents: any[] = []
+  {
+    const r = await supabase.from('incidents')
+      .select('id, poei_id, date_incident, type, gravite, titre, description, mesures_prises, statut, apprenant_id, formateur_id, created_at')
+      .in('poei_id', poeiIds).eq('organization_id', organizationId)
+      .order('date_incident', { ascending: false })
+    if (!r.error) incidents = r.data || []
+  }
+
   const [{ data: poeis }, { data: cands }, { data: grilles }] = await Promise.all([
     supabase.from('poei').select('id, numero, poste_vise, date_debut, date_fin, statut, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)').in('id', poeiIds).eq('organization_id', organizationId).order('date_debut', { ascending: false }),
     supabase.from('poei_candidats').select('id, poei_id, apprenant_id, apprenant:apprenants(id, nom, prenom)').in('poei_id', poeiIds),
@@ -41,6 +52,12 @@ export default async function MonEspacePoeiPage() {
         poeis={(poeis || []) as any[]}
         candidats={(cands || []) as any[]}
         grilles={(grilles || []) as any[]}
+      />
+
+      <PoeiIncidentsFormateur
+        poeis={(poeis || []) as any[]}
+        candidats={(cands || []) as any[]}
+        incidents={incidents}
       />
     </div>
   )

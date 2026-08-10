@@ -16,6 +16,7 @@ import { PoeiShell } from './PoeiShell'
 import { PoeiPilotage } from './PoeiPilotage'
 import { PoeiDocuments } from './PoeiDocuments'
 import { PoeiMails } from './PoeiMails'
+import { PoeiIncidents } from '@/components/poei/PoeiIncidents'
 import type { CandidatMail } from './PoeiMails'
 import type { CandidatDoc } from './PoeiDocuments'
 import type { LigneCandidat, Etat } from './PoeiPilotage'
@@ -239,6 +240,20 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     }
   })
 
+  // Incidents du dossier (résilient : table sans poei_id avant migration 123)
+  let incidentsPoei: any[] = []
+  {
+    const r = await supabase.from('incidents')
+      .select('id, date_incident, type, gravite, titre, description, mesures_prises, statut, apprenant_id, formateur_id, created_at')
+      .eq('poei_id', params.id).eq('organization_id', session.organization.id)
+      .order('date_incident', { ascending: false })
+    if (!r.error) incidentsPoei = r.data || []
+  }
+  const candidatsIncident = candidats.map((c: any) => ({
+    id: c.apprenant?.id || c.apprenant_id,
+    nom: `${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || 'Candidat',
+  })).filter((c: any) => c.id)
+
   const montantTotal = (Number(p.duree_heures) || 0) * (Number(p.montant_horaire) || 0)
   // Vérité financière unique : les factures du dossier.
   const finances = {
@@ -293,6 +308,14 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
 
       <PoeiShell
         pilotage={<PoeiPilotage lignes={lignesPilotage} />}
+        incidents={
+          <PoeiIncidents
+            poeiId={p.id}
+            incidents={incidentsPoei as any[]}
+            candidats={candidatsIncident}
+            peutTraiter
+          />
+        }
         documents={
           <PoeiDocuments
             poeiId={p.id}
@@ -304,9 +327,11 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         nbCandidats={candidats.length}
         nbInterventions={(interventions || []).length}
         nbMails={(emailLogs || []).length}
+        nbIncidents={incidentsPoei.length}
         alertes={{
           candidats: candidats.length === 0 ? 1 : 0,
           facturation: formationTerminee && nbFactures < candidats.length ? 1 : 0,
+          incidents: incidentsPoei.filter((i: any) => ['ouvert', 'en_cours'].includes(i.statut)).length,
         }}
         dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} agences={(agencesFt || []) as any[]} />}
         candidats={
