@@ -40,12 +40,25 @@ export async function GET(
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
-  // Facture POEI adressée à une agence France Travail (« pour le compte de » le client)
+  // Destinataire : agence France Travail (POEI) ou OPCO (session financée).
+  // Dans les deux cas l'entreprise apparaît en « pour le compte de ».
   let agence: any = null
   if ((facture as any).agence_ft_id) {
     const { data: ag } = await supabase.from('agences_france_travail')
       .select('*').eq('id', (facture as any).agence_ft_id).maybeSingle()
     agence = ag || null
+  } else if ((facture as any).financeur_type === 'opco' && (facture as any).session_id) {
+    const { data: sess } = await supabase
+      .from('sessions')
+      .select('opco_id, client:client_id(opco_id)')
+      .eq('id', (facture as any).session_id)
+      .maybeSingle()
+    const opcoId = (sess as any)?.opco_id || (sess as any)?.client?.opco_id
+    if (opcoId) {
+      const { data: o } = await supabase.from('opco')
+        .select('nom, adresse, code_postal, ville, siret, tva_intra').eq('id', opcoId).maybeSingle()
+      agence = o || null
+    }
   }
 
   // Détail de l'action de formation : le financeur en a besoin pour rapprocher
@@ -84,6 +97,48 @@ export async function GET(
     if (engagement) detail.push({ label: "N° d'engagement", valeur: String(engagement) })
     const convention = (cand as any)?.numero_convention
     if (convention) detail.push({ label: 'N° de convention', valeur: String(convention) })
+  }
+
+  // Facture de session financée : même bloc de détail que les factures OPCO
+  // reprises de Dendreo (type, référence, participants, dates, durée, lieu,
+  // numéro de dossier).
+  const marqueurSession = String((facture as any).notes_internes || '').match(/\[SESSION-FACT:([0-9a-f-]+)\]/i)
+  if (marqueurSession) {
+    const { data: sess } = await supabase
+      .from('sessions')
+      .select('reference, type_session, date_debut, date_fin, lieu, adresse, code_postal, ville, numero_dossier_opco, formation:formation_id(duree_heures), client:client_id(raison_sociale, adresse, code_postal, ville)')
+      .eq('id', marqueurSession[1])
+      .maybeSingle()
+    const { data: inscrits } = await supabase
+      .from('inscriptions')
+      .select('apprenant:apprenants(prenom, nom)')
+      .eq('session_id', marqueurSession[1])
+      .not('status', 'in', '("annule","abandonne")')
+
+    const se: any = sess || {}
+    const frd = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '')
+    const heures = Number(se.formation?.duree_heures) || 0
+    const jours = heures ? Math.round(heures / 7) : 0
+    const noms = (inscrits || [])
+      .map((i: any) => `${i.apprenant?.nom || ''} ${i.apprenant?.prenom || ''}`.trim())
+      .filter(Boolean)
+    const lieuSession = /\b\d{5}\b/.test(String(se.lieu || ''))
+      ? se.lieu
+      : [se.lieu, se.adresse || se.client?.adresse, [se.code_postal || se.client?.code_postal, se.ville || se.client?.ville].filter(Boolean).join(' ')]
+          .filter(Boolean).join(', ')
+
+    detail.push({ label: 'Type', valeur: (se.type_session || 'INTRA').toUpperCase() })
+    if (se.reference) detail.push({ label: 'Référence', valeur: se.reference })
+    if (noms.length) detail.push({ label: `${noms.length} participant${noms.length > 1 ? 's' : ''}`, valeur: noms.join(', ') })
+    if (se.date_debut) {
+      detail.push({
+        label: 'Dates',
+        valeur: se.date_fin && se.date_fin !== se.date_debut ? `du ${frd(se.date_debut)} au ${frd(se.date_fin)}` : `le ${frd(se.date_debut)}`,
+      })
+    }
+    if (heures) detail.push({ label: 'Durée', valeur: `${heures}h${jours ? ` (${jours} jour${jours > 1 ? 's' : ''})` : ''}` })
+    if (lieuSession) detail.push({ label: 'Lieu', valeur: lieuSession })
+    if (se.numero_dossier_opco) detail.push({ label: 'Numéro dossier', valeur: se.numero_dossier_opco })
   }
 
   const buffer = await renderToBuffer(
