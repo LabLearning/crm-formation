@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
+import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
@@ -60,7 +61,7 @@ function getDisplayInfo(user: User) {
   }
 }
 
-export function MonEspaceShell({ user, orgName, children }: { user: User; orgName: string; children: React.ReactNode }) {
+export function MonEspaceShell({ user, orgName, children, impersonatedBy }: { user: User; orgName: string; children: React.ReactNode; impersonatedBy?: User }) {
   const pathname = usePathname()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -104,7 +105,8 @@ export function MonEspaceShell({ user, orgName, children }: { user: User; orgNam
 
   return (
     <ToastProvider>
-    <div className="min-h-screen bg-surface-50">
+    <div className={cn('min-h-screen bg-surface-50', impersonatedBy && 'pt-10')}>
+      {impersonatedBy && <ImpersonationBanner user={user} />}
       {/* Mobile header */}
       <header className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-surface-200/60">
         <div className="h-14 px-4 flex items-center justify-between">
