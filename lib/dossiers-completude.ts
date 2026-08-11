@@ -104,7 +104,7 @@ export async function completudeDossiers(
       contrat: aContrat.has(s.id),
       positionnement: aType(s.id, ['positionnement', 'entree']),
       emargement: aEmargement.has(s.id),
-      acquis: aType(s.id, ['sortie', 'evaluation']) || aEvalAcquis.has(s.id),
+      acquis: aType(s.id, ['sortie']) || aEvalAcquis.has(s.id),
       satisfaction: aType(s.id, ['satisfaction_chaud', 'satisfaction_froid']),
     }
     const justifs = docsParSession.get(s.id) || new Set<string>()

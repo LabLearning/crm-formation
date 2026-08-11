@@ -144,7 +144,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   const { SOCLE, estFormationHygiene } = await import('@/lib/dpo')
   const typeParJalon: Record<string, string[]> = {
     positionnement: ['positionnement', 'entree'],
-    evaluation_acquis: ['sortie', 'evaluation'],
+    evaluation_acquis: ['sortie'],
     satisfaction_chaud: ['satisfaction_chaud'],
     satisfaction_froid: ['satisfaction_froid'],
   }
@@ -287,7 +287,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     contrat: !!contratFormateur,
     positionnement: aRepondu(['positionnement', 'entree']),
     emargement: (emargements || []).some((e: any) => e.signature_data),
-    acquis: aRepondu(['sortie', 'evaluation']) || nbEvalAcquis > 0,
+    acquis: aRepondu(['sortie']) || nbEvalAcquis > 0,
     satisfaction: aRepondu(['satisfaction_chaud', 'satisfaction_froid']),
   }
 

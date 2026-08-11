@@ -99,7 +99,7 @@ const manquantesDe = (s) => {
     contrat: aCtr.has(s.id),
     recueil: aRec.has(s.id),
     positionnement: aType(s.id, ['positionnement', 'entree']),
-    acquis: aType(s.id, ['sortie', 'evaluation']) || aAcq.has(s.id),
+    acquis: aType(s.id, ['sortie']) || aAcq.has(s.id),
     satisfaction: aType(s.id, ['satisfaction_chaud', 'satisfaction_froid']),
   }
   const justifs = docsPar.get(s.id) || new Set()

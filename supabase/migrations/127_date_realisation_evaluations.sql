@@ -49,7 +49,7 @@ FROM qcm q, sessions s
 WHERE r.qcm_id = q.id
   AND r.session_id = s.id
   AND r.date_realisation IS NULL
-  AND q.type IN ('sortie', 'evaluation', 'satisfaction_chaud');
+  AND q.type IN ('sortie', 'satisfaction_chaud', 'evaluation_formateur');
 
 -- Satisfaction à froid : par construction différée, on la laisse à sa date de
 -- saisie plutôt que de la rattacher artificiellement à la session.
@@ -106,7 +106,7 @@ BEGIN
   NEW.date_realisation := CASE
     -- Le positionnement ouvre la formation, l'évaluation la referme.
     WHEN t IN ('positionnement', 'entree') THEN d
-    WHEN t IN ('sortie', 'evaluation', 'satisfaction_chaud') THEN f
+    WHEN t IN ('sortie', 'satisfaction_chaud', 'evaluation_formateur') THEN f
     -- La satisfaction à froid est différée par nature : sa date de saisie
     -- est sa vraie date, la rattacher à la session serait un contresens.
     ELSE COALESCE(NEW.completed_at::date, CURRENT_DATE)
