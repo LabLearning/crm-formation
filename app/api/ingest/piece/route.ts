@@ -97,13 +97,22 @@ export async function POST(request: NextRequest) {
   const emailFormateur = String(form.get('formateur_email') || '').trim().toLowerCase()
   const nomFormateur = String(form.get('formateur_nom') || '').trim()
 
+  // Dernier recours : le numéro de dossier OPCO, souvent le seul repère fiable.
+  // Les accords AKTO le portent dans leur nom — « dossier_accord2503af013110 »
+  // — et il désigne la session, tantôt par sa référence (actions reprises de
+  // 2025), tantôt par son financement (actions 2026).
+  const numeroDossier = (
+    String(form.get('numero_dossier') || '').trim() ||
+    (fichier.name.match(/(\d{4}AF\d{6})/i)?.[1] || '')
+  ).toUpperCase()
+
   let sessionId: string | null = null
   let clientId: string | null = null
   let formateurId: string | null = null
   let libelleCible = ''
 
   const cibleFormateur = !!(emailFormateur || nomFormateur)
-  const cibleSession = !!(refSession || dendreoId)
+  const cibleSession = !!(refSession || dendreoId || (numeroDossier && !cibleFormateur))
   if (cibleSession && !TYPES_SESSION.has(type)) {
     return NextResponse.json({ error: `Type de session inconnu : ${type}` }, { status: 400 })
   }
@@ -112,16 +121,24 @@ export async function POST(request: NextRequest) {
   }
 
   if (cibleSession) {
-    const requete = supabase
-      .from('sessions').select('id, client_id, reference')
-      .eq('organization_id', orgId)
-    const { data: s } = await (refSession
-      ? requete.eq('reference', refSession)
-      : requete.eq('dendreo_id', dendreoId)
-    ).limit(1).maybeSingle()
+    const base = () => supabase.from('sessions').select('id, client_id, reference').eq('organization_id', orgId)
+    let s: any = null
+    if (refSession) {
+      ({ data: s } = await base().eq('reference', refSession).limit(1).maybeSingle())
+    } else if (dendreoId) {
+      ({ data: s } = await base().eq('dendreo_id', dendreoId).limit(1).maybeSingle())
+    } else {
+      // Le numéro sert de référence sur les actions reprises, de numéro de
+      // financement sur les autres : on essaie les deux.
+      ({ data: s } = await base().eq('reference', numeroDossier).limit(1).maybeSingle())
+      if (!s) ({ data: s } = await base().eq('numero_dossier_opco', numeroDossier).limit(1).maybeSingle())
+    }
     if (!s) {
       return NextResponse.json(
-        { error: `Session introuvable (${refSession || 'dendreo ' + dendreoId})`, introuvable: true },
+        {
+          error: `Session introuvable (${refSession || (dendreoId && 'dendreo ' + dendreoId) || numeroDossier})`,
+          introuvable: true,
+        },
         { status: 404 },
       )
     }
