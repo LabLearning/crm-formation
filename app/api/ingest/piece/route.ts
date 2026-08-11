@@ -36,6 +36,32 @@ const TYPES_FORMATEUR = new Set([
   'attestation_fiscale', 'rib', 'piece_identite', 'autre',
 ])
 
+/**
+ * Type de pièce déduit du nom de fichier.
+ *
+ * L'export Dendreo nomme ses documents de façon stable — « Feuille_emargement
+ * - … », « Convention_formation - … », « Contrat_sous-traitance_… ». Le script
+ * qui pousse les fichiers n'a donc pas à connaître la nomenclature du CRM.
+ * Une pièce non reconnue est rangée en « autre » plutôt que refusée : mieux
+ * vaut un document au dossier mal étiqueté qu'un document perdu.
+ */
+function typeDApresNom(nom: string): string {
+  const n = nom.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (/feuille[_ -]*emargement|emargement|presence/.test(n)) return 'emargement_signe'
+  if (/convention/.test(n)) return 'convention_signee'
+  if (/contrat[_ -]*(sous[_ -]*trait|formateur|prestation)/.test(n)) return 'contrat_formateur'
+  if (/certificat[_ -]*(de[_ -]*)?realisation/.test(n)) return 'certificat_realisation'
+  if (/attestation[_ -]*(de[_ -]*)?(fin|assiduite|formation)/.test(n)) return 'attestation_fin'
+  if (/evaluation[_ -]*(des[_ -]*)?acquis|test[_ -]*sortie/.test(n)) return 'evaluation_acquis'
+  if (/positionnement|test[_ -]*entree|diagnostic/.test(n)) return 'positionnement'
+  if (/satisfaction|questionnaire[_ -]*chaud|a[_ -]*froid/.test(n)) return 'satisfaction'
+  if (/recueil|besoin/.test(n)) return 'recueil_besoin'
+  if (/prise[_ -]*en[_ -]*charge|accord/.test(n)) return 'accord_prise_en_charge'
+  if (/programme/.test(n)) return 'programme'
+  if (/facture/.test(n)) return 'facture'
+  return 'autre'
+}
+
 export async function POST(request: NextRequest) {
   const attendu = process.env.CRON_SECRET
   if (!attendu) return NextResponse.json({ error: 'Route non configurée' }, { status: 503 })
@@ -54,7 +80,10 @@ export async function POST(request: NextRequest) {
   if (!fichier || fichier.size === 0) return NextResponse.json({ error: 'Aucun fichier' }, { status: 400 })
   if (fichier.size > 25 * 1024 * 1024) return NextResponse.json({ error: 'Fichier trop lourd' }, { status: 413 })
 
-  const type = String(form.get('type') || 'autre')
+  // « auto » : le script pousse les fichiers sans les connaître, le type se
+  // déduit ici du nom que Dendreo leur a donné.
+  const typeDemande = String(form.get('type') || 'auto')
+  const type = typeDemande === 'auto' ? typeDApresNom(fichier.name) : typeDemande
 
   const supabase = await createServiceRoleClient()
 
@@ -62,8 +91,9 @@ export async function POST(request: NextRequest) {
   if (!org) return NextResponse.json({ error: 'Organisation introuvable' }, { status: 500 })
   const orgId = (org as any).id
 
-  // ── Cible : une session, ou un formateur ──
+  // ── Cible : une session (référence ou identifiant Dendreo), ou un formateur ──
   const refSession = String(form.get('session_reference') || '').trim()
+  const dendreoId = String(form.get('dendreo_id') || '').trim()
   const emailFormateur = String(form.get('formateur_email') || '').trim().toLowerCase()
 
   let sessionId: string | null = null
@@ -71,21 +101,31 @@ export async function POST(request: NextRequest) {
   let formateurId: string | null = null
   let libelleCible = ''
 
-  if (refSession && !TYPES_SESSION.has(type)) {
+  const cibleSession = !!(refSession || dendreoId)
+  if (cibleSession && !TYPES_SESSION.has(type)) {
     return NextResponse.json({ error: `Type de session inconnu : ${type}` }, { status: 400 })
   }
-  if (emailFormateur && !refSession && !TYPES_FORMATEUR.has(type)) {
+  if (!cibleSession && emailFormateur && !TYPES_FORMATEUR.has(type)) {
     return NextResponse.json({ error: `Type de pièce formateur inconnu : ${type}` }, { status: 400 })
   }
 
-  if (refSession) {
-    const { data: s } = await supabase
+  if (cibleSession) {
+    const requete = supabase
       .from('sessions').select('id, client_id, reference')
-      .eq('organization_id', orgId).eq('reference', refSession).maybeSingle()
-    if (!s) return NextResponse.json({ error: `Session ${refSession} introuvable` }, { status: 404 })
+      .eq('organization_id', orgId)
+    const { data: s } = await (refSession
+      ? requete.eq('reference', refSession)
+      : requete.eq('dendreo_id', dendreoId)
+    ).limit(1).maybeSingle()
+    if (!s) {
+      return NextResponse.json(
+        { error: `Session introuvable (${refSession || 'dendreo ' + dendreoId})`, introuvable: true },
+        { status: 404 },
+      )
+    }
     sessionId = (s as any).id
     clientId = (s as any).client_id || null
-    libelleCible = refSession
+    libelleCible = (s as any).reference || `dendreo ${dendreoId}`
   } else if (emailFormateur) {
     const { data: f } = await supabase
       .from('formateurs').select('id, prenom, nom')
@@ -94,7 +134,7 @@ export async function POST(request: NextRequest) {
     formateurId = (f as any).id
     libelleCible = `${(f as any).prenom || ''} ${(f as any).nom || ''}`.trim()
   } else {
-    return NextResponse.json({ error: 'Indiquez session_reference ou formateur_email' }, { status: 400 })
+    return NextResponse.json({ error: 'Indiquez session_reference, dendreo_id ou formateur_email' }, { status: 400 })
   }
 
   // ── Idempotence : même fichier, même cible → on ne redépose pas ──
