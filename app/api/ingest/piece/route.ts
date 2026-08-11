@@ -46,7 +46,10 @@ const TYPES_FORMATEUR = new Set([
  * vaut un document au dossier mal étiqueté qu'un document perdu.
  */
 function typeDApresNom(nom: string): string {
-  const n = nom.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  // Le fichier collecté porte un préfixe « date__expediteur__ » : les motifs
+  // ancrés en début de nom doivent viser le nom d'origine, pas la date.
+  const brut = nom.replace(/^\d{4}-\d{2}-\d{2}__[^_]*__/, '')
+  const n = brut.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   // Abréviations maison, relevées dans la boîte : « FE CLIENT », « CR NOM »,
   // « AF NOM ». Elles ne veulent rien dire hors contexte, d'où l'ancrage en
   // début de nom pour éviter de happer un mot quelconque.
