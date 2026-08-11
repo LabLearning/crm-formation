@@ -67,7 +67,7 @@ WHERE date_realisation IS NULL;
 
 UPDATE evaluations_satisfaction e
 SET date_realisation = CASE
-      WHEN e.type = 'froid' THEN COALESCE(e.completee_at::date, e.created_at::date)
+      WHEN e.type = 'satisfaction_froid' THEN COALESCE(e.completee_at::date, e.created_at::date)
       ELSE COALESCE(s.date_fin, s.date_debut)
     END
 FROM sessions s
