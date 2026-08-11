@@ -25,6 +25,7 @@ import { SessionDocActions } from './SessionDocActions'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
+import { SaisieQuestionnaire } from '@/components/qcm/SaisieQuestionnaire'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
 import { SessionDossier } from './SessionDossier'
@@ -114,6 +115,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const socleManquants = socleEtat.filter((s: any) => !s.fait).length
   const derouleIncomplet = socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
 
+  const [saisie, setSaisie] = useState<{ id: string; nom: string } | null>(null)
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
@@ -1183,6 +1185,14 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                                     {Number(r.score)}%
                                   </div>
                                 )}
+                                {!r.is_complete && !isFormateur && (
+                                  <button
+                                    onClick={() => setSaisie({ id: r.id, nom: a ? `${a.prenom} ${a.nom}` : 'ce stagiaire' })}
+                                    title="Reporter les réponses recueillies auprès du stagiaire"
+                                    className="btn-secondary !py-1 !px-2.5 text-xs shrink-0">
+                                    Saisir
+                                  </button>
+                                )}
                               </div>
                             )
                           })
@@ -1251,6 +1261,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
         </div>
       )}
+
+      <SaisieQuestionnaire
+        reponseId={saisie?.id || null}
+        apprenantNom={saisie?.nom || ''}
+        onClose={() => setSaisie(null)}
+      />
 
       {/* Modal signature */}
       {signingEmargement && (
