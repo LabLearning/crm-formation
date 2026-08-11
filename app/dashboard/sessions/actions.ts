@@ -127,6 +127,10 @@ export async function createSessionAction(formData: FormData): Promise<ActionRes
         status: 'inscrit',
       }))
     )
+    try {
+      const { lierInscritsAuxQcmSession } = await import('@/lib/qcm-auto-seed')
+      await lierInscritsAuxQcmSession(supabase, data.id)
+    } catch (e) { console.error('[lien qcm]', e) }
     // Un apprenant créé à la volée sans client hérite de celui de la session,
     // sinon il n'apparaît sur aucune fiche client
     if (parsed.data.client_id) {
@@ -567,6 +571,10 @@ export async function updateSessionAction(id: string, formData: FormData): Promi
           status: 'inscrit',
         }))
       )
+      try {
+        const { lierInscritsAuxQcmSession } = await import('@/lib/qcm-auto-seed')
+        await lierInscritsAuxQcmSession(supabase, id)
+      } catch (e) { console.error('[lien qcm]', e) }
       // Un apprenant créé à la volée sans client hérite de celui de la session
       if (parsed.data.client_id) {
         await supabase

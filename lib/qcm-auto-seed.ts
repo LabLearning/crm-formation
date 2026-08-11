@@ -334,3 +334,57 @@ export async function notifyApprenantsForQcm(
     }
   }
 }
+
+/**
+ * Rattache les inscrits aux questionnaires DE LA SESSION.
+ *
+ * Les fonctions ci-dessus partent des QCM de la formation ; celle-ci part de
+ * ceux réellement rattachés à la session (`qcm_sessions`), qui font foi. Elle
+ * est appelée à chaque inscription et à chaque rattachement de questionnaire :
+ * les stagiaires arrivent souvent après la création de la session, et sans
+ * cela ils n'apparaissent dans aucun questionnaire.
+ *
+ * Idempotente : ne crée que les lignes absentes.
+ */
+export async function lierInscritsAuxQcmSession(
+  supabase: any,
+  sessionId: string,
+): Promise<{ created: number }> {
+  const { data: sess } = await supabase
+    .from('sessions').select('id, organization_id').eq('id', sessionId).maybeSingle()
+  if (!sess) return { created: 0 }
+
+  const [{ data: liens }, { data: inscriptions }, { data: existantes }] = await Promise.all([
+    supabase.from('qcm_sessions').select('qcm_id').eq('session_id', sessionId),
+    supabase.from('inscriptions').select('apprenant_id').eq('session_id', sessionId)
+      .not('status', 'in', '("annule","abandonne")'),
+    supabase.from('qcm_reponses').select('qcm_id, apprenant_id').eq('session_id', sessionId),
+  ])
+
+  const qcmIds = [...new Set((liens || []).map((l: any) => l.qcm_id).filter(Boolean))]
+  const apprenantIds = [...new Set((inscriptions || []).map((i: any) => i.apprenant_id).filter(Boolean))]
+  if (qcmIds.length === 0 || apprenantIds.length === 0) return { created: 0 }
+
+  const deja = new Set((existantes || []).map((r: any) => `${r.qcm_id}|${r.apprenant_id}`))
+  const rows: any[] = []
+  for (const qcmId of qcmIds) {
+    for (const apprenantId of apprenantIds) {
+      if (deja.has(`${qcmId}|${apprenantId}`)) continue
+      rows.push({
+        organization_id: sess.organization_id,
+        qcm_id: qcmId,
+        session_id: sessionId,
+        apprenant_id: apprenantId,
+        is_complete: false,
+      })
+    }
+  }
+  if (rows.length === 0) return { created: 0 }
+
+  const { error } = await supabase.from('qcm_reponses').insert(rows)
+  if (error) {
+    console.error('[lierInscritsAuxQcmSession]', error.message)
+    return { created: 0 }
+  }
+  return { created: rows.length }
+}

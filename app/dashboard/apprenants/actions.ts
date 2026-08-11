@@ -182,6 +182,13 @@ export async function inscrireApprenantAction(apprenantId: string, sessionId: st
     await syncConventionAvenant(supabase, sessionId, session.user.id)
   } catch (e) { console.error('[avenant]', e) }
 
+  // Un stagiaire inscrit après coup doit apparaître dans les questionnaires
+  // déjà rattachés à la session, sinon il n'y figure nulle part.
+  try {
+    const { lierInscritsAuxQcmSession } = await import('@/lib/qcm-auto-seed')
+    await lierInscritsAuxQcmSession(supabase, sessionId)
+  } catch (e) { console.error('[lien qcm]', e) }
+
   await logAudit({
     action: 'inscription',
     entity_type: 'inscription',
