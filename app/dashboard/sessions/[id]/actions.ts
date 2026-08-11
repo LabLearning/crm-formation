@@ -393,6 +393,10 @@ export async function sendConventionForSignatureAction(
         pdfBuffer: Buffer.from(buffer),
         pdfFilename: `convention-${convFull.numero}.pdf`,
         footerNote: 'Lien valable 30 jours. Vous pouvez aussi signer le PDF et nous le retourner.',
+        organizationId: sess.organization_id,
+        entityType: 'convention',
+        entityId: convId,
+        triggeredBy: session.user.id,
       })
     }
   } catch (e) { console.error('[send convention signature]', e) }
@@ -494,6 +498,10 @@ export async function sendContratToFormateurAction(sessionId: string): Promise<A
       pdfBuffer: Buffer.from(buffer),
       pdfFilename: `contrat-prestation-${formateur.nom}.pdf`,
       footerNote: 'Document contractuel — à conserver pour vos dossiers.',
+      organizationId: sess.organization_id,
+      entityType: 'contrat_formateur',
+      entityId: contratExistant?.id || sessionId,
+      triggeredBy: session.user.id,
     })
   } catch (e) {
     console.error('[send contrat formateur]', e)

@@ -383,6 +383,9 @@ export async function acceptMissionAction(sessionId: string): Promise<ActionResu
           ctaLabel: 'Signer mon contrat',
           ctaUrl: contratSignUrl,
           footerNote: 'Lien valable 30 jours. La session sera confirmée dès la signature du contrat et de la convention client.',
+          organizationId: sess.organization_id,
+          entityType: 'contrat_formateur',
+          entityId: existingContrat?.id || sess.id,
         })
       }
     }

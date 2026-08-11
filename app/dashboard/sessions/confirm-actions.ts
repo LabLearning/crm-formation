@@ -203,6 +203,10 @@ export async function confirmSessionAction(sessionId: string): Promise<ActionRes
           orgLogoUrl: (session.organization as any).logo_url || undefined,
           qualiopiCertified: (session.organization as any).is_qualiopi !== false,
         }),
+        organizationId: sess.organization_id,
+        entityType: 'convention',
+        entityId: convention?.id || sessionId,
+        triggeredBy: session.user.id,
       })
     }
 
@@ -224,6 +228,10 @@ export async function confirmSessionAction(sessionId: string): Promise<ActionRes
           orgLogoUrl: (session.organization as any).logo_url || undefined,
           qualiopiCertified: (session.organization as any).is_qualiopi !== false,
         }),
+        organizationId: sess.organization_id,
+        entityType: 'contrat_formateur',
+        entityId: contratId || sessionId,
+        triggeredBy: session.user.id,
       })
 
       // Notif in-app si formateur a un compte

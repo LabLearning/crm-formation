@@ -21,6 +21,13 @@ interface Contrat {
   montant_ht: number | null; signature_token: string | null
 }
 
+/** Envoi tracé dans email_logs, rattaché à une pièce précise du dossier. */
+interface EnvoiDoc {
+  id: string; to_email: string; to_name: string | null; subject: string
+  status: string | null; sent_at: string | null; opened_at: string | null; created_at: string
+  entity_type: string | null; entity_id: string | null
+}
+
 interface Props {
   sessionId: string
   hasClient: boolean
@@ -34,6 +41,7 @@ interface Props {
   dates?: string | null
   convention?: Convention | null
   contrat?: Contrat | null
+  docEmailLogs?: EnvoiDoc[]
 }
 
 function fmtDateHeure(d: string | null | undefined): string {
@@ -63,7 +71,7 @@ function StatutBadge({ etat, date }: { etat: 'absent' | 'attente' | 'partiel' | 
 export function SessionDocuments(props: Props) {
   const {
     sessionId, hasClient, hasFormateur, formateurId, formateurNom, formateurEmail,
-    clientNom, clientEmail, formationNom, dates, convention, contrat,
+    clientNom, clientEmail, formationNom, dates, convention, contrat, docEmailLogs = [],
   } = props
   const { toast } = useToast()
   const router = useRouter()
@@ -73,6 +81,7 @@ export function SessionDocuments(props: Props) {
   const [signUrl, setSignUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
+  const [histo, setHisto] = useState<'conv' | 'contrat' | null>(null)
   // Contrôle de conformité de la convention (mentions obligatoires)
   const [check, setCheck] = useState<{ ok: boolean; blocking: { section: string; label: string }[] } | null>(null)
   const [checking, setChecking] = useState(false)
@@ -159,17 +168,62 @@ export function SessionDocuments(props: Props) {
   const contratPdfUrl = formateurId ? `/api/pdf/contrat-formateur/${formateurId}?${contratRef}&inline=1` : null
   const contratDlUrl = formateurId ? `/api/pdf/contrat-formateur/${formateurId}?${contratRef}` : null
 
+  // Les envois sont rattachés à la pièce elle-même : la convention et le
+  // contrat ne se mélangent pas, même s'ils partent au même destinataire.
+  const envoisConvention = docEmailLogs.filter((l) => l.entity_type === 'convention')
+  const envoisContrat = docEmailLogs.filter((l) => l.entity_type === 'contrat_formateur')
+
+  // ── Historique des envois d'une pièce ──
+  function Historique({ envois }: { envois: EnvoiDoc[] }) {
+    if (envois.length === 0) {
+      return (
+        <div className="px-4 pb-3 -mt-1">
+          <p className="text-xs text-surface-400">
+            Aucun envoi tracé. Les envois antérieurs au suivi ne sont pas remontés ici.
+          </p>
+        </div>
+      )
+    }
+    return (
+      <div className="px-4 pb-3 -mt-1">
+        <ol className="rounded-lg border border-surface-100 divide-y divide-surface-100 bg-surface-50/40">
+          {envois.map((e) => (
+            <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+              <span className="text-xs text-surface-700 flex-1 min-w-[160px] truncate">{e.subject}</span>
+              <span className="text-[11px] text-surface-500 truncate">{e.to_name || e.to_email}</span>
+              {e.opened_at && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600">
+                  <Eye className="h-3 w-3" /> Ouvert
+                </span>
+              )}
+              <span className={cn(
+                'inline-flex items-center gap-1 text-[11px] font-medium shrink-0',
+                e.status === 'sent' ? 'text-emerald-600' : e.status === 'failed' ? 'text-danger-600' : 'text-amber-600',
+              )}>
+                {e.status === 'sent' ? <CheckCircle2 className="h-3 w-3" /> : e.status === 'failed' ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                {e.status === 'sent' ? 'Envoyé' : e.status === 'failed' ? 'Échec' : 'En cours'}
+              </span>
+              <span className="text-[11px] text-surface-400 shrink-0 tabular-nums">{fmtDateHeure(e.sent_at || e.created_at)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )
+  }
+
   // ── Ligne document ──
   function DocRow({
-    icon, titre, sousTitre, etat, date, onPreview, onSend, sendLabel, downloadUrl, disabled, disabledReason, busyKey, onCancel,
+    icon, titre, sousTitre, etat, date, onPreview, onSend, sendLabel, downloadUrl, disabled, disabledReason, busyKey, onCancel, envois,
   }: {
     icon: React.ReactNode; titre: string; sousTitre: string
     etat: 'absent' | 'attente' | 'partiel' | 'signe'; date?: string | null
     onPreview: () => void; onSend: () => void; sendLabel: string
     downloadUrl: string | null; disabled?: boolean; disabledReason?: string; busyKey: 'conv' | 'contrat'
-    onCancel?: () => void
+    onCancel?: () => void; envois: EnvoiDoc[]
   }) {
+    const ouvert = histo === busyKey
     return (
+      <div>
       <div className="flex flex-wrap items-center gap-3 px-4 py-3.5">
         <span className="h-9 w-9 rounded-xl bg-surface-100 flex items-center justify-center shrink-0">{icon}</span>
         <div className="flex-1 min-w-[180px]">
@@ -178,6 +232,22 @@ export function SessionDocuments(props: Props) {
         </div>
         <StatutBadge etat={etat} date={date} />
         <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => setHisto(ouvert ? null : busyKey)}
+            title="Historique des envois de ce document"
+            aria-expanded={ouvert}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium',
+              ouvert ? 'border-surface-900 bg-surface-900 text-white' : 'border-surface-200 text-surface-700 hover:bg-surface-50',
+            )}
+          >
+            <Mail className="h-3.5 w-3.5" /> Mails
+            {envois.length > 0 && (
+              <span className={cn('text-[10px] font-bold px-1 rounded', ouvert ? 'bg-white/20' : 'bg-surface-100 text-surface-500')}>
+                {envois.length}
+              </span>
+            )}
+          </button>
           <button
             onClick={onPreview}
             disabled={disabled}
@@ -216,6 +286,8 @@ export function SessionDocuments(props: Props) {
           )}
         </div>
       </div>
+      {ouvert && <Historique envois={envois} />}
+      </div>
     )
   }
 
@@ -239,6 +311,7 @@ export function SessionDocuments(props: Props) {
           downloadUrl={convention ? `/api/pdf/convention/${convention.id}` : null}
           disabled={!hasClient} disabledReason="Aucun client entreprise rattaché à la session"
           busyKey="conv"
+          envois={envoisConvention}
         />
         <DocRow
           icon={<FileText className="h-4 w-4 text-blue-600" />}
@@ -251,6 +324,7 @@ export function SessionDocuments(props: Props) {
           downloadUrl={contratDlUrl}
           disabled={!hasFormateur} disabledReason="Aucun formateur rattaché à la session"
           busyKey="contrat"
+          envois={envoisContrat}
         />
       </div>
 

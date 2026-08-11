@@ -224,6 +224,22 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     emailLogs = data || []
   }
 
+  // Historique des envois des documents contractuels. Il se cherche par pièce
+  // (entity_id), pas par destinataire : un formateur qui intervient sur vingt
+  // sessions recevrait sinon, sur chacune, les contrats des dix-neuf autres.
+  const docEntityIds = [
+    params.id,
+    ...(conventions || []).map((c: any) => c.id),
+    ...(contratFormateur ? [(contratFormateur as any).id] : []),
+  ].filter(Boolean)
+  const { data: docEmailLogs } = await supabase.from('email_logs')
+    .select('id, to_email, to_name, subject, status, sent_at, opened_at, created_at, entity_type, entity_id')
+    .eq('organization_id', session.organization.id)
+    .in('entity_type', ['convention', 'contrat_formateur'])
+    .in('entity_id', docEntityIds)
+    .order('created_at', { ascending: false })
+    .limit(60)
+
   // Est-ce que le user est le formateur de cette session ?
   const isFormateur = session.user.role === 'formateur' && (sessionData.formateur as any)?.user_id === session.user.id
 
@@ -279,6 +295,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         clientsRef={(clientsRef || []) as any[]}
         clientContacts={(clientContacts || []) as any[]}
         emailLogs={emailLogs as any[]}
+        docEmailLogs={(docEmailLogs || []) as any[]}
         apprenantsRef={(apprenantsRef || []) as any[]}
         sessionFormationIds={((sessionFormations || []) as any[]).map((r) => r.formation_id)}
         evaluationsAppr={(evaluationsAppr || []) as any[]}

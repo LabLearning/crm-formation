@@ -237,6 +237,9 @@ export async function sendContratForSignature(
     ] as [string, string][],
     ctaLabel: 'Signer le contrat',
     ctaUrl: signUrl,
+    organizationId: contrat.organization_id,
+    entityType: 'contrat_formateur',
+    entityId: contratId,
   })
 
   if (!res.success) return { success: false, error: res.error || 'Envoi impossible' }
@@ -342,5 +345,8 @@ export async function sendSignedContratCopies(supabase: any, contratId: string):
     pdfBuffer: buffer,
     pdfFilename: `contrat-${contrat.numero || contratId}-signe.pdf`,
     footerNote: 'Cet exemplaire fait foi entre les parties.',
+    organizationId: contrat.organization_id,
+    entityType: 'contrat_formateur',
+    entityId: contratId,
   })
 }
