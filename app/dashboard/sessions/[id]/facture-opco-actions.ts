@@ -130,3 +130,118 @@ export async function genererFactureOpcoAction(
   revalidatePath('/dashboard/factures')
   return { success: true, data: facture }
 }
+
+/**
+ * Enregistre le financement OPCO de la session : l'organisme, le numéro de
+ * dossier et le montant accordé. Ces trois informations sont reprises telles
+ * quelles sur la facture — le numéro de dossier devient le numéro de prise en
+ * charge, que l'OPCO exige pour régler.
+ */
+export async function enregistrerFinancementOpcoAction(
+  sessionId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+
+  const texte = (k: string) => {
+    const v = String(formData.get(k) ?? '').trim()
+    return v || null
+  }
+  const montantBrut = texte('montant_finance_opco')
+  const montant = montantBrut === null ? null : Number(montantBrut.replace(',', '.'))
+  if (montant !== null && !Number.isFinite(montant)) {
+    return { success: false, error: 'Montant financé invalide' }
+  }
+
+  const { error } = await supabase
+    .from('sessions')
+    .update({
+      opco_id: texte('opco_id'),
+      numero_dossier_opco: texte('numero_dossier_opco'),
+      montant_finance_opco: montant,
+      accord_pec_date: texte('accord_pec_date'),
+    })
+    .eq('id', sessionId)
+    .eq('organization_id', session.organization.id)
+
+  if (error) {
+    console.error('[financement opco]', error)
+    if ((error as any).code === '42703') {
+      return { success: false, error: 'Colonnes absentes : appliquer les migrations 122 et 126' }
+    }
+    return { success: false, error: 'Enregistrement impossible' }
+  }
+
+  await logAudit({ action: 'update', entity_type: 'session', entity_id: sessionId, details: { financement_opco: true } })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true }
+}
+
+/**
+ * Dépose l'accord de prise en charge reçu de l'OPCO.
+ *
+ * Le fichier arrive tel quel — PDF du portail OPCO ou pièce jointe de mail —
+ * et devient le justificatif du financement au dossier de la session.
+ */
+export async function deposerAccordPecAction(
+  sessionId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const fichier = formData.get('fichier') as File | null
+  if (!fichier || fichier.size === 0) return { success: false, error: 'Aucun fichier' }
+  if (fichier.size > 15 * 1024 * 1024) return { success: false, error: 'Fichier trop lourd (15 Mo maximum)' }
+
+  const { data: sess } = await supabase
+    .from('sessions').select('id, reference, client_id').eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const ext = (fichier.name.split('.').pop() || 'pdf').toLowerCase()
+  const chemin = `${orgId}/sessions/${sessionId}/accord-pec-${Date.now()}.${ext}`
+
+  const { error: upErr } = await supabase.storage
+    .from('documents')
+    .upload(chemin, Buffer.from(await fichier.arrayBuffer()), {
+      contentType: fichier.type || 'application/pdf',
+      upsert: false,
+    })
+  if (upErr) {
+    console.error('[accord pec]', upErr.message)
+    return { success: false, error: 'Dépôt du fichier impossible' }
+  }
+
+  const { data, error } = await supabase.from('documents').insert({
+    organization_id: orgId,
+    nom: `Accord de prise en charge — ${(sess as any).reference || 'session'}`,
+    type: 'accord_prise_en_charge',
+    session_id: sessionId,
+    client_id: (sess as any).client_id || null,
+    storage_path: chemin,
+    file_name: fichier.name,
+    file_size: fichier.size,
+    mime_type: fichier.type || null,
+    origine: String(formData.get('origine') || 'mail'),
+    date_piece: String(formData.get('date_piece') || '') || null,
+    created_by: session.user.id,
+  }).select('id').single()
+
+  if (error) {
+    // Le fichier est déjà déposé : on le retire pour ne pas laisser d'orphelin.
+    await supabase.storage.from('documents').remove([chemin])
+    console.error('[accord pec]', error)
+    if ((error as any).code === '22P02') {
+      return { success: false, error: "Type absent : appliquer la migration 126_accord_prise_en_charge.sql" }
+    }
+    return { success: false, error: 'Enregistrement impossible' }
+  }
+
+  await logAudit({ action: 'create', entity_type: 'document', entity_id: data.id, details: { session: sessionId, piece: 'accord_prise_en_charge' } })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data }
+}

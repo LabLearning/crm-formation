@@ -8,7 +8,7 @@ import {
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
   Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck, Mails, Route,
-  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles,
+  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles, ReceiptEuro,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
 import { DerouleOperationnel } from '@/components/deroule/DerouleOperationnel'
@@ -24,6 +24,7 @@ import { SendDocButton } from './SendDocButton'
 import { SessionDocActions } from './SessionDocActions'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
+import { FacturationOpco } from './FacturationOpco'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
 import { SessionDossier } from './SessionDossier'
@@ -57,6 +58,9 @@ interface Props {
   clientContacts?: any[]
   emailLogs?: any[]
   docEmailLogs?: any[]
+  opcos?: any[]
+  factureOpco?: any
+  accordPec?: any
   apprenantsRef?: any[]
   sessionFormationIds?: string[]
   evaluationsAppr?: any[]
@@ -102,7 +106,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -110,7 +114,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const socleManquants = socleEtat.filter((s: any) => !s.fait).length
   const derouleIncomplet = socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
 
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails'>('session')
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
   const [montantValue, setMontantValue] = useState('')
@@ -377,6 +381,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Documents', icon: FileText }] : []),
+          ...(!isFormateur ? [{ id: 'facturation' as const, label: 'Facturation', icon: ReceiptEuro }] : []),
           ...(!isFormateur ? [{ id: 'mails' as const, label: `Mails (${emailLogs.length})`, icon: Mails }] : []),
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -1202,6 +1207,22 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           apprenants={inscriptions.map((i: any) => ({ id: i.apprenant?.id, nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), email: i.apprenant?.email || null }))}
           contacts={clientContacts as any[]}
           emailLogs={emailLogs as any[]}
+        />
+      )}
+
+      {tab === 'facturation' && !isFormateur && (
+        <FacturationOpco
+          sessionId={session.id}
+          statutSession={session.status || null}
+          opcos={opcos}
+          opcoId={(session as any).opco_id || (session as any).client?.opco_id || null}
+          numeroDossier={(session as any).numero_dossier_opco || null}
+          montantFinance={(session as any).montant_finance_opco ?? null}
+          accordDate={(session as any).accord_pec_date || null}
+          prixHt={(session as any).prix_ht ?? null}
+          dejaFactureAilleurs={Number((session as any).deja_facture_ailleurs || 0)}
+          accord={accordPec}
+          facture={factureOpco}
         />
       )}
 

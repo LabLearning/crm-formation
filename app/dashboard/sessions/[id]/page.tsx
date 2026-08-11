@@ -240,6 +240,29 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .order('created_at', { ascending: false })
     .limit(60)
 
+  // ── Facturation OPCO ────────────────────────────────────────────────────
+  // La facture d'une session se retrouve par son session_id ; l'accord de
+  // prise en charge est le justificatif du financement, déposé au dossier.
+  const [{ data: opcos }, { data: factureSession }, { data: accordPec }] = await Promise.all([
+    supabase.from('opco').select('id, code, nom').eq('is_active', true).order('nom'),
+    supabase.from('factures')
+      .select('id, numero, status, montant_ttc')
+      .eq('organization_id', session.organization.id)
+      .eq('session_id', params.id)
+      .eq('financeur_type', 'opco')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from('documents')
+      .select('id, file_name, date_piece, created_at')
+      .eq('organization_id', session.organization.id)
+      .eq('session_id', params.id)
+      .eq('type', 'accord_prise_en_charge')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
   // Est-ce que le user est le formateur de cette session ?
   const isFormateur = session.user.role === 'formateur' && (sessionData.formateur as any)?.user_id === session.user.id
 
@@ -296,6 +319,9 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         clientContacts={(clientContacts || []) as any[]}
         emailLogs={emailLogs as any[]}
         docEmailLogs={(docEmailLogs || []) as any[]}
+        opcos={(opcos || []) as any[]}
+        factureOpco={factureSession as any}
+        accordPec={accordPec as any}
         apprenantsRef={(apprenantsRef || []) as any[]}
         sessionFormationIds={((sessionFormations || []) as any[]).map((r) => r.formation_id)}
         evaluationsAppr={(evaluationsAppr || []) as any[]}
