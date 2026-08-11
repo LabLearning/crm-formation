@@ -199,15 +199,29 @@ export async function deposerAccordPecAction(
   if (fichier.size > 15 * 1024 * 1024) return { success: false, error: 'Fichier trop lourd (15 Mo maximum)' }
 
   const { data: sess } = await supabase
-    .from('sessions').select('id, reference, client_id').eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
+    .from('sessions').select('id, reference, client_id, numero_dossier_opco')
+    .eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
   if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const contenu = Buffer.from(await fichier.arrayBuffer())
+
+  // Lecture du numéro de dossier dans l'accord : le recopier à la main est la
+  // première source d'erreur, et un numéro faux fait rejeter la facture.
+  let numeroLu: string | null = null
+  try {
+    const { lireAccordPec } = await import('@/lib/accord-pec-parse')
+    const lu = await lireAccordPec(contenu, fichier.type)
+    numeroLu = lu.numero_dossier
+  } catch (e) {
+    console.error('[accord pec — lecture]', e)
+  }
 
   const ext = (fichier.name.split('.').pop() || 'pdf').toLowerCase()
   const chemin = `${orgId}/sessions/${sessionId}/accord-pec-${Date.now()}.${ext}`
 
   const { error: upErr } = await supabase.storage
     .from('documents')
-    .upload(chemin, Buffer.from(await fichier.arrayBuffer()), {
+    .upload(chemin, contenu, {
       contentType: fichier.type || 'application/pdf',
       upsert: false,
     })
@@ -241,9 +255,17 @@ export async function deposerAccordPecAction(
     return { success: false, error: 'Enregistrement impossible' }
   }
 
-  await logAudit({ action: 'create', entity_type: 'document', entity_id: data.id, details: { session: sessionId, piece: 'accord_prise_en_charge' } })
+  // Le numéro lu ne remplace jamais une saisie existante.
+  let numeroEcrit: string | null = null
+  if (numeroLu && !(sess as any).numero_dossier_opco) {
+    const { error: majErr } = await supabase
+      .from('sessions').update({ numero_dossier_opco: numeroLu }).eq('id', sessionId)
+    if (!majErr) numeroEcrit = numeroLu
+  }
+
+  await logAudit({ action: 'create', entity_type: 'document', entity_id: data.id, details: { session: sessionId, piece: 'accord_prise_en_charge', numero_lu: numeroLu } })
   revalidatePath(`/dashboard/sessions/${sessionId}`)
-  return { success: true, data }
+  return { success: true, data: { ...data, numero_lu: numeroLu, numero_ecrit: numeroEcrit } }
 }
 
 /**

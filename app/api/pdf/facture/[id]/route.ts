@@ -85,7 +85,6 @@ export async function GET(
       .filter(Boolean).join(', ')
       || [p.client?.adresse, p.client?.code_postal, p.client?.ville].filter(Boolean).join(', ')
 
-    detail.push({ label: 'Type', valeur: 'INTER' })
     if (p.session?.reference) detail.push({ label: 'Référence', valeur: p.session.reference })
     if (participant) detail.push({ label: 'Participant', valeur: participant })
     if (p.date_debut) detail.push({ label: 'Dates', valeur: `du ${fr(p.date_debut)} au ${fr(p.date_fin)}` })
@@ -127,7 +126,6 @@ export async function GET(
       : [se.lieu, se.adresse || se.client?.adresse, [se.code_postal || se.client?.code_postal, se.ville || se.client?.ville].filter(Boolean).join(' ')]
           .filter(Boolean).join(', ')
 
-    detail.push({ label: 'Type', valeur: (se.type_session || 'INTRA').toUpperCase() })
     if (se.reference) detail.push({ label: 'Référence', valeur: se.reference })
     if (noms.length) detail.push({ label: `${noms.length} participant${noms.length > 1 ? 's' : ''}`, valeur: noms.join(', ') })
     if (se.date_debut) {

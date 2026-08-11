@@ -81,7 +81,11 @@ export function FacturationOpco({
     const res = await deposerAccordPecAction(sessionId, new FormData(e.currentTarget))
     setDepotEnCours(false)
     if (!res.success) { toast('error', res.error || 'Erreur'); return }
-    toast('success', 'Accord de prise en charge déposé')
+    const d = res.data as any
+    toast('success',
+      d?.numero_ecrit ? `Accord déposé — dossier ${d.numero_ecrit} repris du document`
+      : d?.numero_lu ? `Accord déposé — dossier ${d.numero_lu} lu, mais un numéro était déjà saisi`
+      : 'Accord déposé — aucun numéro de dossier lisible dans le document')
     setDepotOuvert(false)
     router.refresh()
   }
@@ -298,7 +302,8 @@ export function FacturationOpco({
       <Modal isOpen={depotOuvert} onClose={() => setDepotOuvert(false)} title="Déposer l'accord de prise en charge" size="md">
         <form onSubmit={deposer} className="space-y-4">
           <p className="text-sm text-surface-600">
-            Le document tel que l&apos;OPCO l&apos;a émis. Il justifie le financement au dossier de la session.
+            Le document tel que l&apos;OPCO l&apos;a émis. Le numéro de dossier y est lu automatiquement
+            s&apos;il est lisible — un accord scanné n&apos;a pas de texte à lire.
           </p>
 
           <div>
