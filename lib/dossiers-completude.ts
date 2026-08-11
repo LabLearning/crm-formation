@@ -28,7 +28,7 @@ export async function completudeDossiers(
 ): Promise<DossierSession[]> {
   const depuis = opts?.depuis || '2000-01-01'
 
-  const sessions = await fetchAllPaged((from, to) =>
+  const brutes = await fetchAllPaged((from, to) =>
     supabase.from('sessions')
       .select('id, reference, intitule, date_debut, status, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
       .eq('organization_id', organizationId)
@@ -37,6 +37,10 @@ export async function completudeDossiers(
       .order('date_debut', { ascending: false })
       .range(from, to),
   )
+  // Les lignes « BPF-… » ont été créées pour faire coller les totaux du bilan
+  // pédagogique et financier : ce sont des agrégats, pas des actions de
+  // formation. Les compter comme des dossiers incomplets n'a pas de sens.
+  const sessions = brutes.filter((s: any) => !String(s.reference || '').startsWith('BPF-'))
   const ids = new Set(sessions.map((s: any) => s.id))
 
   const [inscriptions, emargements, qcmSessions, qcmReponses, qcms, conventions, contrats, recueils, evalAcquis, docs] =
