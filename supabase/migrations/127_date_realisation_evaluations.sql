@@ -65,14 +65,8 @@ UPDATE qcm_reponses
 SET date_realisation = COALESCE(completed_at::date, created_at::date)
 WHERE date_realisation IS NULL;
 
-UPDATE evaluations_satisfaction e
-SET date_realisation = CASE
-      WHEN e.type = 'satisfaction_froid' THEN COALESCE(e.completee_at::date, e.created_at::date)
-      ELSE COALESCE(s.date_fin, s.date_debut)
-    END
-FROM sessions s
-WHERE e.session_id = s.id
-  AND e.date_realisation IS NULL;
+-- La table evaluations_satisfaction est vide en base : la colonne est ajoutée
+-- pour l'avenir, il n'y a rien à reprendre.
 
 -- ── La règle tient en base, pas dans le code ────────────────────────────────
 -- Une réponse créée par le portail, par une reprise ou par un écran du CRM
