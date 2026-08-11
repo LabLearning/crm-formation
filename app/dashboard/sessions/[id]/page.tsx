@@ -227,6 +227,39 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Est-ce que le user est le formateur de cette session ?
   const isFormateur = session.user.role === 'formateur' && (sessionData.formateur as any)?.user_id === session.user.id
 
+  // Pièces du dossier : produites par le CRM, ou justifiées par un document
+  // déposé (migration 124).
+  const piecesRes = await supabase
+    .from('documents')
+    .select('id, type, origine, date_piece, file_name, created_at')
+    .eq('session_id', params.id)
+  const piecesTableManquante = !!piecesRes.error
+  const docsParType = new Map<string, any>()
+  for (const d of (piecesRes.data as any[]) || []) if (!docsParType.has(d.type)) docsParType.set(d.type, d)
+
+  const { PIECES: PIECES_DOSSIER } = await import('@/lib/pieces-session')
+  const aRepondu = (types: string[]) =>
+    (qcmReponses || []).some((r: any) => r.is_complete &&
+      (qcmSessions || []).some((q: any) => q.qcm_id === r.qcm_id && types.includes(q.qcm?.type)))
+
+  const natif: Record<string, boolean> = {
+    recueil: !!recueil,
+    convention: (conventions || []).some((c: any) => c.signature_client_date),
+    contrat: !!contratFormateur,
+    positionnement: aRepondu(['positionnement', 'entree']),
+    emargement: (emargements || []).some((e: any) => e.signature_data),
+    acquis: aRepondu(['sortie', 'evaluation']) || nbEvalAcquis > 0,
+    satisfaction: aRepondu(['satisfaction_chaud', 'satisfaction_froid']),
+  }
+
+  const etatsPieces = PIECES_DOSSIER.map((p) => {
+    const doc = docsParType.get(p.typeDocument)
+    if (natif[p.cle]) return { cle: p.cle, presente: true, source: 'crm', documentId: doc?.id || null, fichier: doc?.file_name || null, dateDepot: doc?.date_piece || null }
+    if (doc) return { cle: p.cle, presente: true, source: doc.origine || 'mail', documentId: doc.id, fichier: doc.file_name, dateDepot: doc.date_piece || doc.created_at }
+    return { cle: p.cle, presente: false, source: null, documentId: null, fichier: null, dateDepot: null }
+  })
+
+
   return (
     <div className="animate-fade-in">
       <SessionDetailClient
@@ -261,6 +294,8 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         derouleValidations={derouleValidations}
         derouleTableManquante={derouleTableManquante}
         socleEtat={socleEtat}
+        etatsPieces={etatsPieces}
+        piecesTableManquante={piecesTableManquante}
         estHygiene={estHygiene}
       />
     </div>
