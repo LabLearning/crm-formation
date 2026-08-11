@@ -87,7 +87,7 @@ export interface PositionnementRow {
 }
 
 /**
- * État du questionnaire de positionnement (types 'positionnement' et 'entree')
+ * État du questionnaire de positionnement
  * pour les inscrits d'une session : qui l'a passé, qui ne l'a pas fait.
  * S'appuie sur qcm_reponses, la table alimentée par lib/qcm-auto-seed.ts et
  * complétée par le portail apprenant.
@@ -105,7 +105,7 @@ export async function getPositionnementEtat(
     .eq('session_id', sessionId)
 
   const pertinentes = ((reponses || []) as any[]).filter((r) =>
-    ['positionnement', 'entree'].includes(r.qcm?.type),
+    r.qcm?.type === 'positionnement',
   )
 
   // Aucun questionnaire de positionnement/entrée rattaché à cette session :

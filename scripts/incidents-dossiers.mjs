@@ -98,7 +98,7 @@ const manquantesDe = (s) => {
     emargement: aEm.has(s.id),
     contrat: aCtr.has(s.id),
     recueil: aRec.has(s.id),
-    positionnement: aType(s.id, ['positionnement', 'entree']),
+    positionnement: aType(s.id, ['positionnement']),
     acquis: aType(s.id, ['sortie']) || aAcq.has(s.id),
     satisfaction: aType(s.id, ['satisfaction_chaud', 'satisfaction_froid']),
   }

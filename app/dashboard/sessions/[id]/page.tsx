@@ -143,7 +143,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // rattachés et les réponses effectivement complétées.
   const { SOCLE, estFormationHygiene } = await import('@/lib/dpo')
   const typeParJalon: Record<string, string[]> = {
-    positionnement: ['positionnement', 'entree'],
+    positionnement: ['positionnement'],
     evaluation_acquis: ['sortie'],
     satisfaction_chaud: ['satisfaction_chaud'],
     satisfaction_froid: ['satisfaction_froid'],
@@ -285,7 +285,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     recueil: !!recueil,
     convention: (conventions || []).some((c: any) => c.signature_client_date),
     contrat: !!contratFormateur,
-    positionnement: aRepondu(['positionnement', 'entree']),
+    positionnement: aRepondu(['positionnement']),
     emargement: (emargements || []).some((e: any) => e.signature_data),
     acquis: aRepondu(['sortie']) || nbEvalAcquis > 0,
     satisfaction: aRepondu(['satisfaction_chaud', 'satisfaction_froid']),

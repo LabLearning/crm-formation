@@ -102,7 +102,7 @@ export async function completudeDossiers(
       recueil: aRecueil.has(s.id),
       convention: aConvention.has(s.id),
       contrat: aContrat.has(s.id),
-      positionnement: aType(s.id, ['positionnement', 'entree']),
+      positionnement: aType(s.id, ['positionnement']),
       emargement: aEmargement.has(s.id),
       acquis: aType(s.id, ['sortie']) || aEvalAcquis.has(s.id),
       satisfaction: aType(s.id, ['satisfaction_chaud', 'satisfaction_froid']),
