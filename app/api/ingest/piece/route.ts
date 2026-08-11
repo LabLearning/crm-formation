@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
   let sessionId: string | null = null
   let clientId: string | null = null
   let formateurId: string | null = null
+  let apprenantId: string | null = null
   let libelleCible = ''
 
   const cibleFormateur = !!(emailFormateur || nomFormateur)
@@ -165,6 +166,7 @@ export async function POST(request: NextRequest) {
     if ('erreur' in trouve) return NextResponse.json(trouve.erreur, { status: trouve.statut })
     sessionId = trouve.id
     clientId = trouve.clientId
+    apprenantId = trouve.apprenantId || null
     libelleCible = trouve.libelle
   }
 
@@ -201,6 +203,7 @@ export async function POST(request: NextRequest) {
     session_id: sessionId,
     client_id: clientId,
     formateur_id: formateurId,
+    apprenant_id: apprenantId,
     // La fiche session lit `storage_path`, la fiche formateur lit `file_url`.
     ...(sessionId ? { storage_path: chemin } : { file_url: chemin }),
     file_name: fichier.name,
@@ -324,7 +327,10 @@ async function deviner(
   supabase: any,
   orgId: string,
   nomFichier: string,
-): Promise<{ id: string; clientId: string | null; libelle: string } | { erreur: any; statut: number }> {
+): Promise<
+  { id: string; clientId: string | null; apprenantId?: string | null; libelle: string }
+  | { erreur: any; statut: number }
+> {
   const m = nomFichier.match(/^(\d{4}-\d{2}-\d{2})__[^_]*__(.+)$/)
   if (!m) {
     return { erreur: { error: 'Nom de fichier non exploitable', introuvable: true }, statut: 404 }
@@ -345,8 +351,11 @@ async function deviner(
     return [...sien].some((w) => distinctifs.includes(w))
   })
 
+  // Beaucoup de pièces sont nominatives — certificats, attestations — et
+  // portent le nom du stagiaire, pas celui de l'entreprise. On passe alors
+  // par l'apprenant, ce qui donne en prime le rattachement à sa fiche.
   if (candidats.length === 0) {
-    return { erreur: { error: `Client non reconnu dans « ${m[2]} »`, introuvable: true }, statut: 404 }
+    return await devinerParApprenant(supabase, orgId, distinctifs, dateMail, m[2])
   }
   if (candidats.length > 1) {
     return {
@@ -389,4 +398,80 @@ async function deviner(
   }
 
   return { id: sessions[0].id, clientId: client.id, libelle: sessions[0].reference }
+}
+
+
+/** Repli : la pièce porte le nom d'un stagiaire plutôt que celui du client. */
+async function devinerParApprenant(
+  supabase: any,
+  orgId: string,
+  distinctifs: string[],
+  dateMail: string,
+  libelleFichier: string,
+): Promise<
+  { id: string; clientId: string | null; apprenantId: string; libelle: string }
+  | { erreur: any; statut: number }
+> {
+  const { data: apprenants } = await supabase
+    .from('apprenants').select('id, prenom, nom').eq('organization_id', orgId).range(0, 9999)
+
+  // Nom ET prénom doivent figurer : un nom seul est trop souvent partagé.
+  const candidats = (apprenants || []).filter((a: any) => {
+    const n = mots(a.nom).filter((w) => !BANALS.has(w))
+    const p = mots(a.prenom).filter((w) => !BANALS.has(w))
+    if (n.length === 0 || p.length === 0) return false
+    return n.some((w) => distinctifs.includes(w)) && p.some((w) => distinctifs.includes(w))
+  })
+
+  if (candidats.length === 0) {
+    return { erreur: { error: `Ni client ni stagiaire reconnu dans « ${libelleFichier} »`, introuvable: true }, statut: 404 }
+  }
+  if (candidats.length > 1) {
+    return {
+      erreur: {
+        error: `Plusieurs stagiaires correspondent à « ${libelleFichier} »`,
+        ambigu: true,
+        candidats: candidats.slice(0, 6).map((a: any) => `${a.prenom} ${a.nom}`),
+      },
+      statut: 409,
+    }
+  }
+
+  const appr = candidats[0]
+  const debut = new Date(dateMail); debut.setDate(debut.getDate() - 130)
+  const fin = new Date(dateMail); fin.setDate(fin.getDate() + 20)
+
+  const { data: insc } = await supabase
+    .from('inscriptions')
+    .select('session:session_id(id, reference, date_debut, client_id)')
+    .eq('organization_id', orgId).eq('apprenant_id', appr.id)
+
+  const sessions = (insc || [])
+    .map((i: any) => i.session).filter(Boolean)
+    .filter((s: any) => s.date_debut >= debut.toISOString().slice(0, 10)
+                     && s.date_debut <= fin.toISOString().slice(0, 10))
+
+  if (sessions.length === 0) {
+    return {
+      erreur: { error: `${appr.prenom} ${appr.nom} : aucune session autour du ${dateMail}`, introuvable: true },
+      statut: 404,
+    }
+  }
+  if (sessions.length > 1) {
+    return {
+      erreur: {
+        error: `${appr.prenom} ${appr.nom} : ${sessions.length} sessions possibles autour du ${dateMail}`,
+        ambigu: true,
+        candidats: sessions.map((s: any) => `${s.reference} (${s.date_debut})`),
+      },
+      statut: 409,
+    }
+  }
+
+  return {
+    id: sessions[0].id,
+    clientId: sessions[0].client_id || null,
+    apprenantId: appr.id,
+    libelle: `${sessions[0].reference} · ${appr.prenom} ${appr.nom}`,
+  }
 }
