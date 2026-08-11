@@ -95,17 +95,19 @@ export async function POST(request: NextRequest) {
   const refSession = String(form.get('session_reference') || '').trim()
   const dendreoId = String(form.get('dendreo_id') || '').trim()
   const emailFormateur = String(form.get('formateur_email') || '').trim().toLowerCase()
+  const nomFormateur = String(form.get('formateur_nom') || '').trim()
 
   let sessionId: string | null = null
   let clientId: string | null = null
   let formateurId: string | null = null
   let libelleCible = ''
 
+  const cibleFormateur = !!(emailFormateur || nomFormateur)
   const cibleSession = !!(refSession || dendreoId)
   if (cibleSession && !TYPES_SESSION.has(type)) {
     return NextResponse.json({ error: `Type de session inconnu : ${type}` }, { status: 400 })
   }
-  if (!cibleSession && emailFormateur && !TYPES_FORMATEUR.has(type)) {
+  if (!cibleSession && cibleFormateur && !TYPES_FORMATEUR.has(type)) {
     return NextResponse.json({ error: `Type de pièce formateur inconnu : ${type}` }, { status: 400 })
   }
 
@@ -126,15 +128,16 @@ export async function POST(request: NextRequest) {
     sessionId = (s as any).id
     clientId = (s as any).client_id || null
     libelleCible = (s as any).reference || `dendreo ${dendreoId}`
-  } else if (emailFormateur) {
-    const { data: f } = await supabase
-      .from('formateurs').select('id, prenom, nom')
-      .eq('organization_id', orgId).ilike('email', emailFormateur).limit(1).maybeSingle()
-    if (!f) return NextResponse.json({ error: `Formateur ${emailFormateur} introuvable` }, { status: 404 })
-    formateurId = (f as any).id
-    libelleCible = `${(f as any).prenom || ''} ${(f as any).nom || ''}`.trim()
+  } else if (cibleFormateur) {
+    const trouve = await retrouverFormateur(supabase, orgId, emailFormateur, nomFormateur)
+    if ('erreur' in trouve) return NextResponse.json(trouve.erreur, { status: trouve.statut })
+    formateurId = trouve.id
+    libelleCible = trouve.libelle
   } else {
-    return NextResponse.json({ error: 'Indiquez session_reference, dendreo_id ou formateur_email' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Indiquez session_reference, dendreo_id, formateur_email ou formateur_nom' },
+      { status: 400 },
+    )
   }
 
   // ── Idempotence : même fichier, même cible → on ne redépose pas ──
@@ -188,4 +191,73 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, id: data.id, cible: libelleCible, type })
+}
+
+/**
+ * Retrouve un formateur par son email, à défaut par son nom.
+ *
+ * Les intervenants écrivent depuis plusieurs adresses — professionnelle,
+ * personnelle, celle de leur société — et une seule est enregistrée. Le nom
+ * devient alors la clé de repli.
+ *
+ * Une homonymie n'est jamais tranchée au hasard : on renvoie les candidats et
+ * on laisse l'appelant choisir. Rattacher le diplôme d'un formateur à la
+ * fiche d'un autre serait pire que ne rien déposer.
+ */
+async function retrouverFormateur(
+  supabase: any,
+  orgId: string,
+  email: string,
+  nom: string,
+): Promise<{ id: string; libelle: string } | { erreur: any; statut: number }> {
+  const libelleDe = (f: any) => `${f.prenom || ''} ${f.nom || ''}`.trim()
+
+  if (email) {
+    const { data } = await supabase
+      .from('formateurs').select('id, prenom, nom')
+      .eq('organization_id', orgId).ilike('email', email).limit(1).maybeSingle()
+    if (data) return { id: (data as any).id, libelle: libelleDe(data) }
+  }
+
+  if (!nom) {
+    return { erreur: { error: `Formateur ${email} introuvable`, introuvable: true }, statut: 404 }
+  }
+
+  // Comparaison dépouillée : accents, tirets et casse ne doivent pas séparer
+  // « Jean-Philippe MA » de « jean philippe ma ».
+  const nu = (v: string) =>
+    (v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+  const { data: tous } = await supabase
+    .from('formateurs').select('id, prenom, nom, email').eq('organization_id', orgId)
+
+  const cherche = nu(nom)
+  const motsCherches = cherche.split(' ').filter((m: string) => m.length > 1)
+
+  const candidats = (tous || []).filter((f: any) => {
+    const complet = nu(`${f.prenom || ''} ${f.nom || ''}`)
+    if (complet === cherche) return true
+    const mots = complet.split(' ').filter((m: string) => m.length > 1)
+    // Tous les mots cherchés se retrouvent dans le nom enregistré, ou l'inverse.
+    return motsCherches.length > 0 && (
+      motsCherches.every((m: string) => mots.includes(m)) ||
+      mots.every((m: string) => motsCherches.includes(m))
+    )
+  })
+
+  if (candidats.length === 1) {
+    return { id: candidats[0].id, libelle: libelleDe(candidats[0]) }
+  }
+  if (candidats.length === 0) {
+    return { erreur: { error: `Formateur « ${nom} » introuvable`, introuvable: true }, statut: 404 }
+  }
+  return {
+    erreur: {
+      error: `Plusieurs formateurs correspondent à « ${nom} »`,
+      ambigu: true,
+      candidats: candidats.map((f: any) => ({ nom: libelleDe(f), email: f.email })),
+    },
+    statut: 409,
+  }
 }
