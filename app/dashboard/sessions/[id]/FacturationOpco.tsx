@@ -4,12 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ReceiptEuro, Upload, Download, Trash2, Loader2, FileCheck2, AlertCircle,
-  CheckCircle2, ExternalLink,
+  CheckCircle2, ExternalLink, RefreshCw,
 } from 'lucide-react'
 import { Button, Input, Select, Modal, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import {
   enregistrerFinancementOpcoAction, deposerAccordPecAction, genererFactureOpcoAction,
+  recupererFinancementDendreoAction,
 } from './facture-opco-actions'
 import { lienPieceAction, retirerPieceAction } from './pieces-actions'
 
@@ -37,10 +38,11 @@ const PROVENANCES = [
  */
 export function FacturationOpco({
   sessionId, statutSession, opcos, opcoId, numeroDossier, montantFinance, accordDate,
-  prixHt, dejaFactureAilleurs, accord, facture,
+  prixHt, dejaFactureAilleurs, accord, facture, dendreoId,
 }: {
   sessionId: string
   statutSession: string | null
+  dendreoId?: string | null
   opcos: Opco[]
   opcoId: string | null
   numeroDossier: string | null
@@ -58,6 +60,7 @@ export function FacturationOpco({
   const [depotEnCours, setDepotEnCours] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [generation, setGeneration] = useState(false)
+  const [recup, setRecup] = useState(false)
 
   const montantAFacturer = montantFinance ?? prixHt ?? 0
   const dejaAilleurs = Number(dejaFactureAilleurs || 0)
@@ -101,6 +104,21 @@ export function FacturationOpco({
     else toast('error', r.error || 'Erreur')
   }
 
+  // Le dossier est déjà monté dans Dendreo : inutile de resaisir l'accord.
+  async function recupererDepuisDendreo() {
+    setRecup(true)
+    const r = await recupererFinancementDendreoAction(sessionId)
+    setRecup(false)
+    if (!r.success) { toast('error', r.error || 'Aucun financement trouvé'); return }
+    const d = r.data as any
+    toast('success', [
+      d.numero_dossier ? `Dossier ${d.numero_dossier}` : null,
+      d.montant_finance ? euro(Number(d.montant_finance)) : null,
+      d.opco || null,
+    ].filter(Boolean).join(' · ') || 'Financement récupéré')
+    router.refresh()
+  }
+
   async function genererFacture(forcer = false) {
     setGeneration(true)
     const r = await genererFactureOpcoAction(sessionId, forcer ? { forcer: true } : undefined)
@@ -126,14 +144,24 @@ export function FacturationOpco({
 
       {/* ── Prise en charge ── */}
       <form onSubmit={enregistrer} className="card p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-heading font-semibold text-surface-900 flex items-center gap-2">
-            <FileCheck2 className="h-4 w-4 text-brand-500" />
-            Prise en charge
-          </h2>
-          <p className="text-xs text-surface-500 mt-0.5">
-            Le numéro de dossier est repris sur la facture comme numéro de prise en charge : sans lui, l&apos;OPCO ne règle pas.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-heading font-semibold text-surface-900 flex items-center gap-2">
+              <FileCheck2 className="h-4 w-4 text-brand-500" />
+              Prise en charge
+            </h2>
+            <p className="text-xs text-surface-500 mt-0.5">
+              Le numéro de dossier est repris sur la facture comme numéro de prise en charge : sans lui, l&apos;OPCO ne règle pas.
+            </p>
+          </div>
+          {dendreoId && (
+            <button type="button" onClick={recupererDepuisDendreo} disabled={recup}
+              title="Reprendre l'OPCO, le numéro de dossier et le montant depuis Dendreo"
+              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs disabled:opacity-50 shrink-0">
+              {recup ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              Récupérer depuis Dendreo
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

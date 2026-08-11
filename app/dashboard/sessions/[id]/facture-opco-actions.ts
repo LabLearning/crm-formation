@@ -245,3 +245,26 @@ export async function deposerAccordPecAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true, data }
 }
+
+/**
+ * Récupère le financement OPCO depuis Dendreo, où l'accord de prise en charge
+ * a déjà été saisi lors du montage du dossier.
+ */
+export async function recupererFinancementDendreoAction(sessionId: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+
+  try {
+    const { importerFinancementSession } = await import('@/lib/dendreo-financements')
+    const r = await importerFinancementSession(supabase, session.organization.id, sessionId)
+    if (!r.trouve) return { success: false, error: r.raison || 'Aucun financement trouvé' }
+
+    await logAudit({ action: 'update', entity_type: 'session', entity_id: sessionId, details: { financement: 'dendreo' } })
+    revalidatePath(`/dashboard/sessions/${sessionId}`)
+    return { success: true, data: r }
+  } catch (e: any) {
+    console.error('[financement dendreo]', e)
+    return { success: false, error: e?.message || 'Dendreo injoignable' }
+  }
+}

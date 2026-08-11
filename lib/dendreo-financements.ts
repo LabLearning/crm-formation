@@ -125,3 +125,70 @@ export async function importerFinancementsDendreo(
 
   return resume
 }
+
+/**
+ * Récupère le financement d'une seule session, à la demande.
+ *
+ * Même règle que la reprise globale, mais déclenchée depuis la fiche session :
+ * l'accord de prise en charge est déjà saisi dans Dendreo, il n'y a pas de
+ * raison de le retaper. Renvoie ce qui a été trouvé pour que l'écran puisse
+ * le dire — « rien trouvé » est une réponse utile, pas un échec.
+ */
+export async function importerFinancementSession(
+  supabase: any,
+  organizationId: string,
+  sessionId: string,
+): Promise<{
+  trouve: boolean
+  raison?: string
+  opco?: string | null
+  numero_dossier?: string | null
+  montant_finance?: number | null
+  deja_facture?: number
+}> {
+  const { data: s } = await supabase
+    .from('sessions').select('id, dendreo_id')
+    .eq('id', sessionId).eq('organization_id', organizationId).maybeSingle()
+  if (!s) return { trouve: false, raison: 'Session introuvable' }
+  if (!(s as any).dendreo_id) {
+    return { trouve: false, raison: "Cette session n'a pas été reprise de Dendreo : aucun financement à y chercher." }
+  }
+
+  const actionId = String((s as any).dendreo_id)
+  const [financements, financeurs] = await Promise.all([
+    dendreo(`/financements.php?id_action_de_formation=${encodeURIComponent(actionId)}`),
+    dendreo('/financeurs.php?per_page=5000'),
+  ])
+
+  // Le filtre côté API n'est pas garanti : on revérifie l'appartenance.
+  const fs = (financements || []).filter((f: any) => String(f.id_action_de_formation) === actionId)
+  if (fs.length === 0) {
+    return { trouve: false, raison: 'Aucun financement enregistré dans Dendreo pour cette action de formation.' }
+  }
+
+  const parFinanceur = new Map((financeurs || []).map((f: any) => [String(f.id_opca), f]))
+  const { data: opcos } = await supabase.from('opco').select('id, code, nom')
+
+  const finance = fs.reduce((a: number, f: any) => a + Number(f.montant_total_finance || 0), 0)
+  const facture = fs.reduce((a: number, f: any) => a + Number(f.montant_total_facture || 0), 0)
+  const dossier = fs.map((f: any) => f.numero_dossier).find(Boolean) || null
+  const financeur: any = parFinanceur.get(String(fs[0]?.id_financeur || ''))
+  const opcoId = trouverOpco(financeur?.raison_sociale || '', (opcos as any[]) || [])
+
+  const { error } = await supabase.from('sessions').update({
+    ...(opcoId ? { opco_id: opcoId } : {}),
+    ...(dossier ? { numero_dossier_opco: dossier } : {}),
+    ...(finance ? { montant_finance_opco: finance } : {}),
+    deja_facture_ailleurs: facture,
+    financement_synced_at: new Date().toISOString(),
+  }).eq('id', sessionId)
+  if (error) return { trouve: false, raison: 'Enregistrement impossible' }
+
+  return {
+    trouve: true,
+    opco: financeur?.raison_sociale || null,
+    numero_dossier: dossier,
+    montant_finance: finance || null,
+    deja_facture: facture,
+  }
+}

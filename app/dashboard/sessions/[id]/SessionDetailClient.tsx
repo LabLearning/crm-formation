@@ -1214,6 +1214,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         <FacturationOpco
           sessionId={session.id}
           statutSession={session.status || null}
+          dendreoId={(session as any).dendreo_id || null}
           opcos={opcos}
           opcoId={(session as any).opco_id || (session as any).client?.opco_id || null}
           numeroDossier={(session as any).numero_dossier_opco || null}
