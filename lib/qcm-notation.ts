@@ -17,17 +17,12 @@ export interface ResultatNotation {
 /**
  * Calcule le score, enregistre le détail des réponses et clôt le
  * questionnaire.
- *
- * `saisiPar` distingue les deux cas : nul quand le stagiaire répond lui-même,
- * renseigné quand un tiers transcrit. Cette distinction est conservée en base
- * parce qu'elle change la valeur probante de la pièce.
  */
 export async function enregistrerReponses(
   supabase: any,
   qcmReponseId: string,
   qcmId: string,
   reponses: Record<string, string>,
-  saisiPar?: string | null,
 ): Promise<{ success: boolean; error?: string; data?: ResultatNotation }> {
   const { data: questions } = await supabase
     .from('qcm_questions')
@@ -90,17 +85,13 @@ export async function enregistrerReponses(
     await supabase.from('qcm_reponses_detail').insert(details)
   }
 
-  const maj: any = {
+  const maj = {
     score,
     score_points: pointsObtenusTotal,
     score_total: pointsPossibles,
     is_reussi: isReussi,
     is_complete: true,
     completed_at: new Date().toISOString(),
-  }
-  if (saisiPar) {
-    maj.saisi_par = saisiPar
-    maj.saisi_le = new Date().toISOString()
   }
 
   const { error } = await supabase.from('qcm_reponses').update(maj).eq('id', qcmReponseId)

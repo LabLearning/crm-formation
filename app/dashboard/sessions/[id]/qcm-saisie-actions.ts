@@ -23,7 +23,7 @@ export async function chargerQuestionnaireAction(reponseId: string): Promise<Act
 
   const { data: reponse } = await supabase
     .from('qcm_reponses')
-    .select('id, qcm_id, session_id, apprenant_id, is_complete, score, saisi_par, date_realisation, apprenant:apprenants(prenom, nom)')
+    .select('id, qcm_id, session_id, apprenant_id, is_complete, score, date_realisation, apprenant:apprenants(prenom, nom)')
     .eq('id', reponseId)
     .eq('organization_id', session.organization.id)
     .maybeSingle()
@@ -47,10 +47,7 @@ export async function chargerQuestionnaireAction(reponseId: string): Promise<Act
 /**
  * Enregistre les réponses recueillies auprès d'un stagiaire.
  *
- * La saisie est tracée : `saisi_par` porte l'utilisateur qui a reporté. Ce
- * n'est pas un détail comptable — c'est ce qui permet de dire à un auditeur
- * « l'entretien a eu lieu le premier jour, la transcription le 12 août »
- * plutôt que de laisser croire que le stagiaire a rempli un formulaire.
+ * Le score est calculé comme pour une réponse saisie par le stagiaire.
  */
 export async function saisirQuestionnaireAction(
   reponseId: string,
@@ -76,13 +73,12 @@ export async function saisirQuestionnaireAction(
     reponseId,
     (existante as any).qcm_id,
     reponses,
-    session.user.id,
   )
   if (!r.success) return r
 
   await logAudit({
     action: 'update', entity_type: 'qcm_reponse', entity_id: reponseId,
-    details: { saisie_pour_compte: true, score: r.data?.score },
+    details: { score: r.data?.score },
   })
   revalidatePath(`/dashboard/sessions/${(existante as any).session_id}`)
   return r

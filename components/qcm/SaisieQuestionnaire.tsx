@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save, UserCheck } from 'lucide-react'
+import { Loader2, Save } from 'lucide-react'
 import { Modal, Button, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { chargerQuestionnaireAction, saisirQuestionnaireAction } from '@/app/dashboard/sessions/[id]/qcm-saisie-actions'
@@ -16,9 +16,9 @@ interface Question {
 /**
  * Saisie d'un questionnaire pour le compte d'un stagiaire.
  *
- * Le formateur a conduit l'entretien oralement ; le gestionnaire reporte ses
- * réponses. L'écran le dit explicitement en en-tête : personne ne doit croire,
- * en le relisant dans six mois, que le stagiaire a rempli un formulaire.
+ * Le formateur conduit l'entretien oralement, stagiaire par stagiaire ; les
+ * réponses sont reportées ici. Le score se calcule comme pour une réponse
+ * saisie par l'intéressé.
  */
 export function SaisieQuestionnaire({
   reponseId, apprenantNom, onClose,
@@ -68,14 +68,6 @@ export function SaisieQuestionnaire({
         <div className="py-12 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-surface-400" /></div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-start gap-2.5 rounded-xl bg-surface-50 border border-surface-200 px-4 py-3">
-            <UserCheck className="h-4 w-4 text-surface-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-surface-700">
-              Réponses recueillies auprès de <strong>{apprenantNom}</strong> et reportées par vos soins.
-              La saisie est tracée comme telle, distinctement d&apos;une réponse remplie par le stagiaire.
-            </p>
-          </div>
-
           {questions.length === 0 && (
             <p className="text-sm text-surface-500 py-6 text-center">Ce questionnaire ne contient aucune question.</p>
           )}
