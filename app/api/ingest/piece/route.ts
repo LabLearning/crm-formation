@@ -47,7 +47,14 @@ const TYPES_FORMATEUR = new Set([
  */
 function typeDApresNom(nom: string): string {
   const n = nom.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  if (/feuille[_ -]*emargement|emargement|presence/.test(n)) return 'emargement_signe'
+  // Abréviations maison, relevées dans la boîte : « FE CLIENT », « CR NOM »,
+  // « AF NOM ». Elles ne veulent rien dire hors contexte, d'où l'ancrage en
+  // début de nom pour éviter de happer un mot quelconque.
+  if (/^fe[ _-]/.test(n)) return 'emargement_signe'
+  if (/^cr[ _-]/.test(n)) return 'certificat_realisation'
+  if (/^af[ _-]/.test(n)) return 'attestation_fin'
+  if (/rapport[_ -]*satisfaction/.test(n)) return 'satisfaction'
+  if (/feuille[_ -]*d?[_ ']*emargement|emargement|presence/.test(n)) return 'emargement_signe'
   if (/convention/.test(n)) return 'convention_signee'
   if (/contrat[_ -]*(sous[_ -]*trait|formateur|prestation)/.test(n)) return 'contrat_formateur'
   if (/certificat[_ -]*(de[_ -]*)?realisation/.test(n)) return 'certificat_realisation'
@@ -151,10 +158,14 @@ export async function POST(request: NextRequest) {
     formateurId = trouve.id
     libelleCible = trouve.libelle
   } else {
-    return NextResponse.json(
-      { error: 'Indiquez session_reference, dendreo_id, formateur_email ou formateur_nom' },
-      { status: 400 },
-    )
+    // Dernier recours : deviner la session d'après le nom du client et la date
+    // du mail, tous deux présents dans le nom du fichier collecté
+    // (« 2025-05-13__sales@…__FE SQUADRA 15.pdf »).
+    const trouve = await deviner(supabase, orgId, fichier.name)
+    if ('erreur' in trouve) return NextResponse.json(trouve.erreur, { status: trouve.statut })
+    sessionId = trouve.id
+    clientId = trouve.clientId
+    libelleCible = trouve.libelle
   }
 
   // ── Idempotence : même fichier, même cible → on ne redépose pas ──
@@ -277,4 +288,105 @@ async function retrouverFormateur(
     },
     statut: 409,
   }
+}
+
+
+/** Texte comparable : sans accents, sans ponctuation, en majuscules. */
+function mots(v: string): string[] {
+  return (v || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase().replace(/[^A-Z0-9]+/g, ' ')
+    .split(' ').filter((m) => m.length >= 3)
+}
+
+// Mots trop courants pour identifier un client : ils sont dans la moitié des
+// raisons sociales du secteur, ou décrivent le document lui-même.
+const BANALS = new Set([
+  'SAS', 'SARL', 'SASU', 'EURL', 'SNC', 'GROUPE', 'FRANCE', 'THE', 'LES', 'DES',
+  'FEUILLE', 'EMARGEMENT', 'CERTIFICAT', 'REALISATION', 'ATTESTATION', 'FORMATION',
+  'CONVENTION', 'RAPPORT', 'SATISFACTION', 'CHAUD', 'FROID', 'PROGRAMME', 'SIGNE',
+  'SIGNED', 'FINAL', 'FINALE', 'COPIE', 'HYGIENE', 'ALIMENTAIRE', 'PREVENTION',
+  'RISQUES', 'DUERP', 'ACCUEIL', 'CLIENT', 'PDF', 'DOC', 'LAB', 'LEARNING',
+])
+
+/**
+ * Retrouve la session d'une pièce à partir du nom du fichier collecté.
+ *
+ * Le nom porte la date du mail et, presque toujours, le nom du client —
+ * « FE SQUADRA 15 », « Feuille d'émargement … Chicken Street Plombières ».
+ * On identifie donc le client, puis sa session la plus proche de cette date.
+ *
+ * Le principe qui gouverne tout : en cas de doute, ne rien faire. Une pièce
+ * rattachée à la mauvaise session est pire qu'une pièce non rattachée — elle
+ * est invisible et fausse deux dossiers à la fois.
+ */
+async function deviner(
+  supabase: any,
+  orgId: string,
+  nomFichier: string,
+): Promise<{ id: string; clientId: string | null; libelle: string } | { erreur: any; statut: number }> {
+  const m = nomFichier.match(/^(\d{4}-\d{2}-\d{2})__[^_]*__(.+)$/)
+  if (!m) {
+    return { erreur: { error: 'Nom de fichier non exploitable', introuvable: true }, statut: 404 }
+  }
+  const dateMail = m[1]
+  const distinctifs = mots(m[2].replace(/\.[^.]+$/, '')).filter((w) => !BANALS.has(w))
+  if (distinctifs.length === 0) {
+    return { erreur: { error: 'Aucun nom de client identifiable', introuvable: true }, statut: 404 }
+  }
+
+  const { data: clients } = await supabase
+    .from('clients').select('id, raison_sociale, nom_commercial').eq('organization_id', orgId)
+
+  const candidats = (clients || []).filter((c: any) => {
+    const sien = new Set([...mots(c.raison_sociale), ...mots(c.nom_commercial)].filter((w) => !BANALS.has(w)))
+    if (sien.size === 0) return false
+    // Il faut qu'un mot distinctif du client figure dans le nom du fichier.
+    return [...sien].some((w) => distinctifs.includes(w))
+  })
+
+  if (candidats.length === 0) {
+    return { erreur: { error: `Client non reconnu dans « ${m[2]} »`, introuvable: true }, statut: 404 }
+  }
+  if (candidats.length > 1) {
+    return {
+      erreur: {
+        error: `Plusieurs clients correspondent à « ${m[2]} »`,
+        ambigu: true,
+        candidats: candidats.slice(0, 6).map((c: any) => c.raison_sociale),
+      },
+      statut: 409,
+    }
+  }
+
+  // La pièce est envoyée après la formation, rarement plus de quatre mois.
+  const client = candidats[0]
+  const debut = new Date(dateMail); debut.setDate(debut.getDate() - 130)
+  const fin = new Date(dateMail); fin.setDate(fin.getDate() + 20)
+
+  const { data: sessions } = await supabase
+    .from('sessions').select('id, reference, date_debut')
+    .eq('organization_id', orgId).eq('client_id', client.id)
+    .gte('date_debut', debut.toISOString().slice(0, 10))
+    .lte('date_debut', fin.toISOString().slice(0, 10))
+    .order('date_debut', { ascending: false })
+
+  if (!sessions || sessions.length === 0) {
+    return {
+      erreur: { error: `${client.raison_sociale} : aucune session autour du ${dateMail}`, introuvable: true },
+      statut: 404,
+    }
+  }
+  if (sessions.length > 1) {
+    return {
+      erreur: {
+        error: `${client.raison_sociale} : ${sessions.length} sessions possibles autour du ${dateMail}`,
+        ambigu: true,
+        candidats: sessions.map((s: any) => `${s.reference} (${s.date_debut})`),
+      },
+      statut: 409,
+    }
+  }
+
+  return { id: sessions[0].id, clientId: client.id, libelle: sessions[0].reference }
 }
