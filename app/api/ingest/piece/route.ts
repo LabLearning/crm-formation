@@ -331,14 +331,15 @@ async function deviner(
   { id: string; clientId: string | null; apprenantId?: string | null; libelle: string }
   | { erreur: any; statut: number }
 > {
-  const m = nomFichier.match(/^(\d{4}-\d{2}-\d{2})__[^_]*__(.+)$/)
+  const m = nomFichier.match(/^(\d{4}-\d{2}-\d{2})__([^_]*)__(.+)$/)
   if (!m) {
     return { erreur: { error: 'Nom de fichier non exploitable', introuvable: true }, statut: 404 }
   }
   const dateMail = m[1]
-  const distinctifs = mots(m[2].replace(/\.[^.]+$/, '')).filter((w) => !BANALS.has(w))
+  const expediteur = (m[2] || '').toLowerCase()
+  const distinctifs = mots(m[3].replace(/\.[^.]+$/, '')).filter((w) => !BANALS.has(w))
   if (distinctifs.length === 0) {
-    return { erreur: { error: 'Aucun nom de client identifiable', introuvable: true }, statut: 404 }
+    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, m[3])
   }
 
   const { data: clients } = await supabase
@@ -355,12 +356,14 @@ async function deviner(
   // portent le nom du stagiaire, pas celui de l'entreprise. On passe alors
   // par l'apprenant, ce qui donne en prime le rattachement à sa fiche.
   if (candidats.length === 0) {
-    return await devinerParApprenant(supabase, orgId, distinctifs, dateMail, m[2])
+    const parAppr = await devinerParApprenant(supabase, orgId, distinctifs, dateMail, m[3])
+    if (!('erreur' in parAppr)) return parAppr
+    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, m[3])
   }
   if (candidats.length > 1) {
     return {
       erreur: {
-        error: `Plusieurs clients correspondent à « ${m[2]} »`,
+        error: `Plusieurs clients correspondent à « ${m[3]} »`,
         ambigu: true,
         candidats: candidats.slice(0, 6).map((c: any) => c.raison_sociale),
       },
@@ -473,5 +476,75 @@ async function devinerParApprenant(
     clientId: sessions[0].client_id || null,
     apprenantId: appr.id,
     libelle: `${sessions[0].reference} · ${appr.prenom} ${appr.nom}`,
+  }
+}
+
+
+/**
+ * Dernier repli : la pièce ne nomme ni client ni stagiaire.
+ *
+ * C'est le cas des photos de feuilles signées — « J1.png », « haccp j2.png »,
+ * « img124.jpg » — que certains formateurs prennent en fin de journée. Le nom
+ * ne dit rien, mais l'expéditeur et la date disent tout : ce formateur, cette
+ * période. Si une seule de ses sessions tombe dans la fenêtre, c'est elle.
+ */
+async function devinerParFormateur(
+  supabase: any,
+  orgId: string,
+  expediteur: string,
+  dateMail: string,
+  libelleFichier: string,
+): Promise<
+  { id: string; clientId: string | null; apprenantId?: string | null; libelle: string }
+  | { erreur: any; statut: number }
+> {
+  if (!expediteur.includes('@')) {
+    return { erreur: { error: `Expéditeur inconnu pour « ${libelleFichier} »`, introuvable: true }, statut: 404 }
+  }
+
+  const { data: form } = await supabase
+    .from('formateurs').select('id, prenom, nom')
+    .eq('organization_id', orgId).ilike('email', expediteur).limit(1).maybeSingle()
+  if (!form) {
+    return {
+      erreur: { error: `${expediteur} n'est pas un formateur connu`, introuvable: true },
+      statut: 404,
+    }
+  }
+
+  // Une feuille est photographiée le jour même ou peu après, jamais des mois
+  // plus tard : fenêtre volontairement courte pour éviter les faux positifs.
+  const debut = new Date(dateMail); debut.setDate(debut.getDate() - 45)
+  const fin = new Date(dateMail); fin.setDate(fin.getDate() + 5)
+
+  const { data: sessions } = await supabase
+    .from('sessions').select('id, reference, date_debut, client_id')
+    .eq('organization_id', orgId).eq('formateur_id', (form as any).id)
+    .gte('date_debut', debut.toISOString().slice(0, 10))
+    .lte('date_debut', fin.toISOString().slice(0, 10))
+    .order('date_debut', { ascending: false })
+
+  const nom = `${(form as any).prenom || ''} ${(form as any).nom || ''}`.trim()
+  if (!sessions || sessions.length === 0) {
+    return {
+      erreur: { error: `${nom} : aucune session autour du ${dateMail}`, introuvable: true },
+      statut: 404,
+    }
+  }
+  if (sessions.length > 1) {
+    return {
+      erreur: {
+        error: `${nom} : ${sessions.length} sessions possibles autour du ${dateMail}`,
+        ambigu: true,
+        candidats: sessions.map((s: any) => `${s.reference} (${s.date_debut})`),
+      },
+      statut: 409,
+    }
+  }
+
+  return {
+    id: sessions[0].id,
+    clientId: sessions[0].client_id || null,
+    libelle: `${sessions[0].reference} · ${nom}`,
   }
 }
