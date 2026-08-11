@@ -122,6 +122,12 @@ export function QualiopiDashboard({ indicateurs, initialized, crmEvidence }: Qua
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Conformité Qualiopi</h1>
           <p className="text-surface-500 mt-1 text-sm">7 critères · 32 indicateurs</p>
         </div>
+        {/* Le document qui explique le changement de système à l'auditeur.
+            Ses chiffres sont recalculés à chaque édition. */}
+        <a href="/api/pdf/note-tracabilite" target="_blank" rel="noreferrer"
+          className="btn-secondary inline-flex items-center gap-2 text-sm shrink-0">
+          <Download className="h-4 w-4" /> Note de traçabilité de la migration
+        </a>
       </div>
 
       {/* Global progress */}
