@@ -26,6 +26,7 @@ import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
 import { SaisieQuestionnaire } from '@/components/qcm/SaisieQuestionnaire'
+import { SaisieRapide } from '@/components/qcm/SaisieRapide'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
 import { SessionDossier } from './SessionDossier'
@@ -116,6 +117,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const derouleIncomplet = socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
 
   const [saisie, setSaisie] = useState<{ id: string; nom: string } | null>(null)
+  const [rapide, setRapide] = useState(false)
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
@@ -1122,6 +1124,21 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
           )}
 
+          {qcmSessions.length > 0 && inscriptions.length > 0 && !isFormateur && (
+            <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-heading font-semibold text-surface-900">Saisie rapide</div>
+                <p className="text-xs text-surface-500 mt-0.5">
+                  Reporter les résultats de tous les stagiaires d&apos;après les questionnaires du formateur, en un écran.
+                </p>
+              </div>
+              <button onClick={() => setRapide(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-900 text-white text-xs font-semibold hover:bg-surface-800 transition-colors shrink-0">
+                <Pencil className="h-3.5 w-3.5" /> Saisir les résultats
+              </button>
+            </div>
+          )}
+
           {/* Liste des questionnaires rattachés + suivi des réponses */}
           {qcmPedago.length === 0 ? (
             <div className="card p-8 text-center">
@@ -1261,6 +1278,15 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
         </div>
       )}
+
+      <SaisieRapide
+        sessionId={session.id}
+        ouvert={rapide}
+        onClose={() => setRapide(false)}
+        qcmSessions={qcmSessions as any[]}
+        reponses={qcmReponses as any[]}
+        apprenants={inscriptions.map((i: any) => i.apprenant).filter(Boolean)}
+      />
 
       <SaisieQuestionnaire
         reponseId={saisie?.id || null}
