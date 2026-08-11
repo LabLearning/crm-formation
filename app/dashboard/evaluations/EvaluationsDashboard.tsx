@@ -249,7 +249,7 @@ export function EvaluationsDashboard({ reponses, satisfactions }: EvaluationsDas
                     )}
                   </td>
                   <td className="px-6 py-3.5 hidden md:table-cell text-sm text-surface-500">
-                    {r.completed_at ? formatDate(r.completed_at, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                    {r.date_realisation || r.completed_at ? formatDate(r.date_realisation || r.completed_at, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                   </td>
                   <td className="px-6 py-3.5 hidden lg:table-cell text-sm text-surface-500">
                     {r.duree_secondes ? `${Math.floor(r.duree_secondes / 60)}min ${r.duree_secondes % 60}s` : '—'}

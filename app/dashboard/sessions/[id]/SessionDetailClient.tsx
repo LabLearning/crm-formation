@@ -1173,7 +1173,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                                   <div className="text-sm text-surface-900 truncate">{a ? `${a.prenom} ${a.nom}` : 'Apprenant'}</div>
                                   <div className="text-xs text-surface-400">
                                     {r.is_complete
-                                      ? (r.completed_at ? `Répondu le ${new Date(r.completed_at).toLocaleDateString('fr-FR')}` : 'Répondu')
+                                      ? (r.date_realisation || r.completed_at ? `Réalisé le ${new Date(r.date_realisation || r.completed_at).toLocaleDateString('fr-FR')}` : 'Réalisé')
                                       : 'En attente de réponse'}
                                   </div>
                                 </div>

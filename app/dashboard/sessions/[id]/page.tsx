@@ -92,7 +92,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     // Réponses des apprenants (qui a répondu + score)
     supabase
       .from('qcm_reponses')
-      .select('id, qcm_id, apprenant_id, score, is_reussi, is_complete, completed_at')
+      .select('id, qcm_id, apprenant_id, score, is_reussi, is_complete, completed_at, date_realisation')
       .eq('session_id', params.id),
     // Banque de QCM de l'organisation (pour rattacher) — formation_id pour
     // repérer le QCM propre à la formation de la session
