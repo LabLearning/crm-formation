@@ -107,8 +107,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const [isPending, startTransition] = useTransition()
   // Pastille de l'onglet : jalons du socle non couverts + étapes terrain manquantes
   const socleManquants = socleEtat.filter((s: any) => !s.fait).length
-  const piecesManquantes = etatsPieces.filter((p: any) => !p.presente).length
-  const derouleIncomplet = piecesManquantes + socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
+  const derouleIncomplet = socleManquants + (estHygiene ? etatDeroule(derouleValidations).manquantes.length : 0)
 
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
@@ -370,7 +369,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
           ...(!isFormateur ? [{ id: 'contenu' as const, label: 'Contenu pédagogique', icon: BookOpen }] : []),
           ...(!isFormateur ? [{ id: 'recueil' as const, label: 'Recueil du besoin', icon: ClipboardList }] : []),
-          { id: 'deroule' as const, label: derouleIncomplet ? `Dossier (${derouleIncomplet})` : 'Dossier', icon: Route },
+          { id: 'deroule' as const, label: derouleIncomplet ? `Déroulé (${derouleIncomplet})` : 'Déroulé', icon: Route },
           { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
           { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
           { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
@@ -581,6 +580,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ONGLET CONTENU PÉDAGOGIQUE
           ═══════════════════════════════════════════════ */}
       {tab === 'dossier' && !isFormateur && (
+        <div className="space-y-6">
+        <PiecesDossier sessionId={session.id} etats={etatsPieces} tableManquante={piecesTableManquante} />
         <SessionDossier
           sessionId={session.id}
           formationId={session.formation_id || null}
@@ -594,11 +595,10 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           rapport={rapport}
           onGoTab={(t) => setTab(t as any)}
         />
+        </div>
       )}
 
       {tab === 'deroule' && (
-        <div className="space-y-6">
-        <PiecesDossier sessionId={session.id} etats={etatsPieces} tableManquante={piecesTableManquante} />
         <DerouleOperationnel
           sessionId={session.id}
           validations={derouleValidations}
@@ -607,7 +607,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           socle={socleEtat}
           estHygiene={estHygiene}
         />
-        </div>
       )}
 
       {tab === 'recueil' && !isFormateur && (
