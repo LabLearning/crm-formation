@@ -77,10 +77,11 @@ export function PiecesDossier({
           <div>
             <h2 className="text-sm font-heading font-semibold text-surface-900 flex items-center gap-2">
               <FolderCheck className="h-4 w-4 text-brand-500" />
-              Complétude du dossier
+              Dossier de la session
             </h2>
             <p className="text-xs text-surface-500 mt-0.5">
-              Les pièces produites par le CRM comptent d&apos;office ; les autres se justifient par un document.
+              Les pièces qu&apos;un auditeur demandera pour cette action. Celles que le CRM produit comptent
+              d&apos;office ; les autres se justifient en déposant le document.
             </p>
           </div>
           <div className="text-right shrink-0">

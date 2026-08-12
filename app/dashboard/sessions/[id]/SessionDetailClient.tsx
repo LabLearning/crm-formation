@@ -30,7 +30,6 @@ import { SaisieRapide } from '@/components/qcm/SaisieRapide'
 import { marquerJourneePresentAction } from './actions'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
-import { SessionDossier } from './SessionDossier'
 import { SessionForm } from '../SessionForm'
 import type { BadgeVariant } from '@/lib/types'
 
@@ -335,12 +334,18 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             {formation?.duree_heures && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formation.duree_heures}h</span>}
             <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{inscriptions.length} apprenant{inscriptions.length > 1 ? 's' : ''}</span>
           </div>
-          {session.formation_id && (
-            <a href={`/api/pdf/programme/${session.formation_id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-500 text-xs font-medium hover:bg-brand-100 transition-colors">
-              <Download className="h-3.5 w-3.5" /> Programme (avec dates de session)
+          <div className="flex flex-wrap gap-2 mt-2">
+            {session.formation_id && (
+              <a href={`/api/pdf/programme/${session.formation_id}?session=${session.id}`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-500 text-xs font-medium hover:bg-brand-100 transition-colors">
+                <Download className="h-3.5 w-3.5" /> Programme (avec dates de session)
+              </a>
+            )}
+            <a href={`/api/pdf/convocation-session/${session.id}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-500 text-xs font-medium hover:bg-brand-100 transition-colors">
+              <Download className="h-3.5 w-3.5" /> Convocation
             </a>
-          )}
+          </div>
         </div>
         {/* Modifier la session */}
         {!isFormateur && (
@@ -621,17 +626,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ONGLET CONTENU PÉDAGOGIQUE
           ═══════════════════════════════════════════════ */}
       {tab === 'dossier' && !isFormateur && (
-        <div className="space-y-6">
         <PiecesDossier sessionId={session.id} etats={etatsPieces} tableManquante={piecesTableManquante} />
-        <SessionDossier
-          sessionId={session.id}
-          formationId={session.formation_id || null}
-          inscriptions={inscriptions}
-          supports={supports}
-          rapport={rapport}
-          onGoTab={(t) => setTab(t as any)}
-        />
-        </div>
       )}
 
       {tab === 'deroule' && (
