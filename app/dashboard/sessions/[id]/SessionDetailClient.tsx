@@ -1230,13 +1230,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         ) : (
                           reponses.map((r: any) => {
                             const a = inscriptions.find((i: any) => (i.apprenant as any)?.id === r.apprenant_id)?.apprenant
-                            const reussi = scoreMin != null && r.score != null ? Number(r.score) >= scoreMin : r.is_reussi
+                            // L'orange signale un score sous le seuil, jamais un
+                            // questionnaire simplement rempli : une satisfaction
+                            // n'a pas de seuil et doit ressortir verte.
+                            const echec = scoreMin != null && r.score != null && Number(r.score) < scoreMin
                             return (
                               <div key={r.id} className="px-4 py-2.5 flex items-center gap-3">
                                 <span className={cn('h-8 w-8 rounded-full flex items-center justify-center shrink-0',
-                                  r.is_complete ? (reussi ? 'bg-emerald-100' : 'bg-amber-100') : 'bg-surface-100')}>
+                                  r.is_complete ? (echec ? 'bg-amber-100' : 'bg-emerald-100') : 'bg-surface-100')}>
                                   {r.is_complete
-                                    ? (reussi ? <CheckCircle className="h-4 w-4 text-emerald-600" /> : <MinusCircle className="h-4 w-4 text-amber-600" />)
+                                    ? (echec ? <MinusCircle className="h-4 w-4 text-amber-600" /> : <CheckCircle className="h-4 w-4 text-emerald-600" />)
                                     : <Clock className="h-4 w-4 text-surface-400" />}
                                 </span>
                                 <div className="flex-1 min-w-0">
