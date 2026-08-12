@@ -83,3 +83,52 @@ export async function saisirQuestionnaireAction(
   revalidatePath(`/dashboard/sessions/${(existante as any).session_id}`)
   return r
 }
+
+/**
+ * Détail d'une réponse : ce que le stagiaire a effectivement répondu.
+ *
+ * Un pourcentage ne dit rien d'une satisfaction. Ce qui convainc un auditeur,
+ * ce sont les réponses elles-mêmes — les notes attribuées et surtout les
+ * verbatims, qui montrent que le recueil a réellement eu lieu.
+ */
+export async function detailReponseAction(reponseId: string): Promise<ActionResult> {
+  const session = await getSession()
+  if (!ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+
+  const { data: reponse } = await supabase
+    .from('qcm_reponses')
+    .select('id, qcm_id, score, is_complete, date_realisation, completed_at, apprenant:apprenant_id(prenom, nom), qcm:qcm_id(titre, type)')
+    .eq('id', reponseId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!reponse) return { success: false, error: 'Questionnaire introuvable' }
+
+  const [{ data: questions }, { data: details }] = await Promise.all([
+    supabase.from('qcm_questions')
+      .select('id, texte, type, position, choix:qcm_choix(id, texte, est_correct)')
+      .eq('qcm_id', (reponse as any).qcm_id).order('position', { ascending: true }),
+    supabase.from('qcm_reponses_detail')
+      .select('question_id, choix_ids, texte_libre, note_valeur, est_correct')
+      .eq('reponse_id', reponseId),
+  ])
+
+  const parQuestion = new Map((details || []).map((d: any) => [d.question_id, d]))
+  const lignes = (questions || []).map((q: any) => {
+    const d: any = parQuestion.get(q.id)
+    const choisis = (d?.choix_ids || [])
+      .map((id: string) => (q.choix || []).find((c: any) => c.id === id)?.texte)
+      .filter(Boolean)
+    return {
+      question: q.texte,
+      type: q.type,
+      // Une échelle porte son plafond : « 4 / 5 » se lit, « 4 » ne se lit pas.
+      plafond: q.type === 'note_1_5' ? 5 : (q.type === 'note_1_10' || q.type === 'nps') ? 10 : null,
+      note: d?.note_valeur ?? null,
+      texte: d?.texte_libre || null,
+      choisis,
+      estCorrect: d?.est_correct ?? null,
+      attendu: (q.choix || []).filter((c: any) => c.est_correct).map((c: any) => c.texte),
+    }
+  })
+
+  return { success: true, data: { reponse, lignes } }
+}

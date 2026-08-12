@@ -27,6 +27,7 @@ import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
 import { SaisieQuestionnaire } from '@/components/qcm/SaisieQuestionnaire'
 import { SaisieRapide } from '@/components/qcm/SaisieRapide'
+import { DetailReponse } from '@/components/qcm/DetailReponse'
 import { marquerJourneePresentAction } from './actions'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
@@ -118,6 +119,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
   const [saisie, setSaisie] = useState<{ id: string; nom: string } | null>(null)
   const [rapide, setRapide] = useState(false)
+  const [detail, setDetail] = useState<string | null>(null)
   const [jourEnCours, setJourEnCours] = useState<string | null>(null)
   const [scanEnCours, setScanEnCours] = useState(false)
 
@@ -1260,6 +1262,13 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                                     {Number(r.score)}%
                                   </div>
                                 )}
+                                {r.is_complete && !isFormateur && (
+                                  <button onClick={() => setDetail(r.id)}
+                                    title="Voir les réponses du stagiaire"
+                                    className="btn-secondary !py-1 !px-2.5 text-xs shrink-0">
+                                    Réponses
+                                  </button>
+                                )}
                                 {!r.is_complete && !isFormateur && (
                                   <button
                                     onClick={() => setSaisie({ id: r.id, nom: a ? `${a.prenom} ${a.nom}` : 'ce stagiaire' })}
@@ -1336,6 +1345,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
         </div>
       )}
+
+      <DetailReponse reponseId={detail} onClose={() => setDetail(null)} />
 
       <SaisieRapide
         sessionId={session.id}
