@@ -72,6 +72,38 @@ function typeDApresNom(nom: string): string {
   return 'autre'
 }
 
+/**
+ * Type de pièce d'un dossier formateur.
+ *
+ * Le vocabulaire n'est pas celui des sessions et les deux se contredisent :
+ * « attestation de formation » désigne l'attestation remise au stagiaire dans
+ * un dossier de session, et le justificatif de qualification du formateur dans
+ * son dossier à lui. D'où deux lectures séparées, choisies selon la cible.
+ *
+ * L'ordre compte : « Diplome-Certificat-Habilitation.pdf » doit être rangé en
+ * diplôme, pas en habilitation, et « urssaf-attestation-vigilance » n'est pas
+ * une attestation de formation.
+ */
+function typeFormateurDApresNom(nom: string): string {
+  const brut = nom.replace(/^\d{4}-\d{2}-\d{2}__[^_]*__/, '')
+  // Le souligné est un caractère de mot : « CV_MARTIN » et « Certificat_SST »
+  // échappent à \b. On délimite sur « ni lettre ni chiffre » à la place.
+  const n = brut.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const mot = (m: string) => new RegExp(`(?:^|[^a-z0-9])${m}(?![a-z0-9])`).test(n)
+  if (mot('cv') || /curriculum/.test(n)) return 'cv'
+  if (mot('bts') || mot('cap') || /diplome|master|licence|titre[_ -]*professionnel/.test(n)) return 'diplome'
+  if (/urssaf|vigilance|affiliation/.test(n)) return 'attestation_urssaf'
+  if (/kbis|extrait[_ -]*k/.test(n)) return 'kbis'
+  if (mot('nda') || /declaration[_ -]*d?[_ ']*activite|recepisse/.test(n)) return 'nda'
+  if (/responsabilite[_ -]*civile|rc[_ -]*pro|assurance/.test(n)) return 'responsabilite_civile'
+  if (/fiscal|regularite/.test(n)) return 'attestation_fiscale'
+  if (mot('rib') || /iban|releve[_ -]*d?[_ ']*identite[_ -]*bancaire/.test(n)) return 'rib'
+  if (mot('cni') || /carte[_ -]*d?[_ ']*identite|passeport|sejour|residence[_ -]*permit|piece[_ -]*d?[_ ']*identite/.test(n)) return 'piece_identite'
+  if (mot('sst') || mot('fpa') || /habilitation|qualification|haccp|agrement/.test(n)) return 'habilitation'
+  if (/certificat|attestation[_ -]*(de[_ -]*)?formation/.test(n)) return 'attestation_formation_continue'
+  return 'autre'
+}
+
 export async function POST(request: NextRequest) {
   const attendu = process.env.CRON_SECRET
   if (!attendu) return NextResponse.json({ error: 'Route non configurée' }, { status: 503 })
@@ -93,7 +125,7 @@ export async function POST(request: NextRequest) {
   // « auto » : le script pousse les fichiers sans les connaître, le type se
   // déduit ici du nom que Dendreo leur a donné.
   const typeDemande = String(form.get('type') || 'auto')
-  const type = typeDemande === 'auto' ? typeDApresNom(fichier.name) : typeDemande
+  let type = typeDemande === 'auto' ? typeDApresNom(fichier.name) : typeDemande
 
   const supabase = await createServiceRoleClient()
 
@@ -124,6 +156,10 @@ export async function POST(request: NextRequest) {
 
   const cibleFormateur = !!(emailFormateur || nomFormateur)
   const cibleSession = !!(refSession || dendreoId || (numeroDossier && !cibleFormateur))
+  // Le vocabulaire dépend de la cible : on ne peut trancher qu'ici.
+  if (typeDemande === 'auto' && cibleFormateur && !cibleSession) {
+    type = typeFormateurDApresNom(fichier.name)
+  }
   if (cibleSession && !TYPES_SESSION.has(type)) {
     return NextResponse.json({ error: `Type de session inconnu : ${type}` }, { status: 400 })
   }
@@ -228,6 +264,14 @@ export async function POST(request: NextRequest) {
     await supabase.storage.from(bucket).remove([chemin])
     console.error('[ingest piece]', error)
     return NextResponse.json({ error: 'Enregistrement impossible', detail: error.message }, { status: 500 })
+  }
+
+  // La fiche formateur et le compteur de l'indicateur 21 lisent `cv_url` : un CV
+  // déposé qui n'y figure pas reste invisible là où on le cherche.
+  if (formateurId && type === 'cv') {
+    await supabase.from('formateurs')
+      .update({ cv_url: chemin })
+      .eq('id', formateurId).eq('organization_id', orgId)
   }
 
   return NextResponse.json({ ok: true, id: data.id, cible: libelleCible, type })

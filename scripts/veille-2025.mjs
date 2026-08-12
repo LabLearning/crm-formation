@@ -122,7 +122,7 @@ const ENTREES = [
 // registre qui répète le même sujet à dix jours d'intervalle se lit comme du
 // remplissage. On garde la première occurrence de chaque thème.
 const cle = (t) =>
-  t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z]/g, '').slice(0, 24)
 
 const { data: existantes, error } = await supabase
