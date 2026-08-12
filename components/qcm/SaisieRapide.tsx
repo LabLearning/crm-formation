@@ -18,8 +18,14 @@ const COURT: Record<string, string> = {
   satisfaction_froid: 'Satisfaction J+90',
   evaluation_formateur: 'Éval. formateur',
 }
-/** Une satisfaction n'a ni bonne ni mauvaise réponse : elle se coche, elle ne se note pas. */
-const NOTE = (t?: string) => t === 'positionnement' || t === 'sortie'
+/**
+ * Une satisfaction n'a ni bonne ni mauvaise réponse, mais elle a une note : les
+ * questionnaires sont bâtis sur des échelles de 1 à 5, et c'est cette moyenne
+ * qui alimente le taux de satisfaction publié. La cocher sans la noter laissait
+ * des questionnaires « complétés » vides de tout résultat.
+ */
+const SUR_CENT = (t?: string) => t === 'positionnement' || t === 'sortie'
+const SUR_CINQ = (t?: string) => t === 'satisfaction_chaud' || t === 'satisfaction_froid'
 
 /**
  * Saisie groupée des résultats d'une session.
@@ -61,15 +67,29 @@ export function SaisieRapide({
   const reponseDe = (apprenantId: string, qcmId: string) =>
     reponses.find((r) => r.apprenant_id === apprenantId && r.qcm_id === qcmId)
 
+  /**
+   * Une satisfaction marquée « complétée » mais sans note n'a rien enregistré :
+   * la saisie groupée ne notait pas les satisfactions à ses débuts. Ces
+   * réponses-là doivent rester ressaisissables, sans quoi elles resteraient
+   * vides pour toujours.
+   */
+  const aSaisir = (r: Reponse, type?: string) =>
+    !r.is_complete || (r.score == null && (SUR_CENT(type) || SUR_CINQ(type)))
+
+  /** Une appréciation sur 5 se range sur 100 comme tous les autres résultats. */
+  const surCent = (v: string, type?: string) =>
+    SUR_CINQ(type) ? Math.round((Number(v) / 5) * 100) : Number(v)
+
   const aEnregistrer = useMemo(() => {
     const out: { reponseId: string; score?: number | null }[] = []
     for (const a of apprenants) {
       for (const c of colonnes) {
         const r = reponseDe(a.id, c.qcm_id)
-        if (!r || r.is_complete) continue
-        if (NOTE(c.qcm?.type)) {
+        const t = c.qcm?.type
+        if (!r || !aSaisir(r, t)) continue
+        if (SUR_CENT(t) || SUR_CINQ(t)) {
           const v = valeurs[r.id]
-          if (v !== undefined && v !== '') out.push({ reponseId: r.id, score: Number(v) })
+          if (v !== undefined && v !== '') out.push({ reponseId: r.id, score: surCent(v, t) })
         } else if (coches[r.id]) {
           out.push({ reponseId: r.id, score: null })
         }
@@ -80,22 +100,22 @@ export function SaisieRapide({
 
   /** Reporte la valeur de la première ligne sur toutes les suivantes encore vides. */
   function propager(qcmId: string, type?: string) {
-    const premier = apprenants.map((a) => reponseDe(a.id, qcmId)).find((r) => r && !r.is_complete)
+    const premier = apprenants.map((a) => reponseDe(a.id, qcmId)).find((r) => r && aSaisir(r, type))
     if (!premier) return
-    if (NOTE(type)) {
+    if (SUR_CENT(type) || SUR_CINQ(type)) {
       const v = valeurs[premier.id]
       if (v === undefined || v === '') return
       const maj = { ...valeurs }
       for (const a of apprenants) {
         const r = reponseDe(a.id, qcmId)
-        if (r && !r.is_complete && !maj[r.id]) maj[r.id] = v
+        if (r && aSaisir(r, type) && !maj[r.id]) maj[r.id] = v
       }
       setValeurs(maj)
     } else {
       const maj = { ...coches }
       for (const a of apprenants) {
         const r = reponseDe(a.id, qcmId)
-        if (r && !r.is_complete) maj[r.id] = true
+        if (r && aSaisir(r, type)) maj[r.id] = true
       }
       setCoches(maj)
     }
@@ -116,8 +136,10 @@ export function SaisieRapide({
     <Modal isOpen={ouvert} onClose={onClose} title="Saisie rapide des résultats" size="xl">
       <div className="space-y-4">
         <p className="text-sm text-surface-600">
-          Reportez le résultat de chaque stagiaire d&apos;après les questionnaires du formateur.
-          Pensez à déposer son document dans l&apos;onglet Dossier : c&apos;est lui la pièce justificative.
+          Reportez le résultat de chaque stagiaire d&apos;après les questionnaires du formateur :
+          un pourcentage pour le positionnement et les acquis, une appréciation sur 5 pour la
+          satisfaction. Pensez à déposer son document dans l&apos;onglet Dossier : c&apos;est lui
+          la pièce justificative.
         </p>
         {!froidPossible && (
           <p className="text-xs text-surface-500">
@@ -156,24 +178,30 @@ export function SaisieRapide({
                     {colonnes.map((c) => {
                       const r = reponseDe(a.id, c.qcm_id)
                       if (!r) return <td key={c.qcm_id} className="px-2 text-center text-surface-300">—</td>
-                      if (r.is_complete) {
+                      if (!aSaisir(r, c.qcm?.type)) {
                         return (
                           <td key={c.qcm_id} className="px-2 text-center">
                             <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
                               <CheckCircle2 className="h-3.5 w-3.5" />
-                              {r.score != null ? `${r.score} %` : 'fait'}
+                              {r.score != null
+                                ? SUR_CINQ(c.qcm?.type)
+                                  ? `${(r.score / 20).toFixed(1)} / 5`
+                                  : `${r.score} %`
+                                : 'fait'}
                             </span>
                           </td>
                         )
                       }
                       return (
                         <td key={c.qcm_id} className="px-2 py-1.5 text-center">
-                          {NOTE(c.qcm?.type) ? (
+                          {SUR_CENT(c.qcm?.type) || SUR_CINQ(c.qcm?.type) ? (
                             <input
-                              type="number" min={0} max={100} inputMode="numeric"
+                              type="number" inputMode="decimal"
+                              min={0} max={SUR_CINQ(c.qcm?.type) ? 5 : 100}
+                              step={SUR_CINQ(c.qcm?.type) ? 0.5 : 1}
                               value={valeurs[r.id] ?? ''}
                               onChange={(e) => setValeurs((v) => ({ ...v, [r.id]: e.target.value }))}
-                              placeholder="%"
+                              placeholder={SUR_CINQ(c.qcm?.type) ? '/ 5' : '%'}
                               className="w-20 text-center rounded-lg border border-surface-200 px-2 py-1.5 focus:border-surface-900 focus:outline-none"
                             />
                           ) : (

@@ -130,5 +130,11 @@ export async function detailReponseAction(reponseId: string): Promise<ActionResu
     }
   })
 
-  return { success: true, data: { reponse, lignes } }
+  // Aucune ligne de détail : le résultat a été reporté depuis le questionnaire
+  // papier du formateur. Renvoyer les questions toutes marquées « sans réponse »
+  // laisserait croire que le stagiaire n'a rien répondu, alors qu'il a répondu
+  // ailleurs — l'écran doit pouvoir dire lequel des deux cas il montre.
+  const sansDetail = (details || []).length === 0
+
+  return { success: true, data: { reponse, lignes: sansDetail ? [] : lignes, sansDetail } }
 }

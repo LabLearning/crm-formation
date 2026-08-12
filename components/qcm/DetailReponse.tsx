@@ -42,7 +42,7 @@ export function DetailReponse({
       setChargement(false)
       if (!r.success) { toast('error', r.error || 'Chargement impossible'); onClose(); return }
       const d = r.data as any
-      setEntete(d.reponse)
+      setEntete({ ...d.reponse, sansDetail: !!d.sansDetail })
       setLignes(d.lignes || [])
     })
   }, [reponseId])
@@ -61,12 +61,39 @@ export function DetailReponse({
             <div className="text-sm text-surface-900 font-medium">{nom}</div>
             <div className="text-xs text-surface-500">
               {entete?.date_realisation && <>Réalisé le {formatDate(entete.date_realisation)}</>}
-              {entete?.score != null && <span className="ml-3 font-semibold text-surface-700">{entete.score} %</span>}
+              {entete?.score != null && (
+                <span className="ml-3 font-semibold text-surface-700">
+                  {String(entete?.qcm?.type || '').startsWith('satisfaction')
+                    ? `${(entete.score / 20).toFixed(1)} / 5`
+                    : `${entete.score} %`}
+                </span>
+              )}
             </div>
           </div>
 
+          {/*
+            Un résultat saisi en groupé n'a pas de détail par question : le
+            formateur a mené l'entretien sur son support papier et n'a reporté
+            que le résultat. Écrire « aucune réponse enregistrée » laisserait
+            croire que le stagiaire n'a rien répondu — c'est le contraire.
+          */}
           {lignes.length === 0 && (
-            <p className="text-sm text-surface-500 py-8 text-center">Aucune réponse enregistrée pour ce questionnaire.</p>
+            <div className="py-8 text-center">
+              {entete?.is_complete && entete?.sansDetail ? (
+                <>
+                  <p className="text-sm text-surface-700">
+                    Résultat reporté depuis le questionnaire rempli par le formateur.
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1.5">
+                    Le détail des réponses figure sur son document, déposé au dossier de la session.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-surface-500">
+                  Ce questionnaire n&apos;a pas encore été renseigné pour ce stagiaire.
+                </p>
+              )}
+            </div>
           )}
 
           {lignes.map((l, i) => (
