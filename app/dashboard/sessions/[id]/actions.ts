@@ -1004,9 +1004,10 @@ export async function sendConvocationToReferentAction(sessionId: string, opts?: 
  * cocher la journée d'un coup, et décourage la saisie — c'est précisément ce
  * qui laisse les dossiers vides.
  *
- * La signature est horodatée au **jour de la séance**, pas au moment de la
- * saisie : c'est ce jour-là que les stagiaires ont signé. `signed_via` porte
- * « feuille_papier », qui dit d'où vient la présence.
+ * Aucun horodatage n'est inscrit. Une heure inventée — la même pour tout le
+ * monde — se verrait au premier coup d'œil et décrédibiliserait la feuille.
+ * Le jour est déjà porté par la colonne `date`, et `signed_via` dit d'où
+ * vient la présence : la feuille papier, dont le scan reste la pièce.
  */
 export async function marquerJourneePresentAction(
   sessionId: string,
@@ -1024,14 +1025,10 @@ export async function marquerJourneePresentAction(
     .eq('organization_id', session.organization.id).maybeSingle()
   if (!sess) return { success: false, error: 'Session introuvable' }
 
-  // Midi : une heure plausible, et neutre vis-à-vis des fuseaux.
-  const signeLe = new Date(`${date}T12:00:00`).toISOString()
-
   let requete = supabase
     .from('emargements')
     .update({
       est_present: true,
-      signed_at: signeLe,
       signed_via: 'feuille_papier',
       motif_absence: null,
     })

@@ -577,8 +577,9 @@ export async function togglePresenceAction(
  * dans le portail est une double saisie qu'il ne fera pas. C'est exactement
  * ce qui laisse les dossiers vides.
  *
- * La signature est horodatée au jour de la séance, pas au moment de la
- * saisie : c'est ce jour-là que les stagiaires ont signé.
+ * Aucun horodatage n'est inscrit : trente signatures à la même minute se
+ * verraient immédiatement. Le jour est porté par la colonne `date`, et le
+ * scan de la feuille reste la pièce justificative.
  */
 export async function markToutPresentPapierAction(
   token: string,
@@ -608,7 +609,6 @@ export async function markToutPresentPapierAction(
     .from('emargements')
     .update({
       est_present: true,
-      signed_at: new Date(`${date}T12:00:00`).toISOString(),
       signed_via: 'feuille_papier',
       motif_absence: null,
     })
