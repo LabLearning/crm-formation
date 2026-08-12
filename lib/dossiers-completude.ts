@@ -46,7 +46,9 @@ export async function completudeDossiers(
   const [inscriptions, emargements, qcmSessions, qcmReponses, qcms, conventions, contrats, recueils, evalAcquis, docs] =
     await Promise.all([
       fetchAllPaged((f, t) => supabase.from('inscriptions').select('session_id').eq('organization_id', organizationId).not('status', 'in', '("annule","abandonne")').range(f, t)),
-      fetchAllPaged((f, t) => supabase.from('emargements').select('session_id, signature_data').eq('organization_id', organizationId).not('signature_data', 'is', null).range(f, t)),
+      // Signature électronique OU présence relevée sur la feuille papier :
+      // les deux constatent la réalisation de l'action.
+      fetchAllPaged((f, t) => supabase.from('emargements').select('session_id, signature_data, est_present').eq('organization_id', organizationId).or('signature_data.not.is.null,est_present.eq.true').range(f, t)),
       fetchAllPaged((f, t) => supabase.from('qcm_sessions').select('session_id, qcm_id').range(f, t)),
       fetchAllPaged((f, t) => supabase.from('qcm_reponses').select('session_id, qcm_id, is_complete').eq('organization_id', organizationId).eq('is_complete', true).range(f, t)),
       fetchAllPaged((f, t) => supabase.from('qcm').select('id, type').eq('organization_id', organizationId).range(f, t)),

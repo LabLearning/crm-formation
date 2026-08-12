@@ -286,7 +286,9 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     convention: (conventions || []).some((c: any) => c.signature_client_date),
     contrat: !!contratFormateur,
     positionnement: aRepondu(['positionnement']),
-    emargement: (emargements || []).some((e: any) => e.signature_data),
+    // Une présence relevée sur la feuille papier vaut émargement : le CRM en
+    // édite la feuille attestée, et l'original du formateur reste au dossier.
+    emargement: (emargements || []).some((e: any) => e.signature_data || e.est_present),
     acquis: aRepondu(['sortie']) || nbEvalAcquis > 0,
     satisfaction: aRepondu(['satisfaction_chaud', 'satisfaction_froid']),
   }
