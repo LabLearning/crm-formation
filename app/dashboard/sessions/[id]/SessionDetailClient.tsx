@@ -120,6 +120,23 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const [saisie, setSaisie] = useState<{ id: string; nom: string } | null>(null)
   const [rapide, setRapide] = useState(false)
   const [jourEnCours, setJourEnCours] = useState<string | null>(null)
+  const [scanEnCours, setScanEnCours] = useState(false)
+
+  // Le scan de la feuille papier est la pièce justificative : on y accède
+  // depuis l'onglet Émargement, là où on la cherche, pas seulement au Dossier.
+  const scanEmargement = (etatsPieces as any[]).find(
+    (p: any) => p.cle === 'emargement' && p.documentId,
+  )?.documentId as string | undefined
+
+  async function ouvrirScanEmargement() {
+    if (!scanEmargement) return
+    setScanEnCours(true)
+    const { lienPieceAction } = await import('./pieces-actions')
+    const r = await lienPieceAction(scanEmargement)
+    setScanEnCours(false)
+    if ((r as any).success) window.open(((r as any).data as any).url, '_blank')
+    else toast('error', (r as any).error || 'Lien indisponible')
+  }
 
   // Le formateur a fait signer sur papier : cocher trente cases une par une
   // n'apporte rien de plus que de cocher la journée.
@@ -667,11 +684,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium hover:bg-brand-100 transition-colors">
                 <Download className="h-3.5 w-3.5" /> Feuille vierge (PDF)
               </a>
-              {emargements.some((e: any) => e.signature_data) && (
+              {emargements.some((e: any) => e.signature_data || e.est_present) && (
                 <a href={`/api/pdf/emargement-signe/${session.id}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors">
                   <Download className="h-3.5 w-3.5" /> Feuille signée (PDF)
                 </a>
+              )}
+              {scanEmargement && (
+                <button onClick={ouvrirScanEmargement} disabled={scanEnCours}
+                  title="Feuille papier scannée, déposée au dossier de la session"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 transition-colors disabled:opacity-50">
+                  {scanEnCours ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                  Feuille scannée
+                </button>
               )}
             </div>
           )}

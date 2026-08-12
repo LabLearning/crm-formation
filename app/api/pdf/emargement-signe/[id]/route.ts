@@ -48,7 +48,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     participantsFeuille(supabase, params.id),
     supabase
       .from('emargements')
-      .select('apprenant_id, date, creneau, est_present, signature_data, signed_at, motif_absence')
+      .select('apprenant_id, date, creneau, est_present, signature_data, signed_at, signed_via, motif_absence')
       .eq('session_id', params.id)
       .order('date', { ascending: true }),
     supabase
