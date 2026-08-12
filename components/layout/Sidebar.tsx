@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutDashboard, UserPlus, Building2, Users, Handshake, FileText,
   GraduationCap, Calendar, UserCheck, Presentation, FileSignature, FilePen,
@@ -10,7 +10,7 @@ import {
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers,
   ChevronDown, PanelLeftClose, PanelLeft, MapPin, Clock, CheckSquare,
-  Briefcase, UserCog, Banknote, Store, AlertTriangle, Compass, ReceiptText, ReceiptEuro, LifeBuoy,
+  Briefcase, UserCog, Banknote, Store, AlertTriangle, Compass, ReceiptText, ReceiptEuro, LifeBuoy, FolderCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/lib/permissions'
@@ -24,6 +24,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
   CheckSquare, Briefcase, UserCog, Banknote, Store, AlertTriangle, Compass, ReceiptText, ReceiptEuro, LifeBuoy,
+  FolderCheck,
 }
 
 // Couleurs Lab Learning uniformes pour toutes les sections
@@ -41,11 +42,32 @@ interface SidebarProps { permissions: Permission[]; orgName: string; userRole: s
 
 export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
+  const recherche = useSearchParams()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(
     Object.fromEntries(navigation.map(s => [s.title, true]))
   )
   const toggleSection = (title: string) => setOpenSections(prev => ({ ...prev, [title]: !prev[title] }))
-  const isActive = (href: string) => href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
+  // « startsWith » brut faisait s'allumer deux entrées à la fois :
+  // /dashboard/factures-formateurs commence par /dashboard/factures. On
+  // compare donc segment par segment, et on tient compte du paramètre quand
+  // l'entrée en porte un — deux liens ne diffèrent parfois que par lui.
+  const isActive = (href: string) => {
+    const [chemin, requete] = href.split('?')
+    if (chemin !== pathname && !pathname.startsWith(chemin + '/')) return false
+    if (!requete) {
+      // Une entrée sans paramètre ne s'allume pas quand une entrée filtrée
+      // du même chemin correspond à ce que l'on regarde.
+      return !recherche.toString() || !memeCheminFiltre(chemin)
+    }
+    return new URLSearchParams(requete).toString() === recherche.toString()
+  }
+
+  /** Existe-t-il une autre entrée de menu sur ce chemin, avec un paramètre ? */
+  const memeCheminFiltre = (chemin: string) =>
+    navigation.some((sec) => sec.items.some((it) => {
+      const [c, q] = it.href.split('?')
+      return c === chemin && q && new URLSearchParams(q).toString() === recherche.toString()
+    }))
   const isVisible = (item: { module?: CRMModule; hideForRoles?: string[] }) => {
     if (item.hideForRoles?.includes(userRole)) return false
     return !item.module || hasAnyPermission(permissions, item.module)
