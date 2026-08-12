@@ -374,7 +374,10 @@ export async function markPresentPapierAction(
     .update({
       est_present: true,
       signature_data: null,
-      signed_at: new Date().toISOString(),
+      // Pas d'horodatage : la signature a eu lieu en salle, sur papier, et
+      // inscrire l'heure de la saisie ferait apparaître des signatures à la
+      // minute près qui n'ont jamais eu lieu.
+      signed_at: null,
       signed_via: 'feuille_papier',
       motif_absence: null,
     })

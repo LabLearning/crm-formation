@@ -120,13 +120,10 @@ export function EmargementSignePDF({ session, formation, org, formateur, apprena
                         {em?.signature_data ? (
                           <Image src={em.signature_data} style={{ height: 34, maxWidth: creneauW - 8, objectFit: 'contain' }} />
                         ) : em?.est_present && em?.signed_via === 'feuille_papier' ? (
-                          // Présence attestée par la feuille papier signée en salle.
-                          // On l'écrit au lieu de laisser vide : la case blanche
-                          // laisserait croire que le stagiaire n'a rien signé.
-                          <View style={{ alignItems: 'center' }}>
-                            <Text style={{ fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>Présent</Text>
-                            <Text style={{ fontSize: 5.5, color: SURFACE_500, marginTop: 1, textAlign: 'center' }}>feuille papier signée</Text>
-                          </View>
+                          // Présence relevée sur la feuille papier. L'absence de
+                          // signature dit déjà d'où elle vient : inutile de le
+                          // préciser, la case reste lisible.
+                          <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>Présent</Text>
                         ) : em?.motif_absence ? (
                           // « Absent » uniquement si l'absence est explicitement documentée (motif).
                           // Une ligne jamais renseignée (est_present=false par défaut, sans signature

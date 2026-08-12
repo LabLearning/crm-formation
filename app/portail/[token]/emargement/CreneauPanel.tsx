@@ -144,7 +144,7 @@ function ApprenantRow({
 
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-surface-900 truncate">{apprenantName(em)}</div>
-          {signed && em.signed_at && (
+          {signed && em.signature_data && em.signed_at && (
             <div className="text-[11px] text-emerald-600 mt-0.5">
               Signé · {new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </div>

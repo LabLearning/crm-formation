@@ -787,7 +787,11 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           {creneauEmargements.map((em: any) => {
                       const apprenant = inscriptions.find(i => (i.apprenant as any)?.id === em.apprenant_id)?.apprenant
                       const isSigned = em.est_present && em.signature_data
-                      const signedTime = em.signed_at ? new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null
+                      // L'heure n'a de sens que pour une signature électronique :
+                      // une présence relevée sur papier n'en porte aucune.
+                      const signedTime = em.signature_data && em.signed_at
+                        ? new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                        : null
 
                       return (
                         <div
