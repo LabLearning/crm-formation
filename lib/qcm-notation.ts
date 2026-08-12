@@ -8,7 +8,7 @@
  */
 
 export interface ResultatNotation {
-  score: number
+  score: number | null
   scorePoints: number
   scoreTotal: number
   isReussi: boolean | null
@@ -35,6 +35,12 @@ export async function enregistrerReponses(
   let pointsObtenusTotal = 0
   let pointsPossibles = 0
   const details: any[] = []
+  // Un positionnement ou une satisfaction n'a pas de bonne réponse : il n'y a
+  // rien à noter, mais les échelles disent quelque chose. On les moyenne.
+  let notesCumul = 0
+  let notesNombre = 0
+  let notesMax = 0
+  let questionNotable = false
 
   for (const q of questions as any[]) {
     const pts = Number(q.points) || 1
@@ -48,6 +54,7 @@ export async function enregistrerReponses(
     let note: number | null = null
 
     if (q.type === 'choix_unique' || q.type === 'choix_multiple' || q.type === 'vrai_faux') {
+      if ((q.choix as any[])?.some((c: any) => c.est_correct === true)) questionNotable = true
       if (reponse) {
         choixIds = [reponse]
         const choix = (q.choix as any[]).find((c: any) => c.id === reponse)
@@ -62,6 +69,8 @@ export async function enregistrerReponses(
     } else {
       // Échelles et NPS : une satisfaction n'est ni juste ni fausse.
       note = reponse ? parseInt(reponse, 10) : null
+      const plafond = q.type === 'note_1_5' ? 5 : 10
+      if (note != null && !Number.isNaN(note)) { notesCumul += note; notesNombre++; notesMax += plafond }
     }
 
     details.push({
@@ -75,11 +84,21 @@ export async function enregistrerReponses(
     })
   }
 
-  const score = pointsPossibles > 0 ? Math.round((pointsObtenusTotal / pointsPossibles) * 100) : 0
+  // Trois cas, et un seul chiffre affiché :
+  //   des questions notables  -> pourcentage de bonnes réponses ;
+  //   que des échelles        -> moyenne des notes, ramenée sur 100 ;
+  //   que du texte libre      -> aucun score, et surtout pas zéro, qui se
+  //                              lirait comme un échec.
+  const score = questionNotable && pointsPossibles > 0
+    ? Math.round((pointsObtenusTotal / pointsPossibles) * 100)
+    : notesNombre > 0 && notesMax > 0
+      ? Math.round((notesCumul / notesMax) * 100)
+      : null
 
   const { data: qcm } = await supabase.from('qcm').select('score_min_reussite').eq('id', qcmId).single()
   const seuil = qcm?.score_min_reussite != null ? Number(qcm.score_min_reussite) : null
-  const isReussi = seuil !== null ? score >= seuil : null
+  // Sans questions notables, la notion de réussite ne s'applique pas.
+  const isReussi = questionNotable && seuil !== null && score !== null ? score >= seuil : null
 
   if (details.length > 0) {
     await supabase.from('qcm_reponses_detail').insert(details)
@@ -87,8 +106,8 @@ export async function enregistrerReponses(
 
   const maj = {
     score,
-    score_points: pointsObtenusTotal,
-    score_total: pointsPossibles,
+    score_points: questionNotable ? pointsObtenusTotal : null,
+    score_total: questionNotable ? pointsPossibles : null,
     is_reussi: isReussi,
     is_complete: true,
     completed_at: new Date().toISOString(),
