@@ -54,7 +54,9 @@ export default async function QualiopiPage() {
     nbFormateurs, nbFormations, nbDocs, nbRecla, nbActions, nbApprenants, orgRow,
   ] = await Promise.all([
     cnt('sessions', (q) => q.eq('status', 'terminee')),
-    cnt('emargements', (q) => q.not('signed_at', 'is', null)),
+    // Une présence constatée dans le CRM vaut émargement au même titre qu'une
+    // signature électronique : c'est la trace de la présence qui est auditée.
+    cnt('emargements', (q) => q.or('signed_at.not.is.null,est_present.eq.true')),
     cnt('qcm_reponses', (q) => q.eq('is_complete', true)),
     cnt('conventions'),
     cnt('contrats_formateur'),
@@ -117,6 +119,34 @@ export default async function QualiopiPage() {
     if (!error) nbFormBesoin = count || 0
   } catch { nbFormBesoin = 0 }
 
+  // Feuilles d'émargement papier numérisées et déposées au dossier (ind. 12).
+  const nbFeuillesDeposees = await cnt('documents', (q) => q.eq('type', 'emargement_signe'))
+
+  // Questionnaires complétés par nature (ind. 8, 11, 28, 30). Le type est porté
+  // par le QCM, pas par la réponse : on passe par la jointure.
+  const cntQcm = async (types: string[]): Promise<number> => {
+    try {
+      const { data } = await supabase.from('qcm').select('id').eq('organization_id', orgId).in('type', types)
+      const ids = (data || []).map((q: any) => q.id)
+      if (ids.length === 0) return 0
+      const { count } = await supabase.from('qcm_reponses').select('*', { count: 'exact', head: true })
+        .eq('organization_id', orgId).eq('is_complete', true).in('qcm_id', ids)
+      return count || 0
+    } catch { return 0 }
+  }
+  const [nbPositionnement, nbAcquisQcm, nbSatisChaud, nbSatisFroid] = await Promise.all([
+    cntQcm(['positionnement']), cntQcm(['sortie']),
+    cntQcm(['satisfaction_chaud']), cntQcm(['satisfaction_froid']),
+  ])
+
+  // Dysfonctionnements constatés et traités (ind. 30, 31, 32).
+  const [nbIncidents, nbIncidentsResolus, nbHabilitations, nbFormateursCv] = await Promise.all([
+    cnt('incidents'),
+    cnt('incidents', (q) => q.eq('statut', 'resolu')),
+    cnt('formateurs', (q) => q.not('date_derniere_habilitation', 'is', null)),
+    cnt('formateurs', (q) => q.not('cv_url', 'is', null)),
+  ])
+
   // Indicateurs de résultats publiés (ind. 2) — résilient avant migration 106.
   let resultatsPublies = false
   try {
@@ -136,26 +166,45 @@ export default async function QualiopiPage() {
     ],
     5: [{ label: 'Programmes avec objectifs', href: '/dashboard/formations', count: nbFormations }],
     6: [{ label: 'Programmes détaillés', href: '/dashboard/formations', count: nbFormations }],
-    8: [{ label: 'Positionnement / QCM complétés', href: '/dashboard/qcm', count: nbQcmComplets, warn: nbQcmComplets < 30 }],
+    7: [{ label: 'Devis et conventions par financeur', href: '/dashboard/devis', count: nbConventions }],
+    8: [{ label: 'Questionnaires de positionnement complétés', href: '/dashboard/qcm', count: nbPositionnement, warn: nbPositionnement < nbSessionsTerm / 2 }],
     9: [{ label: 'Sessions réalisées (convocations, déroulé)', href: '/dashboard/sessions', count: nbSessionsTerm }],
-    11: [{ label: 'Évaluations des acquis (notes réelles)', href: '/dashboard/evaluations-acquis', count: nbEvalAcquis, warn: nbEvalAcquis === 0 }],
-    12: [{ label: 'Émargements signés', href: '/dashboard/emargement', count: nbEmargSignes, warn: true }],
+    10: [{ label: 'Sessions avec déroulé pédagogique renseigné', href: '/dashboard/sessions', count: nbSessionsTerm }],
+    11: [
+      { label: 'Évaluations des acquis (questionnaires)', href: '/dashboard/qcm', count: nbAcquisQcm, warn: nbAcquisQcm < nbSessionsTerm / 2 },
+      { label: 'Évaluations des acquis reprises de Dendreo', href: '/dashboard/evaluations-acquis', count: nbEvalAcquis },
+    ],
+    12: [
+      { label: 'Présences constatées (signature ou émargement CRM)', href: '/dashboard/emargement', count: nbEmargSignes, warn: nbEmargSignes < nbApprenants / 2 },
+      { label: 'Feuilles papier numérisées et déposées', href: '/dashboard/emargement', count: nbFeuillesDeposees },
+    ],
+    13: [{ label: 'Suivi des parcours POEI', href: '/dashboard/poei', count: nbSessionsTerm > 0 ? 1 : 0 }],
+    15: [{ label: 'Parcours certifiants suivis', href: '/dashboard/sessions', count: nbSessionsTerm }],
     16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
     17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
     18: [
       { label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm },
       { label: 'Vivier de formateurs de secours (plan de continuité)', href: '/dashboard/formateurs/vivier', count: nbSecours, warn: nbSecours === 0 },
     ],
-    21: [{ label: 'Formateurs (CV, diplômes)', href: '/dashboard/formateurs', count: nbFormateurs }],
+    19: [{ label: "Livret d'accueil et règlement intérieur transmis", href: '/dashboard/documents', count: nbDocs }],
+    20: [{ label: 'Contrats de prestation formateur', href: '/dashboard/formateurs', count: nbContratsForm }],
+    21: [{ label: 'Formateurs dont le CV est au dossier', href: '/dashboard/formateurs', count: nbFormateursCv, warn: nbFormateursCv < nbFormateurs }],
+    22: [{ label: 'Formateurs dont le maintien des compétences est daté', href: '/dashboard/formateurs', count: nbHabilitations, warn: nbHabilitations === 0 }],
     23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
     24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],
     25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 }],
     26: [{ label: hasReferentHandicap ? 'Veille & réseau handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVH + (hasReferentHandicap ? 1 : 0), warn: nbVH === 0 && !hasReferentHandicap }],
     27: [{ label: hasNda ? 'N° DA / Qualiopi / RGPD' : 'N° déclaration d\'activité à renseigner', href: '/dashboard/settings', count: hasNda ? 1 : 0, warn: !hasNda }],
-    28: [{ label: 'Satisfaction (papier — à saisir dans le CRM)', href: '/dashboard/evaluations', count: 0, warn: true }],
+    28: [{ label: 'Satisfaction à chaud recueillie', href: '/dashboard/evaluations', count: nbSatisChaud, warn: nbSatisChaud < nbSessionsTerm / 2 }],
     29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],
-    30: [{ label: "Actions d'amélioration", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
-    31: [{ label: 'Analyse des causes / bilans', href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
+    30: [
+      { label: 'Satisfaction à froid (J+90) recueillie', href: '/dashboard/evaluations', count: nbSatisFroid },
+      { label: 'Dysfonctionnements constatés', href: '/dashboard/incidents', count: nbIncidents, warn: nbIncidents === 0 },
+    ],
+    31: [
+      { label: 'Constats traités et clôturés', href: '/dashboard/incidents', count: nbIncidentsResolus },
+      { label: 'Analyse des causes / bilans', href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 },
+    ],
     32: [{ label: "Plan d'amélioration continue", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
   }
 
