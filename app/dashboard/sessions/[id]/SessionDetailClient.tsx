@@ -8,7 +8,7 @@ import {
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
   Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck, Mails, Route,
-  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles, ReceiptEuro,
+  QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles, ReceiptEuro, Printer,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
 import { DerouleOperationnel } from '@/components/deroule/DerouleOperationnel'
@@ -1229,6 +1229,23 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                       </div>
                       {isExpanded ? <ChevronDown className="h-4 w-4 text-surface-400 shrink-0" /> : <ChevronRight className="h-4 w-4 text-surface-400 shrink-0" />}
                     </button>
+                    {/*
+                      Le formateur mène l'entretien sur papier, un stagiaire à la
+                      fois : il lui faut le questionnaire imprimé, un exemplaire
+                      par stagiaire, en-tête déjà rempli pour que la feuille
+                      ramassée reste rattachable à son dossier. Le formateur y a
+                      accès comme l'administratif : c'est lui qui imprime.
+                    */}
+                    <div className="px-4 pb-3 -mt-1">
+                      <a
+                        href={`/api/pdf/questionnaire-papier?session=${session.id}&qcm=${q.qcm_id}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="btn-secondary !py-1 !px-2.5 text-xs inline-flex items-center gap-1.5"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Imprimer les exemplaires vierges
+                      </a>
+                    </div>
                     {isExpanded && (
                       <div className="border-t border-surface-100 divide-y divide-surface-100">
                         {reponses.length === 0 ? (

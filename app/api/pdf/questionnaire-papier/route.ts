@@ -1,0 +1,109 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { renderToBuffer } from '@react-pdf/renderer'
+import { createElement } from 'react'
+import { createServiceRoleClient } from '@/lib/supabase/server'
+import { requireApiUser } from '@/lib/api-auth'
+import { withDocumentLogo } from '@/lib/pdf/org-logo'
+import { QuestionnairePapierPDF, type QuestionPapier } from '@/lib/pdf/questionnaire-papier-pdf'
+
+export const dynamic = 'force-dynamic'
+
+/**
+ * Questionnaire vierge à imprimer, un exemplaire par stagiaire de la session.
+ *
+ * Le formateur mène l'entretien de positionnement ou l'évaluation des acquis
+ * en tête-à-tête, sur papier. Il lui faut le document ; le CRM n'en conserve
+ * ensuite que le résultat, la feuille remplie restant la pièce justificative
+ * à déposer au dossier.
+ *
+ *   /api/pdf/questionnaire-papier?session=<uuid>&qcm=<uuid>
+ */
+export async function GET(req: NextRequest) {
+  const auth = await requireApiUser()
+  if ('error' in auth) return auth.error
+  const orgId = auth.user.organizationId
+
+  const sessionId = req.nextUrl.searchParams.get('session') || ''
+  const qcmId = req.nextUrl.searchParams.get('qcm') || ''
+  if (!sessionId || !qcmId) {
+    return NextResponse.json({ error: 'Session et questionnaire requis' }, { status: 400 })
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const [{ data: orgRow }, { data: sess }, { data: qcm }] = await Promise.all([
+    supabase.from('organizations').select('*').eq('id', orgId).maybeSingle(),
+    supabase.from('sessions')
+      .select(`id, reference, intitule, date_debut, date_fin,
+               formation:formation_id(intitule),
+               client:client_id(raison_sociale, nom_commercial),
+               formateur:formateur_id(prenom, nom)`)
+      .eq('id', sessionId).eq('organization_id', orgId).maybeSingle(),
+    supabase.from('qcm').select('id, titre, type')
+      .eq('id', qcmId).eq('organization_id', orgId).maybeSingle(),
+  ])
+
+  if (!sess) return NextResponse.json({ error: 'Session introuvable' }, { status: 404 })
+  if (!qcm) return NextResponse.json({ error: 'Questionnaire introuvable' }, { status: 404 })
+
+  const [{ data: questions }, { data: inscriptions }] = await Promise.all([
+    supabase.from('qcm_questions')
+      .select('id, texte, type, section, position, choix:qcm_choix(texte, position)')
+      .eq('qcm_id', qcmId).order('position', { ascending: true }),
+    supabase.from('inscriptions')
+      .select('apprenant:apprenants(prenom, nom)')
+      .eq('session_id', sessionId)
+      .not('status', 'in', '("annule","abandonne")'),
+  ])
+
+  const lignes: QuestionPapier[] = (questions || []).map((q: any) => ({
+    texte: q.texte,
+    type: q.type,
+    section: q.section,
+    choix: [...(q.choix || [])]
+      .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+      .map((c: any) => c.texte),
+  }))
+
+  const stagiaires = (inscriptions || [])
+    .map((i: any) => `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'fr'))
+    .map((nom) => ({ nom }))
+
+  const s: any = sess
+  const jour = (d: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '')
+  const dates = s.date_fin && s.date_fin !== s.date_debut
+    ? `du ${jour(s.date_debut)} au ${jour(s.date_fin)}`
+    : jour(s.date_debut)
+
+  const org = await withDocumentLogo(supabase, orgRow)
+
+  const buffer = await renderToBuffer(
+    createElement(QuestionnairePapierPDF, {
+      titre: (qcm as any).titre,
+      type: (qcm as any).type,
+      questions: lignes,
+      stagiaires,
+      session: {
+        reference: s.reference || '',
+        formation: s.formation?.intitule || s.intitule || '',
+        client: s.client?.nom_commercial || s.client?.raison_sociale || '',
+        formateur: s.formateur ? `${s.formateur.prenom || ''} ${s.formateur.nom || ''}`.trim() : '',
+        dates,
+      },
+      org,
+      editeLe: new Date().toLocaleDateString('fr-FR'),
+    }) as any,
+  )
+
+  const nomFichier = `${(qcm as any).titre} - ${s.reference || 'session'}`
+    .replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_').slice(0, 90)
+
+  return new NextResponse(buffer as any, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${nomFichier}.pdf"`,
+    },
+  })
+}
