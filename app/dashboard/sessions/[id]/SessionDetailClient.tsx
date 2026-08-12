@@ -627,11 +627,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           sessionId={session.id}
           formationId={session.formation_id || null}
           inscriptions={inscriptions}
-          emargements={emargements}
-          conventions={conventions}
-          satisfaction={evaluations}
-          nbEvalAcquis={nbEvalAcquis}
-          recueil={recueil}
           supports={supports}
           rapport={rapport}
           onGoTab={(t) => setTab(t as any)}
