@@ -11,9 +11,10 @@
  * document : à quatre pièces manquantes en moyenne sur 481 sessions, le
  * registre deviendrait illisible, or il est fait pour être lu.
  *
- * La date de l'incident est celle du CONSTAT, pas celle de la session. Il
- * s'agit de dire « nous l'avons détecté le 12 août », pas de laisser croire
- * que le suivi existait à l'époque.
+ * `date_incident` porte la date du DYSFONCTIONNEMENT — le dernier jour de la
+ * session, quand la pièce aurait dû être recueillie. La date du constat reste
+ * écrite dans la description, et `created_at` en garde la trace en base :
+ * personne ne peut croire que le suivi existait à l'époque.
  *
  * Idempotent : le marqueur en fin de description évite les doublons.
  *
@@ -136,7 +137,8 @@ for (const s of sessions) {
     organization_id: ORG,
     session_id: s.id,
     client_id: s.client_id || null,
-    date_incident: aujourdhui,
+    // Le dysfonctionnement date du jour où la pièce aurait dû être recueillie.
+    date_incident: s.date_fin || s.date_debut,
     type: 'documentaire',
     gravite: majeures.length >= 2 ? 'majeur' : majeures.length === 1 ? 'modere' : 'mineur',
     titre: `Dossier incomplet — ${s.reference || 'session'} (${manquantes.length} pièce${manquantes.length > 1 ? 's' : ''})`,
