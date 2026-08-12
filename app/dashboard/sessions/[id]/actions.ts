@@ -995,3 +995,62 @@ export async function sendConvocationToReferentAction(sessionId: string, opts?: 
   await logAudit({ action: 'send_convocation_referent', entity_type: 'session', entity_id: sessionId, details: { email: ref.email } })
   return { success: true, data: { email: ref.email } }
 }
+
+/**
+ * Marque tout le monde présent sur une journée d'émargement.
+ *
+ * Le cas courant : le formateur a fait signer sur papier et transmet sa
+ * feuille. Cocher trente cases une par une n'apporte rien de plus que de
+ * cocher la journée d'un coup, et décourage la saisie — c'est précisément ce
+ * qui laisse les dossiers vides.
+ *
+ * La signature est horodatée au **jour de la séance**, pas au moment de la
+ * saisie : c'est ce jour-là que les stagiaires ont signé. `signed_via` porte
+ * « feuille_papier », qui dit d'où vient la présence.
+ */
+export async function marquerJourneePresentAction(
+  sessionId: string,
+  date: string,
+  creneau?: string,
+): Promise<ActionResult & { data?: { marques: number } }> {
+  const session = await getSession()
+  if (!['super_admin', 'gestionnaire', 'directeur_commercial'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: sess } = await supabase
+    .from('sessions').select('id').eq('id', sessionId)
+    .eq('organization_id', session.organization.id).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  // Midi : une heure plausible, et neutre vis-à-vis des fuseaux.
+  const signeLe = new Date(`${date}T12:00:00`).toISOString()
+
+  let requete = supabase
+    .from('emargements')
+    .update({
+      est_present: true,
+      signed_at: signeLe,
+      signed_via: 'feuille_papier',
+      motif_absence: null,
+    })
+    .eq('session_id', sessionId)
+    .eq('date', date)
+    // Une signature déjà recueillie ne se réécrit pas.
+    .is('signature_data', null)
+  if (creneau) requete = requete.eq('creneau', creneau)
+
+  const { data, error } = await requete.select('id')
+  if (error) {
+    console.error('[journee presente]', error.message)
+    return { success: false, error: 'Enregistrement impossible' }
+  }
+
+  await logAudit({
+    action: 'update', entity_type: 'session', entity_id: sessionId,
+    details: { journee_presente: date, creneau: creneau || 'tous', marques: (data || []).length },
+  })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { marques: (data || []).length } }
+}

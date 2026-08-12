@@ -27,6 +27,7 @@ import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
 import { SaisieQuestionnaire } from '@/components/qcm/SaisieQuestionnaire'
 import { SaisieRapide } from '@/components/qcm/SaisieRapide'
+import { marquerJourneePresentAction } from './actions'
 import { SessionContenuPedagogique } from './SessionContenuPedagogique'
 import { SessionRecueil } from './SessionRecueil'
 import { SessionDossier } from './SessionDossier'
@@ -118,6 +119,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
   const [saisie, setSaisie] = useState<{ id: string; nom: string } | null>(null)
   const [rapide, setRapide] = useState(false)
+  const [jourEnCours, setJourEnCours] = useState<string | null>(null)
+
+  // Le formateur a fait signer sur papier : cocher trente cases une par une
+  // n'apporte rien de plus que de cocher la journée.
+  async function marquerJournee(date: string) {
+    setJourEnCours(date)
+    const r = await marquerJourneePresentAction(session.id, date)
+    setJourEnCours(null)
+    if ((r as any).success) {
+      toast('success', `${(r as any).data?.marques ?? 0} présence(s) enregistrée(s)`)
+      router.refresh()
+    } else toast('error', (r as any).error || 'Erreur')
+  }
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>('session')
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
@@ -718,6 +732,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     {isExpanded ? <ChevronUp className="h-4 w-4 text-surface-400" /> : <ChevronDown className="h-4 w-4 text-surface-400" />}
                   </div>
                 </button>
+
+                {!isFormateur && presentCount < allDay.length && (
+                  <div className="px-4 pb-3 -mt-1">
+                    <button
+                      onClick={() => marquerJournee(day)}
+                      disabled={jourEnCours === day}
+                      title="Le formateur a fait signer sur papier : marquer la journée entière"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-surface-200 text-xs font-medium text-surface-700 hover:bg-surface-50 disabled:opacity-50">
+                      {jourEnCours === day ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                      Tous présents ce jour
+                    </button>
+                  </div>
+                )}
 
                 {isExpanded && (
                   <div className="border-t border-surface-100">

@@ -569,3 +569,56 @@ export async function togglePresenceAction(
   }
   return markAbsentAction(token, emargementId, null)
 }
+
+/**
+ * Marque tout un créneau présent d'un coup, sur la foi de la feuille papier.
+ *
+ * Le formateur a fait signer en salle ; lui demander de recocher chaque nom
+ * dans le portail est une double saisie qu'il ne fera pas. C'est exactement
+ * ce qui laisse les dossiers vides.
+ *
+ * La signature est horodatée au jour de la séance, pas au moment de la
+ * saisie : c'est ce jour-là que les stagiaires ont signé.
+ */
+export async function markToutPresentPapierAction(
+  token: string,
+  sessionId: string,
+  date: string,
+  creneau: string,
+): Promise<{ success: boolean; error?: string; marques?: number }> {
+  const context = await getPortalContext(token)
+  if (!context || context.type !== 'formateur') {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+
+  const supabase = await createServiceRoleClient()
+  const owned = await getOwnedSession(supabase, token, sessionId)
+  if (!owned) return { success: false, error: 'Session non autorisée' }
+
+  const { data: feuille } = await supabase
+    .from('emargement_feuilles')
+    .select('validated_at')
+    .eq('session_id', sessionId).eq('date', date).eq('creneau', creneau)
+    .maybeSingle()
+  if (feuille?.validated_at) {
+    return { success: false, error: 'La feuille est déjà validée et verrouillée' }
+  }
+
+  const { data, error } = await supabase
+    .from('emargements')
+    .update({
+      est_present: true,
+      signed_at: new Date(`${date}T12:00:00`).toISOString(),
+      signed_via: 'feuille_papier',
+      motif_absence: null,
+    })
+    .eq('session_id', sessionId).eq('date', date).eq('creneau', creneau)
+    // Une signature numérique déjà recueillie ne se réécrit pas.
+    .is('signature_data', null)
+    .select('id')
+
+  if (error) return { success: false, error: error.message }
+
+  revalidateEmargement(token, sessionId)
+  return { success: true, marques: (data || []).length }
+}

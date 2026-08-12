@@ -21,6 +21,7 @@ import {
   signApprenantPresenceAction,
   markAbsentAction,
   markPresentPapierAction,
+  markToutPresentPapierAction,
   validerFeuilleByFormateurAction,
   attesterFeuillePapierAction,
   setFeuilleModeAction,
@@ -371,6 +372,15 @@ export function CreneauPanel({
           )}
           {mode === 'papier' ? 'Feuille papier' : 'Signature numérique'}
         </span>
+        {mode === 'papier' && !locked && emargements.some((e: any) => !e.est_present && !e.signature_data) && (
+          <button
+            onClick={() => run(() => markToutPresentPapierAction(token, sessionId, date, creneau))}
+            title="Tout le monde a signé la feuille papier"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-surface-200 bg-white text-xs font-medium text-surface-700 hover:bg-surface-50"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" /> Tous présents
+          </button>
+        )}
       </div>
 
 
