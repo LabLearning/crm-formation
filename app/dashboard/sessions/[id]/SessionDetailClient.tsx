@@ -1344,6 +1344,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         qcmSessions={qcmSessions as any[]}
         reponses={qcmReponses as any[]}
         apprenants={inscriptions.map((i: any) => i.apprenant).filter(Boolean)}
+        dateFin={session.date_fin || session.date_debut}
       />
 
       <SaisieQuestionnaire

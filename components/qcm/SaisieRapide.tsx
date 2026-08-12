@@ -29,7 +29,7 @@ const NOTE = (t?: string) => t === 'positionnement' || t === 'sortie'
  * document papier reste la pièce justificative et se dépose au dossier.
  */
 export function SaisieRapide({
-  sessionId, ouvert, onClose, qcmSessions, reponses, apprenants,
+  sessionId, ouvert, onClose, qcmSessions, reponses, apprenants, dateFin,
 }: {
   sessionId: string
   ouvert: boolean
@@ -37,7 +37,12 @@ export function SaisieRapide({
   qcmSessions: QcmSession[]
   reponses: Reponse[]
   apprenants: Apprenant[]
+  dateFin?: string | null
 }) {
+  // La satisfaction à froid se recueille à J+90 : avant, il n'y a rien à saisir.
+  const froidPossible = dateFin
+    ? (Date.now() - new Date(dateFin).getTime()) / 86400000 >= 90
+    : false
   const router = useRouter()
   const { toast } = useToast()
   const [valeurs, setValeurs] = useState<Record<string, string>>({})
@@ -49,8 +54,9 @@ export function SaisieRapide({
     const ordre = ['positionnement', 'sortie', 'satisfaction_chaud', 'satisfaction_froid']
     return [...qcmSessions]
       .filter((q) => ordre.includes(q.qcm?.type || ''))
+      .filter((q) => q.qcm?.type !== 'satisfaction_froid' || froidPossible)
       .sort((a, b) => ordre.indexOf(a.qcm?.type || '') - ordre.indexOf(b.qcm?.type || ''))
-  }, [qcmSessions])
+  }, [qcmSessions, froidPossible])
 
   const reponseDe = (apprenantId: string, qcmId: string) =>
     reponses.find((r) => r.apprenant_id === apprenantId && r.qcm_id === qcmId)
@@ -113,6 +119,12 @@ export function SaisieRapide({
           Reportez le résultat de chaque stagiaire d&apos;après les questionnaires du formateur.
           Pensez à déposer son document dans l&apos;onglet Dossier : c&apos;est lui la pièce justificative.
         </p>
+        {!froidPossible && (
+          <p className="text-xs text-surface-500">
+            La satisfaction à froid n&apos;apparaît pas : elle se recueille trois mois après la fin de
+            la formation.
+          </p>
+        )}
 
         {colonnes.length === 0 || apprenants.length === 0 ? (
           <p className="text-sm text-surface-500 py-8 text-center">

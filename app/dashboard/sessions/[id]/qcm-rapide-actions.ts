@@ -37,6 +37,17 @@ export async function saisieRapideAction(
 
   const supabase = await createServiceRoleClient()
 
+  const { data: sess } = await supabase
+    .from('sessions').select('date_debut, date_fin')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle()
+  const fin = (sess as any)?.date_fin || (sess as any)?.date_debut
+  // La satisfaction à froid se recueille à J+90 : c'est sa définition même.
+  // La renseigner plus tôt produirait une pièce datée d'un jour où personne
+  // n'a été interrogé.
+  const froidPossible = fin
+    ? (Date.now() - new Date(fin).getTime()) / 86400000 >= 90
+    : false
+
   const { data: existantes } = await supabase
     .from('qcm_reponses')
     .select('id, is_complete, qcm_id, qcm:qcm_id(type, score_min_reussite)')
@@ -51,6 +62,7 @@ export async function saisieRapideAction(
   for (const e of entrees) {
     const r: any = parId.get(e.reponseId)
     if (!r || r.is_complete) continue
+    if (r.qcm?.type === 'satisfaction_froid' && !froidPossible) continue
 
     const seuil = r.qcm?.score_min_reussite != null ? Number(r.qcm.score_min_reussite) : null
     const score = e.score == null ? null : Math.max(0, Math.min(100, Math.round(e.score)))
