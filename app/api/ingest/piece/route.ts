@@ -165,7 +165,13 @@ export async function POST(request: NextRequest) {
     // Dernier recours : deviner la session d'après le nom du client et la date
     // du mail, tous deux présents dans le nom du fichier collecté
     // (« 2025-05-13__sales@…__FE SQUADRA 15.pdf »).
-    const trouve = await deviner(supabase, orgId, fichier.name)
+    // L'objet du mail nomme le client bien plus sûrement que le fichier :
+    // « Feuilles d'émargement — Chicken Street Amiens » contre « J1.png ».
+    const trouve = await deviner(
+      supabase, orgId, fichier.name,
+      String(form.get('objet') || '').trim(),
+      String(form.get('date_mail') || '').trim(),
+    )
     if ('erreur' in trouve) return NextResponse.json(trouve.erreur, { status: trouve.statut })
     sessionId = trouve.id
     clientId = trouve.clientId
@@ -330,19 +336,26 @@ async function deviner(
   supabase: any,
   orgId: string,
   nomFichier: string,
+  objet?: string,
+  dateMailFournie?: string,
 ): Promise<
   { id: string; clientId: string | null; apprenantId?: string | null; libelle: string }
   | { erreur: any; statut: number }
 > {
   const m = nomFichier.match(/^(\d{4}-\d{2}-\d{2})__([^_]*)__(.+)$/)
-  if (!m) {
-    return { erreur: { error: 'Nom de fichier non exploitable', introuvable: true }, statut: 404 }
+  const dateMail = dateMailFournie || m?.[1] || ''
+  const expediteur = (m?.[2] || '').toLowerCase()
+  const libelle = objet || m?.[3] || nomFichier
+  if (!dateMail) {
+    return { erreur: { error: 'Date du mail inconnue', introuvable: true }, statut: 404 }
   }
-  const dateMail = m[1]
-  const expediteur = (m[2] || '').toLowerCase()
-  const distinctifs = mots(m[3].replace(/\.[^.]+$/, '')).filter((w) => !BANALS.has(w))
+
+  // L'objet du mail passe avant le nom du fichier : « Émargements L'Original »
+  // désigne un client, « presence.pdf » ne désigne rien.
+  const source = [objet, m?.[3] || nomFichier].filter(Boolean).join(' ')
+  const distinctifs = mots(source.replace(/\.[^.]+$/, '')).filter((w) => !BANALS.has(w))
   if (distinctifs.length === 0) {
-    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, m[3])
+    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, libelle)
   }
 
   const { data: clients } = await supabase
@@ -359,14 +372,14 @@ async function deviner(
   // portent le nom du stagiaire, pas celui de l'entreprise. On passe alors
   // par l'apprenant, ce qui donne en prime le rattachement à sa fiche.
   if (candidats.length === 0) {
-    const parAppr = await devinerParApprenant(supabase, orgId, distinctifs, dateMail, m[3])
+    const parAppr = await devinerParApprenant(supabase, orgId, distinctifs, dateMail, libelle)
     if (!('erreur' in parAppr)) return parAppr
-    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, m[3])
+    return await devinerParFormateur(supabase, orgId, expediteur, dateMail, libelle)
   }
   if (candidats.length > 1) {
     return {
       erreur: {
-        error: `Plusieurs clients correspondent à « ${m[3]} »`,
+        error: `Plusieurs clients correspondent à « ${libelle} »`,
         ambigu: true,
         candidats: candidats.slice(0, 6).map((c: any) => c.raison_sociale),
       },
