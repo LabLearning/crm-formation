@@ -12,7 +12,8 @@
  *
  * ── Mise en place ──────────────────────────────────────────────────────────
  * 1. script.google.com → Nouveau projet, connecté au compte sales@
- * 2. Coller ce fichier, remplacer SECRET par la valeur de CRON_SECRET (Vercel)
+ * 2. Coller ce fichier ENTIER dans Code.gs, puis remplacer SECRET par la
+ *    valeur de CRON_SECRET (Vercel)
  * 3. Exécuter `collecter` une première fois → autoriser Gmail et les appels
  *    externes lorsque Google le demande
  * 4. Si l'exécution s'arrête au bout de 6 minutes (limite Google), relancer
@@ -40,6 +41,41 @@ var REQUETES = [
 var IGNORER = /^(image\d{3,}|logo|signature|unnamed|outlook-)/i
 var EXTENSIONS = /\.(pdf|jpe?g|png|heic|docx?|odt)$/i
 var TAILLE_MAX = 25 * 1024 * 1024
+
+function extraireEmail(from) {
+  var m = String(from).match(/<([^>]+)>/)
+  return (m ? m[1] : String(from)).trim().toLowerCase()
+}
+
+function pousser(pj, nom, expediteur, msg) {
+  var charge = {
+    fichier: pj.copyBlob().setName(nom),
+    formateur_email: expediteur,
+    type: 'auto',
+    origine: 'mail',
+    date_piece: Utilities.formatDate(msg.getDate(), 'Europe/Paris', 'yyyy-MM-dd'),
+    objet: msg.getSubject(),
+    description: 'Transmis par ' + expediteur + ' le '
+      + Utilities.formatDate(msg.getDate(), 'Europe/Paris', 'dd/MM/yyyy'),
+  }
+  try {
+    var rep = UrlFetchApp.fetch(CRM, {
+      method: 'post',
+      payload: charge,
+      headers: { Authorization: 'Bearer ' + SECRET },
+      muteHttpExceptions: true,
+    })
+    var code = rep.getResponseCode()
+    if (code === 200) return true
+    // 404 = expéditeur inconnu du CRM. C'est une information utile, pas une
+    // erreur : ce sont les formateurs à créer, ou dont l'email a changé.
+    Logger.log('[' + code + '] ' + expediteur + ' — ' + nom + ' : ' + rep.getContentText().slice(0, 160))
+    return false
+  } catch (e) {
+    Logger.log('ÉCHEC ' + nom + ' : ' + e)
+    return false
+  }
+}
 
 function collecter() {
   var props = PropertiesService.getScriptProperties()
@@ -83,41 +119,6 @@ function collecter() {
 
   props.deleteAllProperties()
   Logger.log('TERMINÉ — ' + deposes + ' pièce(s) déposée(s), ' + ignores + ' ignorée(s).')
-}
-
-function pousser(pj, nom, expediteur, msg) {
-  var charge = {
-    fichier: pj.copyBlob().setName(nom),
-    formateur_email: expediteur,
-    type: 'auto',
-    origine: 'mail',
-    date_piece: Utilities.formatDate(msg.getDate(), 'Europe/Paris', 'yyyy-MM-dd'),
-    objet: msg.getSubject(),
-    description: 'Transmis par ' + expediteur + ' le '
-      + Utilities.formatDate(msg.getDate(), 'Europe/Paris', 'dd/MM/yyyy'),
-  }
-  try {
-    var rep = UrlFetchApp.fetch(CRM, {
-      method: 'post',
-      payload: charge,
-      headers: { Authorization: 'Bearer ' + SECRET },
-      muteHttpExceptions: true,
-    })
-    var code = rep.getResponseCode()
-    if (code === 200) return true
-    // 404 = expéditeur inconnu du CRM. C'est une information utile, pas une
-    // erreur : ce sont les formateurs à créer, ou dont l'email a changé.
-    Logger.log('[' + code + '] ' + expediteur + ' — ' + nom + ' : ' + rep.getContentText().slice(0, 160))
-    return false
-  } catch (e) {
-    Logger.log('ÉCHEC ' + nom + ' : ' + e)
-    return false
-  }
-}
-
-function extraireEmail(from) {
-  var m = String(from).match(/<([^>]+)>/)
-  return (m ? m[1] : String(from)).trim().toLowerCase()
 }
 
 /** À lancer si l'on veut repartir de zéro plutôt que reprendre. */

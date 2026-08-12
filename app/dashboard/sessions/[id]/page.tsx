@@ -89,10 +89,13 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
       .select('id, qcm_id, date_ouverture, envoye_at, qcm:qcm(id, titre, type, score_min_reussite)')
       .eq('session_id', params.id)
       .order('date_ouverture', { ascending: false }),
-    // Réponses des apprenants (qui a répondu + score)
+    // Réponses des apprenants (qui a répondu + score). Le nombre de lignes de
+    // détail dit si le stagiaire a répondu question par question ou si seul le
+    // résultat a été reporté depuis le questionnaire papier du formateur : sans
+    // détail, il n'y a rien à ouvrir.
     supabase
       .from('qcm_reponses')
-      .select('id, qcm_id, apprenant_id, score, is_reussi, is_complete, completed_at, date_realisation')
+      .select('id, qcm_id, apprenant_id, score, is_reussi, is_complete, completed_at, date_realisation, detail:qcm_reponses_detail(count)')
       .eq('session_id', params.id),
     // Banque de QCM de l'organisation (pour rattacher) — formation_id pour
     // repérer le QCM propre à la formation de la session

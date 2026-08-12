@@ -1259,10 +1259,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                                 {r.is_complete && r.score != null && (
                                   <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full shrink-0',
                                     Number(r.score) >= 70 ? 'bg-emerald-50 text-emerald-700' : Number(r.score) >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700')}>
-                                    {Number(r.score)}%
+                                    {String(q.qcm?.type || '').startsWith('satisfaction')
+                                      ? `${(Number(r.score) / 20).toFixed(1)} / 5`
+                                      : `${Number(r.score)} %`}
                                   </div>
                                 )}
-                                {r.is_complete && !isFormateur && (
+                                {r.is_complete && !isFormateur && (r.detail?.[0]?.count ?? 0) > 0 && (
                                   <button onClick={() => setDetail(r.id)}
                                     title="Voir les réponses du stagiaire"
                                     className="btn-secondary !py-1 !px-2.5 text-xs shrink-0">

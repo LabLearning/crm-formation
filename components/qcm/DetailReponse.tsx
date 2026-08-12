@@ -71,31 +71,6 @@ export function DetailReponse({
             </div>
           </div>
 
-          {/*
-            Un résultat saisi en groupé n'a pas de détail par question : le
-            formateur a mené l'entretien sur son support papier et n'a reporté
-            que le résultat. Écrire « aucune réponse enregistrée » laisserait
-            croire que le stagiaire n'a rien répondu — c'est le contraire.
-          */}
-          {lignes.length === 0 && (
-            <div className="py-8 text-center">
-              {entete?.is_complete && entete?.sansDetail ? (
-                <>
-                  <p className="text-sm text-surface-700">
-                    Résultat reporté depuis le questionnaire rempli par le formateur.
-                  </p>
-                  <p className="text-xs text-surface-500 mt-1.5">
-                    Le détail des réponses figure sur son document, déposé au dossier de la session.
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-surface-500">
-                  Ce questionnaire n&apos;a pas encore été renseigné pour ce stagiaire.
-                </p>
-              )}
-            </div>
-          )}
-
           {lignes.map((l, i) => (
             <div key={i} className="rounded-xl border border-surface-200 p-4">
               <div className="text-sm text-surface-800">
