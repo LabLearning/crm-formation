@@ -626,7 +626,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ONGLET CONTENU PÉDAGOGIQUE
           ═══════════════════════════════════════════════ */}
       {tab === 'dossier' && !isFormateur && (
-        <PiecesDossier sessionId={session.id} etats={etatsPieces} tableManquante={piecesTableManquante} />
+        <PiecesDossier
+          sessionId={session.id}
+          etats={etatsPieces}
+          tableManquante={piecesTableManquante}
+          formationId={session.formation_id || null}
+          nbSupports={supports.length}
+          rapportFait={!!(rapport?.submitted_at || rapport?.status === 'soumis')}
+          nbInscrits={inscriptions.length}
+          onGoTab={(t) => setTab(t as any)}
+        />
       )}
 
       {tab === 'deroule' && (
