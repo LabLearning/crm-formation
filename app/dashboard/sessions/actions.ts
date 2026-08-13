@@ -644,14 +644,20 @@ export async function deleteSessionAction(id: string): Promise<ActionResult> {
 }
 
 /**
- * Émet l'attestation de fin de formation ou le certificat de réalisation d'un
- * apprenant : génère le PDF, le stocke (visible dans son portail) et l'envoie
- * par WhatsApp (lien portail) + notification interne.
+ * Émet un document de clôture d'un apprenant — attestation de fin de formation,
+ * certificat de réalisation, ou attestation d'hygiène alimentaire : génère le
+ * PDF, le stocke (visible dans son portail) et l'envoie par WhatsApp (lien
+ * portail) + notification interne.
+ *
+ * L'attestation d'hygiène n'est pas une variante des deux autres : c'est le
+ * document réglementaire de l'arrêté du 12 février 2024, celui que
+ * l'établissement présente lors d'un contrôle de la DDPP. Elle s'ajoute aux
+ * documents de clôture habituels sur toute formation en hygiène alimentaire.
  */
 export async function sendDocumentToApprenantAction(
   sessionId: string,
   apprenantId: string,
-  docType: 'attestation' | 'certificat',
+  docType: 'attestation' | 'certificat' | 'hygiene',
 ): Promise<ActionResult & { whatsapp?: string }> {
   const session = await getSession()
   if (session.user.role === 'formateur') {
@@ -697,6 +703,20 @@ export async function sendDocumentToApprenantAction(
       buffer = await renderToBuffer(createElement(AttestationFormationPDF, { apprenant, session: sess, formation, org: orgDoc, assiduite }) as any)
       docDbType = 'attestation_fin'
       docNom = `Attestation de formation — ${formationNom}`
+    } else if (docType === 'hygiene') {
+      const { estFormationHygiene } = await import('@/lib/formation-hygiene')
+      if (!estFormationHygiene(formation)) {
+        return { success: false, error: "Cette session ne porte pas sur l'hygiène alimentaire" }
+      }
+      const { AttestationHygienePDF } = await import('@/lib/pdf/attestation-hygiene-pdf')
+      // La durée attestée est celle réellement suivie : c'est elle qui est
+      // opposable lors d'un contrôle, pas la durée prévue au programme.
+      buffer = await renderToBuffer(createElement(AttestationHygienePDF, {
+        apprenants: [apprenant], session: sess, formation, org: orgDoc,
+        heuresParApprenant: heuresPresence != null ? { [apprenantId]: heuresPresence } : undefined,
+      }) as any)
+      docDbType = 'attestation_hygiene'
+      docNom = `Attestation d'hygiène alimentaire — ${formationNom}`
     } else {
       const { CertificatRealisationPDF } = await import('@/lib/pdf/certificat-realisation-pdf')
       buffer = await renderToBuffer(createElement(CertificatRealisationPDF, { apprenant, session: sess, formation, org: orgDoc, assiduite, heuresPresence }) as any)
@@ -742,6 +762,21 @@ export async function sendDocumentToApprenantAction(
     await supabase.from('documents').insert(docPayload)
   }
 
+  // L'attestation d'hygiène est produite et déposée au dossier, mais pas
+  // encore diffusée : sa rédaction est réglementée et attend validation.
+  // Pour l'ouvrir à l'envoi : retirer cette sortie anticipée, et rédiger le
+  // libellé WhatsApp et l'objet du courriel pour ce troisième type — les deux
+  // blocs qui suivent ne connaissent aujourd'hui que l'attestation de fin et
+  // le certificat.
+  if (docType === 'hygiene') {
+    await logAudit({
+      action: 'create', entity_type: 'session', entity_id: sessionId,
+      details: { document: docDbType, apprenant_id: apprenantId, envoi: 'suspendu' },
+    })
+    revalidatePath(`/dashboard/sessions/${sessionId}`)
+    return { success: true, whatsapp: 'skipped' }
+  }
+
   // Token portail apprenant (pour le bouton WhatsApp)
   const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
   const token = await getOrCreateApprenantToken(supabase, apprenantId, apprenant.organization_id, apprenant.email)
@@ -752,7 +787,7 @@ export async function sendDocumentToApprenantAction(
     await createNotification({
       organizationId: apprenant.organization_id,
       userId: apprenant.user_id,
-      titre: docType === 'attestation' ? 'Votre attestation de formation' : 'Votre certificat de réalisation',
+      titre: docNom.split(' — ')[0],
       message: `${docNom} est disponible dans votre espace.`,
       type: 'document',
       lienUrl: token ? `/portail/${token}/documents` : '/mon-espace',

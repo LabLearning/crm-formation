@@ -44,7 +44,7 @@ interface Annexe {
  */
 export function PiecesDossier({
   sessionId, etats, tableManquante, formationId, nbSupports = 0,
-  rapportFait = false, nbInscrits = 0, onGoTab,
+  rapportFait = false, nbInscrits = 0, hygiene = false, onGoTab,
 }: {
   sessionId: string
   etats: (EtatPiece & { fichier?: string | null; dateDepot?: string | null })[]
@@ -53,6 +53,8 @@ export function PiecesDossier({
   nbSupports?: number
   rapportFait?: boolean
   nbInscrits?: number
+  /** La formation relève de l'hygiène alimentaire réglementaire. */
+  hygiene?: boolean
   onGoTab?: (onglet: string) => void
 }) {
   const router = useRouter()
@@ -153,6 +155,15 @@ export function PiecesDossier({
           faite: nbInscrits > 0,
           onglet: 'apprenants',
         },
+        // Exigée par l'arrêté du 12 février 2024, en plus des documents de
+        // clôture habituels. C'est elle que l'établissement présente lors d'un
+        // contrôle sanitaire.
+        ...(hygiene ? [{
+          cle: 'attestation_hygiene', label: "Attestations d'hygiène alimentaire",
+          aide: "Arrêté du 12 février 2024 — une par stagiaire, à remettre à l'établissement.",
+          faite: nbInscrits > 0,
+          href: `/api/pdf/attestation-hygiene?session=${sessionId}`,
+        } as Annexe] : []),
         {
           cle: 'rapport', label: 'Rapport de session',
           aide: 'Bilan du formateur sur le déroulement.',

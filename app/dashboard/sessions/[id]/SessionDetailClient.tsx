@@ -16,6 +16,7 @@ import { PiecesDossier } from '@/components/sessions/PiecesDossier'
 import { etatDeroule } from '@/lib/dpo'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
+import { estFormationHygiene } from '@/lib/formation-hygiene'
 import { cn, formatDate, companyLabel } from '@/lib/utils'
 import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
@@ -636,6 +637,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           nbSupports={supports.length}
           rapportFait={!!(rapport?.submitted_at || rapport?.status === 'soumis')}
           nbInscrits={inscriptions.length}
+          hygiene={estFormationHygiene(session.formation)}
           onGoTab={(t) => setTab(t as any)}
         />
       )}
@@ -957,6 +959,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           { label: 'Envoyer l\'attestation par email', icon: <Mail className="h-4 w-4 text-surface-400" />, onClick: () => handleSendDoc(a?.id, 'attestation', 'Attestation') },
                           { label: 'Certificat de réalisation (PDF)', icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/certificat-realisation/${a?.id}${base}`, '_blank') },
                           { label: 'Envoyer le certificat par email', icon: <Mail className="h-4 w-4 text-surface-400" />, onClick: () => handleSendDoc(a?.id, 'certificat', 'Certificat') },
+                          // Document réglementaire de l'arrêté du 12 février 2024, exigé
+                          // en plus des documents de clôture sur toute formation en
+                          // hygiène alimentaire.
+                          ...(estFormationHygiene(session.formation) ? [
+                            { label: "Attestation d'hygiène alimentaire (PDF)", icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/attestation-hygiene?session=${session.id}&apprenant=${a?.id}`, '_blank') },
+                          ] : []),
                           { label: 'Retirer de la session', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDesinscrire(a?.id, `${a?.prenom || ''} ${a?.nom || ''}`.trim()), danger: true },
                         ]} />
                       </div>
