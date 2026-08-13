@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate, cn } from '@/lib/utils'
-import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction } from './actions'
+import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction, sendContratToFormateurAction } from './actions'
 import { envoyerMailApprenantAction, envoyerMailATousAction, envoyerDocumentsAuReferentAction, type MailApprenantType } from '../mails-actions'
 
 interface EmailLog {
@@ -54,6 +54,56 @@ const TYPES_APPRENANT: {
   },
 ]
 
+/** Les courriels adressables au référent de l'établissement. */
+const TYPES_REFERENT: {
+  key: 'convocation_ref' | 'attestation' | 'certificat' | 'hygiene'
+  label: string
+  aide: string
+  match: (subject: string) => boolean
+  hygieneSeulement?: boolean
+}[] = [
+  {
+    key: 'convocation_ref', label: 'Convocation de formation',
+    aide: 'Participants + PDF · à transmettre aux stagiaires',
+    match: (s) => s.startsWith('Convocation de formation —'),
+  },
+  {
+    key: 'attestation', label: 'Attestations de fin de formation',
+    aide: 'Un exemplaire par stagiaire, à remettre en main propre',
+    match: (s) => s.startsWith('Attestations de fin de formation'),
+  },
+  {
+    key: 'certificat', label: 'Certificats de réalisation',
+    aide: 'Un exemplaire par stagiaire · justificatif pour le financeur',
+    match: (s) => s.startsWith('Certificats de réalisation'),
+  },
+  {
+    key: 'hygiene', label: "Attestations d'hygiène alimentaire",
+    aide: 'PDF unique, une page par stagiaire · contrôle sanitaire',
+    match: (s) => s.startsWith("Attestations d'hygi"),
+    hygieneSeulement: true,
+  },
+]
+
+/** Les courriels adressables au formateur. */
+const TYPES_FORMATEUR_MAILS: {
+  key: 'fiche' | 'contrat'
+  label: string
+  aide: string
+  match: (subject: string) => boolean
+}[] = [
+  {
+    key: 'fiche', label: 'Fiche mission de la session',
+    aide: 'Dates, lieu, participants, déroulé',
+    match: (s) => s.startsWith('Votre prochaine formation'),
+  },
+  {
+    key: 'contrat', label: 'Contrat de prestation',
+    aide: 'PDF contractuel joint · à conserver par le formateur',
+    match: (s) => s.startsWith('Contrat de prestation —'),
+  },
+]
+
 function StatusPill({ status }: { status: string | null }) {
   const s = status || 'pending'
   if (s === 'sent') return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Envoyé</span>
@@ -93,6 +143,8 @@ export function SessionMails({
   const [previewLoading, setPreviewLoading] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [selectionne, setSelectionne] = useState<Person | null>(null)
+  const [contactSel, setContactSel] = useState<Person | null>(null)
+  const [busyContrat, setBusyContrat] = useState(false)
 
   const types = TYPES_APPRENANT.filter((t) => !t.hygieneSeulement || hygiene)
 
@@ -101,6 +153,26 @@ export function SessionMails({
   /** Dernier envoi d'un type donné pour un stagiaire donné. */
   const dernierEnvoi = (p: Person, match: (s: string) => boolean) =>
     emailLogs.find((l) => norm(l.to_email) === norm(p.email) && p.email && match(l.subject || ''))
+
+  /**
+   * Dernier envoi d'un type donné, tous contacts confondus : le serveur choisit
+   * le destinataire (signataire, sinon principal), l'historique doit donc se
+   * lire sur l'ensemble des adresses de l'établissement.
+   */
+  const dernierEnvoiParmi = (emails: (string | null)[], match: (s: string) => boolean) => {
+    const set = new Set(emails.filter(Boolean).map((e) => norm(e)))
+    return emailLogs.find((l) => set.has(norm(l.to_email)) && match(l.subject || ''))
+  }
+
+  /** Envoi direct du contrat de prestation — pas d'aperçu sur ce circuit. */
+  async function envoyerContratFormateur() {
+    if (!confirm('Envoyer le contrat de prestation au formateur ?')) return
+    setBusyContrat(true)
+    const r = await sendContratToFormateurAction(sessionId)
+    setBusyContrat(false)
+    if ((r as any)?.success) { toast('success', `Contrat envoyé à ${(r as any).data?.email || 'au formateur'}`); router.refresh() }
+    else toast('error', (r as any)?.error || 'Erreur')
+  }
 
   /** Combien de stagiaires ont reçu ce courriel au moins une fois. */
   const compteurs = useMemo(() => {
@@ -234,33 +306,6 @@ export function SessionMails({
     { id: 'formateur' as const, label: 'Formateur', icon: GraduationCap, count: formateurPerson ? 1 : 0 },
   ]
 
-  function PersonRow({ p, action }: { p: Person; action?: React.ReactNode }) {
-    const logs = logsFor(p.email)
-    return (
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-surface-900 truncate">{p.nom}{p.sub ? <span className="text-surface-400 font-normal"> · {p.sub}</span> : null}</div>
-            <div className="text-xs text-surface-500 truncate">{p.email || <span className="text-surface-300">Pas d’email</span>}</div>
-          </div>
-          {action}
-        </div>
-        {logs.length > 0 && (
-          <div className="mt-2 rounded-lg border border-surface-100 divide-y divide-surface-100">
-            {logs.map((l) => (
-              <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
-                <span className="text-xs text-surface-700 truncate">{l.subject}</span>
-                <span className="flex items-center gap-3 shrink-0">
-                  <StatusPill status={l.status} />
-                  <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
 
   return (
     <div className="card overflow-hidden">
@@ -410,35 +455,169 @@ export function SessionMails({
       )}
 
       {tab === 'referent' && (
-        <div className="divide-y divide-surface-100">
-          {referents.length === 0
-            ? <div className="text-center py-8 text-sm text-surface-400">Aucun contact référent sur le client</div>
-            : <>
-                <div className="px-4 pt-3 pb-1">
-                  <button onClick={() => openPreview('convocation')} disabled={previewLoading === 'convocation'}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors">
-                    {previewLoading === 'convocation' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Convocation (participants + PDF) — aperçu & envoi
+        referents.length === 0 ? (
+          <div className="text-center py-8 text-sm text-surface-400">Aucun contact référent sur le client</div>
+        ) : (
+          <div className="grid md:grid-cols-[1fr,1.3fr] md:divide-x divide-surface-100">
+            {/* ── Contacts de l'établissement ── */}
+            <div className="divide-y divide-surface-100 max-h-[480px] overflow-y-auto">
+              {referents.map((p, i) => {
+                const actif = contactSel?.email === p.email && contactSel?.nom === p.nom
+                return (
+                  <button key={i} onClick={() => setContactSel(actif ? null : p)}
+                    className={cn('w-full text-left px-4 py-2.5 flex items-center gap-2 transition-colors',
+                      actif ? 'bg-surface-900 text-white' : 'hover:bg-surface-50')}>
+                    <div className="min-w-0 flex-1">
+                      <div className={cn('text-sm font-medium truncate', actif ? 'text-white' : 'text-surface-900')}>
+                        {p.nom}{p.sub ? <span className={cn('font-normal', actif ? 'text-white/60' : 'text-surface-400')}> · {p.sub}</span> : null}
+                      </div>
+                      <div className={cn('text-xs truncate', actif ? 'text-white/60' : 'text-surface-400')}>
+                        {p.email || 'Pas d’email'}
+                      </div>
+                    </div>
+                    <ChevronRight className={cn('h-4 w-4 shrink-0', actif ? 'text-white/70' : 'text-surface-300')} />
                   </button>
-                  <p className="text-[11px] text-surface-400 mt-1">Envoyée au contact signataire / principal de l'établissement, avec la convocation PDF listant les participants.</p>
-                </div>
-                {referents.map((p, i) => <PersonRow key={i} p={p} />)}
-              </>}
-        </div>
+                )
+              })}
+            </div>
+
+            {/* ── Types de courriels ── */}
+            <div>
+              <div className="px-4 py-2.5 border-b border-surface-100 text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                Envois au référent
+              </div>
+              <div className="divide-y divide-surface-100">
+                {TYPES_REFERENT.filter((t) => !t.hygieneSeulement || hygiene).map((t) => {
+                  const envoi = dernierEnvoiParmi(referents.map((r) => r.email), t.match)
+                  const cle = t.key === 'convocation_ref' ? 'convocation' : `ref-${t.key}`
+                  return (
+                    <div key={t.key} className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-surface-900">{t.label}</div>
+                        <div className="text-[11px] text-surface-400 mt-0.5">{t.aide}</div>
+                      </div>
+                      {envoi ? (
+                        <span className="flex items-center gap-2 shrink-0">
+                          <StatusPill status={envoi.status} />
+                          <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-surface-300 shrink-0">Jamais envoyé</span>
+                      )}
+                      <button
+                        onClick={() => t.key === 'convocation_ref'
+                          ? openPreview('convocation')
+                          : apercuReferent(t.key as 'attestation' | 'certificat' | 'hygiene')}
+                        disabled={previewLoading === cle}
+                        className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
+                        {previewLoading === cle ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                        Aperçu & envoi
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Historique du contact sélectionné, sinon de tous les contacts */}
+              {(() => {
+                const logs = contactSel
+                  ? logsFor(contactSel.email)
+                  : referents.flatMap((r) => logsFor(r.email)).slice(0, 12)
+                if (logs.length === 0) return null
+                return (
+                  <div className="px-4 py-3 border-t border-surface-100">
+                    <div className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-2">
+                      Historique{contactSel ? ` — ${contactSel.nom}` : ''}
+                    </div>
+                    <div className="rounded-lg border border-surface-100 divide-y divide-surface-100">
+                      {logs.map((l) => (
+                        <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
+                          <span className="text-xs text-surface-700 truncate">{l.subject}</span>
+                          <span className="flex items-center gap-3 shrink-0">
+                            <StatusPill status={l.status} />
+                            <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        )
       )}
 
       {tab === 'formateur' && (
-        <div className="divide-y divide-surface-100">
-          {!formateurPerson
-            ? <div className="text-center py-8 text-sm text-surface-400">Aucun formateur rattaché</div>
-            : <PersonRow p={formateurPerson} action={
-                formateurPerson.email ? (
-                  <button onClick={() => openPreview('formateur')} disabled={previewLoading === 'formateur'}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors shrink-0">
-                    {previewLoading === 'formateur' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Aperçu & envoi
-                  </button>
-                ) : undefined
-              } />}
-        </div>
+        !formateurPerson ? (
+          <div className="text-center py-8 text-sm text-surface-400">Aucun formateur rattaché</div>
+        ) : (
+          <div className="grid md:grid-cols-[1fr,1.3fr] md:divide-x divide-surface-100">
+            <div className="px-4 py-2.5">
+              <div className="text-sm font-medium text-surface-900 truncate">{formateurPerson.nom}</div>
+              <div className="text-xs text-surface-400 truncate">{formateurPerson.email || 'Pas d’email'}</div>
+            </div>
+
+            <div>
+              <div className="px-4 py-2.5 border-b border-surface-100 text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                Envois au formateur
+              </div>
+              <div className="divide-y divide-surface-100">
+                {TYPES_FORMATEUR_MAILS.map((t) => {
+                  const envoi = dernierEnvoi(formateurPerson, t.match)
+                  return (
+                    <div key={t.key} className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-surface-900">{t.label}</div>
+                        <div className="text-[11px] text-surface-400 mt-0.5">{t.aide}</div>
+                      </div>
+                      {envoi ? (
+                        <span className="flex items-center gap-2 shrink-0">
+                          <StatusPill status={envoi.status} />
+                          <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-surface-300 shrink-0">Jamais envoyé</span>
+                      )}
+                      {t.key === 'fiche' ? (
+                        <button onClick={() => openPreview('formateur')}
+                          disabled={!formateurPerson.email || previewLoading === 'formateur'}
+                          className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
+                          {previewLoading === 'formateur' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                          Aperçu & envoi
+                        </button>
+                      ) : (
+                        <button onClick={envoyerContratFormateur}
+                          disabled={!formateurPerson.email || busyContrat}
+                          className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
+                          {busyContrat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                          Envoyer
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {logsFor(formateurPerson.email).length > 0 && (
+                <div className="px-4 py-3 border-t border-surface-100">
+                  <div className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-2">Historique</div>
+                  <div className="rounded-lg border border-surface-100 divide-y divide-surface-100">
+                    {logsFor(formateurPerson.email).map((l) => (
+                      <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
+                        <span className="text-xs text-surface-700 truncate">{l.subject}</span>
+                        <span className="flex items-center gap-3 shrink-0">
+                          <StatusPill status={l.status} />
+                          <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
       )}
 
       <div className="px-4 py-2 bg-surface-50/60 text-[11px] text-surface-500 border-t border-surface-100">
