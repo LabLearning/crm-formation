@@ -89,9 +89,9 @@ export function SessionMails({
   const [previewKind, setPreviewKind] = useState<'formateur' | 'convocation'>('formateur')
   const [envoiApprenant, setEnvoiApprenant] = useState<{ apprenantId: string; type: MailApprenantType } | null>(null)
   const [envoiReferent, setEnvoiReferent] = useState<{ type: 'attestation' | 'certificat' | 'hygiene' } | null>(null)
+  const [envoiTous, setEnvoiTous] = useState<{ type: MailApprenantType } | null>(null)
   const [previewLoading, setPreviewLoading] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
-  const [busyTous, setBusyTous] = useState<string | null>(null)
   const [selectionne, setSelectionne] = useState<Person | null>(null)
 
   const types = TYPES_APPRENANT.filter((t) => !t.hygieneSeulement || hygiene)
@@ -119,6 +119,7 @@ export function SessionMails({
     setPreviewLoading(null)
     if (r.success && r.data?.html) {
       setEnvoiReferent(null)
+      setEnvoiTous(null)
       setEnvoiApprenant({ apprenantId: p.id, type })
       setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || p.email || '—' })
     } else {
@@ -136,6 +137,7 @@ export function SessionMails({
     setPreviewLoading(null)
     if (r.success && r.data?.html) {
       setEnvoiApprenant(null)
+      setEnvoiTous(null)
       setEnvoiReferent({ type })
       setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || '—' })
     } else {
@@ -143,20 +145,27 @@ export function SessionMails({
     }
   }
 
-  async function envoyerATous(type: MailApprenantType, label: string) {
-    if (!confirm(`Envoyer « ${label} » à tous les apprenants de la session ?`)) return
-    setBusyTous(type)
-    const r = await envoyerMailATousAction(sessionId, type)
-    setBusyTous(null)
-    if (!r.success) { toast('error', r.error || 'Erreur'); return }
-    const d = r.data || ({} as any)
-    const details = [
-      d.envoyes ? `${d.envoyes} envoyé(s)` : null,
-      d.sansEmail ? `${d.sansEmail} sans adresse` : null,
-      d.echecs ? `${d.echecs} en échec` : null,
-    ].filter(Boolean).join(' · ')
-    toast(d.echecs ? 'error' : 'success', details || 'Terminé')
-    router.refresh()
+  async function apercuTous(type: MailApprenantType) {
+    // L'aperçu montre le mail du premier stagiaire doté d'une adresse ; chaque
+    // destinataire recevra le sien, personnalisé à son nom.
+    const exemple = apprenants.find((p) => p.id && p.email)
+    if (!exemple?.id) { toast('error', "Aucun apprenant n'a d'adresse email"); return }
+    setPreviewLoading(`tous-${type}`)
+    const r = await envoyerMailApprenantAction(sessionId, exemple.id, type, { preview: true })
+    setPreviewLoading(null)
+    if (r.success && r.data?.html) {
+      setEnvoiApprenant(null)
+      setEnvoiReferent(null)
+      setEnvoiTous({ type })
+      const avecEmail = apprenants.filter((p) => p.email).length
+      setPreview({
+        html: r.data.html,
+        subject: r.data.subject,
+        to: `Tous les apprenants (${avecEmail} avec adresse sur ${apprenants.length}) — exemple : ${exemple.email}`,
+      })
+    } else {
+      toast('error', r.error || "Impossible de générer l'aperçu")
+    }
   }
 
   // ── Aperçu & envoi référent / formateur (inchangés) ──
@@ -168,6 +177,7 @@ export function SessionMails({
     if ((r as any)?.success && (r as any).data?.html) {
       setEnvoiApprenant(null)
       setEnvoiReferent(null)
+      setEnvoiTous(null)
       setPreviewKind(kind)
       setPreview({ html: (r as any).data.html, subject: (r as any).data.subject, to: (r as any).data.email })
     } else {
@@ -179,6 +189,21 @@ export function SessionMails({
     setSending(true)
     startTransition(async () => {
       let r: any
+      if (envoiTous) {
+        r = await envoyerMailATousAction(sessionId, envoiTous.type)
+        setSending(false)
+        if (r?.success) {
+          const d = r.data || {}
+          const details = [
+            d.envoyes ? `${d.envoyes} envoyé(s)` : null,
+            d.sansEmail ? `${d.sansEmail} sans adresse` : null,
+            d.echecs ? `${d.echecs} en échec` : null,
+          ].filter(Boolean).join(' · ')
+          toast(d.echecs ? 'error' : 'success', details || 'Terminé')
+          setPreview(null); setEnvoiTous(null); router.refresh()
+        } else toast('error', r?.error || 'Erreur')
+        return
+      }
       if (envoiReferent) {
         r = await envoyerDocumentsAuReferentAction(sessionId, envoiReferent.type)
       } else if (envoiApprenant) {
@@ -315,9 +340,9 @@ export function SessionMails({
                             compteurs[t.key] >= apprenants.length ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-100 text-surface-600')}>
                             {compteurs[t.key]} / {apprenants.length}
                           </span>
-                          <button onClick={() => envoyerATous(t.key, t.label)} disabled={busyTous === t.key}
+                          <button onClick={() => apercuTous(t.key)} disabled={previewLoading === `tous-${t.key}`}
                             className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-60">
-                            {busyTous === t.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            {previewLoading === `tous-${t.key}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                             À tous
                           </button>
                           {/*
@@ -421,7 +446,7 @@ export function SessionMails({
       </div>
 
       {/* Aperçu de l'email avant envoi */}
-      <Modal isOpen={!!preview} onClose={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null) }} title="Aperçu de l'email" size="lg">
+      <Modal isOpen={!!preview} onClose={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null); setEnvoiTous(null) }} title="Aperçu de l'email" size="lg">
         {preview && (
           <div className="space-y-3">
             <div className="text-xs text-surface-500">
@@ -432,7 +457,7 @@ export function SessionMails({
               <iframe title="Aperçu email" srcDoc={preview.html} className="w-full" style={{ height: 460, border: 0 }} />
             </div>
             <div className="flex justify-end gap-3 pt-1">
-              <Button variant="secondary" onClick={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null) }}>Annuler</Button>
+              <Button variant="secondary" onClick={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null); setEnvoiTous(null) }}>Annuler</Button>
               <Button onClick={confirmSend} isLoading={sending || pending} icon={<Send className="h-4 w-4" />}>Confirmer l'envoi</Button>
             </div>
           </div>
