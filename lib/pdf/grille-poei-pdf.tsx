@@ -20,6 +20,7 @@ interface Props {
   signatures?: {
     beneficiaire?: { data?: string | null; nom?: string | null; date?: string | null } | null
     tuteur?: { data?: string | null; nom?: string | null; date?: string | null } | null
+    employeur?: { data?: string | null; nom?: string | null; date?: string | null } | null
   } | null
   semaine: number | null
   sections: Section[]
@@ -291,28 +292,33 @@ export function GrillePoeiPDF(p: Props) {
         </Text>
 
         {/*
-          Les trois signatures du formulaire. Le bénéficiaire et le tuteur ont
-          signé électroniquement dans la POEI — leur tracé est reporté avec sa
-          date ; l'employeur n'a pas de signature en base, sa case reste à
-          signer à la main.
+          Les signatures du formulaire, plus le cachet de l'organisme. Chaque
+          tracé reporté vient d'une signature électronique réellement donnée
+          dans la POEI — certificat du bénéficiaire, contrat du tuteur, lien de
+          signature de l'employeur. Une case sans signature en base reste
+          vierge, à signer à la main : rien n'est fabriqué.
         */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }} wrap={false}>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }} wrap={false}>
           {([
-            { titre: "L'employeur, son représentant", sous: '(Date, signature, cachet)', sig: null },
-            { titre: 'Le tuteur', sous: '(Date, signature)', sig: p.signatures?.tuteur || null },
-            { titre: 'Le bénéficiaire de la formation', sous: '(Date, signature)', sig: p.signatures?.beneficiaire || null },
+            { titre: "L'employeur, son représentant", sous: '(Date, signature, cachet)', sig: p.signatures?.employeur || null, tampon: null },
+            { titre: 'Le tuteur', sous: '(Date, signature)', sig: p.signatures?.tuteur || null, tampon: null },
+            { titre: 'Le bénéficiaire de la formation', sous: '(Date, signature)', sig: p.signatures?.beneficiaire || null, tampon: null },
+            { titre: "L'organisme de formation", sous: '(Cachet et signature)', sig: null, tampon: p.org?.tampon_signature_url || null },
           ] as const).map((b) => (
-            <View key={b.titre} style={{ flex: 1, borderWidth: 0.5, borderColor: SURFACE_200, borderRadius: 4, padding: 7, height: 84 }}>
-              <Text style={{ fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>{b.titre}</Text>
-              <Text style={{ fontSize: 6.5, color: SURFACE_500, marginTop: 1 }}>{b.sous}</Text>
+            <View key={b.titre} style={{ flex: 1, borderWidth: 0.5, borderColor: SURFACE_200, borderRadius: 4, padding: 6, height: 88 }}>
+              <Text style={{ fontSize: 7, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>{b.titre}</Text>
+              <Text style={{ fontSize: 6, color: SURFACE_500, marginTop: 1 }}>{b.sous}</Text>
               {b.sig?.data ? (
                 <>
                   {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                  <PdfImage src={b.sig.data} style={{ width: 110, height: 38, objectFit: 'contain', marginTop: 3 }} />
-                  <Text style={{ fontSize: 6, color: SURFACE_500, marginTop: 1 }}>
+                  <PdfImage src={b.sig.data} style={{ width: 100, height: 36, objectFit: 'contain', marginTop: 3 }} />
+                  <Text style={{ fontSize: 5.5, color: SURFACE_500, marginTop: 1 }}>
                     {`${b.sig.nom || ''}${b.sig.date ? ` — signé électroniquement le ${fmtCourt(b.sig.date)}` : ''}`}
                   </Text>
                 </>
+              ) : null}
+              {b.tampon ? (
+                <PdfImage src={b.tampon} style={{ width: 105, height: 52, objectFit: 'contain', marginTop: 3 }} />
               ) : null}
             </View>
           ))}

@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   // prestation. L'employeur n'en a pas en base.
   const [{ data: sigsCertif }, { data: interventions }, { data: candidatsConv }] = await Promise.all([
     supabase.from('certificat_signatures')
-      .select('apprenant_id, signature_data, signataire_nom, signed_at, date_signature')
+      .select('apprenant_id, signature_data, signataire_nom, signed_at, date_signature, role')
       .eq('poei_id', params.id).not('signed_at', 'is', null),
     supabase.from('poei_interventions')
       .select('formateur_id, contrat:contrats_formateur(signature_formateur_date, signature_formateur_nom, signature_formateur_signature_data)')
@@ -44,7 +44,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       .select('apprenant_id, numero_convention, numero_engagement')
       .eq('poei_id', params.id),
   ])
-  const sigBenefPar = new Map((sigsCertif || []).map((x: any) => [String(x.apprenant_id), x]))
+  const sigBenefPar = new Map((sigsCertif || [])
+    .filter((x: any) => (x.role || 'candidat') === 'candidat')
+    .map((x: any) => [String(x.apprenant_id), x]))
+  const sigEmployeur = (sigsCertif || []).find((x: any) => x.role === 'employeur') || null
   const conventionPar = new Map((candidatsConv || []).map((x: any) => [String(x.apprenant_id), x]))
   const sigTuteurPar = new Map(
     (interventions || []).map((i: any) => {
@@ -99,6 +102,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           return x ? { data: x.signature_data, nom: x.signataire_nom, date: x.date_signature || x.signed_at } : null
         })(),
         tuteur: sigTuteurPar.get(String(g.formateur_id)) || [...sigTuteurPar.values()].find(Boolean) || null,
+        employeur: sigEmployeur ? {
+          data: sigEmployeur.signature_data,
+          nom: sigEmployeur.signataire_nom,
+          date: sigEmployeur.date_signature || sigEmployeur.signed_at,
+        } : null,
       },
       apprenant: g.apprenant,
       formateurNom: g.formateur ? `${g.formateur.prenom || ''} ${g.formateur.nom || ''}`.trim() : null,

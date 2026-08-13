@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine } from 'lucide-react'
-import { Badge, Modal } from '@/components/ui'
+import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine, Send, Loader2, Building2 } from 'lucide-react'
+import { Badge, Modal, useToast } from '@/components/ui'
+import { sendSignatureEmployeurAction } from '../certificat-signature-actions'
 import { GrilleEvaluation } from '@/components/poei/GrilleEvaluation'
 import { grilleProgress } from '@/lib/poei-grille'
 import { formatDate } from '@/lib/utils'
@@ -11,8 +12,25 @@ import { PoeiSection, PoeiVide } from './PoeiSection'
 interface Cand { id: string; apprenant_id: string | null; nom: string }
 interface Grille { id: string; apprenant_id: string; semaine: number | null; statut: string; date_evaluation: string; items: any; [k: string]: any }
 
-export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string; candidats: Cand[]; grilles: Grille[] }) {
+export function PoeiEvaluations({ poeiId, candidats, grilles, signatureEmployeur = null }: {
+  poeiId: string
+  candidats: Cand[]
+  grilles: Grille[]
+  /** Signature de l'employeur sur l'attestation : envoyée, signée, ou à demander. */
+  signatureEmployeur?: { sent_at?: string | null; signed_at?: string | null; signataire_nom?: string | null } | null
+}) {
   const [open, setOpen] = useState<{ apprenantId: string; nom: string; semaine: number | null } | null>(null)
+  const { toast } = useToast()
+  const [envoiSig, setEnvoiSig] = useState(false)
+
+  async function envoyerLienEmployeur() {
+    if (!confirm("Envoyer le lien de signature au représentant de l'employeur ?")) return
+    setEnvoiSig(true)
+    const r = await sendSignatureEmployeurAction(poeiId)
+    setEnvoiSig(false)
+    if (r.success) toast('success', `Lien de signature envoyé à ${(r as any).data?.email}`)
+    else toast('error', r.error || 'Erreur')
+  }
 
   // semaines déjà utilisées + prochaine
   const semaines = useMemo(() => {
@@ -35,12 +53,32 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
       icone={ClipboardCheck}
       titre="Évaluations des candidats"
       sous="Remplies par le formateur depuis son espace, semaine après semaine puis en bilan final."
-      actions={grilles.length > 0 ? (
-        <a href={`/api/pdf/poei-grilles/${poeiId}`} target="_blank" rel="noreferrer"
-          className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
-          <Download className="h-4 w-4" /> Télécharger tout (PDF)
-        </a>
-      ) : undefined}
+      actions={(
+        <div className="flex items-center gap-2 flex-wrap">
+          {/*
+            La signature de l'employeur couvre l'attestation de chaque candidat :
+            un seul lien, une seule signature, reportée sur tous les documents.
+          */}
+          {signatureEmployeur?.signed_at ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5">
+              <Building2 className="h-3.5 w-3.5" />
+              Employeur : signé{signatureEmployeur.signataire_nom ? ` par ${signatureEmployeur.signataire_nom}` : ''}
+            </span>
+          ) : (
+            <button onClick={envoyerLienEmployeur} disabled={envoiSig}
+              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm disabled:opacity-60">
+              {envoiSig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {signatureEmployeur?.sent_at ? 'Relancer la signature employeur' : 'Faire signer l\u2019employeur'}
+            </button>
+          )}
+          {grilles.length > 0 && (
+            <a href={`/api/pdf/poei-grilles/${poeiId}`} target="_blank" rel="noreferrer"
+              className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
+              <Download className="h-4 w-4" /> Télécharger tout (PDF)
+            </a>
+          )}
+        </div>
+      )}
     >
 
       <div className="card overflow-hidden">

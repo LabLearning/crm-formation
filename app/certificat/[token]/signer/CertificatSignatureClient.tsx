@@ -6,11 +6,23 @@ import { Button } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { signCertificatAction } from './actions'
 
-export function CertificatSignatureClient({ sig, token }: { sig: any; token: string }) {
+export function CertificatSignatureClient({ sig, token, nbCandidats = 0, employeurNom = null }: {
+  sig: any
+  token: string
+  nbCandidats?: number
+  employeurNom?: string | null
+}) {
+  // Le représentant de l'employeur signe l'attestation France Travail, une
+  // fois pour tous les candidats ; le candidat signe son propre certificat.
+  const estEmployeur = sig.role === 'employeur'
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawing, setDrawing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
-  const [nom, setNom] = useState(`${sig.apprenant?.prenom || ''} ${sig.apprenant?.nom || ''}`.trim())
+  const [nom, setNom] = useState(
+    sig.role === 'employeur'
+      ? (employeurNom || '')
+      : `${sig.apprenant?.prenom || ''} ${sig.apprenant?.nom || ''}`.trim(),
+  )
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(!!sig.signed_at)
   const [err, setErr] = useState<string | null>(null)
@@ -57,8 +69,12 @@ export function CertificatSignatureClient({ sig, token }: { sig: any; token: str
         <div className="h-16 w-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-5">
           <CheckCircle2 className="h-8 w-8 text-emerald-600" />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900">Certificat signé</h1>
-        <p className="text-surface-500 mt-2">Merci. Votre certificat de réalisation a bien été signé{dateAffichee ? ` (daté du ${formatDate(dateAffichee, { day: 'numeric', month: 'long', year: 'numeric' })})` : ''}.</p>
+        <h1 className="text-2xl font-heading font-bold text-surface-900">{estEmployeur ? 'Attestation signée' : 'Certificat signé'}</h1>
+        <p className="text-surface-500 mt-2">
+          {estEmployeur
+            ? `Merci. Votre signature sera portée sur l'attestation de développement de compétences de chaque candidat${dateAffichee ? ` (datée du ${formatDate(dateAffichee, { day: 'numeric', month: 'long', year: 'numeric' })})` : ''}.`
+            : `Merci. Votre certificat de réalisation a bien été signé${dateAffichee ? ` (daté du ${formatDate(dateAffichee, { day: 'numeric', month: 'long', year: 'numeric' })})` : ''}.`}
+        </p>
         <p className="text-xs text-surface-400 mt-6">{sig.organization?.name || 'Lab Learning'}</p>
       </div>
     )
@@ -71,12 +87,20 @@ export function CertificatSignatureClient({ sig, token }: { sig: any; token: str
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 bg-brand-50 rounded-full px-3 py-1">
           <ShieldCheck className="h-3.5 w-3.5" /> Signature électronique
         </div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 mt-3">Certificat de réalisation</h1>
-        <p className="text-surface-500 mt-1 text-sm">Vérifiez les informations puis signez dans le cadre ci-dessous.</p>
+        <h1 className="text-2xl font-heading font-bold text-surface-900 mt-3">
+          {estEmployeur ? 'Attestation de développement de compétences' : 'Certificat de réalisation'}
+        </h1>
+        <p className="text-surface-500 mt-1 text-sm">
+          {estEmployeur
+            ? 'En qualité de représentant de l\u2019employeur, vérifiez les informations puis signez dans le cadre ci-dessous.'
+            : 'Vérifiez les informations puis signez dans le cadre ci-dessous.'}
+        </p>
       </div>
 
       <div className="card p-5 mb-5 space-y-2.5 text-sm">
-        {[['Bénéficiaire', `${sig.apprenant?.prenom || ''} ${sig.apprenant?.nom || ''}`.trim()],
+        {[estEmployeur
+            ? ['Candidats concernés', nbCandidats ? `${nbCandidats} candidat${nbCandidats > 1 ? 's' : ''} — une signature couvre toutes les attestations` : null]
+            : ['Bénéficiaire', `${sig.apprenant?.prenom || ''} ${sig.apprenant?.nom || ''}`.trim()],
           ['Entreprise', client.nom_commercial || client.raison_sociale || sig.apprenant?.entreprise],
           ['Formation', formation.intitule || poei.poste_vise],
           ['Période', poei.date_debut ? `${formatDate(poei.date_debut, { day: 'numeric', month: 'short', year: 'numeric' })}${poei.date_fin ? ` → ${formatDate(poei.date_fin, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}` : null],
@@ -114,10 +138,12 @@ export function CertificatSignatureClient({ sig, token }: { sig: any; token: str
         )}
 
         <Button className="w-full mt-5" onClick={submit} isLoading={saving} icon={<CheckCircle2 className="h-4 w-4" />}>
-          Signer mon certificat
+          {estEmployeur ? "Signer l'attestation" : 'Signer mon certificat'}
         </Button>
         <p className="text-2xs text-surface-400 mt-3 text-center">
-          En signant, vous attestez avoir suivi la formation mentionnée ci-dessus.
+          {estEmployeur
+            ? 'En signant, vous attestez, en qualité de représentant de l\u2019employeur, l\u2019exactitude des informations portées sur les attestations de développement de compétences des candidats du projet.'
+            : 'En signant, vous attestez avoir suivi la formation mentionnée ci-dessus.'}
         </p>
       </div>
     </div>

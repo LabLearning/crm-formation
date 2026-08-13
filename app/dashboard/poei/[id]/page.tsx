@@ -148,6 +148,17 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     .eq('poei_id', params.id).eq('organization_id', session.organization.id)
     .order('semaine', { ascending: true, nullsFirst: false })
 
+  // Signature de l'employeur sur l'attestation de développement de
+  // compétences : demandée, signée, ou encore à envoyer. Résilient avant la
+  // migration 131 (colonne role absente).
+  let sigEmployeur: { sent_at?: string | null; signed_at?: string | null; signataire_nom?: string | null } | null = null
+  try {
+    const { data, error } = await supabase.from('certificat_signatures')
+      .select('sent_at, signed_at, signataire_nom')
+      .eq('poei_id', params.id).eq('role', 'employeur').maybeSingle()
+    if (!error) sigEmployeur = data
+  } catch { sigEmployeur = null }
+
   // Dernier statut d'envoi d'attestation par adresse email (le plus récent gagne)
   const emailStatus: Record<string, { status: string; date: string | null }> = {}
   for (const log of (emailLogs || []).filter((l: any) => l.template === 'attestation_entree')) {
@@ -353,6 +364,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
             poeiId={p.id}
             candidats={candidats.map((c: any) => ({ id: c.id, apprenant_id: c.apprenant?.id || c.apprenant_id || null, nom: `${c.apprenant?.prenom || c.prenom || ''} ${c.apprenant?.nom || c.nom || ''}`.trim() || 'Candidat' }))}
             grilles={(grilles || []) as any[]}
+            signatureEmployeur={sigEmployeur}
           />
         }
         facturation={

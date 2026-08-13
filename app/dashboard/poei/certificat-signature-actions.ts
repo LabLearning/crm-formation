@@ -116,3 +116,106 @@ export async function getCertificatSignatureLinkAction(poeiId: string, apprenant
   if ('error' in r) return { success: false, error: r.error }
   return { success: true, data: { url: `${APP()}/certificat/${(r as any).sig.token}/signer` } }
 }
+
+/**
+ * Envoie au représentant de l'employeur le lien de signature de l'attestation
+ * de développement de compétences.
+ *
+ * Il signe une fois pour tous les candidats de la POEI : c'est le formulaire
+ * France Travail qui veut sa signature sur chaque attestation, pas neuf
+ * cérémonies de signature. Le destinataire est le représentant renseigné sur
+ * le projet ; à défaut, le contact signataire du client.
+ */
+export async function sendSignatureEmployeurAction(poeiId: string): Promise<ActionResult & { data?: { email: string } }> {
+  const session = await getSession()
+  if (['apprenant', 'formateur'].includes(session.user.role)) {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: poei } = await supabase
+    .from('poei')
+    .select('id, numero, date_debut, date_fin, session_id, client_id, employeur_prenom, employeur_nom, employeur_email, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
+    .eq('id', poeiId).eq('organization_id', session.organization.id).single()
+  if (!poei) return { success: false, error: 'POEI introuvable' }
+
+  // Le représentant du projet d'abord ; le contact signataire du client en repli.
+  let nom = [poei.employeur_prenom, poei.employeur_nom].filter(Boolean).join(' ').trim()
+  let email = (poei as any).employeur_email || null
+  if (!email && (poei as any).client_id) {
+    const { data: contacts } = await supabase
+      .from('contacts').select('prenom, nom, email, est_signataire, est_principal')
+      .eq('client_id', (poei as any).client_id)
+    const c = (contacts || []).find((x: any) => x.est_signataire && x.email)
+      || (contacts || []).find((x: any) => x.est_principal && x.email)
+      || (contacts || []).find((x: any) => x.email)
+    if (c) { email = c.email; nom = nom || [c.prenom, c.nom].filter(Boolean).join(' ').trim() }
+  }
+  if (!email) {
+    return { success: false, error: "Renseignez l'email du représentant de l'employeur dans les paramètres du projet" }
+  }
+
+  const { data: existing } = await supabase
+    .from('certificat_signatures').select('*')
+    .eq('organization_id', session.organization.id)
+    .eq('poei_id', poeiId).eq('role', 'employeur').maybeSingle()
+  if (existing?.signed_at) return { success: false, error: "L'employeur a déjà signé" }
+
+  const dateSignature = (poei as any).date_fin || (poei as any).date_debut || null
+  let sig = existing
+  if (!sig) {
+    const { data: created, error } = await supabase.from('certificat_signatures').insert({
+      organization_id: session.organization.id,
+      poei_id: poeiId,
+      session_id: (poei as any).session_id || null,
+      apprenant_id: null,
+      role: 'employeur',
+      email,
+      date_signature: dateSignature,
+      created_by: session.user.id,
+    }).select('*').single()
+    if (error) {
+      console.error('[sig employeur]', error)
+      return { success: false, error: 'Erreur lors de la préparation du lien (migration 131 appliquée ?)' }
+    }
+    sig = created
+  } else if (existing.email !== email) {
+    await supabase.from('certificat_signatures').update({ email }).eq('id', existing.id)
+  }
+
+  const { count: nbCandidats } = await supabase
+    .from('poei_candidats').select('id', { count: 'exact', head: true }).eq('poei_id', poeiId)
+
+  const { data: org } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
+  const clientNom = (poei as any).client?.nom_commercial || (poei as any).client?.raison_sociale || 'votre établissement'
+  const formationNom = (poei as any).formation?.intitule || 'la formation'
+  const url = `${APP()}/certificat/${sig.token}/signer`
+
+  try {
+    const { sendDocumentEmail } = await import('@/lib/email')
+    await sendDocumentEmail({
+      to: email,
+      orgName: org?.name || 'Lab Learning',
+      orgEmail: (org as any)?.email_contact || org?.email,
+      orgLogoUrl: (org as any)?.logo_url,
+      qualiopiCertified: (org as any)?.is_qualiopi !== false,
+      recipientName: nom || 'Madame, Monsieur',
+      subject: `Signature — Attestation de développement de compétences (${(poei as any).numero || 'POEI'})`,
+      docTitle: "Attestation de développement de compétences",
+      intro: `La POEI menée chez ${clientNom} sur « ${formationNom} » touche à sa fin. En qualité de représentant de l'établissement, votre signature est requise sur l'attestation de développement de compétences remise à France Travail — une seule signature couvre les ${nbCandidats || ''} candidats du projet.`,
+      ctaLabel: "Signer l'attestation",
+      ctaUrl: url,
+      footerNote: 'Lien personnel, à ne pas transmettre. Valable 60 jours.',
+      organizationId: session.organization.id,
+      entityType: 'certificat_signature', entityId: sig.id, triggeredBy: session.user.id,
+    })
+  } catch (e) {
+    console.error('[email sig employeur]', e)
+    return { success: false, error: "L'envoi de l'email a échoué" }
+  }
+
+  await supabase.from('certificat_signatures').update({ sent_at: new Date().toISOString() }).eq('id', sig.id)
+  await logAudit({ action: 'send_signature_employeur', entity_type: 'poei', entity_id: poeiId, details: { email } })
+  revalidatePath(`/dashboard/poei/${poeiId}`)
+  return { success: true, data: { email } }
+}

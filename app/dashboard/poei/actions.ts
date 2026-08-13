@@ -168,6 +168,12 @@ export async function updatePoeiAction(id: string, formData: FormData): Promise<
       date_paiement: str(formData, "date_paiement"),
       montant_paye: num(formData, "montant_paye"),
       notes: str(formData, "notes"),
+      // Le représentant de l'employeur : il signe l'attestation de
+      // développement de compétences et reçoit le lien de signature.
+      employeur_prenom: str(formData, 'employeur_prenom'),
+      employeur_nom: str(formData, 'employeur_nom'),
+      employeur_email: str(formData, 'employeur_email'),
+      employeur_telephone: str(formData, 'employeur_telephone'),
     })
     .eq('id', id).eq('organization_id', session.organization.id)
   if (error) return { success: false, error: 'Erreur lors de la mise à jour' }

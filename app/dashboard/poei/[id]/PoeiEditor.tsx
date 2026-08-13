@@ -92,6 +92,19 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finance
       </div>
 
       <div className="card p-5">
+        {/*
+          Le représentant de l'établissement employeur : signataire de
+          l'attestation de développement de compétences, destinataire du lien
+          de signature.
+        */}
+        <div className="section-label mb-3">Employeur — représentant</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <Input id="employeur_prenom" name="employeur_prenom" label="Prénom" defaultValue={(poei as any).employeur_prenom || ''} />
+          <Input id="employeur_nom" name="employeur_nom" label="Nom" defaultValue={(poei as any).employeur_nom || ''} />
+          <Input id="employeur_email" name="employeur_email" type="email" label="Email" defaultValue={(poei as any).employeur_email || ''} />
+          <Input id="employeur_telephone" name="employeur_telephone" type="tel" label="Téléphone" defaultValue={(poei as any).employeur_telephone || ''} />
+        </div>
+
         <div className="section-label mb-3">Notes internes</div>
         <textarea id="notes" name="notes" rows={3} className="input-base resize-none w-full" defaultValue={d(poei.notes)} />
       </div>

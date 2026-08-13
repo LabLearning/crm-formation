@@ -10,7 +10,7 @@ export default async function CertificatSignerPage({ params }: { params: { token
   const { data: sig } = await supabase
     .from('certificat_signatures')
     .select(`
-      id, token, token_expires_at, signed_at, date_signature, signature_data,
+      id, token, token_expires_at, signed_at, date_signature, signature_data, role, email,
       apprenant:apprenants(prenom, nom, entreprise),
       poei:poei(id, date_debut, date_fin, duree_heures, poste_vise,
         formation:formation_id(intitule, duree_heures),
@@ -23,9 +23,22 @@ export default async function CertificatSignerPage({ params }: { params: { token
   if (!sig) redirect('/portail/expired')
   if (sig.token_expires_at && new Date(sig.token_expires_at) < new Date()) redirect('/portail/expired')
 
+  // Le signataire employeur signe pour tous les candidats du projet : la page
+  // lui montre le projet et leur nombre, pas la fiche d'un candidat.
+  let nbCandidats = 0
+  let employeurNom: string | null = null
+  if ((sig as any).role === 'employeur' && (sig as any).poei?.id) {
+    const [{ count }, { data: poeiRow }] = await Promise.all([
+      supabase.from('poei_candidats').select('id', { count: 'exact', head: true }).eq('poei_id', (sig as any).poei.id),
+      supabase.from('poei').select('employeur_prenom, employeur_nom').eq('id', (sig as any).poei.id).maybeSingle(),
+    ])
+    nbCandidats = count || 0
+    employeurNom = [poeiRow?.employeur_prenom, poeiRow?.employeur_nom].filter(Boolean).join(' ').trim() || null
+  }
+
   return (
     <div className="min-h-screen bg-surface-50">
-      <CertificatSignatureClient sig={sig as any} token={params.token} />
+      <CertificatSignatureClient sig={sig as any} token={params.token} nbCandidats={nbCandidats} employeurNom={employeurNom} />
     </div>
   )
 }
