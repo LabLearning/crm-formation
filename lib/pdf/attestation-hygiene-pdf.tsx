@@ -163,19 +163,6 @@ export function AttestationHygienePDF({
                   </View>
                   <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet de l&apos;organisme</Text>
                 </View>
-
-                {/* La déclaration d'activité est enregistrée auprès du préfet de région. */}
-                <View style={{ width: 150 }}>
-                  <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, lineHeight: 1.4 }}>
-                    PRÉFET{'\n'}DE LA RÉGION{'\n'}{String(org?.region_declaration || 'OCCITANIE').toUpperCase()}
-                  </Text>
-                  <Text style={{ fontSize: 6.5, color: SURFACE_500, marginTop: 4, lineHeight: 1.5 }}>
-                    Liberté · Égalité · Fraternité
-                  </Text>
-                  <Text style={{ fontSize: 6.5, color: SURFACE_500, marginTop: 6, lineHeight: 1.5 }}>
-                    Enregistrement de la déclaration d&apos;activité ne valant pas agrément de l&apos;État.
-                  </Text>
-                </View>
               </View>
             </View>
 
