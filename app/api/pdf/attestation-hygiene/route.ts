@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   }
 
   let q = supabase.from('inscriptions')
-    .select('apprenant_id, apprenant:apprenants(id, civilite, prenom, nom, date_naissance)')
+    .select('apprenant_id, apprenant:apprenants(id, civilite, prenom, nom, date_naissance, entreprise)')
     .eq('session_id', sessionId)
     .not('status', 'in', '("annule","abandonne")')
   if (apprenantId) q = q.eq('apprenant_id', apprenantId)
