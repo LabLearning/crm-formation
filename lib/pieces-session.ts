@@ -19,17 +19,20 @@ export interface PieceDossier {
   majeure: boolean
 }
 
+// Les numéros suivent le Référentiel national qualité officiel — celui du plan
+// d'actions remis après l'audit blanc du 12 août 2026. Une pièce annoncée sous
+// un mauvais numéro fait douter de tout le reste du dossier.
 export const PIECES: PieceDossier[] = [
   {
     cle: 'recueil', label: 'Recueil du besoin', indicateur: 4, typeDocument: 'recueil_besoin',
     aide: "Analyse du besoin du client avant la formation.", majeure: true,
   },
   {
-    cle: 'convention', label: 'Convention signée', indicateur: 14, typeDocument: 'convention_signee',
+    cle: 'convention', label: 'Convention signée', indicateur: 9, typeDocument: 'convention_signee',
     aide: "Convention ou contrat de formation, signé par le client.", majeure: true,
   },
   {
-    cle: 'contrat', label: 'Contrat formateur', indicateur: 21, typeDocument: 'contrat_formateur',
+    cle: 'contrat', label: 'Contrat formateur', indicateur: 27, typeDocument: 'contrat_formateur',
     aide: "Contrat de prestation du formateur intervenu.", majeure: true,
   },
   {
@@ -45,7 +48,7 @@ export const PIECES: PieceDossier[] = [
     aide: "Mesure de l'atteinte des objectifs en fin de formation.", majeure: true,
   },
   {
-    cle: 'satisfaction', label: 'Satisfaction', indicateur: 28, typeDocument: 'satisfaction',
+    cle: 'satisfaction', label: 'Satisfaction', indicateur: 30, typeDocument: 'satisfaction',
     aide: "Appréciation des stagiaires à l'issue de la formation.", majeure: false,
   },
 ]

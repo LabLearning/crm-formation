@@ -28,13 +28,13 @@ const ECRIRE = process.argv.includes('--ecrire')
 const MARQUEUR = '[CONSTAT-DOSSIER]'
 
 const PIECES = [
-  { cle: 'convention',    label: 'Convention de formation signée', indicateur: 14, majeure: true,  doc: 'convention_signee' },
+  { cle: 'convention',    label: 'Convention de formation signée', indicateur: 9, majeure: true,  doc: 'convention_signee' },
   { cle: 'emargement',    label: "Feuille d'émargement signée",    indicateur: 12, majeure: true,  doc: 'emargement_signe' },
-  { cle: 'contrat',       label: 'Contrat de prestation formateur', indicateur: 21, majeure: false, doc: 'contrat_formateur' },
+  { cle: 'contrat',       label: 'Contrat de prestation formateur', indicateur: 27, majeure: false, doc: 'contrat_formateur' },
   { cle: 'recueil',       label: 'Recueil du besoin',              indicateur: 4,  majeure: false, doc: 'recueil_besoin' },
   { cle: 'positionnement',label: 'Questionnaire de positionnement', indicateur: 8,  majeure: false, doc: 'positionnement' },
   { cle: 'acquis',        label: 'Évaluation des acquis',          indicateur: 11, majeure: true,  doc: 'evaluation_acquis' },
-  { cle: 'satisfaction',  label: 'Évaluation de satisfaction',     indicateur: 28, majeure: false, doc: 'satisfaction' },
+  { cle: 'satisfaction',  label: 'Évaluation de satisfaction',     indicateur: 30, majeure: false, doc: 'satisfaction' },
 ]
 
 const pages = async (fn) => {
