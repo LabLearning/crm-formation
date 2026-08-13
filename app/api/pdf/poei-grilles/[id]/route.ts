@@ -24,11 +24,23 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: poei } = await supabase
     .from('poei')
-    .select('id, numero, poste_vise, date_debut, date_fin, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
+    .select('id, numero, poste_vise, date_debut, date_fin, duree_heures, numero_engagement, numero_dossier_ft, client_id, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
     .eq('id', params.id).eq('organization_id', orgId).single()
   if (!poei) return NextResponse.json({ error: 'Projet POEI introuvable' }, { status: 404 })
 
   const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', orgId).single()
+
+  // Le signataire de l'attestation : le contact de l'établissement employeur.
+  let representantEmployeur: string | null = null
+  if ((poei as any)?.client_id) {
+    const { data: contacts } = await supabase
+      .from('contacts').select('prenom, nom, est_signataire, est_principal')
+      .eq('client_id', (poei as any).client_id)
+    const c = (contacts || []).find((x: any) => x.est_signataire)
+      || (contacts || []).find((x: any) => x.est_principal)
+      || (contacts || [])[0]
+    if (c) representantEmployeur = [c.prenom, c.nom].filter(Boolean).join(' ').trim() || null
+  }
   const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
   const org = await withDocumentLogo(supabase, orgRaw)
 
@@ -51,6 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const render = (g: any) => renderToBuffer(
     createElement(GrillePoeiPDF, {
       org, poei,
+      representantEmployeur,
       apprenant: g.apprenant,
       formateurNom: g.formateur ? `${g.formateur.prenom || ''} ${g.formateur.nom || ''}`.trim() : null,
       semaine: g.semaine,
