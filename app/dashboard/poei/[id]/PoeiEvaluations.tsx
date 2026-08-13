@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine, Send, Loader2, Building2 } from 'lucide-react'
-import { Badge, Modal, useToast } from '@/components/ui'
+import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine, Send, Loader2, Building2, Eye } from 'lucide-react'
+import { Badge, Button, Modal, useToast } from '@/components/ui'
 import { sendSignatureEmployeurAction } from '../certificat-signature-actions'
 import { GrilleEvaluation } from '@/components/poei/GrilleEvaluation'
 import { grilleProgress } from '@/lib/poei-grille'
@@ -22,14 +22,30 @@ export function PoeiEvaluations({ poeiId, candidats, grilles, signatureEmployeur
   const [open, setOpen] = useState<{ apprenantId: string; nom: string; semaine: number | null } | null>(null)
   const { toast } = useToast()
   const [envoiSig, setEnvoiSig] = useState(false)
+  const [apercuSig, setApercuSig] = useState<{ html: string; subject?: string; to?: string } | null>(null)
+  const [signatureEnvoyee, setSignatureEnvoyee] = useState(false)
 
-  async function envoyerLienEmployeur() {
-    if (!confirm("Envoyer le lien de signature au représentant de l'employeur ?")) return
+  // On montre le mail avant qu'il parte : destinataire, objet, rendu complet.
+  async function ouvrirApercuEmployeur() {
+    setEnvoiSig(true)
+    const r = await sendSignatureEmployeurAction(poeiId, { preview: true })
+    setEnvoiSig(false)
+    if (r.success && (r as any).data?.html) {
+      setApercuSig({ html: (r as any).data.html, subject: (r as any).data.subject, to: (r as any).data.email })
+    } else {
+      toast('error', r.error || "Impossible de générer l'aperçu")
+    }
+  }
+
+  async function confirmerEnvoiEmployeur() {
     setEnvoiSig(true)
     const r = await sendSignatureEmployeurAction(poeiId)
     setEnvoiSig(false)
-    if (r.success) toast('success', `Lien de signature envoyé à ${(r as any).data?.email}`)
-    else toast('error', r.error || 'Erreur')
+    if (r.success) {
+      toast('success', `Lien de signature envoyé à ${(r as any).data?.email}`)
+      setApercuSig(null)
+      setSignatureEnvoyee(true)
+    } else toast('error', r.error || 'Erreur')
   }
 
   // semaines déjà utilisées + prochaine
@@ -65,10 +81,10 @@ export function PoeiEvaluations({ poeiId, candidats, grilles, signatureEmployeur
               Employeur : signé{signatureEmployeur.signataire_nom ? ` par ${signatureEmployeur.signataire_nom}` : ''}
             </span>
           ) : (
-            <button onClick={envoyerLienEmployeur} disabled={envoiSig}
+            <button onClick={ouvrirApercuEmployeur} disabled={envoiSig}
               className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm disabled:opacity-60">
-              {envoiSig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {signatureEmployeur?.sent_at ? 'Relancer la signature employeur' : 'Faire signer l\u2019employeur'}
+              {envoiSig && !apercuSig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+              {signatureEmployeur?.sent_at || signatureEnvoyee ? 'Relancer la signature employeur' : 'Faire signer l\u2019employeur'}
             </button>
           )}
           {grilles.length > 0 && (
@@ -164,6 +180,26 @@ export function PoeiEvaluations({ poeiId, candidats, grilles, signatureEmployeur
           </table>
         </div>
       </div>
+
+      <Modal isOpen={!!apercuSig} onClose={() => setApercuSig(null)} title="Aperçu de l'email" size="lg">
+        {apercuSig && (
+          <div className="space-y-3">
+            <div className="text-xs text-surface-500">
+              <div><span className="font-semibold text-surface-700">À :</span> {apercuSig.to}</div>
+              <div><span className="font-semibold text-surface-700">Objet :</span> {apercuSig.subject}</div>
+            </div>
+            <div className="rounded-xl border border-surface-200 overflow-hidden bg-white">
+              <iframe title="Aperçu email" srcDoc={apercuSig.html} className="w-full" style={{ height: 460, border: 0 }} />
+            </div>
+            <div className="flex justify-end gap-3 pt-1">
+              <Button variant="secondary" onClick={() => setApercuSig(null)}>Annuler</Button>
+              <Button onClick={confirmerEnvoiEmployeur} isLoading={envoiSig} icon={<Send className="h-4 w-4" />}>
+                Confirmer l'envoi
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={!!open} onClose={() => setOpen(null)} size="lg"
         title={open ? `${open.nom} — ${open.semaine === null ? 'Évaluation finale' : `Semaine ${open.semaine}`}` : ''}>

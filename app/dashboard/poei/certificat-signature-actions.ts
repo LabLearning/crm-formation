@@ -126,7 +126,10 @@ export async function getCertificatSignatureLinkAction(poeiId: string, apprenant
  * cérémonies de signature. Le destinataire est le représentant renseigné sur
  * le projet ; à défaut, le contact signataire du client.
  */
-export async function sendSignatureEmployeurAction(poeiId: string): Promise<ActionResult & { data?: { email: string } }> {
+export async function sendSignatureEmployeurAction(
+  poeiId: string,
+  opts?: { preview?: boolean },
+): Promise<ActionResult & { data?: { email: string; html?: string; subject?: string } }> {
   const session = await getSession()
   if (['apprenant', 'formateur'].includes(session.user.role)) {
     return { success: false, error: 'Accès non autorisé' }
@@ -191,21 +194,32 @@ export async function sendSignatureEmployeurAction(poeiId: string): Promise<Acti
   const formationNom = (poei as any).formation?.intitule || 'la formation'
   const url = `${APP()}/certificat/${sig.token}/signer`
 
+  // Mêmes textes pour l'aperçu et l'envoi : un aperçu qui divergerait de ce
+  // qui part vraiment ferait pire que pas d'aperçu du tout.
+  const emailParams = {
+    orgName: org?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || org?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: nom || 'Madame, Monsieur',
+    subject: `Signature — Attestation de développement de compétences (${(poei as any).numero || 'POEI'})`,
+    docTitle: "Attestation de développement de compétences",
+    intro: `La POEI menée chez ${clientNom} sur « ${formationNom} » touche à sa fin. En qualité de représentant de l'établissement, votre signature est requise sur l'attestation de développement de compétences remise à France Travail — une seule signature couvre les ${nbCandidats || ''} candidats du projet.`,
+    ctaLabel: "Signer l'attestation",
+    ctaUrl: url,
+    footerNote: 'Lien personnel, à ne pas transmettre. Valable 60 jours.',
+  }
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    return { success: true, data: { email, html: buildDocumentEmailHtml(emailParams), subject: emailParams.subject } }
+  }
+
   try {
     const { sendDocumentEmail } = await import('@/lib/email')
     await sendDocumentEmail({
+      ...emailParams,
       to: email,
-      orgName: org?.name || 'Lab Learning',
-      orgEmail: (org as any)?.email_contact || org?.email,
-      orgLogoUrl: (org as any)?.logo_url,
-      qualiopiCertified: (org as any)?.is_qualiopi !== false,
-      recipientName: nom || 'Madame, Monsieur',
-      subject: `Signature — Attestation de développement de compétences (${(poei as any).numero || 'POEI'})`,
-      docTitle: "Attestation de développement de compétences",
-      intro: `La POEI menée chez ${clientNom} sur « ${formationNom} » touche à sa fin. En qualité de représentant de l'établissement, votre signature est requise sur l'attestation de développement de compétences remise à France Travail — une seule signature couvre les ${nbCandidats || ''} candidats du projet.`,
-      ctaLabel: "Signer l'attestation",
-      ctaUrl: url,
-      footerNote: 'Lien personnel, à ne pas transmettre. Valable 60 jours.',
       organizationId: session.organization.id,
       entityType: 'certificat_signature', entityId: sig.id, triggeredBy: session.user.id,
     })
