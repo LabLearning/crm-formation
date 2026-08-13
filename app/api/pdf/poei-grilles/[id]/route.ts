@@ -30,6 +30,33 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', orgId).single()
 
+  // Signatures déjà recueillies dans la POEI : celle du bénéficiaire sur son
+  // certificat de réalisation, celle du formateur référent sur son contrat de
+  // prestation. L'employeur n'en a pas en base.
+  const [{ data: sigsCertif }, { data: interventions }, { data: candidatsConv }] = await Promise.all([
+    supabase.from('certificat_signatures')
+      .select('apprenant_id, signature_data, signataire_nom, signed_at, date_signature')
+      .eq('poei_id', params.id).not('signed_at', 'is', null),
+    supabase.from('poei_interventions')
+      .select('formateur_id, contrat:contrats_formateur(signature_formateur_date, signature_formateur_nom, signature_formateur_signature_data)')
+      .eq('poei_id', params.id),
+    supabase.from('poei_candidats')
+      .select('apprenant_id, numero_convention, numero_engagement')
+      .eq('poei_id', params.id),
+  ])
+  const sigBenefPar = new Map((sigsCertif || []).map((x: any) => [String(x.apprenant_id), x]))
+  const conventionPar = new Map((candidatsConv || []).map((x: any) => [String(x.apprenant_id), x]))
+  const sigTuteurPar = new Map(
+    (interventions || []).map((i: any) => {
+      const c = Array.isArray(i.contrat) ? i.contrat[0] : i.contrat
+      return [String(i.formateur_id), c?.signature_formateur_signature_data ? {
+        data: c.signature_formateur_signature_data,
+        nom: c.signature_formateur_nom,
+        date: c.signature_formateur_date,
+      } : null]
+    }),
+  )
+
   // Le signataire de l'attestation : le contact de l'établissement employeur.
   let representantEmployeur: string | null = null
   if ((poei as any)?.client_id) {
@@ -64,6 +91,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     createElement(GrillePoeiPDF, {
       org, poei,
       representantEmployeur,
+      conventionNumero: conventionPar.get(String(g.apprenant_id))?.numero_convention
+        || conventionPar.get(String(g.apprenant_id))?.numero_engagement || null,
+      signatures: {
+        beneficiaire: (() => {
+          const x = sigBenefPar.get(String(g.apprenant_id))
+          return x ? { data: x.signature_data, nom: x.signataire_nom, date: x.date_signature || x.signed_at } : null
+        })(),
+        tuteur: sigTuteurPar.get(String(g.formateur_id)) || [...sigTuteurPar.values()].find(Boolean) || null,
+      },
       apprenant: g.apprenant,
       formateurNom: g.formateur ? `${g.formateur.prenom || ''} ${g.formateur.nom || ''}`.trim() : null,
       semaine: g.semaine,

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Document, Page, View, Text } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image as PdfImage } from '@react-pdf/renderer'
 import { PdfSectionTitle, PdfDocHeader, PdfDocFooter, shared, BRAND_GREEN, SURFACE_200, SURFACE_400, SURFACE_500, SURFACE_700, SURFACE_900 } from './components'
 
 interface Section { key: string; titre: string; items: { id: string; label: string }[] }
@@ -11,6 +11,16 @@ interface Props {
   formateurNom: string | null
   /** Contact signataire de l'établissement employeur, s'il est connu. */
   representantEmployeur?: string | null
+  /** Numéro de convention France Travail — porté par le candidat. */
+  conventionNumero?: string | null
+  /**
+   * Signatures électroniques déjà recueillies dans la POEI. L'employeur n'en
+   * a pas en base : sa case reste à signer à la main.
+   */
+  signatures?: {
+    beneficiaire?: { data?: string | null; nom?: string | null; date?: string | null } | null
+    tuteur?: { data?: string | null; nom?: string | null; date?: string | null } | null
+  } | null
   semaine: number | null
   sections: Section[]
   items: Record<string, { n?: string; o?: string }>
@@ -79,7 +89,9 @@ export function GrillePoeiPDF(p: Props) {
   const nomAppr = `${p.apprenant?.prenom || ''} ${String(p.apprenant?.nom || '').toUpperCase()}`.trim()
   const clientNom = p.poei?.client?.nom_commercial || p.poei?.client?.raison_sociale || ''
   const posteVise = p.poei?.poste_vise || p.poei?.formation?.intitule || ''
-  const conventionNumero = p.poei?.numero_engagement || p.poei?.numero_dossier_ft || null
+  // La convention est propre à chaque candidat ; les champs de la POEI ne
+  // servent que de repli.
+  const conventionNumero = p.conventionNumero || p.poei?.numero_engagement || p.poei?.numero_dossier_ft || null
 
   const tousItems = p.sections.flatMap((s) => s.items)
   const total = tousItems.length
@@ -249,8 +261,8 @@ export function GrillePoeiPDF(p: Props) {
               : <LigneVide />}
           </View>
           <Text style={{ fontSize: 9, color: SURFACE_900 }}>
-            {'et a acquis les compétences ci-dessous pour le poste/métier de\u00A0: '}
-            <Text style={{ fontFamily: 'Satoshi', fontWeight: 700 }}>{posteVise || '—'}</Text>
+            {'et a acquis les compétences ci-dessous pour le poste/métier de\u00A0:'}
+            <Text style={{ fontFamily: 'Satoshi', fontWeight: 700 }}>{`\u00A0${posteVise || '—'}`}</Text>
           </Text>
         </View>
 
@@ -278,16 +290,30 @@ export function GrillePoeiPDF(p: Props) {
           Fait à : {p.org?.city || '___________'}, le {dateAff}.
         </Text>
 
-        {/* Les trois signatures du formulaire : employeur, tuteur, bénéficiaire. */}
+        {/*
+          Les trois signatures du formulaire. Le bénéficiaire et le tuteur ont
+          signé électroniquement dans la POEI — leur tracé est reporté avec sa
+          date ; l'employeur n'a pas de signature en base, sa case reste à
+          signer à la main.
+        */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }} wrap={false}>
-          {[
-            { titre: "L'employeur, son représentant", sous: '(Date, signature, cachet)' },
-            { titre: 'Le tuteur', sous: '(Date, signature)' },
-            { titre: 'Le bénéficiaire de la formation', sous: '(Date, signature)' },
-          ].map((b) => (
+          {([
+            { titre: "L'employeur, son représentant", sous: '(Date, signature, cachet)', sig: null },
+            { titre: 'Le tuteur', sous: '(Date, signature)', sig: p.signatures?.tuteur || null },
+            { titre: 'Le bénéficiaire de la formation', sous: '(Date, signature)', sig: p.signatures?.beneficiaire || null },
+          ] as const).map((b) => (
             <View key={b.titre} style={{ flex: 1, borderWidth: 0.5, borderColor: SURFACE_200, borderRadius: 4, padding: 7, height: 84 }}>
               <Text style={{ fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>{b.titre}</Text>
               <Text style={{ fontSize: 6.5, color: SURFACE_500, marginTop: 1 }}>{b.sous}</Text>
+              {b.sig?.data ? (
+                <>
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                  <PdfImage src={b.sig.data} style={{ width: 110, height: 38, objectFit: 'contain', marginTop: 3 }} />
+                  <Text style={{ fontSize: 6, color: SURFACE_500, marginTop: 1 }}>
+                    {`${b.sig.nom || ''}${b.sig.date ? ` — signé électroniquement le ${fmtCourt(b.sig.date)}` : ''}`}
+                  </Text>
+                </>
+              ) : null}
             </View>
           ))}
         </View>
