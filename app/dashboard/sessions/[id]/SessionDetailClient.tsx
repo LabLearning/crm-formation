@@ -194,7 +194,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
   const [editApprenant, setEditApprenant] = useState<any | null>(null)
 
-  function handleSendDoc(apprenantId: string, docType: 'attestation' | 'certificat', label: string) {
+  function handleSendDoc(apprenantId: string, docType: 'attestation' | 'certificat' | 'hygiene', label: string) {
     startTransition(async () => {
       const r = await sendDocumentToApprenantAction(session.id, apprenantId, docType)
       if ((r as any)?.success) toast('success', `${label} envoyé${(r as any).data?.email ? ` à ${(r as any).data.email}` : ''}`)
@@ -964,6 +964,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           // hygiène alimentaire.
                           ...(estFormationHygiene(session.formation) ? [
                             { label: "Attestation d'hygiène alimentaire (PDF)", icon: <Download className="h-4 w-4 text-surface-400" />, onClick: () => window.open(`/api/pdf/attestation-hygiene?session=${session.id}&apprenant=${a?.id}`, '_blank') },
+                            { label: "Envoyer l'attestation d'hygiène par email", icon: <Mail className="h-4 w-4 text-surface-400" />, onClick: () => handleSendDoc(a?.id, 'hygiene', "Attestation d'hygiène") },
                           ] : []),
                           { label: 'Retirer de la session', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDesinscrire(a?.id, `${a?.prenom || ''} ${a?.nom || ''}`.trim()), danger: true },
                         ]} />

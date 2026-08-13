@@ -762,21 +762,6 @@ export async function sendDocumentToApprenantAction(
     await supabase.from('documents').insert(docPayload)
   }
 
-  // L'attestation d'hygiène est produite et déposée au dossier, mais pas
-  // encore diffusée : sa rédaction est réglementée et attend validation.
-  // Pour l'ouvrir à l'envoi : retirer cette sortie anticipée, et rédiger le
-  // libellé WhatsApp et l'objet du courriel pour ce troisième type — les deux
-  // blocs qui suivent ne connaissent aujourd'hui que l'attestation de fin et
-  // le certificat.
-  if (docType === 'hygiene') {
-    await logAudit({
-      action: 'create', entity_type: 'session', entity_id: sessionId,
-      details: { document: docDbType, apprenant_id: apprenantId, envoi: 'suspendu' },
-    })
-    revalidatePath(`/dashboard/sessions/${sessionId}`)
-    return { success: true, whatsapp: 'skipped' }
-  }
-
   // Token portail apprenant (pour le bouton WhatsApp)
   const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
   const token = await getOrCreateApprenantToken(supabase, apprenantId, apprenant.organization_id, apprenant.email)
@@ -820,7 +805,7 @@ export async function sendDocumentToApprenantAction(
           toName: `${apprenant.prenom || ''} ${apprenant.nom || ''}`.trim(),
           template: 'document_disponible',
           languageCode: 'fr',
-          bodyParams: [prenom, 'certificat de réalisation', formationNom],
+          bodyParams: [prenom, docType === 'hygiene' ? "attestation d'hygiène alimentaire" : 'certificat de réalisation', formationNom],
           buttonUrlParam: token,
           entityType: 'session',
           entityId: sessionId,
@@ -837,6 +822,7 @@ export async function sendDocumentToApprenantAction(
         : '—'
       const portalUrl = token ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/portail/${token}/documents` : undefined
       const isAtt = docType === 'attestation'
+      const isHyg = docType === 'hygiene'
       await sendDocumentEmail({
         to: apprenant.email,
         orgName: org?.name || 'Lab Learning',
@@ -844,13 +830,19 @@ export async function sendDocumentToApprenantAction(
         orgLogoUrl: org?.logo_url,
         qualiopiCertified: org?.is_qualiopi !== false,
         recipientName: `${apprenant.prenom || ''} ${apprenant.nom || ''}`.trim() || 'Madame, Monsieur',
-        subject: isAtt
-          ? `Votre attestation de formation — ${formationNom}`
-          : `Votre certificat de réalisation — ${formationNom}`,
-        docTitle: isAtt ? 'Votre attestation de fin de formation' : 'Votre certificat de réalisation',
-        intro: isAtt
-          ? `Votre formation est terminée. Voici votre attestation de fin de formation, à conserver précieusement.`
-          : `Votre formation est terminée. Voici votre certificat de réalisation, justificatif officiel auprès de votre employeur ou financeur.`,
+        subject: isHyg
+          ? `Votre attestation d'hygiène alimentaire — ${formationNom}`
+          : isAtt
+            ? `Votre attestation de formation — ${formationNom}`
+            : `Votre certificat de réalisation — ${formationNom}`,
+        docTitle: isHyg
+          ? "Votre attestation d'hygiène alimentaire"
+          : isAtt ? 'Votre attestation de fin de formation' : 'Votre certificat de réalisation',
+        intro: isHyg
+          ? `Votre formation est terminée. Voici votre attestation de formation spécifique en matière d'hygiène alimentaire, délivrée au titre de l'arrêté du 12 février 2024. Conservez-la : c'est elle qui est présentée lors d'un contrôle sanitaire.`
+          : isAtt
+            ? `Votre formation est terminée. Voici votre attestation de fin de formation, à conserver précieusement.`
+            : `Votre formation est terminée. Voici votre certificat de réalisation, justificatif officiel auprès de votre employeur ou financeur.`,
         metadata: [
           ['Formation', formationNom],
           ['Période', formationDates],
