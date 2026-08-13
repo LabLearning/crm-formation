@@ -76,7 +76,7 @@ export async function sendCertificatSignatureAction(poeiId: string, apprenantId:
       ctaUrl: url,
       footerNote: 'Lien personnel, à ne pas transmettre. Valable 60 jours.',
       organizationId: session.organization.id,
-      entityType: 'certificat_signature', entityId: sig.id, triggeredBy: session.user.id,
+      entityType: 'poei', entityId: poeiId, triggeredBy: session.user.id,
     })
   } catch (e) {
     console.error('[certif email]', e)
@@ -221,7 +221,7 @@ export async function sendSignatureEmployeurAction(
       ...emailParams,
       to: email,
       organizationId: session.organization.id,
-      entityType: 'certificat_signature', entityId: sig.id, triggeredBy: session.user.id,
+      entityType: 'poei', entityId: poeiId, triggeredBy: session.user.id,
     })
   } catch (e) {
     console.error('[email sig employeur]', e)
