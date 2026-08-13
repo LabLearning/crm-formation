@@ -16,10 +16,15 @@ export async function ensureEmargements(
 ): Promise<number> {
   const { data: sess } = await supabase
     .from('sessions')
-    .select('id, date_debut, date_fin')
+    .select('id, date_debut, date_fin, poei_intervention_id')
     .eq('id', sessionId)
     .single()
   if (!sess?.date_debut || !sess?.date_fin) return 0
+  // Une session POEI se déroule en entreprise, au rythme de l'établissement :
+  // en restauration, le samedi et le dimanche sont des jours travaillés comme
+  // les autres. L'exclusion du week-end ne vaut que pour les formations en
+  // salle.
+  const inclureWeekend = !!sess.poei_intervention_id
 
   const { data: inscriptions } = await supabase
     .from('inscriptions')
@@ -40,7 +45,7 @@ export async function ensureEmargements(
   const fin = new Date(sess.date_fin)
   while (d <= fin) {
     const jourSemaine = d.getDay()
-    if (jourSemaine !== 0 && jourSemaine !== 6) {
+    if (inclureWeekend || (jourSemaine !== 0 && jourSemaine !== 6)) {
       jours.push(d.toISOString().split('T')[0])
     }
     d.setDate(d.getDate() + 1)

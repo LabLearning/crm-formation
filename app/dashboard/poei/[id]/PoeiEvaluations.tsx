@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardCheck, CheckCircle2, Clock, Download, Minus } from 'lucide-react'
+import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine } from 'lucide-react'
 import { Badge, Modal } from '@/components/ui'
 import { GrilleEvaluation } from '@/components/poei/GrilleEvaluation'
 import { grilleProgress } from '@/lib/poei-grille'
@@ -20,6 +20,10 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
     for (const g of grilles) if (g.semaine != null) s.add(g.semaine)
     return [...s].sort((a, b) => a - b)
   }, [grilles])
+  // La première grille doit pouvoir naître d'ici : sans ce point d'entrée, le
+  // formateur lisait « En attente du formateur » sur son propre espace, sans
+  // aucun moyen d'agir.
+  const prochaineSemaine = (semaines[semaines.length - 1] ?? 0) + 1
   const gridOf = (aid: string, sem: number | null) => grilles.find((g) => g.apprenant_id === aid && g.semaine === sem)
 
   if (candidats.length === 0) {
@@ -46,6 +50,7 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
               <tr className="border-b border-surface-200 bg-surface-50/60 text-left">
                 <th className="px-4 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider">Candidat</th>
                 {semaines.map((s) => <th key={s} className="px-3 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider text-center whitespace-nowrap">S{s}</th>)}
+                <th className="px-3 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider text-center whitespace-nowrap">S{prochaineSemaine}</th>
                 <th className="px-4 py-2.5 text-[11px] font-semibold text-surface-500 uppercase tracking-wider text-center">Évaluation finale</th>
               </tr>
             </thead>
@@ -54,7 +59,7 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                 if (!c.apprenant_id) return (
                   <tr key={c.id}>
                     <td className="px-4 py-3 text-surface-800">{c.nom}</td>
-                    <td colSpan={semaines.length + 1} className="px-4 py-3 text-xs text-surface-400">Candidat non rattaché à une fiche apprenant</td>
+                    <td colSpan={semaines.length + 2} className="px-4 py-3 text-xs text-surface-400">Candidat non rattaché à une fiche apprenant</td>
                   </tr>
                 )
                 const aid = c.apprenant_id
@@ -79,6 +84,14 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                         </td>
                       )
                     })}
+                    {/* Ouvrir la semaine suivante pour ce candidat */}
+                    <td className="px-3 py-2 text-center">
+                      <button onClick={() => setOpen({ apprenantId: aid, nom: c.nom, semaine: prochaineSemaine })}
+                        title={`Évaluer la semaine ${prochaineSemaine}`}
+                        className="p-1.5 rounded-lg text-surface-300 hover:text-brand-600 hover:bg-brand-50 transition-colors">
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center justify-end gap-2">
                         {fin?.avis_final && (
@@ -92,7 +105,10 @@ export function PoeiEvaluations({ poeiId, candidats, grilles }: { poeiId: string
                             {fin.statut === 'validee' ? <><CheckCircle2 className="h-3.5 w-3.5" /> Validée</> : <><Clock className="h-3.5 w-3.5" /> Brouillon</>}
                           </button>
                         ) : (
-                          <span className="text-xs text-surface-400">En attente du formateur</span>
+                          <button onClick={() => setOpen({ apprenantId: aid, nom: c.nom, semaine: null })}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-surface-100 text-surface-600 hover:bg-surface-200 transition-colors">
+                            <PenLine className="h-3.5 w-3.5" /> Remplir
+                          </button>
                         )}
                         {fin && (
                           <a href={`/api/pdf/poei-grilles/${poeiId}?apprenant=${aid}&semaine=`} target="_blank" rel="noreferrer"

@@ -10,17 +10,18 @@ interface EmargementProps {
   apprenants: any[]
 }
 
-function buildCreneaux(dateDebut: string, dateFin: string) {
+function buildCreneaux(dateDebut: string, dateFin: string, inclureWeekend = false) {
   const out: { jour: string; creneau: string }[] = []
   const start = new Date(dateDebut)
   const end = new Date(dateFin || dateDebut)
   let cur = new Date(start)
   let guard = 0
   while (cur <= end && guard < 40) {
-    // Samedi et dimanche exclus : ils produisaient des colonnes vides que le
-    // formateur devait barrer à la main
+    // Samedi et dimanche exclus des formations en salle : ils produisaient des
+    // colonnes vides que le formateur devait barrer à la main. Une POEI se
+    // déroule en entreprise, week-end compris.
     const jourSemaine = cur.getDay()
-    if (jourSemaine !== 0 && jourSemaine !== 6) {
+    if (inclureWeekend || (jourSemaine !== 0 && jourSemaine !== 6)) {
       const jour = cur.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
       out.push({ jour, creneau: 'Matin' })
       out.push({ jour, creneau: 'Après-midi' })
@@ -32,7 +33,7 @@ function buildCreneaux(dateDebut: string, dateFin: string) {
 }
 
 export function EmargementPDF({ session, formation, org, formateur, apprenants }: EmargementProps) {
-  const allCreneaux = buildCreneaux(session.date_debut, session.date_fin)
+  const allCreneaux = buildCreneaux(session.date_debut, session.date_fin, !!session.poei_intervention_id)
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   const lieu = session.lieu || session.adresse || [session.code_postal, session.ville].filter(Boolean).join(' ') || '—'
   const numero = session.reference || `SESS-${String(session.id || '').slice(0, 8)}`
