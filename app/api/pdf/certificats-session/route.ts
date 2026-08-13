@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const [{ data: orgRow }, { data: sess }] = await Promise.all([
     supabase.from('organizations').select('*').eq('id', orgId).maybeSingle(),
     supabase.from('sessions')
-      .select('*, formateur:formateurs(prenom, nom)')
+      .select('*, formateur:formateurs(prenom, nom), client:client_id(raison_sociale, nom_commercial)')
       .eq('id', sessionId).eq('organization_id', orgId).maybeSingle(),
   ])
   if (!sess) return NextResponse.json({ error: 'Session introuvable' }, { status: 404 })

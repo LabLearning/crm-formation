@@ -674,7 +674,7 @@ export async function sendDocumentToApprenantAction(
 
   const { data: sess } = await supabase
     .from('sessions')
-    .select('*, formateur:formateurs(prenom, nom)')
+    .select('*, formateur:formateurs(prenom, nom), client:client_id(raison_sociale, nom_commercial)')
     .eq('id', sessionId).single()
   if (!sess) return { success: false, error: 'Session introuvable' }
 

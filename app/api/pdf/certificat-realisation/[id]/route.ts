@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const { data: apprenant } = await supabase.from('apprenants').select('*').eq('id', params.id).eq('organization_id', auth.user.organizationId).single()
   if (!apprenant) return NextResponse.json({ error: 'Apprenant introuvable' }, { status: 404 })
 
-  const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
+  const { data: session } = await supabase.from('sessions').select('*, client:client_id(raison_sociale, nom_commercial)').eq('id', sessionId).single()
   if (!session) return NextResponse.json({ error: 'Session introuvable' }, { status: 404 })
 
   const { data: formation } = await supabase.from('formations').select('*').eq('id', session.formation_id).single()

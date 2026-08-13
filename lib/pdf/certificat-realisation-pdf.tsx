@@ -26,6 +26,21 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
   const heuresRealisees = heuresPresence != null ? heuresPresence : duree
   const enTotalite = !duree || heuresRealisees >= duree
   const representant = [org?.representant_legal_civilite, org?.representant_legal_prenom, org?.representant_legal_nom].filter(Boolean).join(' ').trim() || `le représentant légal de ${org?.name || 'l\'organisme'}`
+  const adresseOrg = [org?.address, [org?.postal_code, org?.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  // « M. » ou « Mme » : la civilité est libre en base.
+  const civ = (() => {
+    const n = String(apprenant?.civilite || '').toLowerCase()
+    if (n.startsWith('mme') || n.startsWith('mad') || n === 'f') return 'Mme'
+    if (n.startsWith('m')) return 'M.'
+    return ''
+  })()
+  const stagiaire = [civ, apprenant.prenom, String(apprenant.nom || '').toUpperCase()].filter(Boolean).join(' ')
+  const entreprise = session?.client?.nom_commercial || session?.client?.raison_sociale || apprenant?.entreprise || null
+  const fmtCourt = (d: string) => new Date(d).toLocaleDateString('fr-FR')
+  const memeJour = !session.date_fin || session.date_fin === session.date_debut
+  const periode = memeJour
+    ? `le ${fmtCourt(session.date_debut)}`
+    : `du ${fmtCourt(session.date_debut)} au ${fmtCourt(session.date_fin)}`
 
   return (
     <Page size="A4" style={shared.page}>
@@ -38,38 +53,61 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
         </View>
 
         <View style={shared.section}>
-          <PdfSectionTitle>Organisme de formation</PdfSectionTitle>
+          <PdfSectionTitle>Dispensateur de formation</PdfSectionTitle>
           <View style={shared.row}><Text style={shared.label}>Raison sociale :</Text><Text style={shared.value}>{org.legal_name || org.name}</Text></View>
+          {adresseOrg && <View style={shared.row}><Text style={shared.label}>Adresse :</Text><Text style={shared.value}>{adresseOrg}</Text></View>}
           <View style={shared.row}><Text style={shared.label}>N° déclaration :</Text><Text style={shared.value}>{org.numero_da || ''}</Text></View>
           <View style={shared.row}><Text style={shared.label}>SIRET :</Text><Text style={shared.value}>{org.siret || ''}</Text></View>
+          <View style={shared.row}><Text style={shared.label}>TVA intracom. :</Text><Text style={shared.value}>{org.numero_tva_intra || 'Non renseignée'}</Text></View>
         </View>
 
-        <View style={shared.section}>
-          <PdfSectionTitle>Stagiaire</PdfSectionTitle>
-          <View style={shared.row}><Text style={shared.label}>Nom :</Text><Text style={shared.value}>{apprenant.prenom} {apprenant.nom}</Text></View>
-          {apprenant.entreprise && <View style={shared.row}><Text style={shared.label}>Entreprise :</Text><Text style={shared.value}>{apprenant.entreprise}</Text></View>}
-        </View>
-
-        <View style={shared.section}>
-          <PdfSectionTitle>Caractéristiques de l'action</PdfSectionTitle>
-          <View style={shared.row}><Text style={shared.label}>Intitulé :</Text><Text style={{ ...shared.value, fontFamily: 'Satoshi', fontWeight: 700 }}>{formation.intitule}</Text></View>
-          <View style={shared.row}><Text style={shared.label}>Nature :</Text><Text style={shared.value}>Action de formation</Text></View>
-          <View style={shared.row}><Text style={shared.label}>Modalité :</Text><Text style={shared.value}>{formation.modalite === 'distanciel' ? 'À distance' : formation.modalite === 'mixte' ? 'Mixte (présentiel + à distance)' : 'Présentiel'}</Text></View>
-          <View style={shared.row}><Text style={shared.label}>Dates :</Text><Text style={shared.value}>Du {new Date(session.date_debut).toLocaleDateString('fr-FR')} au {new Date(session.date_fin).toLocaleDateString('fr-FR')}</Text></View>
-          <View style={shared.row}><Text style={shared.label}>Nombre total d'heures :</Text><Text style={{ ...shared.value, fontFamily: 'Satoshi', fontWeight: 700 }}>{heuresRealisees} heures réalisées{duree && heuresRealisees < duree ? ` (sur ${duree} h prévues)` : ''}</Text></View>
-          {session.lieu && <View style={shared.row}><Text style={shared.label}>Lieu :</Text><Text style={shared.value}>{session.lieu}</Text></View>}
-        </View>
-
+        {/*
+          Le corps suit le modèle publié par le ministère du Travail : mêmes
+          mentions, même ordre. C'est ce que les financeurs contrôlent.
+        */}
         <View style={shared.section}>
           <PdfSectionTitle>Attestation</PdfSectionTitle>
           <Text style={{ fontSize: 9, color: SURFACE_900, lineHeight: 1.8 }}>
-            {`Je soussigné(e) ${representant}, atteste que ${apprenant.prenom} ${apprenant.nom} a réalisé ${enTotalite ? 'en totalité' : 'partiellement'} une action concourant au développement des compétences (action de formation au sens de l'article L.6313-1 du Code du travail), dont les caractéristiques figurent ci-dessus.`}
+            {`Je soussigné(e) ${representant}, représentant légal du dispensateur de formation ${org?.name || 'Lab Learning'}, atteste que :`}
+          </Text>
+
+          <Text style={{ fontSize: 10, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginTop: 8 }}>
+            {stagiaire}
+          </Text>
+          {entreprise && (
+            <Text style={{ fontSize: 9, color: SURFACE_900, marginTop: 2 }}>{`salarié(e) de l'entreprise ${entreprise}`}</Text>
+          )}
+          <Text style={{ fontSize: 9, color: SURFACE_900, lineHeight: 1.8, marginTop: 6 }}>
+            {`a ${enTotalite ? 'suivi' : 'partiellement suivi'} l'action de formation « ${formation.intitule} »,`}
+          </Text>
+          <Text style={{ fontSize: 9, color: SURFACE_900, lineHeight: 1.8 }}>
+            {`qui s'est déroulée ${periode}${session.lieu ? ` à ${session.lieu}` : ''},`}
+          </Text>
+          <Text style={{ fontSize: 9, color: SURFACE_900, lineHeight: 1.8 }}>
+            {`pour une durée totale de ${heuresRealisees} heures${duree && heuresRealisees < duree ? ` (sur ${duree} heures prévues)` : ''}.`}
+          </Text>
+
+          <Text style={{ fontSize: 8.5, color: SURFACE_700, marginTop: 8 }}>
+            Nature de l'action concourant au développement des compétences : action de formation
+            <Text style={{ fontSize: 6 }}> (1)</Text> — article L.6313-1 du Code du travail.
+            Modalité : {formation.modalite === 'distanciel' ? 'à distance' : formation.modalite === 'mixte' ? 'mixte (présentiel et à distance)' : 'présentiel'}.
           </Text>
           {assiduite != null && (
-            <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6, marginTop: 6 }}>
+            <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6, marginTop: 4 }}>
               Taux d'assiduité : {assiduite}% (calculé sur la base des feuilles d'émargement signées).
             </Text>
           )}
+        </View>
+
+        {/* Engagement de conservation des pièces — mention du modèle officiel. */}
+        <View style={shared.infoBox}>
+          <Text style={{ fontSize: 7.5, color: SURFACE_700, lineHeight: 1.6, textAlign: 'justify' }}>
+            Sans préjudice des délais imposés par les règles fiscales, comptables ou commerciales, je
+            m'engage à conserver l'ensemble des pièces justificatives qui ont permis d'établir le présent
+            certificat pendant une durée de 3 ans à compter de la fin de l'année du dernier paiement. En
+            cas de cofinancement des fonds européens, la durée de conservation est étendue conformément
+            aux obligations conventionnelles spécifiques.
+          </Text>
         </View>
 
         <View style={{ marginTop: 30 }}>
@@ -90,7 +128,7 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
                   <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 150, height: 75, objectFit: 'contain' }} />
                 ) : null}
               </View>
-              <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet du dispensateur</Text>
+              <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Cachet et signature du responsable du dispensateur de formation</Text>
             </View>
             {signatureCandidat?.data ? (
               <View style={{ flex: 1 }}>
@@ -108,6 +146,11 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
           </View>
         </View>
 
+      {/* Renvoi du modèle officiel sur les formations à distance. */}
+      <Text style={{ position: 'absolute', bottom: 44, left: 40, right: 40, fontSize: 6.5, color: SURFACE_500, borderTopWidth: 0.5, borderTopColor: '#e7e5e4', paddingTop: 4 }} fixed>
+        (1) Dans le cadre des formations à distance, prendre en compte la réalisation des activités
+        pédagogiques et le temps estimé pour les réaliser.
+      </Text>
       <PdfDocFooter numero={numero} org={org} />
     </Page>
   )
