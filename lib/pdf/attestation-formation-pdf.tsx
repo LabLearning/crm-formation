@@ -21,7 +21,7 @@ export function AttestationFormationPDF({ apprenant, session, formation, org, as
 
         <View style={shared.section}>
           <Text style={{ fontSize: 10, color: SURFACE_700, lineHeight: 1.8, marginBottom: 10 }}>
-            Je soussigné(e), représentant(e) de {org.name}, organisme de formation certifié Qualiopi, atteste que :
+            {`Je soussigné(e), représentant(e) de ${org.name}, organisme de formation certifié Qualiopi, atteste que :`}
           </Text>
         </View>
 

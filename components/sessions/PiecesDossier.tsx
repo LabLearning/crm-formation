@@ -174,9 +174,10 @@ export function PiecesDossier({
         },
         {
           cle: 'certificats', label: 'Certificats de réalisation',
-          aide: 'Un par stagiaire, exigé par le financeur.',
+          aide: 'Un par stagiaire, exigé par le financeur — PDF unique pour toute la session.',
           faite: nbInscrits > 0,
-          onglet: 'apprenants',
+          href: `/api/pdf/certificats-session?session=${sessionId}`,
+          envoi: { docType: 'certificat', label: 'Certificat de réalisation' },
         },
         // Exigée par l'arrêté du 12 février 2024, en plus des documents de
         // clôture habituels. C'est elle que l'établissement présente lors d'un
