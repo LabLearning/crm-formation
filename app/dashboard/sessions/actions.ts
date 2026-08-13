@@ -658,7 +658,8 @@ export async function sendDocumentToApprenantAction(
   sessionId: string,
   apprenantId: string,
   docType: 'attestation' | 'certificat' | 'hygiene',
-): Promise<ActionResult & { whatsapp?: string }> {
+  opts?: { preview?: boolean },
+): Promise<ActionResult<{ html?: string; subject?: string; email?: string | null }> & { whatsapp?: string }> {
   const session = await getSession()
   if (session.user.role === 'formateur') {
     return { success: false, error: 'Action réservée aux gestionnaires' }
@@ -725,6 +726,49 @@ export async function sendDocumentToApprenantAction(
     }
   } catch (e: any) {
     return { success: false, error: 'Erreur de génération du PDF' }
+  }
+
+  // Textes du courriel, partagés entre l'aperçu et l'envoi réel : un aperçu qui
+  // divergerait de ce qui part vraiment ferait pire que pas d'aperçu du tout.
+  const formationDates = sess.date_debut
+    ? `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin || sess.date_debut).toLocaleDateString('fr-FR')}`
+    : '—'
+  const isAtt = docType === 'attestation'
+  const isHyg = docType === 'hygiene'
+  const sujetEmail = isHyg
+    ? `Votre attestation d'hygiène alimentaire — ${formationNom}`
+    : isAtt
+      ? `Votre attestation de formation — ${formationNom}`
+      : `Votre certificat de réalisation — ${formationNom}`
+  const titreEmail = isHyg
+    ? "Votre attestation d'hygiène alimentaire"
+    : isAtt ? 'Votre attestation de fin de formation' : 'Votre certificat de réalisation'
+  const introEmail = isHyg
+    ? `Votre formation est terminée. Voici votre attestation de formation spécifique en matière d'hygiène alimentaire, délivrée au titre de l'arrêté du 12 février 2024. Conservez-la : c'est elle qui est présentée lors d'un contrôle sanitaire.`
+    : isAtt
+      ? `Votre formation est terminée. Voici votre attestation de fin de formation, à conserver précieusement.`
+      : `Votre formation est terminée. Voici votre certificat de réalisation, justificatif officiel auprès de votre employeur ou financeur.`
+  const metaEmail: Array<[string, string]> = [
+    ['Formation', formationNom],
+    ['Période', formationDates],
+    ['Durée', formation?.duree_heures ? `${formation.duree_heures} h` : '—'],
+  ]
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    const html = buildDocumentEmailHtml({
+      orgName: org?.name || 'Lab Learning',
+      orgEmail: org?.email_contact || org?.email,
+      orgLogoUrl: org?.logo_url,
+      qualiopiCertified: org?.is_qualiopi !== false,
+      recipientName: `${apprenant.prenom || ''} ${apprenant.nom || ''}`.trim() || 'Madame, Monsieur',
+      docTitle: titreEmail,
+      intro: introEmail,
+      metadata: metaEmail,
+      pdfFilename: `${docType}-${apprenant.nom || 'stagiaire'}.pdf`,
+      footerNote: 'Document également disponible dans votre espace personnel.',
+    })
+    return { success: true, data: { html, subject: sujetEmail, email: apprenant.email } }
   }
 
   // Upload dans le bucket privé "dossiers" (chemin stable → écrase à chaque renvoi)
@@ -817,12 +861,7 @@ export async function sendDocumentToApprenantAction(
   if (apprenant.email) {
     try {
       const { sendDocumentEmail } = await import('@/lib/email')
-      const formationDates = sess.date_debut
-        ? `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin || sess.date_debut).toLocaleDateString('fr-FR')}`
-        : '—'
       const portalUrl = token ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/portail/${token}/documents` : undefined
-      const isAtt = docType === 'attestation'
-      const isHyg = docType === 'hygiene'
       await sendDocumentEmail({
         to: apprenant.email,
         orgName: org?.name || 'Lab Learning',
@@ -830,28 +869,20 @@ export async function sendDocumentToApprenantAction(
         orgLogoUrl: org?.logo_url,
         qualiopiCertified: org?.is_qualiopi !== false,
         recipientName: `${apprenant.prenom || ''} ${apprenant.nom || ''}`.trim() || 'Madame, Monsieur',
-        subject: isHyg
-          ? `Votre attestation d'hygiène alimentaire — ${formationNom}`
-          : isAtt
-            ? `Votre attestation de formation — ${formationNom}`
-            : `Votre certificat de réalisation — ${formationNom}`,
-        docTitle: isHyg
-          ? "Votre attestation d'hygiène alimentaire"
-          : isAtt ? 'Votre attestation de fin de formation' : 'Votre certificat de réalisation',
-        intro: isHyg
-          ? `Votre formation est terminée. Voici votre attestation de formation spécifique en matière d'hygiène alimentaire, délivrée au titre de l'arrêté du 12 février 2024. Conservez-la : c'est elle qui est présentée lors d'un contrôle sanitaire.`
-          : isAtt
-            ? `Votre formation est terminée. Voici votre attestation de fin de formation, à conserver précieusement.`
-            : `Votre formation est terminée. Voici votre certificat de réalisation, justificatif officiel auprès de votre employeur ou financeur.`,
-        metadata: [
-          ['Formation', formationNom],
-          ['Période', formationDates],
-          ['Durée', formation?.duree_heures ? `${formation.duree_heures} h` : '—'],
-        ],
+        subject: sujetEmail,
+        docTitle: titreEmail,
+        intro: introEmail,
+        metadata: metaEmail,
         pdfBuffer: buffer,
         pdfFilename: fileName,
         ctaLabel: portalUrl ? 'Voir tous mes documents' : undefined,
         ctaUrl: portalUrl,
+        // Sans organizationId, rien ne s'écrit dans email_logs : l'envoi
+        // devient invisible dans l'onglet Mails et introuvable à l'audit.
+        organizationId: apprenant.organization_id,
+        entityType: 'session',
+        entityId: sessionId,
+        triggeredBy: session.user.id,
         footerNote: 'Document également disponible dans votre espace personnel.',
       })
     } catch (e) { console.error('[email doc]', e) }

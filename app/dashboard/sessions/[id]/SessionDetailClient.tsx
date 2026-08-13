@@ -1342,6 +1342,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           apprenants={inscriptions.map((i: any) => ({ id: i.apprenant?.id, nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), email: i.apprenant?.email || null }))}
           contacts={clientContacts as any[]}
           emailLogs={emailLogs as any[]}
+          hygiene={estFormationHygiene(session.formation)}
         />
       )}
 

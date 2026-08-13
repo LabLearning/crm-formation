@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, GraduationCap, Users, UserCheck, CheckCircle2, Clock, XCircle, Send, Loader2, Eye } from 'lucide-react'
+import {
+  Mail, GraduationCap, Users, UserCheck, CheckCircle2, Clock, XCircle,
+  Send, Loader2, Eye, ChevronRight,
+} from 'lucide-react'
 import { Modal, Button, useToast } from '@/components/ui'
-import { formatDate } from '@/lib/utils'
+import { formatDate, cn } from '@/lib/utils'
 import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction } from './actions'
+import { envoyerMailApprenantAction, envoyerMailATousAction, type MailApprenantType } from '../mails-actions'
 
 interface EmailLog {
   id: string; to_email: string; to_name: string | null; subject: string
@@ -15,6 +19,41 @@ interface Person { id?: string; nom: string; email: string | null; sub?: string 
 
 const norm = (e?: string | null) => (e || '').trim().toLowerCase()
 
+/**
+ * Les courriels qu'on peut adresser à un stagiaire, et comment retrouver leurs
+ * envois passés dans email_logs : par le début de l'objet, stable par
+ * construction puisque c'est ce code qui les envoie.
+ */
+const TYPES_APPRENANT: {
+  key: MailApprenantType
+  label: string
+  aide: string
+  match: (subject: string) => boolean
+  hygieneSeulement?: boolean
+}[] = [
+  {
+    key: 'convocation', label: 'Convocation',
+    aide: 'PDF joint · part aussi automatiquement à J-3',
+    match: (s) => s.startsWith('Convocation — '),
+  },
+  {
+    key: 'attestation', label: 'Attestation de fin de formation',
+    aide: 'Document de clôture remis au stagiaire',
+    match: (s) => s.startsWith('Votre attestation de formation'),
+  },
+  {
+    key: 'certificat', label: 'Certificat de réalisation',
+    aide: 'Justificatif pour l’employeur et le financeur',
+    match: (s) => s.startsWith('Votre certificat de réalisation'),
+  },
+  {
+    key: 'hygiene', label: "Attestation d'hygiène alimentaire",
+    aide: 'Arrêté du 12 février 2024 · présentée en contrôle sanitaire',
+    match: (s) => s.startsWith("Votre attestation d'hygi"),
+    hygieneSeulement: true,
+  },
+]
+
 function StatusPill({ status }: { status: string | null }) {
   const s = status || 'pending'
   if (s === 'sent') return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Envoyé</span>
@@ -23,17 +62,24 @@ function StatusPill({ status }: { status: string | null }) {
 }
 
 /**
- * Mails de la session : trace des emails envoyés (email_logs) regroupés par
- * destinataire — apprenants, référent client, formateur — et actions d'envoi.
+ * Mails de la session.
+ *
+ * Le volet Apprenants est une matrice : une ligne par type de courriel, un
+ * stagiaire sélectionné à gauche. Sans sélection, chaque ligne montre combien
+ * de stagiaires ont reçu ce courriel et l'envoie à tout le groupe ; un
+ * stagiaire sélectionné, elle montre son historique à lui et l'envoi se fait
+ * après aperçu — on voit ce qui va partir avant que ça parte.
  */
 export function SessionMails({
-  sessionId, formateur, apprenants, contacts, emailLogs,
+  sessionId, formateur, apprenants, contacts, emailLogs, hygiene = false,
 }: {
   sessionId: string
   formateur: { prenom?: string; nom?: string; email?: string | null } | null
   apprenants: Person[]
   contacts: { prenom?: string; nom?: string; poste?: string | null; email: string | null }[]
   emailLogs: EmailLog[]
+  /** La formation relève de l'hygiène alimentaire réglementaire. */
+  hygiene?: boolean
 }) {
   const { toast } = useToast()
   const router = useRouter()
@@ -41,18 +87,67 @@ export function SessionMails({
   const [pending, startTransition] = useTransition()
   const [preview, setPreview] = useState<{ html: string; subject?: string; to?: string } | null>(null)
   const [previewKind, setPreviewKind] = useState<'formateur' | 'convocation'>('formateur')
-  const [previewLoading, setPreviewLoading] = useState(false)
+  const [envoiApprenant, setEnvoiApprenant] = useState<{ apprenantId: string; type: MailApprenantType } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [busyTous, setBusyTous] = useState<string | null>(null)
+  const [selectionne, setSelectionne] = useState<Person | null>(null)
+
+  const types = TYPES_APPRENANT.filter((t) => !t.hygieneSeulement || hygiene)
 
   const logsFor = (email?: string | null) => emailLogs.filter((l) => norm(l.to_email) === norm(email)).slice(0, 12)
 
-  // Aperçu avant envoi : récupère le HTML de l'email sans l'envoyer
+  /** Dernier envoi d'un type donné pour un stagiaire donné. */
+  const dernierEnvoi = (p: Person, match: (s: string) => boolean) =>
+    emailLogs.find((l) => norm(l.to_email) === norm(p.email) && p.email && match(l.subject || ''))
+
+  /** Combien de stagiaires ont reçu ce courriel au moins une fois. */
+  const compteurs = useMemo(() => {
+    const out: Record<string, number> = {}
+    for (const t of types) {
+      out[t.key] = apprenants.filter((p) => dernierEnvoi(p, t.match)).length
+    }
+    return out
+  }, [types, apprenants, emailLogs])
+
+  // ── Aperçu & envoi par stagiaire ──
+  async function apercuApprenant(p: Person, type: MailApprenantType) {
+    if (!p.id) return
+    setPreviewLoading(`${p.id}-${type}`)
+    const r = await envoyerMailApprenantAction(sessionId, p.id, type, { preview: true })
+    setPreviewLoading(null)
+    if (r.success && r.data?.html) {
+      setEnvoiApprenant({ apprenantId: p.id, type })
+      setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || p.email || '—' })
+    } else {
+      toast('error', r.error || "Impossible de générer l'aperçu")
+    }
+  }
+
+  async function envoyerATous(type: MailApprenantType, label: string) {
+    if (!confirm(`Envoyer « ${label} » à tous les apprenants de la session ?`)) return
+    setBusyTous(type)
+    const r = await envoyerMailATousAction(sessionId, type)
+    setBusyTous(null)
+    if (!r.success) { toast('error', r.error || 'Erreur'); return }
+    const d = r.data || ({} as any)
+    const details = [
+      d.envoyes ? `${d.envoyes} envoyé(s)` : null,
+      d.sansEmail ? `${d.sansEmail} sans adresse` : null,
+      d.echecs ? `${d.echecs} en échec` : null,
+    ].filter(Boolean).join(' · ')
+    toast(d.echecs ? 'error' : 'success', details || 'Terminé')
+    router.refresh()
+  }
+
+  // ── Aperçu & envoi référent / formateur (inchangés) ──
   async function openPreview(kind: 'formateur' | 'convocation') {
-    setPreviewLoading(true)
+    setPreviewLoading(kind)
     const fn = kind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
     const r = await fn(sessionId, { preview: true })
-    setPreviewLoading(false)
+    setPreviewLoading(null)
     if ((r as any)?.success && (r as any).data?.html) {
+      setEnvoiApprenant(null)
       setPreviewKind(kind)
       setPreview({ html: (r as any).data.html, subject: (r as any).data.subject, to: (r as any).data.email })
     } else {
@@ -63,13 +158,18 @@ export function SessionMails({
   function confirmSend() {
     setSending(true)
     startTransition(async () => {
-      const fn = previewKind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
-      const r = await fn(sessionId)
+      let r: any
+      if (envoiApprenant) {
+        r = await envoyerMailApprenantAction(sessionId, envoiApprenant.apprenantId, envoiApprenant.type)
+      } else {
+        const fn = previewKind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
+        r = await fn(sessionId)
+      }
       setSending(false)
-      if ((r as any)?.success) {
-        toast('success', previewKind === 'convocation' ? `Convocation envoyée à ${(r as any).data?.email || 'au référent'}` : `Infos envoyées à ${(r as any).data?.email || 'au formateur'}`)
-        setPreview(null); router.refresh()
-      } else toast('error', (r as any)?.error || 'Erreur')
+      if (r?.success) {
+        toast('success', `Email envoyé${r.data?.email ? ` à ${r.data.email}` : ''}`)
+        setPreview(null); setEnvoiApprenant(null); router.refresh()
+      } else toast('error', r?.error || 'Erreur')
     })
   }
 
@@ -137,46 +237,155 @@ export function SessionMails({
         })}
       </div>
 
-      <div className="divide-y divide-surface-100">
-        {tab === 'apprenants' && (
-          apprenants.length === 0
-            ? <div className="text-center py-8 text-sm text-surface-400">Aucun apprenant inscrit</div>
-            : apprenants.map((p, i) => <PersonRow key={p.id || i} p={p} />)
-        )}
-        {tab === 'referent' && (
-          referents.length === 0
+      {tab === 'apprenants' && (
+        apprenants.length === 0 ? (
+          <div className="text-center py-8 text-sm text-surface-400">Aucun apprenant inscrit</div>
+        ) : (
+          <div className="grid md:grid-cols-[1fr,1.3fr] md:divide-x divide-surface-100">
+            {/* ── Stagiaires ── */}
+            <div className="divide-y divide-surface-100 max-h-[480px] overflow-y-auto">
+              <button
+                onClick={() => setSelectionne(null)}
+                className={cn('w-full text-left px-4 py-2.5 text-sm transition-colors',
+                  !selectionne ? 'bg-surface-900 text-white' : 'text-surface-700 hover:bg-surface-50')}
+              >
+                Tous les apprenants
+                <span className={cn('ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded', !selectionne ? 'bg-white/20' : 'bg-surface-100 text-surface-500')}>
+                  {apprenants.length}
+                </span>
+              </button>
+              {apprenants.map((p, i) => {
+                const actif = selectionne?.id === p.id
+                return (
+                  <button key={p.id || i} onClick={() => setSelectionne(actif ? null : p)}
+                    className={cn('w-full text-left px-4 py-2.5 flex items-center gap-2 transition-colors',
+                      actif ? 'bg-surface-900 text-white' : 'hover:bg-surface-50')}>
+                    <div className="min-w-0 flex-1">
+                      <div className={cn('text-sm font-medium truncate', actif ? 'text-white' : 'text-surface-900')}>{p.nom}</div>
+                      <div className={cn('text-xs truncate', actif ? 'text-white/60' : 'text-surface-400')}>
+                        {p.email || 'Pas d’email'}
+                      </div>
+                    </div>
+                    <ChevronRight className={cn('h-4 w-4 shrink-0', actif ? 'text-white/70' : 'text-surface-300')} />
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* ── Types de courriels ── */}
+            <div>
+              <div className="px-4 py-2.5 border-b border-surface-100 text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                {selectionne ? selectionne.nom : 'Récapitulatif des envois'}
+              </div>
+              <div className="divide-y divide-surface-100">
+                {types.map((t) => {
+                  const envoi = selectionne ? dernierEnvoi(selectionne, t.match) : null
+                  return (
+                    <div key={t.key} className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-surface-900">{t.label}</div>
+                        <div className="text-[11px] text-surface-400 mt-0.5">{t.aide}</div>
+                      </div>
+
+                      {!selectionne ? (
+                        <>
+                          <span className={cn('text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full',
+                            compteurs[t.key] >= apprenants.length ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-100 text-surface-600')}>
+                            {compteurs[t.key]} / {apprenants.length}
+                          </span>
+                          <button onClick={() => envoyerATous(t.key, t.label)} disabled={busyTous === t.key}
+                            className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-60">
+                            {busyTous === t.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            À tous
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {envoi ? (
+                            <span className="flex items-center gap-2 shrink-0">
+                              <StatusPill status={envoi.status} />
+                              <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-surface-300 shrink-0">Jamais envoyé</span>
+                          )}
+                          <button
+                            onClick={() => apercuApprenant(selectionne, t.key)}
+                            disabled={!selectionne.email || previewLoading === `${selectionne.id}-${t.key}`}
+                            title={selectionne.email ? 'Voir le mail avant envoi' : "Cet apprenant n'a pas d'adresse email"}
+                            className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
+                            {previewLoading === `${selectionne.id}-${t.key}`
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <Eye className="h-3.5 w-3.5" />}
+                            Aperçu & envoi
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Historique complet du stagiaire sélectionné */}
+              {selectionne && logsFor(selectionne.email).length > 0 && (
+                <div className="px-4 py-3 border-t border-surface-100">
+                  <div className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-2">Historique</div>
+                  <div className="rounded-lg border border-surface-100 divide-y divide-surface-100">
+                    {logsFor(selectionne.email).map((l) => (
+                      <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
+                        <span className="text-xs text-surface-700 truncate">{l.subject}</span>
+                        <span className="flex items-center gap-3 shrink-0">
+                          <StatusPill status={l.status} />
+                          <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      )}
+
+      {tab === 'referent' && (
+        <div className="divide-y divide-surface-100">
+          {referents.length === 0
             ? <div className="text-center py-8 text-sm text-surface-400">Aucun contact référent sur le client</div>
             : <>
-                <div className="px-4 pt-3">
-                  <button onClick={() => openPreview('convocation')} disabled={previewLoading}
+                <div className="px-4 pt-3 pb-1">
+                  <button onClick={() => openPreview('convocation')} disabled={previewLoading === 'convocation'}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors">
-                    {previewLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Convocation (participants + PDF) — aperçu & envoi
+                    {previewLoading === 'convocation' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Convocation (participants + PDF) — aperçu & envoi
                   </button>
                   <p className="text-[11px] text-surface-400 mt-1">Envoyée au contact signataire / principal de l'établissement, avec la convocation PDF listant les participants.</p>
                 </div>
                 {referents.map((p, i) => <PersonRow key={i} p={p} />)}
-              </>
-        )}
-        {tab === 'formateur' && (
-          !formateurPerson
+              </>}
+        </div>
+      )}
+
+      {tab === 'formateur' && (
+        <div className="divide-y divide-surface-100">
+          {!formateurPerson
             ? <div className="text-center py-8 text-sm text-surface-400">Aucun formateur rattaché</div>
             : <PersonRow p={formateurPerson} action={
                 formateurPerson.email ? (
-                  <button onClick={() => openPreview('formateur')} disabled={previewLoading}
+                  <button onClick={() => openPreview('formateur')} disabled={previewLoading === 'formateur'}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 text-white text-xs font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors shrink-0">
-                    {previewLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Aperçu & envoi
+                    {previewLoading === 'formateur' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Aperçu & envoi
                   </button>
                 ) : undefined
-              } />
-        )}
-      </div>
+              } />}
+        </div>
+      )}
 
-      <div className="px-4 py-2 bg-surface-50/60 text-[11px] text-surface-500">
+      <div className="px-4 py-2 bg-surface-50/60 text-[11px] text-surface-500 border-t border-surface-100">
         Chaque email envoyé depuis le CRM (convocations, attestations, infos formateur…) est tracé ici, par destinataire.
       </div>
 
       {/* Aperçu de l'email avant envoi */}
-      <Modal isOpen={!!preview} onClose={() => setPreview(null)} title="Aperçu de l'email" size="lg">
+      <Modal isOpen={!!preview} onClose={() => { setPreview(null); setEnvoiApprenant(null) }} title="Aperçu de l'email" size="lg">
         {preview && (
           <div className="space-y-3">
             <div className="text-xs text-surface-500">
@@ -187,7 +396,7 @@ export function SessionMails({
               <iframe title="Aperçu email" srcDoc={preview.html} className="w-full" style={{ height: 460, border: 0 }} />
             </div>
             <div className="flex justify-end gap-3 pt-1">
-              <Button variant="secondary" onClick={() => setPreview(null)}>Annuler</Button>
+              <Button variant="secondary" onClick={() => { setPreview(null); setEnvoiApprenant(null) }}>Annuler</Button>
               <Button onClick={confirmSend} isLoading={sending || pending} icon={<Send className="h-4 w-4" />}>Confirmer l'envoi</Button>
             </div>
           </div>
