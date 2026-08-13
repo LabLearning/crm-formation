@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  CheckCircle2, Circle, Upload, Download, Trash2, Loader2, ShieldAlert,
+  CheckCircle2, Circle, Upload, Download, Trash2, Loader2, ShieldAlert, Send,
   FolderCheck, ArrowRight, MinusCircle,
 } from 'lucide-react'
 import { Button, Modal, Input, Select, useToast } from '@/components/ui'
@@ -11,6 +11,7 @@ import { cn, formatDate } from '@/lib/utils'
 import { PIECES, ORIGINES, completude } from '@/lib/pieces-session'
 import type { EtatPiece } from '@/lib/pieces-session'
 import { deposerPieceAction, retirerPieceAction, lienPieceAction } from '@/app/dashboard/sessions/[id]/pieces-actions'
+import { envoyerDocumentSessionAction } from '@/app/dashboard/sessions/actions'
 
 const LABEL_ORIGINE: Record<string, string> = {
   crm: 'Produite par le CRM',
@@ -27,6 +28,8 @@ interface Annexe {
   faite: boolean
   href?: string
   onglet?: string
+  /** Envoi groupé aux stagiaires de la session. */
+  envoi?: { docType: 'attestation' | 'certificat' | 'hygiene'; label: string }
 }
 
 /**
@@ -83,6 +86,26 @@ export function PiecesDossier({
     setBusy(null)
     if (r.success) window.open((r.data as any).url, '_blank')
     else toast('error', r.error || 'Erreur')
+  }
+
+  /**
+   * Une session compte sept à quinze stagiaires : l'envoi se fait pour tout le
+   * groupe, pas stagiaire par stagiaire.
+   */
+  async function envoyerATous(docType: 'attestation' | 'certificat' | 'hygiene', label: string) {
+    if (!confirm(`Envoyer « ${label} » à tous les stagiaires de cette session ?`)) return
+    setBusy(`envoi-${docType}`)
+    const r = await envoyerDocumentSessionAction(sessionId, docType)
+    setBusy(null)
+    if (!r.success) { toast('error', r.error || 'Erreur'); return }
+    const d = (r as any).data || {}
+    const details = [
+      d.envoyes ? `${d.envoyes} envoyé(s) par email` : null,
+      d.sansEmail ? `${d.sansEmail} sans adresse, déposé(s) au portail` : null,
+      d.echecs ? `${d.echecs} en échec` : null,
+    ].filter(Boolean).join(' · ')
+    toast(d.echecs ? 'error' : 'success', details || 'Terminé')
+    router.refresh()
   }
 
   async function retirer(documentId: string) {
@@ -163,6 +186,7 @@ export function PiecesDossier({
           aide: "Arrêté du 12 février 2024 — une par stagiaire, à remettre à l'établissement.",
           faite: nbInscrits > 0,
           href: `/api/pdf/attestation-hygiene?session=${sessionId}`,
+          envoi: { docType: 'hygiene', label: "Attestation d'hygiène" },
         } as Annexe] : []),
         {
           cle: 'rapport', label: 'Rapport de session',
@@ -292,6 +316,16 @@ export function PiecesDossier({
                         className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs">
                         <Download className="h-3.5 w-3.5" /> PDF
                       </a>
+                    )}
+                    {ligne.envoi && (
+                      <button onClick={() => envoyerATous(ligne.envoi!.docType, ligne.envoi!.label)}
+                        disabled={busy === `envoi-${ligne.envoi.docType}`}
+                        className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs ml-2 disabled:opacity-60">
+                        {busy === `envoi-${ligne.envoi.docType}`
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Send className="h-3.5 w-3.5" />}
+                        Envoyer à tous
+                      </button>
                     )}
                     {ligne.onglet && onGoTab && (
                       <button onClick={() => onGoTab(ligne.onglet!)}

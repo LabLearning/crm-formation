@@ -861,3 +861,53 @@ export async function sendDocumentToApprenantAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true, whatsapp: whatsappStatus }
 }
+
+/**
+ * Envoie un document de clôture à tous les stagiaires d'une session.
+ *
+ * Une session compte sept à quinze stagiaires, et l'organisme en tient plus de
+ * deux cents par an : ouvrir le menu de chacun pour cliquer « envoyer » n'est
+ * pas un mode opératoire tenable. Les absents et les désinscrits sont exclus,
+ * et les stagiaires sans adresse reçoivent tout de même leur document au
+ * dossier et dans leur portail — c'est l'envoi qui échoue, pas l'émission.
+ */
+export async function envoyerDocumentSessionAction(
+  sessionId: string,
+  docType: 'attestation' | 'certificat' | 'hygiene',
+): Promise<ActionResult & { data?: { envoyes: number; sansEmail: number; echecs: number } }> {
+  const session = await getSession()
+  if (session.user.role === 'formateur') {
+    return { success: false, error: 'Action réservée aux gestionnaires' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: inscriptions } = await supabase
+    .from('inscriptions')
+    .select('apprenant_id, apprenant:apprenants(email)')
+    .eq('session_id', sessionId)
+    .not('status', 'in', '("annule","abandonne")')
+
+  const cibles = (inscriptions || []).filter((i: any) => i.apprenant_id)
+  if (cibles.length === 0) return { success: false, error: 'Aucun stagiaire sur cette session' }
+
+  let envoyes = 0
+  let sansEmail = 0
+  let echecs = 0
+  for (const i of cibles as any[]) {
+    const r = await sendDocumentToApprenantAction(sessionId, i.apprenant_id, docType)
+    if (!r.success) { echecs++; continue }
+    if (i.apprenant?.email) envoyes++
+    else sansEmail++
+  }
+
+  await logAudit({
+    action: `send_${docType}_session`, entity_type: 'session', entity_id: sessionId,
+    details: { envoyes, sansEmail, echecs },
+  })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+
+  if (envoyes === 0 && sansEmail === 0) {
+    return { success: false, error: "Aucun document n'a pu être émis" }
+  }
+  return { success: true, data: { envoyes, sansEmail, echecs } }
+}
