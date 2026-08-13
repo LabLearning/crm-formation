@@ -1122,6 +1122,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           {chaud ? 'Envoyé en fin de session' : 'Envoyé 3 mois après la formation'}
                         </span>
                       )}
+                      {/*
+                        La satisfaction se recueille aussi sur papier : le
+                        formateur la fait remplir en fin de séance, sans
+                        dépendre d'un stagiaire qui relèvera ses mails.
+                      */}
+                      <a
+                        href={`/api/pdf/questionnaire-papier?session=${session.id}&qcm=${q.qcm_id}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="btn-secondary !py-1 !px-2.5 text-xs inline-flex items-center gap-1.5 shrink-0"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Imprimer
+                      </a>
                     </div>
                   )
                 })}
