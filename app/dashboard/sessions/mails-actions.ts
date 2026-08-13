@@ -165,3 +165,166 @@ export async function envoyerMailATousAction(
   }
   return { success: true, data: { envoyes, sansEmail, echecs } }
 }
+
+/**
+ * Envoie au référent de l'établissement les documents de TOUS les stagiaires,
+ * en un seul courriel.
+ *
+ * Beaucoup de stagiaires n'ont pas d'adresse email : leur employeur, si. Le
+ * référent reçoit un exemplaire par stagiaire et les remet en main propre —
+ * c'est lui qui les côtoie chaque jour. Même résolution du destinataire que la
+ * convocation : signataire, sinon contact principal, sinon premier contact
+ * doté d'une adresse.
+ */
+export async function envoyerDocumentsAuReferentAction(
+  sessionId: string,
+  type: 'attestation' | 'certificat' | 'hygiene',
+  opts?: { preview?: boolean },
+): Promise<ActionResult<{ html?: string; subject?: string; email?: string | null }>> {
+  const session = await getSession()
+  if (session.user.role === 'formateur') {
+    return { success: false, error: 'Action réservée aux gestionnaires' }
+  }
+  const supabase = await createServiceRoleClient()
+
+  const { data: sess } = await supabase
+    .from('sessions')
+    .select('*, formation:formation_id(*), formateur:formateurs(prenom, nom), client:client_id(id, raison_sociale, nom_commercial)')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+  if (!(sess as any).client_id) return { success: false, error: 'Aucun établissement rattaché à la session' }
+
+  const formation = (sess as any).formation
+  if (type === 'hygiene') {
+    const { estFormationHygiene } = await import('@/lib/formation-hygiene')
+    if (!estFormationHygiene(formation)) {
+      return { success: false, error: "Cette session ne porte pas sur l'hygiène alimentaire" }
+    }
+  }
+
+  const { data: contacts } = await supabase
+    .from('contacts').select('prenom, nom, email, est_signataire, est_principal')
+    .eq('client_id', (sess as any).client_id)
+  const list = (contacts || []) as any[]
+  const ref = list.find((c) => c.est_signataire && c.email) || list.find((c) => c.est_principal && c.email) || list.find((c) => c.email)
+  if (!ref?.email) return { success: false, error: "Le référent (contact de l'établissement) n'a pas d'email renseigné" }
+  const referentNom = [ref.prenom, ref.nom].filter(Boolean).join(' ') || 'Madame, Monsieur'
+
+  const { data: inscriptions } = await supabase
+    .from('inscriptions')
+    .select('apprenant:apprenants(*)')
+    .eq('session_id', sessionId)
+    .not('status', 'in', '("annule","abandonne")')
+  const apprenants = (inscriptions || []).map((i: any) => i.apprenant).filter(Boolean)
+    .sort((a: any, b: any) => String(a.nom || '').localeCompare(String(b.nom || ''), 'fr'))
+  if (apprenants.length === 0) return { success: false, error: 'Aucun stagiaire sur cette session' }
+
+  const { data: org } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
+  const formationNom = formation?.intitule || (sess as any).intitule || 'Formation'
+  const clientNom = (sess as any).client?.nom_commercial || (sess as any).client?.raison_sociale || 'votre établissement'
+
+  const LIBELLES = {
+    attestation: { pluriel: 'attestations de fin de formation', titre: 'Attestations de fin de formation' },
+    certificat: { pluriel: 'certificats de réalisation', titre: 'Certificats de réalisation' },
+    hygiene: { pluriel: "attestations d'hygiène alimentaire", titre: "Attestations d'hygiène alimentaire" },
+  }[type]
+
+  const fmtFr = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
+  const emailParams = {
+    orgName: (org as any)?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || (org as any)?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: referentNom,
+    subject: `${LIBELLES.titre} — ${formationNom} (${apprenants.length} stagiaire${apprenants.length > 1 ? 's' : ''})`,
+    docTitle: LIBELLES.titre,
+    intro: `Veuillez trouver ci-joint les ${LIBELLES.pluriel} des ${apprenants.length} stagiaires de ${clientNom} pour la session « ${formationNom} ». Merci de remettre à chacun son exemplaire${type === 'hygiene' ? " : c'est ce document qui est présenté lors d'un contrôle sanitaire de l'établissement" : ''}.`,
+    metadata: ([
+      ['Formation', formationNom],
+      ['Dates', `Du ${fmtFr((sess as any).date_debut)} au ${fmtFr((sess as any).date_fin || (sess as any).date_debut)}`],
+      ['Établissement', clientNom],
+      ['Stagiaires', apprenants.map((a: any) => `${a.prenom || ''} ${a.nom || ''}`.trim()).join(', ')],
+    ]) as [string, string][],
+    footerNote: `${apprenants.length} document(s) en pièce jointe — un par stagiaire.`,
+  }
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    return { success: true, data: { html: buildDocumentEmailHtml(emailParams), subject: emailParams.subject, email: ref.email } }
+  }
+
+  // ── Génération des documents ──
+  const { createElement } = await import('react')
+  const { renderToBuffer } = await import('@react-pdf/renderer')
+  const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
+  const orgDoc = await withDocumentLogo(supabase, org)
+
+  // L'assiduité de chaque stagiaire, comme sur les envois individuels.
+  const { data: em } = await supabase.from('emargements')
+    .select('apprenant_id, est_present').eq('session_id', sessionId)
+  const dureePrevue = Number(formation?.duree_heures || 0)
+  const assiduiteDe = (apprenantId: string) => {
+    const lignes = (em || []).filter((e: any) => e.apprenant_id === apprenantId)
+    if (lignes.length === 0) return { assiduite: undefined as number | undefined, heures: dureePrevue }
+    const presents = lignes.filter((e: any) => e.est_present).length
+    const pct = Math.round((presents / lignes.length) * 100)
+    return { assiduite: pct, heures: Math.round(dureePrevue * pct) / 100 }
+  }
+
+  const attachments: { filename: string; content: Buffer }[] = []
+  try {
+    if (type === 'hygiene') {
+      // Un seul PDF, une page par stagiaire : plus simple à imprimer d'un bloc.
+      const { AttestationHygienePDF } = await import('@/lib/pdf/attestation-hygiene-pdf')
+      const heuresParApprenant: Record<string, number> = {}
+      for (const a of apprenants) heuresParApprenant[a.id] = assiduiteDe(a.id).heures
+      const buffer = await renderToBuffer(createElement(AttestationHygienePDF, {
+        apprenants, session: sess, formation, org: orgDoc, heuresParApprenant,
+      }) as any)
+      attachments.push({
+        filename: `attestations-hygiene-${(sess as any).reference || 'session'}.pdf`,
+        content: Buffer.from(buffer),
+      })
+    } else {
+      const composant = type === 'attestation'
+        ? (await import('@/lib/pdf/attestation-formation-pdf')).AttestationFormationPDF
+        : (await import('@/lib/pdf/certificat-realisation-pdf')).CertificatRealisationPDF
+      for (const a of apprenants) {
+        const { assiduite, heures } = assiduiteDe(a.id)
+        const buffer = await renderToBuffer(createElement(composant as any, {
+          apprenant: a, session: sess, formation, org: orgDoc,
+          assiduite, heuresPresence: heures,
+        }) as any)
+        attachments.push({
+          filename: `${type}-${(a.nom || 'stagiaire')}-${(a.prenom || '')}.pdf`.replace(/\s+/g, '_'),
+          content: Buffer.from(buffer),
+        })
+      }
+    }
+  } catch (e) {
+    console.error('[docs referent]', e)
+    return { success: false, error: 'Erreur de génération des documents' }
+  }
+
+  const [premiere, ...autres] = attachments
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    ...emailParams,
+    to: ref.email,
+    pdfBuffer: premiere.content,
+    pdfFilename: premiere.filename,
+    extraAttachments: autres.map((x) => ({ filename: x.filename, content: x.content })),
+    organizationId: session.organization.id,
+    entityType: 'session',
+    entityId: sessionId,
+    triggeredBy: session.user.id,
+  })
+  if (!r.success) return { success: false, error: r.error || "L'envoi a échoué" }
+
+  await logAudit({
+    action: `send_${type}_referent`, entity_type: 'session', entity_id: sessionId,
+    details: { referent: ref.email, documents: attachments.length },
+  })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { email: ref.email } }
+}

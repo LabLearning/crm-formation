@@ -9,7 +9,7 @@ import {
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate, cn } from '@/lib/utils'
 import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction } from './actions'
-import { envoyerMailApprenantAction, envoyerMailATousAction, type MailApprenantType } from '../mails-actions'
+import { envoyerMailApprenantAction, envoyerMailATousAction, envoyerDocumentsAuReferentAction, type MailApprenantType } from '../mails-actions'
 
 interface EmailLog {
   id: string; to_email: string; to_name: string | null; subject: string
@@ -88,6 +88,7 @@ export function SessionMails({
   const [preview, setPreview] = useState<{ html: string; subject?: string; to?: string } | null>(null)
   const [previewKind, setPreviewKind] = useState<'formateur' | 'convocation'>('formateur')
   const [envoiApprenant, setEnvoiApprenant] = useState<{ apprenantId: string; type: MailApprenantType } | null>(null)
+  const [envoiReferent, setEnvoiReferent] = useState<{ type: 'attestation' | 'certificat' | 'hygiene' } | null>(null)
   const [previewLoading, setPreviewLoading] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [busyTous, setBusyTous] = useState<string | null>(null)
@@ -117,8 +118,26 @@ export function SessionMails({
     const r = await envoyerMailApprenantAction(sessionId, p.id, type, { preview: true })
     setPreviewLoading(null)
     if (r.success && r.data?.html) {
+      setEnvoiReferent(null)
       setEnvoiApprenant({ apprenantId: p.id, type })
       setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || p.email || '—' })
+    } else {
+      toast('error', r.error || "Impossible de générer l'aperçu")
+    }
+  }
+
+  /**
+   * Beaucoup de stagiaires n'ont pas d'adresse : leur employeur, si. Le
+   * référent reçoit un exemplaire par stagiaire et les remet en main propre.
+   */
+  async function apercuReferent(type: 'attestation' | 'certificat' | 'hygiene') {
+    setPreviewLoading(`ref-${type}`)
+    const r = await envoyerDocumentsAuReferentAction(sessionId, type, { preview: true })
+    setPreviewLoading(null)
+    if (r.success && r.data?.html) {
+      setEnvoiApprenant(null)
+      setEnvoiReferent({ type })
+      setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || '—' })
     } else {
       toast('error', r.error || "Impossible de générer l'aperçu")
     }
@@ -148,6 +167,7 @@ export function SessionMails({
     setPreviewLoading(null)
     if ((r as any)?.success && (r as any).data?.html) {
       setEnvoiApprenant(null)
+      setEnvoiReferent(null)
       setPreviewKind(kind)
       setPreview({ html: (r as any).data.html, subject: (r as any).data.subject, to: (r as any).data.email })
     } else {
@@ -159,7 +179,9 @@ export function SessionMails({
     setSending(true)
     startTransition(async () => {
       let r: any
-      if (envoiApprenant) {
+      if (envoiReferent) {
+        r = await envoyerDocumentsAuReferentAction(sessionId, envoiReferent.type)
+      } else if (envoiApprenant) {
         r = await envoyerMailApprenantAction(sessionId, envoiApprenant.apprenantId, envoiApprenant.type)
       } else {
         const fn = previewKind === 'convocation' ? sendConvocationToReferentAction : sendSessionInfoToFormateurAction
@@ -168,7 +190,7 @@ export function SessionMails({
       setSending(false)
       if (r?.success) {
         toast('success', `Email envoyé${r.data?.email ? ` à ${r.data.email}` : ''}`)
-        setPreview(null); setEnvoiApprenant(null); router.refresh()
+        setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null); router.refresh()
       } else toast('error', r?.error || 'Erreur')
     })
   }
@@ -298,6 +320,20 @@ export function SessionMails({
                             {busyTous === t.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                             À tous
                           </button>
+                          {/*
+                            Tous les exemplaires en un mail au référent de
+                            l'établissement — la voie qui marche quand les
+                            stagiaires n'ont pas d'adresse.
+                          */}
+                          {t.key !== 'convocation' && (
+                            <button onClick={() => apercuReferent(t.key as 'attestation' | 'certificat' | 'hygiene')}
+                              disabled={previewLoading === `ref-${t.key}`}
+                              title="Envoyer les documents de tous les stagiaires au référent de l'établissement"
+                              className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-60">
+                              {previewLoading === `ref-${t.key}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserCheck className="h-3.5 w-3.5" />}
+                              Au référent
+                            </button>
+                          )}
                         </>
                       ) : (
                         <>
@@ -385,7 +421,7 @@ export function SessionMails({
       </div>
 
       {/* Aperçu de l'email avant envoi */}
-      <Modal isOpen={!!preview} onClose={() => { setPreview(null); setEnvoiApprenant(null) }} title="Aperçu de l'email" size="lg">
+      <Modal isOpen={!!preview} onClose={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null) }} title="Aperçu de l'email" size="lg">
         {preview && (
           <div className="space-y-3">
             <div className="text-xs text-surface-500">
@@ -396,7 +432,7 @@ export function SessionMails({
               <iframe title="Aperçu email" srcDoc={preview.html} className="w-full" style={{ height: 460, border: 0 }} />
             </div>
             <div className="flex justify-end gap-3 pt-1">
-              <Button variant="secondary" onClick={() => { setPreview(null); setEnvoiApprenant(null) }}>Annuler</Button>
+              <Button variant="secondary" onClick={() => { setPreview(null); setEnvoiApprenant(null); setEnvoiReferent(null) }}>Annuler</Button>
               <Button onClick={confirmSend} isLoading={sending || pending} icon={<Send className="h-4 w-4" />}>Confirmer l'envoi</Button>
             </div>
           </div>
