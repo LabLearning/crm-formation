@@ -18,7 +18,7 @@ interface Props {
   agences?: { id: string; nom: string; ville?: string | null }[]
 }
 
-export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finances, agences = [] }: Props) {
+export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finances, agences = [], referent = null }: Props & { referent?: { prenom?: string | null; nom?: string | null; email?: string | null; telephone?: string | null } | null }) {
   const { toast } = useToast()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -93,16 +93,25 @@ export function PoeiEditor({ poei, clients, formations, nbCandidats = 0, finance
 
       <div className="card p-5">
         {/*
-          Le représentant de l'établissement employeur : signataire de
-          l'attestation de développement de compétences, destinataire du lien
-          de signature.
+          Le représentant de l'employeur est le contact référent de
+          l'entreprise : une seule source, la fiche client — pas de copie qui
+          divergerait. C'est lui qui signe l'attestation de développement de
+          compétences et reçoit le lien de signature.
         */}
         <div className="section-label mb-3">Employeur — représentant</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-          <Input id="employeur_prenom" name="employeur_prenom" label="Prénom" defaultValue={(poei as any).employeur_prenom || ''} />
-          <Input id="employeur_nom" name="employeur_nom" label="Nom" defaultValue={(poei as any).employeur_nom || ''} />
-          <Input id="employeur_email" name="employeur_email" type="email" label="Email" defaultValue={(poei as any).employeur_email || ''} />
-          <Input id="employeur_telephone" name="employeur_telephone" type="tel" label="Téléphone" defaultValue={(poei as any).employeur_telephone || ''} />
+        <div className="rounded-xl border border-surface-200 px-4 py-3 mb-5 text-sm">
+          {referent ? (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+              <span className="font-medium text-surface-900">{[referent.prenom, referent.nom].filter(Boolean).join(' ')}</span>
+              {referent.email && <span className="text-surface-600">{referent.email}</span>}
+              {referent.telephone && <span className="text-surface-600">{referent.telephone}</span>}
+              <span className="text-xs text-surface-400 w-full sm:w-auto">Contact référent de l'entreprise — modifiable sur la fiche client</span>
+            </div>
+          ) : (
+            <span className="text-surface-500">
+              Aucun contact référent sur l'entreprise : ajoutez-en un sur la fiche client pour la signature de l'attestation.
+            </span>
+          )}
         </div>
 
         <div className="section-label mb-3">Notes internes</div>

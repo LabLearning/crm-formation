@@ -148,6 +148,18 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
     .eq('poei_id', params.id).eq('organization_id', session.organization.id)
     .order('semaine', { ascending: true, nullsFirst: false })
 
+  // Le contact référent de l'entreprise : signataire de l'attestation,
+  // destinataire du lien de signature. Une seule source, la fiche client.
+  let referent: any = null
+  if (p.client_id) {
+    const { data: contactsClient } = await supabase
+      .from('contacts').select('prenom, nom, email, telephone, est_signataire, est_principal')
+      .eq('client_id', p.client_id)
+    referent = (contactsClient || []).find((x: any) => x.est_signataire)
+      || (contactsClient || []).find((x: any) => x.est_principal)
+      || (contactsClient || [])[0] || null
+  }
+
   // Signature de l'employeur sur l'attestation de développement de
   // compétences : demandée, signée, ou encore à envoyer. Résilient avant la
   // migration 131 (colonne role absente).
@@ -344,7 +356,7 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           facturation: formationTerminee && nbFactures < candidats.length ? 1 : 0,
           incidents: incidentsPoei.filter((i: any) => ['ouvert', 'en_cours'].includes(i.statut)).length,
         }}
-        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} agences={(agencesFt || []) as any[]} />}
+        dossier={<PoeiEditor poei={p} clients={clients || []} formations={formations || []} nbCandidats={candidats.length} finances={finances} agences={(agencesFt || []) as any[]} referent={referent} />}
         candidats={
           <PoeiCandidats poeiId={p.id} candidats={candidats} apprenants={apprenants || []} emailStatus={emailStatus} clientNom={companyLabel(p.client) || null} clientId={p.client_id} devisByCandidat={devisByCandidat} sessionTerminee={formationTerminee} />
         }

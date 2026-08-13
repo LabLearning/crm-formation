@@ -138,14 +138,14 @@ export async function sendSignatureEmployeurAction(
 
   const { data: poei } = await supabase
     .from('poei')
-    .select('id, numero, date_debut, date_fin, session_id, client_id, employeur_prenom, employeur_nom, employeur_email, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
+    .select('id, numero, date_debut, date_fin, session_id, client_id, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
     .eq('id', poeiId).eq('organization_id', session.organization.id).single()
   if (!poei) return { success: false, error: 'POEI introuvable' }
 
-  // Le représentant du projet d'abord ; le contact signataire du client en repli.
-  let nom = [poei.employeur_prenom, poei.employeur_nom].filter(Boolean).join(' ').trim()
-  let email = (poei as any).employeur_email || null
-  if (!email && (poei as any).client_id) {
+  // Le contact référent de l'entreprise : signataire, à défaut principal.
+  let nom = ''
+  let email: string | null = null
+  if ((poei as any).client_id) {
     const { data: contacts } = await supabase
       .from('contacts').select('prenom, nom, email, est_signataire, est_principal')
       .eq('client_id', (poei as any).client_id)
@@ -155,7 +155,7 @@ export async function sendSignatureEmployeurAction(
     if (c) { email = c.email; nom = nom || [c.prenom, c.nom].filter(Boolean).join(' ').trim() }
   }
   if (!email) {
-    return { success: false, error: "Renseignez l'email du représentant de l'employeur dans les paramètres du projet" }
+    return { success: false, error: "Aucun contact référent avec email sur l'entreprise : ajoutez-le sur la fiche client" }
   }
 
   const { data: existing } = await supabase

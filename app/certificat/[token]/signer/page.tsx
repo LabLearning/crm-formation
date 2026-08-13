@@ -30,10 +30,19 @@ export default async function CertificatSignerPage({ params }: { params: { token
   if ((sig as any).role === 'employeur' && (sig as any).poei?.id) {
     const [{ count }, { data: poeiRow }] = await Promise.all([
       supabase.from('poei_candidats').select('id', { count: 'exact', head: true }).eq('poei_id', (sig as any).poei.id),
-      supabase.from('poei').select('employeur_prenom, employeur_nom').eq('id', (sig as any).poei.id).maybeSingle(),
+      supabase.from('poei').select('client_id').eq('id', (sig as any).poei.id).maybeSingle(),
     ])
     nbCandidats = count || 0
-    employeurNom = [poeiRow?.employeur_prenom, poeiRow?.employeur_nom].filter(Boolean).join(' ').trim() || null
+    // Le référent de l'entreprise : une seule source, la fiche client.
+    if (poeiRow?.client_id) {
+      const { data: contacts } = await supabase
+        .from('contacts').select('prenom, nom, est_signataire, est_principal')
+        .eq('client_id', poeiRow.client_id)
+      const c = (contacts || []).find((x: any) => x.est_signataire)
+        || (contacts || []).find((x: any) => x.est_principal)
+        || (contacts || [])[0]
+      if (c) employeurNom = [c.prenom, c.nom].filter(Boolean).join(' ').trim() || null
+    }
   }
 
   return (

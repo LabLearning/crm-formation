@@ -27,29 +27,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS certificat_signatures_employeur_unique
   ON certificat_signatures (poei_id)
   WHERE role = 'employeur';
 
--- ── Le représentant de l'employeur, porté par le projet POEI ─────────────
--- C'est lui qui signe l'attestation et reçoit le lien : le deviner depuis les
--- contacts du client était fragile — le signataire de la POEI n'est pas
--- toujours le signataire commercial du compte.
-ALTER TABLE poei
-  ADD COLUMN IF NOT EXISTS employeur_prenom text,
-  ADD COLUMN IF NOT EXISTS employeur_nom text,
-  ADD COLUMN IF NOT EXISTS employeur_email text,
-  ADD COLUMN IF NOT EXISTS employeur_telephone text;
-
-COMMENT ON COLUMN poei.employeur_nom IS
-  'Représentant de l''établissement employeur : signe l''attestation de développement de compétences et reçoit le lien de signature.';
-
--- Reprise : le contact signataire du client, à défaut le principal.
-UPDATE poei p
-SET employeur_prenom = c.prenom,
-    employeur_nom = c.nom,
-    employeur_email = c.email,
-    employeur_telephone = c.telephone
-FROM (
-  SELECT DISTINCT ON (client_id) client_id, prenom, nom, email, telephone
-  FROM contacts
-  ORDER BY client_id, est_signataire DESC, est_principal DESC, created_at
-) c
-WHERE c.client_id = p.client_id
-  AND p.employeur_nom IS NULL;
+-- Le représentant de l'employeur n'est PAS dupliqué sur la POEI : c'est le
+-- contact référent de l'entreprise (contacts.est_signataire, à défaut
+-- est_principal) qui signe et reçoit le lien. Une seule source, pas de copie
+-- qui divergerait de la fiche client.
