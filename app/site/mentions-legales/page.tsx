@@ -27,7 +27,7 @@ export default function MentionsLegales() {
       </p>
       <p>
         Lab Learning est <strong>certifié Qualiopi</strong> au titre de la catégorie « Actions de formation »
-        — certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION (accréditation COFRAC n° 5-0667),
+        — certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION,
         valable jusqu&apos;au 04/11/2027 (<a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer">consulter le certificat</a>) —
         et inscrit sur la liste officielle de la <strong>DRAAF</strong> pour dispenser la formation en hygiène
         alimentaire (HACCP).

@@ -29,9 +29,8 @@ export function SiteFooter() {
             </a>
           </div>
           <p className="mt-3 text-[11px] text-[#78716C] max-w-sm leading-relaxed">
-            Certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION (accréditation COFRAC n° 5-0667),
-            valable jusqu&apos;au 04/11/2027. Inscrit sur la liste de la DRAAF pour la formation hygiène
-            alimentaire (HACCP).
+            Certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION, valable jusqu&apos;au 04/11/2027.
+            Inscrit sur la liste de la DRAAF pour la formation hygiène alimentaire (HACCP).
           </p>
         </div>
         <div>
