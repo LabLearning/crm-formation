@@ -13,15 +13,25 @@ export function SiteFooter() {
             Organisme de formation professionnelle certifié Qualiopi, spécialiste des métiers de bouche
             et de la performance en restauration.
           </p>
-          <div className="mt-5 flex items-center gap-3">
-            <span className="rounded-lg bg-white px-2.5 py-2 inline-flex items-center">
-              <img src="/site/logos/qualiopi.png" alt="Certifié Qualiopi — Actions de formation" className="h-10 w-auto" />
-            </span>
+          {/*
+            Règle d'usage de la marque Qualiopi : le logo ne s'affiche jamais
+            sans la mention de la catégorie d'action, dans le même bloc.
+          */}
+          <div className="mt-5 max-w-sm rounded-2xl bg-white p-4">
+            <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-12 w-auto" />
+            <p className="mt-3 text-[12px] leading-relaxed text-[#44403C]">
+              La certification qualité a été délivrée au titre de la catégorie d&apos;action suivante :
+              <br /><strong className="text-[#14110F]">ACTIONS DE FORMATION</strong>
+            </p>
+            <a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer"
+              className="mt-2 inline-block text-[12px] font-semibold text-[#195144] underline underline-offset-2 hover:text-[#123f34]">
+              Consulter notre certificat (PDF)
+            </a>
           </div>
           <p className="mt-3 text-[11px] text-[#78716C] max-w-sm leading-relaxed">
-            La certification qualité a été délivrée au titre de la catégorie d&apos;actions suivante :
-            ACTIONS DE FORMATION. Certificat n° CERT_S1024_0345 (CEVA SOLUTION), valable jusqu&apos;au
-            04/11/2027. Inscrit sur la liste de la DRAAF pour la formation hygiène alimentaire (HACCP).
+            Certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION (accréditation COFRAC n° 5-0667),
+            valable jusqu&apos;au 04/11/2027. Inscrit sur la liste de la DRAAF pour la formation hygiène
+            alimentaire (HACCP).
           </p>
         </div>
         <div>
