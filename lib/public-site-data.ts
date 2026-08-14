@@ -145,15 +145,23 @@ export interface PublicFormationDetail extends PublicFormation {
   accessibilite_handicap: string | null
   competences_visees: string[]
   duree_jours: number | null
+  /** Mentions exigées par l'indicateur 1 : tarif, admission, délai d'accès. */
+  tarif_intra_ht: number | null
+  tarif_inter_ht: number | null
+  modalites_admission: string | null
+  delai_acces: string | null
+  date_derniere_maj: string | null
 }
 
 /** Détail public d'une formation (par id). */
 export async function getPublicFormation(id: string): Promise<PublicFormationDetail | null> {
   const supabase = await createServiceRoleClient()
   const { data: f } = await supabase.from('formations')
-    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap')
+    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap, tarif_intra_ht, tarif_inter_ht, modalites_admission, date_derniere_maj')
     .eq('id', id).eq('organization_id', ORG).eq('is_active', true).maybeSingle()
   if (!f) return null
+  // Le délai d'accès est une politique de l'organisme, pas de la formation.
+  const { data: org } = await supabase.from('organizations').select('delai_acces').eq('id', ORG).maybeSingle()
   return {
     id: (f as any).id, intitule: (f as any).intitule, sous_titre: (f as any).sous_titre || null,
     categorie: (f as any).categorie || null, duree_heures: (f as any).duree_heures || null,
@@ -165,6 +173,11 @@ export async function getPublicFormation(id: string): Promise<PublicFormationDet
     methodes_pedagogiques: (f as any).methodes_pedagogiques || null,
     modalites_evaluation: (f as any).modalites_evaluation || null,
     accessibilite_handicap: (f as any).accessibilite_handicap || null,
+    tarif_intra_ht: (f as any).tarif_intra_ht || null,
+    tarif_inter_ht: (f as any).tarif_inter_ht || null,
+    modalites_admission: (f as any).modalites_admission || null,
+    delai_acces: (org as any)?.delai_acces || null,
+    date_derniere_maj: (f as any).date_derniere_maj || null,
   }
 }
 

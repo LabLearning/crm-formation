@@ -34,6 +34,21 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
   if (f.programme_detaille) sections.push({ Icon: BookOpen, title: 'Programme', content: <Prose text={f.programme_detaille} /> })
   if (f.methodes_pedagogiques) sections.push({ Icon: Bulb, title: 'Méthodes pédagogiques', content: <Prose text={f.methodes_pedagogiques} /> })
   if (f.modalites_evaluation) sections.push({ Icon: ClipboardCheck, title: 'Modalités d’évaluation', content: <Prose text={f.modalites_evaluation} /> })
+  if (f.modalites_admission || f.delai_acces) {
+    sections.push({
+      Icon: Calendar, title: 'Modalités et délai d’accès',
+      content: (
+        <div className="space-y-3">
+          {f.modalites_admission && <Prose text={f.modalites_admission} />}
+          {f.delai_acces && <p className="text-[#57534E] leading-relaxed">{f.delai_acces}</p>}
+          <p className="text-[#57534E] leading-relaxed">
+            Les dates de session sont planifiées avec votre établissement, en intra comme en inter :
+            contactez-nous pour un calendrier adapté à votre activité.
+          </p>
+        </div>
+      ),
+    })
+  }
   if (f.accessibilite_handicap) sections.push({ Icon: Accessibility, title: 'Accessibilité', content: <Prose text={f.accessibilite_handicap} /> })
 
   return (
@@ -96,7 +111,11 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             <div className="mt-4 space-y-2 text-sm">
               {f.duree_heures ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Durée</span><span className="font-medium text-[#14110F]">{f.duree_heures} h{f.duree_jours ? ` · ${f.duree_jours} j` : ''}</span></div> : null}
               {f.modalite ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Modalité</span><span className="font-medium text-[#14110F]">{MODALITE[f.modalite] || f.modalite}</span></div> : null}
+              {/* Le tarif publié quand il l'est ; sinon la règle honnête : sur devis. */}
+              <div className="flex items-center justify-between"><span className="text-[#78716C]">Tarif</span><span className="font-medium text-[#14110F] text-right">{f.tarif_intra_ht ? `${Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT (intra)` : f.tarif_inter_ht ? `${Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.` : 'Sur devis'}</span></div>
               <div className="flex items-center justify-between"><span className="text-[#78716C]">Financement</span><span className="font-medium text-[#14110F]">OPCO éligible</span></div>
+              <div className="flex items-center justify-between gap-3"><span className="text-[#78716C] shrink-0">Dates</span><span className="font-medium text-[#14110F] text-right">Planifiées avec votre établissement</span></div>
+              {f.delai_acces ? <div className="flex items-start justify-between gap-3"><span className="text-[#78716C] shrink-0">Délai d’accès</span><span className="font-medium text-[#14110F] text-right">{f.delai_acces}</span></div> : null}
             </div>
             <Link href="/site/contact" className="mt-5 flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
               Demander cette formation <ArrowRight className="h-4 w-4" />
@@ -104,6 +123,13 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           </div>
         </aside>
       </div>
+      {f.date_derniere_maj && (
+        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-10 -mt-4">
+          <p className="text-xs text-[#A8A29E]">
+            Programme mis à jour le {new Date(f.date_derniere_maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.
+          </p>
+        </div>
+      )}
     </>
   )
 }

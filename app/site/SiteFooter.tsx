@@ -19,7 +19,9 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="mt-3 text-[11px] text-[#78716C] max-w-sm leading-relaxed">
-            Certification qualité délivrée au titre des actions de formation. Inscrit sur la liste de la DRAAF pour la formation hygiène alimentaire (HACCP).
+            La certification qualité a été délivrée au titre de la catégorie d&apos;actions suivante :
+            ACTIONS DE FORMATION. Certificat n° CERT_S1024_0345 (CEVA SOLUTION), valable jusqu&apos;au
+            04/11/2027. Inscrit sur la liste de la DRAAF pour la formation hygiène alimentaire (HACCP).
           </p>
         </div>
         <div>
