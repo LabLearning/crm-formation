@@ -65,7 +65,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
                 <Reveal key={f.id} delay={(i % 3) * 70}>
                   <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#195144]/10 bg-white overflow-hidden hover:border-[#195144]/30 hover:shadow-sm ll-lift">
                     <div className="relative h-32 overflow-hidden">
-                      <img src={`/site/metiers/${GROUP_IMG[g.key] || b.img}.webp`} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img loading="lazy" src={`/site/metiers/${GROUP_IMG[g.key] || b.img}.webp`} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${b.from}26 0%, ${b.to}73 100%)` }} />
                     </div>
                     <div className="flex flex-col flex-1 p-5">

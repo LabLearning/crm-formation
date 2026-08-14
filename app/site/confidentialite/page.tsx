@@ -34,18 +34,28 @@ export default function Confidentialite() {
       </ul>
 
       <h2>Durée de conservation</h2>
-      <p>
-        Vos données sont conservées pour la durée nécessaire aux finalités poursuivies, puis archivées ou supprimées
-        conformément aux obligations légales (notamment la durée de conservation des documents de formation et
-        comptables).
-      </p>
+      <ul>
+        <li><strong>Demandes de contact et prospects :</strong> 3 ans après le dernier échange ;</li>
+        <li><strong>Dossiers de formation</strong> (convention, émargements, évaluations, attestations) : 3 ans à compter
+          de la fin de l&apos;année du dernier paiement, conformément aux obligations liées aux financements publics et
+          mutualisés — durée étendue en cas de cofinancement européen ;</li>
+        <li><strong>Documents comptables :</strong> 10 ans ;</li>
+        <li><strong>Données de navigation :</strong> 13 mois au maximum.</li>
+      </ul>
 
-      <h2>Destinataires</h2>
+      <h2>Destinataires et sous-traitants</h2>
       <p>
-        Vos données sont destinées aux services habilités de Lab Learning et, le cas échéant, à nos sous-traitants
-        (hébergeur, outils de gestion) et partenaires strictement nécessaires (financeurs, OPCO), dans le respect de
-        la confidentialité. Elles ne sont jamais vendues à des tiers.
+        Vos données sont destinées aux services habilités de Lab Learning et, le cas échéant, aux financeurs de votre
+        formation (OPCO, France Travail) dans la stricte mesure exigée par les dispositifs. Elles ne sont jamais
+        vendues à des tiers. Nos sous-traitants techniques, liés par des engagements de conformité RGPD :
       </p>
+      <ul>
+        <li><strong>Vercel</strong> — hébergement du site (clauses contractuelles types pour les transferts hors UE) ;</li>
+        <li><strong>Supabase</strong> — base de données, hébergée dans l&apos;Union européenne (région Paris) ;</li>
+        <li><strong>Resend</strong> — envoi des emails transactionnels (convocations, attestations) ;</li>
+        <li><strong>Meta (WhatsApp Business)</strong> — notifications WhatsApp, uniquement avec votre consentement ;</li>
+        <li><strong>Google Workspace</strong> — messagerie et documents internes.</li>
+      </ul>
 
       <h2>Vos droits</h2>
       <p>Vous disposez des droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité

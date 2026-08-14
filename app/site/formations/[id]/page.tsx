@@ -11,7 +11,22 @@ const MODALITE: Record<string, string> = { presentiel: 'Présentiel', distanciel
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const f = await getPublicFormation(params.id)
-  return { title: f ? `${f.intitule} — Lab Learning` : 'Formation — Lab Learning' }
+  if (!f) return { title: 'Formation' }
+  const description = (f.sous_titre
+    || (f.objectifs[0] ? `Objectifs : ${f.objectifs.slice(0, 2).join(' · ')}` : null)
+    || `Formation ${f.intitule} — ${f.duree_heures || ''}h, financement OPCO, certifiée Qualiopi.`)
+    .slice(0, 158)
+  return {
+    title: f.intitule.slice(0, 58),
+    description,
+    alternates: { canonical: `/site/formations/${f.id}` },
+    openGraph: {
+      title: f.intitule,
+      description,
+      url: `/site/formations/${f.id}`,
+      type: 'website',
+    },
+  }
 }
 
 function Prose({ text }: { text: string }) {
@@ -31,6 +46,30 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
   // Le tarif public est le barème de prise en charge de la branche : nos prix
   // sont calés sur les montants OPCO, pas sur un tarif catalogue.
   const tarifsOpco = tarifsOpcoPourFormation(f)
+
+  // Balisage Course : le prix et la durée directement dans les résultats de
+  // recherche — et les moteurs génératifs savent répondre « combien coûte la
+  // formation HACCP chez Lab Learning ».
+  const schemaCourse = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: f.intitule,
+    description: f.sous_titre || (f.objectifs[0] ? f.objectifs.join('. ').slice(0, 300) : undefined),
+    provider: { '@id': 'https://crm.lab-learning.fr/site#organization' },
+    ...(f.tarif_inter_ht || f.tarif_intra_ht ? {
+      offers: {
+        '@type': 'Offer',
+        price: String(f.tarif_inter_ht || f.tarif_intra_ht),
+        priceCurrency: 'EUR',
+        category: f.tarif_inter_ht ? 'Par stagiaire, HT' : 'Par groupe, HT',
+      },
+    } : {}),
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: f.modalite === 'distanciel' ? 'online' : f.modalite === 'mixte' ? 'blended' : 'onsite',
+      ...(f.duree_heures ? { courseWorkload: `PT${f.duree_heures}H` } : {}),
+    },
+  }
 
   const sections: { Icon: any; title: string; content: React.ReactNode }[] = []
   if (f.public_vise) sections.push({ Icon: Users, title: 'Public visé', content: <Prose text={f.public_vise} /> })
@@ -57,6 +96,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }} />
       <section className="relative overflow-hidden border-b border-[#195144]/10">
         <div className="absolute inset-0 -z-10 bg-[#195144]" />
         <img src={metierStyle(f.categorie || '').img} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25" />

@@ -20,7 +20,7 @@ export function Marquee({ items }: { items: MarqueeItem[] }) {
             className="shrink-0 w-52 h-24 rounded-2xl border border-[#195144]/10 bg-white flex flex-col items-center justify-center gap-1.5 px-5"
           >
             {f.logo_url ? (
-              <img src={f.logo_url} alt={f.nom} className="h-9 w-auto max-w-[130px] object-contain grayscale opacity-70" />
+              <img loading="lazy" src={f.logo_url} alt={f.nom} className="h-9 w-auto max-w-[130px] object-contain grayscale opacity-70" />
             ) : (
               <span className="inline-flex items-center gap-2 font-heading font-semibold text-[#44403C] text-sm text-center">
                 <Store className="h-4 w-4 text-[#195144]/60" /> {f.nom}

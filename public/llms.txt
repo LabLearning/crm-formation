@@ -1,0 +1,36 @@
+# Lab Learning
+
+> Organisme de formation professionnelle certifié Qualiopi (actions de formation),
+> spécialiste des métiers de bouche : restauration rapide, hôtellerie-restauration,
+> boucherie-charcuterie, boulangerie-pâtisserie. Formations en intra-entreprise
+> partout en France, prises en charge par les OPCO (AKTO, OPCO EP) et France
+> Travail (POEI). Siège : 6b boulevard Berthelot, Bureau 3, 34000 Montpellier.
+> N° de déclaration d'activité 76341315134 — certificat Qualiopi CERT_S1024_0345_1
+> (CEVA Solution, COFRAC 5-0667), valable jusqu'au 04/11/2027.
+
+## Pages principales
+
+- [Accueil](https://crm.lab-learning.fr/site) : présentation de l'organisme et des branches couvertes
+- [Catalogue des formations](https://crm.lab-learning.fr/site/formations) : toutes les formations actives, avec durée, tarif calé sur la prise en charge OPCO, objectifs et programme
+- [Restauration rapide](https://crm.lab-learning.fr/site/branches/restauration-rapide)
+- [Restaurant & hôtellerie (HCR)](https://crm.lab-learning.fr/site/branches/restaurant-hcr)
+- [Boucherie-charcuterie](https://crm.lab-learning.fr/site/branches/boucherie-charcuterie)
+- [Boulangerie-pâtisserie](https://crm.lab-learning.fr/site/branches/boulangerie-patisserie)
+- [Financements](https://crm.lab-learning.fr/site/financements) : OPCO, POEI France Travail, plan de développement des compétences
+- [Nos résultats](https://crm.lab-learning.fr/site/resultats) : indicateurs de résultats publiés (satisfaction, réussite)
+- [Contact](https://crm.lab-learning.fr/site/contact)
+
+## Informations réglementaires
+
+- [Règlement intérieur stagiaires](https://crm.lab-learning.fr/site/reglement-interieur)
+- [Déposer une réclamation](https://crm.lab-learning.fr/site/reclamation)
+- [Certificat Qualiopi (PDF)](https://crm.lab-learning.fr/site/documents/certificat-qualiopi-lab-learning.pdf)
+- [Mentions légales](https://crm.lab-learning.fr/site/mentions-legales)
+- [CGV](https://crm.lab-learning.fr/site/cgv)
+
+## Domaines phares
+
+Hygiène alimentaire et HACCP (formation obligatoire des établissements de
+restauration commerciale, arrêté du 12 février 2024), sécurité (DUERP, incendie,
+SST), management en restauration, techniques métier (pizza, pâtisserie,
+boucherie), POEI de recrutement pour les enseignes de restauration rapide.
