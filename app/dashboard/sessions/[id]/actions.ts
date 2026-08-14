@@ -274,6 +274,24 @@ export async function sendConventionForSignatureAction(
   if (!sess) return { success: false, error: 'Session introuvable' }
   if (!sess.client_id) return { success: false, error: 'Aucun client entreprise rattaché à la session' }
 
+  // L'analyse du besoin précède la contractualisation (indicateur 4 du RNQ) :
+  // une convention partie avant le recueil produit un dossier dont les dates
+  // se contredisent — c'est exactement l'écart relevé à l'audit blanc sur
+  // 7 conventions. On bloque à la source plutôt que de réparer après coup.
+  const { data: recueil } = await supabase
+    .from('recueils_besoin')
+    .select('id, statut')
+    .eq('session_id', sessionId)
+    .eq('statut', 'complete')
+    .limit(1)
+    .maybeSingle()
+  if (!recueil) {
+    return {
+      success: false,
+      error: "Complétez d'abord le recueil du besoin (onglet Recueil) : l'analyse du besoin doit être datée avant la signature de la convention (indicateur 4).",
+    }
+  }
+
   // Convention liée (ou création)
   let convId = conventionId
   if (!convId) {
