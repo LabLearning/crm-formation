@@ -148,6 +148,7 @@ export interface PublicFormationDetail extends PublicFormation {
   /** Mentions exigées par l'indicateur 1 : tarif, admission, délai d'accès. */
   tarif_intra_ht: number | null
   tarif_inter_ht: number | null
+  branches: string[]
   modalites_admission: string | null
   delai_acces: string | null
   date_derniere_maj: string | null
@@ -157,7 +158,7 @@ export interface PublicFormationDetail extends PublicFormation {
 export async function getPublicFormation(id: string): Promise<PublicFormationDetail | null> {
   const supabase = await createServiceRoleClient()
   const { data: f } = await supabase.from('formations')
-    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap, tarif_intra_ht, tarif_inter_ht, modalites_admission, date_derniere_maj')
+    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap, tarif_intra_ht, tarif_inter_ht, modalites_admission, date_derniere_maj, branches')
     .eq('id', id).eq('organization_id', ORG).eq('is_active', true).maybeSingle()
   if (!f) return null
   // Le délai d'accès est une politique de l'organisme, pas de la formation.
@@ -175,6 +176,7 @@ export async function getPublicFormation(id: string): Promise<PublicFormationDet
     accessibilite_handicap: (f as any).accessibilite_handicap || null,
     tarif_intra_ht: (f as any).tarif_intra_ht || null,
     tarif_inter_ht: (f as any).tarif_inter_ht || null,
+    branches: Array.isArray((f as any).branches) ? (f as any).branches : [],
     modalites_admission: (f as any).modalites_admission || null,
     delai_acces: (org as any)?.delai_acces || null,
     date_derniere_maj: (f as any).date_derniere_maj || null,

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, ClipboardCheck, Accessibility, ShieldCheck, BookOpen, ListView, Bulb } from '../../icons'
 import { getPublicFormation } from '@/lib/public-site-data'
+import { tarifsOpcoPourFormation } from '@/lib/opco-tarifs'
 import { metierStyle } from '../../metier'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,9 @@ function Prose({ text }: { text: string }) {
 export default async function SiteFormationDetail({ params }: { params: { id: string } }) {
   const f = await getPublicFormation(params.id)
   if (!f) notFound()
+  // Le tarif public est le barème de prise en charge de la branche : nos prix
+  // sont calés sur les montants OPCO, pas sur un tarif catalogue.
+  const tarifsOpco = tarifsOpcoPourFormation(f)
 
   const sections: { Icon: any; title: string; content: React.ReactNode }[] = []
   if (f.public_vise) sections.push({ Icon: Users, title: 'Public visé', content: <Prose text={f.public_vise} /> })
@@ -111,9 +115,26 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             <div className="mt-4 space-y-2 text-sm">
               {f.duree_heures ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Durée</span><span className="font-medium text-[#14110F]">{f.duree_heures} h{f.duree_jours ? ` · ${f.duree_jours} j` : ''}</span></div> : null}
               {f.modalite ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Modalité</span><span className="font-medium text-[#14110F]">{MODALITE[f.modalite] || f.modalite}</span></div> : null}
-              {/* Le tarif publié quand il l'est ; sinon la règle honnête : sur devis. */}
-              <div className="flex items-center justify-between"><span className="text-[#78716C]">Tarif</span><span className="font-medium text-[#14110F] text-right">{f.tarif_intra_ht ? `${Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT (intra)` : f.tarif_inter_ht ? `${Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.` : 'Sur devis'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-[#78716C]">Financement</span><span className="font-medium text-[#14110F]">OPCO éligible</span></div>
+              {/*
+                Le tarif suit le barème de prise en charge OPCO de la branche ;
+                un tarif saisi au catalogue prime, une formation hors branche
+                reste sur devis.
+              */}
+              {f.tarif_intra_ht || f.tarif_inter_ht ? (
+                <div className="flex items-center justify-between"><span className="text-[#78716C]">Tarif</span><span className="font-medium text-[#14110F] text-right">{f.tarif_intra_ht ? `${Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT (intra)` : `${Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.`}</span></div>
+              ) : tarifsOpco.length > 0 ? (
+                <div className="space-y-1.5">
+                  {tarifsOpco.map((t) => (
+                    <div key={t.branche} className="flex items-start justify-between gap-3">
+                      <span className="text-[#78716C] shrink-0">{tarifsOpco.length > 1 ? t.branche : 'Tarif'}</span>
+                      <span className="font-medium text-[#14110F] text-right">{t.montant}<br /><span className="text-[11px] font-normal text-[#78716C]">{t.detail}</span></span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between"><span className="text-[#78716C]">Tarif</span><span className="font-medium text-[#14110F]">Sur devis</span></div>
+              )}
+              <div className="flex items-center justify-between"><span className="text-[#78716C]">Financement</span><span className="font-medium text-[#14110F]">{tarifsOpco.length > 0 ? `Pris en charge ${[...new Set(tarifsOpco.map((t) => t.opco))].join(' / ')}` : 'OPCO éligible'}</span></div>
               <div className="flex items-center justify-between gap-3"><span className="text-[#78716C] shrink-0">Dates</span><span className="font-medium text-[#14110F] text-right">Planifiées avec votre établissement</span></div>
               {f.delai_acces ? <div className="flex items-start justify-between gap-3"><span className="text-[#78716C] shrink-0">Délai d’accès</span><span className="font-medium text-[#14110F] text-right">{f.delai_acces}</span></div> : null}
             </div>
