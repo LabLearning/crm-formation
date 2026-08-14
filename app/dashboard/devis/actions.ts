@@ -197,6 +197,10 @@ export async function updateDevisStatusAction(id: string, status: string): Promi
           pdfBuffer: Buffer.from(buffer),
           pdfFilename: `devis-${(devis as any).numero}.pdf`,
           footerNote: 'Pour accepter ce devis, retournez-le signé avec la mention « Bon pour accord ».',
+          organizationId: session.organization.id,
+          entityType: 'devis',
+          entityId: id,
+          triggeredBy: session.user.id,
         })
       }
     } catch (e) { console.error('[email devis]', e) }

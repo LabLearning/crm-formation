@@ -228,6 +228,10 @@ async function notifyFormateurOfMission(formateurId: string, sessionId: string, 
       ctaLabel: 'Voir la mission dans mon espace',
       ctaUrl: `${appUrl}/mon-espace`,
       footerNote: 'Merci de répondre rapidement afin que nous puissions confirmer la session.',
+      organizationId: session.organization.id,
+      entityType: 'session',
+      entityId: sessionId,
+      triggeredBy: session.user.id,
     })
   }
 }

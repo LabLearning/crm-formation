@@ -63,6 +63,10 @@ export async function updateSessionStatusAction(sessionId: string, newStatus: st
           ctaLabel: 'Répondre par email',
           ctaUrl: replyEmail ? `mailto:${replyEmail}?subject=${encodeURIComponent('Retour formation — ' + formationNom)}` : undefined,
           footerNote: 'Vos remarques nous aident à améliorer continuellement nos prestations.',
+          organizationId: session.organization.id,
+          entityType: 'session',
+          entityId: sessionId,
+          triggeredBy: session.user.id,
         })
       }
     } catch (e) { console.error('[email eval client]', e) }

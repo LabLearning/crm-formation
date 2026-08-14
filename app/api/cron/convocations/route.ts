@@ -148,6 +148,9 @@ export async function GET(req: Request) {
             pdfBuffer: Buffer.from(buffer),
             pdfFilename: `convocation-${a.nom || 'stagiaire'}.pdf`,
             footerNote: 'Merci de vous présenter 15 minutes avant le début de la session avec une pièce d\'identité.',
+            organizationId: sess.organization_id,
+            entityType: 'session',
+            entityId: sess.id,
           })
           totalEmails++
         } catch (e) { console.error('[email convoc]', e) }

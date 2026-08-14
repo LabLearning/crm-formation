@@ -406,6 +406,10 @@ export async function sendAuditAccessAction(formateurId: string): Promise<Action
     ctaLabel: "Activer mon accès à l'outil d'audit",
     ctaUrl: link,
     footerNote: 'Ce lien est personnel et vous est réservé.',
+    organizationId: session.organization.id,
+    entityType: 'formateur',
+    entityId: formateurId,
+    triggeredBy: session.user.id,
   })
   if (!r.success) return { success: false, error: r.error }
 

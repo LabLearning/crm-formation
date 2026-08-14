@@ -60,6 +60,10 @@ export async function createReclamationAction(formData: FormData): Promise<Actio
           ['Date de réception', new Date().toLocaleDateString('fr-FR')],
         ],
         footerNote: 'Vous serez recontacté(e) dans les meilleurs délais. Pour toute question, vous pouvez répondre directement à cet email.',
+        organizationId: session.organization.id,
+        entityType: 'reclamation',
+        entityId: (data as any).id,
+        triggeredBy: session.user.id,
       })
     } catch (e) { console.error('[email reclamation accuse]', e) }
   }
@@ -130,6 +134,10 @@ export async function updateReclamationStatusAction(id: string, status: string, 
             ...(isClosed && closure ? [['Conclusion', closure] as [string, string]] : []),
           ],
           footerNote: 'Si la résolution ne vous satisfait pas, vous pouvez nous répondre directement à cet email.',
+          organizationId: session.organization.id,
+          entityType: 'reclamation',
+          entityId: id,
+          triggeredBy: session.user.id,
         })
       }
     } catch (e) { console.error('[email reclamation reponse]', e) }

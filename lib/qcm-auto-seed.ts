@@ -329,6 +329,9 @@ export async function notifyApprenantsForQcm(
           ctaLabel: eCfg.cta,
           ctaUrl: `${appUrl}/portail/${token}/questionnaires`,
           footerNote: 'Aucun mot de passe requis — le lien est personnel et sécurisé.',
+          organizationId: sess.organization_id,
+          entityType: 'session',
+          entityId: sessionId,
         })
       } catch (e) { console.error('[email qcm]', e) }
     }

@@ -1274,6 +1274,10 @@ async function notifyFormateurIntervention(supabase: any, session: any, interven
       ctaLabel: 'Voir la mission dans mon espace',
       ctaUrl: `${appUrl}/mon-espace`,
       footerNote: 'Merci de répondre rapidement afin de confirmer le planning du parcours.',
+      organizationId: session.organization.id,
+      entityType: 'poei_intervention',
+      entityId: interventionId,
+      triggeredBy: session.user.id,
     })
   }
 }

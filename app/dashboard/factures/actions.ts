@@ -228,6 +228,10 @@ export async function updateFactureStatusAction(id: string, status: string): Pro
           pdfBuffer: Buffer.from(buffer),
           pdfFilename: `facture-${f!.numero}.pdf`,
           footerNote: 'Merci d\'indiquer le numéro de facture en référence de votre virement.',
+          organizationId: session.organization.id,
+          entityType: 'facture',
+          entityId: id,
+          triggeredBy: session.user.id,
         })
       } catch (e) { console.error('[email facture]', e) }
     }

@@ -283,6 +283,9 @@ export async function signConventionPublicAction(
           pdfBuffer: Buffer.from(buffer),
           pdfFilename: `convention-${(convFull as any).numero}-signee.pdf`,
           footerNote: 'Cet exemplaire fait foi entre les parties. Conservez-le pour vos archives.',
+          organizationId: (conv as any).organization_id,
+          entityType: 'convention',
+          entityId: conv.id,
         })
       }
     } catch (e) { console.error('[email conv signee]', e) }

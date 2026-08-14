@@ -97,6 +97,10 @@ export async function sendDocumentByEmailAction(documentId: string, formData: Fo
     pdfBuffer: buffer,
     pdfFilename: doc.file_name || doc.nom,
     attachmentContentType: doc.mime_type || 'application/octet-stream',
+    organizationId: session.organization.id,
+    entityType: 'document',
+    entityId: documentId,
+    triggeredBy: session.user.id,
   })
 
   // Journalisation

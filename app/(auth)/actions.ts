@@ -136,6 +136,9 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
         ctaLabel: 'Réinitialiser mon mot de passe',
         ctaUrl: recoveryUrl,
         footerNote: 'Ce lien est valable 1 heure. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email — votre mot de passe restera inchangé.',
+        organizationId: user.organization_id,
+        entityType: 'user',
+        entityId: user.id,
       })
     } catch (e) { console.error('[reset password]', e) }
   }

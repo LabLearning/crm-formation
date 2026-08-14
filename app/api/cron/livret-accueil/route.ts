@@ -158,6 +158,9 @@ export async function GET(req: Request) {
               pdfBuffer: livretBuf,
               pdfFilename: livretFilename,
               footerNote: 'À très bientôt !',
+              organizationId: sess.organization_id,
+              entityType: 'session',
+              entityId: sess.id,
             })
             totalEmails++
           }

@@ -71,6 +71,8 @@ export async function notifyFranchiseUsers(
             metadata: notif.email.metadata,
             ctaLabel: notif.email.ctaLabel || (notif.lienUrl ? 'Voir dans mon espace' : undefined),
             ctaUrl: notif.email.ctaUrl || (notif.lienUrl ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}${notif.lienUrl}` : undefined),
+            organizationId,
+            entityType: 'franchise',
           })
         } catch (e) { console.error('[notifyFranchiseUsers email]', e) }
       }

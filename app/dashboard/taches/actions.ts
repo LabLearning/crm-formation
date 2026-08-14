@@ -50,6 +50,9 @@ async function notifyAssignee(
           intro: `${message}. Connectez-vous au CRM pour voir le détail et traiter la tâche.`,
           ctaLabel: 'Ouvrir mes tâches',
           ctaUrl: `${appUrl}/dashboard/taches`,
+          organizationId,
+          entityType: 'crm_tache',
+          entityId: tacheId,
         })
       }
     }

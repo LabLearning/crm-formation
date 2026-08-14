@@ -103,6 +103,9 @@ export async function GET(req: Request) {
             pdfBuffer: Buffer.from(buffer),
             pdfFilename: `facture-${f.numero}.pdf`,
             footerNote: 'Merci de procéder au règlement dans les meilleurs délais. Si vous avez déjà réglé, ignorez ce message.',
+            organizationId: (f as any).organization_id,
+            entityType: 'facture',
+            entityId: f.id,
           })
           emailsEnvoyes++
         }

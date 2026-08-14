@@ -503,6 +503,9 @@ export async function resendAccessAction(userId: string): Promise<ActionResult &
       ctaLabel: 'Définir mon mot de passe',
       ctaUrl: recoveryUrl,
       footerNote: 'Ce lien est valable 1 heure. Si vous n\'êtes pas concerné, ignorez cet email.',
+      organizationId: user.organization_id,
+      entityType: 'user',
+      entityId: user.id,
     })
   } catch (e) {
     console.error('[resend access]', e)
