@@ -19,10 +19,12 @@ export async function GET(req: Request) {
 
   const supabase = await createServiceRoleClient()
 
-  // Date cible : J+3 (sessions qui démarrent dans 3 jours)
-  const target = new Date()
-  target.setDate(target.getDate() + 3)
-  const targetDate = target.toISOString().split('T')[0]
+  // Fenêtre J+1 → J+3 : l'envoi vise J-3, mais une session créée après ce
+  // jalon doit quand même recevoir sa convocation — au plus tard la veille.
+  // Le garde convocations_sent_at nul assure qu'une session n'est traitée
+  // qu'une seule fois.
+  const demain = new Date(); demain.setDate(demain.getDate() + 1)
+  const jPlus3 = new Date(); jPlus3.setDate(jPlus3.getDate() + 3)
 
   const { data: sessions } = await supabase
     .from('sessions')
@@ -32,7 +34,8 @@ export async function GET(req: Request) {
       formation:formation_id(intitule),
       formateur:formateurs(prenom, nom, email, user_id)
     `)
-    .eq('date_debut', targetDate)
+    .gte('date_debut', demain.toISOString().split('T')[0])
+    .lte('date_debut', jPlus3.toISOString().split('T')[0])
     .is('convocations_sent_at', null)
     .neq('status', 'annulee')
     .neq('status', 'terminee')
