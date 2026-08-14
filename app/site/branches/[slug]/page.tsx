@@ -73,6 +73,12 @@ export default async function SiteBranche({ params }: { params: { slug: string }
                       <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
                         {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
                         {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+                        {/* Le prix dès la carte : calé sur la prise en charge OPCO. */}
+                        {f.tarif_inter_ht ? (
+                          <span className="font-semibold text-[#195144]">{Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT/pers.</span>
+                        ) : f.tarif_intra_ht ? (
+                          <span className="font-semibold text-[#195144]">{Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT/groupe</span>
+                        ) : null}
                       </div>
                       {f.objectifs.length > 0 && (
                         <ul className="mt-4 space-y-1.5 flex-1">

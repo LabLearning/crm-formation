@@ -11,8 +11,8 @@ export default function MentionsLegales() {
         au capital de 5 000 €.
       </p>
       <ul>
-        <li><strong>Siège social :</strong> 7 rue de l’Opale, 34070 Montpellier</li>
-        <li><strong>SIRET :</strong> 931 658 561 000 10</li>
+        <li><strong>Siège social :</strong> 6b boulevard Berthelot, Bureau 3, 34000 Montpellier</li>
+        <li><strong>SIRET :</strong> 931 658 561 00036</li>
         <li><strong>TVA intracommunautaire :</strong> FR41931658561</li>
         <li><strong>Représentant légal :</strong> Julien MACHADO</li>
         <li><strong>Téléphone :</strong> 06 95 33 11 24</li>

@@ -13,7 +13,7 @@ export default function Confidentialite() {
 
       <h2>Responsable de traitement</h2>
       <p>
-        Lab Learning, SAS — 7 rue de l’Opale, 34070 Montpellier. Contact : <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
+        Lab Learning, SAS — 6b boulevard Berthelot, Bureau 3, 34000 Montpellier. Contact : <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
         Délégué à la protection des données (DPO) : <a href="mailto:dpo@lab-learning.fr">dpo@lab-learning.fr</a>.
       </p>
 

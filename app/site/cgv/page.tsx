@@ -7,7 +7,7 @@ export default function CGV() {
     <LegalPage title="Conditions générales de vente" updated="août 2026">
       <p>
         Les présentes conditions générales de vente (CGV) régissent les relations entre <strong>Lab Learning</strong>
-        {' '}(SAS, 7 rue de l’Opale, 34070 Montpellier, SIRET 931 658 561 000 10, organisme de formation enregistré
+        {' '}(SAS, 6b boulevard Berthelot, Bureau 3, 34000 Montpellier, SIRET 931 658 561 00036, organisme de formation enregistré
         sous le n° 76 34 13151 34) et ses clients dans le cadre de la vente d’actions de formation professionnelle.
       </p>
 

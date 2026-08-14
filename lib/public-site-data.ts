@@ -12,6 +12,9 @@ export interface PublicFormation {
   duree_heures: number | null
   modalite: string | null
   objectifs: string[]
+  /** Prix catalogue, calé sur la prise en charge OPCO de la branche. */
+  tarif_inter_ht: number | null
+  tarif_intra_ht: number | null
 }
 
 export interface PublicSiteData {
@@ -31,7 +34,7 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
 
   const [formationsRes, franchisesRes, apprC, formC, sessC, cliC] = await Promise.all([
     supabase.from('formations')
-      .select('id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques')
+      .select('id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques, tarif_inter_ht, tarif_intra_ht')
       .eq('organization_id', ORG).eq('is_active', true).order('intitule'),
     supabase.from('franchises')
       .select('nom, logo_url, secteur, nombre_etablissements')
@@ -54,6 +57,7 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
       id: f.id, intitule: f.intitule, categorie: f.categorie || null,
       duree_heures: f.duree_heures || null, modalite: f.modalite || null,
       objectifs: Array.isArray(f.objectifs_pedagogiques) ? f.objectifs_pedagogiques.slice(0, 4) : [],
+      tarif_inter_ht: f.tarif_inter_ht || null, tarif_intra_ht: f.tarif_intra_ht || null,
     })
   }
 
@@ -99,7 +103,7 @@ export interface BrancheData {
  */
 export async function getBranchesData(): Promise<BrancheData[]> {
   const supabase = await createServiceRoleClient()
-  const base = 'id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques'
+  const base = 'id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques, tarif_inter_ht, tarif_intra_ht'
   let rows: any[] | null = null
   // Tente les colonnes branche ; si absentes (avant migration), on refait sans.
   const withCols = await supabase.from('formations')
@@ -124,6 +128,7 @@ export async function getBranchesData(): Promise<BrancheData[]> {
       id: f.id, intitule: f.intitule, categorie: f.categorie || null,
       duree_heures: f.duree_heures || null, modalite: f.modalite || null,
       objectifs: Array.isArray(f.objectifs_pedagogiques) ? f.objectifs_pedagogiques.slice(0, 4) : [],
+      tarif_inter_ht: f.tarif_inter_ht || null, tarif_intra_ht: f.tarif_intra_ht || null,
       branches: f.branches, est_transverse: f.est_transverse, site_publie: f.site_publie,
     })
   }
