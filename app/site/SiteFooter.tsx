@@ -61,6 +61,7 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link href="/site/mentions-legales" className="hover:text-[#D6D3D1]">Mentions légales</Link>
             <Link href="/site/cgv" className="hover:text-[#D6D3D1]">CGV</Link>
+            <Link href="/site/reglement-interieur" className="hover:text-[#D6D3D1]">Règlement intérieur</Link>
             <Link href="/site/confidentialite" className="hover:text-[#D6D3D1]">Confidentialité</Link>
             <Link href="/site/cookies" className="hover:text-[#D6D3D1]">Cookies</Link>
           </div>
