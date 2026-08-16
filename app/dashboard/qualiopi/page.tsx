@@ -183,6 +183,7 @@ export default async function QualiopiPage() {
     16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
     17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
     18: [
+      { label: 'Organigramme fonctionnel (PDF, généré du CRM)', href: '/api/pdf/organigramme', count: 1 },
       { label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm },
       { label: 'Vivier de formateurs de secours (plan de continuité)', href: '/dashboard/formateurs/vivier', count: nbSecours, warn: nbSecours === 0 },
     ],
