@@ -313,6 +313,11 @@ export function FormateursList({ formateurs, sessionCounts }: FormateursListProp
           <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Formateurs</h1>
           <p className="text-surface-500 mt-1 text-sm">{formateurs.length} formateur{formateurs.length > 1 ? 's' : ''}</p>
         </div>
+        {/* Trame de l'audit blanc (ind. 21) : pour les entretiens de recrutement à venir. */}
+        <a href="/api/pdf/grille-entretien" target="_blank" rel="noreferrer"
+          className="btn-secondary inline-flex items-center gap-1.5 !py-2 !px-3 text-sm">
+          Grille d&apos;entretien (PDF)
+        </a>
         <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Nouveau formateur</Button>
       </div>
 

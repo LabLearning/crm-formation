@@ -12,6 +12,7 @@ import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/format
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
 import { Download } from 'lucide-react'
 import { FormateurFacturesAdmin } from './FormateurFacturesAdmin'
+import { EvaluationFormateur } from './EvaluationFormateur'
 import { FormateurDocUpload, FormateurDocDelete } from '@/app/mon-espace/_formateur/FormateurDocUpload'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,13 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
     .eq('organization_id', session.organization.id)
     .single()
   if (!f) redirect('/dashboard/formateurs')
+
+  // Fiche d'évaluation courante (indicateur 21) — résiliente avant migration 133.
+  let evaluation: any = null
+  try {
+    const r = await supabase.from('formateur_evaluations').select('*').eq('formateur_id', params.id).maybeSingle()
+    if (!r.error) evaluation = r.data
+  } catch { evaluation = null }
 
   const { data: sessions } = await supabase
     .from('sessions')
@@ -163,6 +171,9 @@ export default async function FormateurDetailPage({ params }: { params: { id: st
           </>
         )}
       </div>
+
+      {/* Évaluation du profil et des compétences (indicateur 21) */}
+      <EvaluationFormateur formateurId={params.id} initial={evaluation} />
 
       {/* Factures de prestation envoyées par le formateur */}
       <FormateurFacturesAdmin factures={factures} fileUrls={facUrls} />
