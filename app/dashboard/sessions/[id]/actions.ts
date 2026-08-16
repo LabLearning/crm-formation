@@ -292,18 +292,10 @@ export async function sendConventionForSignatureAction(
     }
   }
 
-  // Chronologie fixée par l'auditrice : le recueil précède la signature d'au
-  // moins 7 jours, et la signature précède le début de session d'au moins
-  // 1 jour. La signature intervenant au plus tôt aujourd'hui, on vérifie les
-  // deux seuils au moment de l'envoi.
+  // La signature précède le début de session d'au moins un jour ; le délai de
+  // sept jours entre recueil et signature ne vaut que pour la datation des
+  // dossiers passés, pas comme frein commercial au fil de l'eau.
   const aujourdHui = new Date().toISOString().slice(0, 10)
-  const seuilRecueil = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10) })()
-  if (recueil.date_recueil && String(recueil.date_recueil).slice(0, 10) > seuilRecueil) {
-    return {
-      success: false,
-      error: `Le recueil du besoin est daté du ${new Date(recueil.date_recueil).toLocaleDateString('fr-FR')} : la convention ne peut être signée que 7 jours au moins après le recueil. Envoi possible à partir du ${new Date(new Date(recueil.date_recueil).getTime() + 7 * 86400000).toLocaleDateString('fr-FR')}.`,
-    }
-  }
   if (sess.date_debut && String(sess.date_debut).slice(0, 10) <= aujourdHui) {
     return {
       success: false,
