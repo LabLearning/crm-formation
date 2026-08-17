@@ -139,6 +139,32 @@ export default async function QualiopiPage() {
     cntQcm(['satisfaction_chaud']), cntQcm(['satisfaction_froid']),
   ])
 
+  // Absences sans motif (ind. 12) — même règle que l'écran /dashboard/absences :
+  // seules les sessions dont la présence est suivie dans le CRM portent de
+  // vraies absences ; ailleurs, les lignes non pointées sont des présences
+  // jamais numérisées, pas des absents.
+  let nbAbsencesSansMotif = 0
+  try {
+    const lignes: any[] = []
+    for (let f = 0; ; f += 1000) {
+      const { data, error } = await supabase.from('emargements')
+        .select('session_id, est_present, motif_absence, signature_data')
+        .eq('organization_id', orgId).range(f, f + 999)
+      if (error) throw error
+      lignes.push(...(data || []))
+      if ((data || []).length < 1000) break
+    }
+    const parSession = new Map<string, any[]>()
+    for (const e of lignes) {
+      if (!parSession.has(e.session_id)) parSession.set(e.session_id, [])
+      parSession.get(e.session_id)!.push(e)
+    }
+    for (const rows of parSession.values()) {
+      if (!rows.some((r) => r.est_present || r.signature_data)) continue
+      nbAbsencesSansMotif += rows.filter((r) => !r.est_present && !r.signature_data && !r.motif_absence).length
+    }
+  } catch { nbAbsencesSansMotif = 0 }
+
   // Dysfonctionnements constatés et traités (ind. 30, 31, 32).
   const [nbIncidents, nbIncidentsResolus, nbHabilitations, nbFormateursCv] = await Promise.all([
     cnt('incidents'),
@@ -177,6 +203,7 @@ export default async function QualiopiPage() {
     12: [
       { label: 'Présences constatées (signature ou émargement CRM)', href: '/dashboard/emargement', count: nbEmargSignes, warn: nbEmargSignes < nbApprenants / 2 },
       { label: 'Feuilles papier numérisées et déposées', href: '/dashboard/emargement', count: nbFeuillesDeposees },
+      { label: 'Absences à justifier', href: '/dashboard/absences', count: nbAbsencesSansMotif, warn: nbAbsencesSansMotif > 0 },
     ],
     13: [{ label: 'Suivi des parcours POEI', href: '/dashboard/poei', count: nbSessionsTerm > 0 ? 1 : 0 }],
     15: [{ label: 'Parcours certifiants suivis', href: '/dashboard/sessions', count: nbSessionsTerm }],
