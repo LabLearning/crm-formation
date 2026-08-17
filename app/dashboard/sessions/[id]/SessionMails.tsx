@@ -30,6 +30,7 @@ const TYPES_APPRENANT: {
   aide: string
   match: (subject: string) => boolean
   hygieneSeulement?: boolean
+  supportsSeulement?: boolean
 }[] = [
   {
     key: 'convocation', label: 'Convocation',
@@ -51,6 +52,12 @@ const TYPES_APPRENANT: {
     aide: 'Arrêté du 12 février 2024 · présentée en contrôle sanitaire',
     match: (s) => s.startsWith("Votre attestation d'hygi"),
     hygieneSeulement: true,
+  },
+  {
+    key: 'supports', label: 'Supports pédagogiques',
+    aide: 'Mise à disposition tracée — lien vers le portail du stagiaire (ind. 19)',
+    match: (s) => s.startsWith('Vos supports de formation'),
+    supportsSeulement: true,
   },
 ]
 
@@ -121,7 +128,7 @@ function StatusPill({ status }: { status: string | null }) {
  * après aperçu — on voit ce qui va partir avant que ça parte.
  */
 export function SessionMails({
-  sessionId, formateur, apprenants, contacts, emailLogs, hygiene = false,
+  sessionId, formateur, apprenants, contacts, emailLogs, hygiene = false, nbSupports = 0,
 }: {
   sessionId: string
   formateur: { prenom?: string; nom?: string; email?: string | null } | null
@@ -130,6 +137,8 @@ export function SessionMails({
   emailLogs: EmailLog[]
   /** La formation relève de l'hygiène alimentaire réglementaire. */
   hygiene?: boolean
+  /** Supports pédagogiques déposés sur la session. */
+  nbSupports?: number
 }) {
   const { toast } = useToast()
   const router = useRouter()
@@ -146,7 +155,8 @@ export function SessionMails({
   const [contactSel, setContactSel] = useState<Person | null>(null)
   const [busyContrat, setBusyContrat] = useState(false)
 
-  const types = TYPES_APPRENANT.filter((t) => !t.hygieneSeulement || hygiene)
+  const types = TYPES_APPRENANT.filter((t) =>
+    (!t.hygieneSeulement || hygiene) && (!t.supportsSeulement || nbSupports > 0))
 
   const logsFor = (email?: string | null) => emailLogs.filter((l) => norm(l.to_email) === norm(email)).slice(0, 12)
 

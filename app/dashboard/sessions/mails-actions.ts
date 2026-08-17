@@ -7,7 +7,7 @@ import { logAudit } from '@/lib/audit'
 import type { ActionResult } from '@/lib/types'
 import { sendDocumentToApprenantAction, envoyerDocumentSessionAction } from './actions'
 
-export type MailApprenantType = 'convocation' | 'attestation' | 'certificat' | 'hygiene'
+export type MailApprenantType = 'convocation' | 'attestation' | 'certificat' | 'hygiene' | 'supports'
 
 /**
  * Envoie — ou prévisualise — un courriel de session à un apprenant.
@@ -24,6 +24,7 @@ export async function envoyerMailApprenantAction(
   type: MailApprenantType,
   opts?: { preview?: boolean },
 ): Promise<ActionResult<{ html?: string; subject?: string; email?: string | null }>> {
+  if (type === 'supports') return envoyerSupportsApprenant(sessionId, apprenantId, opts)
   if (type !== 'convocation') {
     return sendDocumentToApprenantAction(sessionId, apprenantId, type, opts)
   }
@@ -132,13 +133,102 @@ export async function envoyerMailApprenantAction(
 }
 
 /**
+ * Mise à disposition tracée des supports pédagogiques (indicateur 19) : le
+ * stagiaire reçoit la liste des supports de sa session et le lien vers son
+ * portail où ils se consultent. La trace de l'envoi EST la preuve de la mise
+ * à disposition — c'est elle que l'auditeur demande sur les sessions passées.
+ */
+async function envoyerSupportsApprenant(
+  sessionId: string,
+  apprenantId: string,
+  opts?: { preview?: boolean },
+): Promise<ActionResult<{ html?: string; subject?: string; email?: string | null }>> {
+  const session = await getSession()
+  if (session.user.role === 'formateur') return { success: false, error: 'Action réservée aux gestionnaires' }
+  const supabase = await createServiceRoleClient()
+
+  const [{ data: apprenant }, { data: sess }] = await Promise.all([
+    supabase.from('apprenants').select('*').eq('id', apprenantId).maybeSingle(),
+    supabase.from('sessions').select('id, reference, intitule, date_debut, date_fin, formation:formation_id(intitule)')
+      .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle(),
+  ])
+  if (!apprenant || (apprenant as any).organization_id !== session.organization.id) {
+    return { success: false, error: 'Apprenant introuvable' }
+  }
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: supports } = await supabase.from('documents')
+    .select('nom, file_name')
+    .eq('session_id', sessionId)
+    .eq('type', 'support_pedagogique')
+  if (!supports?.length) return { success: false, error: 'Aucun support pédagogique déposé sur cette session' }
+
+  const { data: org } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
+  const formationNom = (sess as any).formation?.intitule || (sess as any).intitule || 'votre formation'
+  const sujet = `Vos supports de formation — ${formationNom}`
+  const intro = `Les supports pédagogiques de votre formation sont à votre disposition dans votre espace personnel. Ils restent consultables à tout moment — n'hésitez pas à y revenir pour ancrer les acquis.`
+  const meta: Array<[string, string]> = [
+    ['Formation', formationNom],
+    ['Supports', supports.map((d: any) => d.nom || d.file_name).filter(Boolean).slice(0, 8).join(' · ')],
+  ]
+  const destinataire = `${(apprenant as any).prenom || ''} ${(apprenant as any).nom || ''}`.trim() || 'Madame, Monsieur'
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    const html = buildDocumentEmailHtml({
+      orgName: (org as any)?.name || 'Lab Learning',
+      orgEmail: (org as any)?.email_contact || (org as any)?.email,
+      orgLogoUrl: (org as any)?.logo_url,
+      qualiopiCertified: (org as any)?.is_qualiopi !== false,
+      recipientName: destinataire,
+      docTitle: 'Vos supports de formation',
+      intro, metadata: meta,
+      ctaLabel: 'Consulter mes supports',
+      footerNote: 'Documents protégés par le droit d’auteur — usage strictement personnel.',
+    })
+    return { success: true, data: { html, subject: sujet, email: (apprenant as any).email } }
+  }
+
+  if (!(apprenant as any).email) return { success: false, error: "Cet apprenant n'a pas d'adresse email" }
+
+  const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
+  const token = await getOrCreateApprenantToken(supabase, apprenantId, session.organization.id, (apprenant as any).email)
+  const portalUrl = token ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/portail/${token}/documents` : undefined
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    to: (apprenant as any).email,
+    orgName: (org as any)?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || (org as any)?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: destinataire,
+    subject: sujet,
+    docTitle: 'Vos supports de formation',
+    intro, metadata: meta,
+    ctaLabel: portalUrl ? 'Consulter mes supports' : undefined,
+    ctaUrl: portalUrl,
+    footerNote: 'Documents protégés par le droit d’auteur — usage strictement personnel.',
+    organizationId: session.organization.id,
+    entityType: 'session',
+    entityId: sessionId,
+    triggeredBy: session.user.id,
+  })
+  if (!r.success) return { success: false, error: r.error || "L'envoi a échoué" }
+
+  await logAudit({ action: 'send_supports', entity_type: 'apprenant', entity_id: apprenantId })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { email: (apprenant as any).email } }
+}
+
+/**
  * Le même envoi, pour tous les stagiaires de la session d'un coup.
  */
 export async function envoyerMailATousAction(
   sessionId: string,
   type: MailApprenantType,
 ): Promise<ActionResult<{ envoyes: number; sansEmail: number; echecs: number }>> {
-  if (type !== 'convocation') return envoyerDocumentSessionAction(sessionId, type)
+  if (type !== 'convocation' && type !== 'supports') return envoyerDocumentSessionAction(sessionId, type)
 
   const session = await getSession()
   if (session.user.role === 'formateur') {
@@ -159,7 +249,7 @@ export async function envoyerMailATousAction(
   let echecs = 0
   for (const i of cibles as any[]) {
     if (!i.apprenant?.email) { sansEmail++; continue }
-    const r = await envoyerMailApprenantAction(sessionId, i.apprenant_id, 'convocation')
+    const r = await envoyerMailApprenantAction(sessionId, i.apprenant_id, type)
     if (r.success) envoyes++
     else echecs++
   }

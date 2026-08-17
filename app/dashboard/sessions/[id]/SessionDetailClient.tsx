@@ -1343,6 +1343,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           contacts={clientContacts as any[]}
           emailLogs={emailLogs as any[]}
           hygiene={estFormationHygiene(session.formation)}
+          nbSupports={supports.length}
         />
       )}
 
