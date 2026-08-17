@@ -1,5 +1,13 @@
 import { z } from 'zod'
 
+// Un booléen de FormData arrive en chaîne : z.coerce.boolean() transformait
+// "false" en true (Boolean("false") === true). Ce helper parse honnêtement.
+const boolChamp = () => z.preprocess(
+  (v) => (v == null ? v : v === true || v === 'true' || v === 'on' || v === '1'),
+  z.boolean(),
+)
+
+
 // ---- Leads ----
 
 export const createLeadSchema = z.object({
@@ -25,8 +33,8 @@ export const createLeadSchema = z.object({
   date_creation_entreprise: z.string().optional().or(z.literal('')),
   effectif_libelle: z.string().optional(),
   tva_intra: z.string().optional(),
-  est_qualiopi: z.coerce.boolean().optional(),
-  est_organisme_formation: z.coerce.boolean().optional(),
+  est_qualiopi: boolChamp().optional(),
+  est_organisme_formation: boolChamp().optional(),
   franchise_id: z.string().uuid().optional().or(z.literal('')),
   adresse: z.string().optional(),
   code_postal: z.string().optional(),
@@ -97,7 +105,7 @@ export const createClientSchema = z.object({
   ville: z.string().optional(),
   telephone: z.string().optional(),
   whatsapp: z.string().optional(),
-  whatsapp_opt_in: z.coerce.boolean().optional(),
+  whatsapp_opt_in: boolChamp().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   site_web: z.string().url('URL invalide').optional().or(z.literal('')),
   financeur_type: z.enum(['opco', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
@@ -112,8 +120,8 @@ export const createClientSchema = z.object({
   date_creation_entreprise: z.string().optional().or(z.literal('')),
   effectif_libelle: z.string().optional(),
   tva_intra: z.string().optional(),
-  est_qualiopi: z.coerce.boolean().optional(),
-  est_organisme_formation: z.coerce.boolean().optional(),
+  est_qualiopi: boolChamp().optional(),
+  est_organisme_formation: boolChamp().optional(),
   // Dirigeant pour créer un contact lié automatiquement
   dirigeant_prenom: z.string().optional(),
   dirigeant_nom: z.string().optional(),
@@ -144,12 +152,12 @@ export const createContactSchema = z.object({
   mobile: z.string().optional(),
   poste: z.string().optional(),
   service: z.string().optional(),
-  est_principal: z.coerce.boolean().optional(),
-  est_signataire: z.coerce.boolean().optional(),
-  est_referent_formation: z.coerce.boolean().optional(),
+  est_principal: boolChamp().optional(),
+  est_signataire: boolChamp().optional(),
+  est_referent_formation: boolChamp().optional(),
   notes: z.string().optional(),
   whatsapp: z.string().optional(),
-  whatsapp_opt_in: z.coerce.boolean().optional(),
+  whatsapp_opt_in: boolChamp().optional(),
 })
 
 // ---- Apporteurs ----

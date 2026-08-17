@@ -1,5 +1,13 @@
 import { z } from 'zod'
 
+// Un booléen de FormData arrive en chaîne : z.coerce.boolean() transformait
+// "false" en true (Boolean("false") === true). Ce helper parse honnêtement.
+const boolChamp = () => z.preprocess(
+  (v) => (v == null ? v : v === true || v === 'true' || v === 'on' || v === '1'),
+  z.boolean(),
+)
+
+
 // Un champ nombre laissé vide ("") ne doit pas devenir 0 : on le rend
 // undefined pour qu'il soit stocké null (prix absent ≠ prix nul).
 const emptyToUndefined = (v: unknown) => (v === '' || v == null ? undefined : v)
@@ -19,7 +27,7 @@ export const createFormationSchema = z.object({
   sous_titre: z.string().optional(),
   categorie: z.string().optional(),
   analyse_besoin: z.string().optional(),
-  besoin_valide: z.coerce.boolean().optional(),
+  besoin_valide: boolChamp().optional(),
   objectifs_pedagogiques: z.string().optional(), // Sera splitté par ligne
   prerequis: z.string().optional(),
   public_vise: z.string().optional(),
@@ -35,17 +43,17 @@ export const createFormationSchema = z.object({
   tarif_inter_ht: z.coerce.number().min(0).optional(),
   tarif_intra_ht: z.coerce.number().min(0).optional(),
   tarif_individuel_ht: z.coerce.number().min(0).optional(),
-  tva_applicable: z.coerce.boolean().optional(),
+  tva_applicable: boolChamp().optional(),
   taux_tva: z.coerce.number().min(0).max(100).optional(),
-  est_certifiante: z.coerce.boolean().optional(),
+  est_certifiante: boolChamp().optional(),
   code_rncp: z.string().optional(),
   code_rs: z.string().optional(),
   certificateur: z.string().optional(),
   modalites_admission: z.string().optional(),
-  is_published: z.coerce.boolean().optional(),
-  is_poei: z.coerce.boolean().optional(),
-  est_transverse: z.coerce.boolean().optional(),
-  site_publie: z.coerce.boolean().optional(),
+  is_published: boolChamp().optional(),
+  is_poei: boolChamp().optional(),
+  est_transverse: boolChamp().optional(),
+  site_publie: boolChamp().optional(),
 })
 
 export const createSessionSchema = z.object({
@@ -90,7 +98,7 @@ export const createFormateurSchema = z.object({
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   telephone: z.string().optional(),
   whatsapp: z.string().optional(),
-  whatsapp_opt_in: z.coerce.boolean().optional(),
+  whatsapp_opt_in: boolChamp().optional(),
   qualifications: z.string().optional(),
   domaines_expertise: z.string().optional(), // Sera splitté
   certifications: z.string().optional(),
@@ -111,7 +119,7 @@ export const createApprenantSchema = z.object({
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   telephone: z.string().optional(),
   whatsapp: z.string().optional(),
-  whatsapp_opt_in: z.coerce.boolean().optional(),
+  whatsapp_opt_in: boolChamp().optional(),
   date_naissance: z.string().optional(),
   lieu_naissance: z.string().optional(),
   numero_securite_sociale: z.string().optional(),
@@ -122,7 +130,7 @@ export const createApprenantSchema = z.object({
   sexe: z.string().optional(),
   entreprise: z.string().optional(),
   poste: z.string().optional(),
-  situation_handicap: z.coerce.boolean().optional(),
+  situation_handicap: boolChamp().optional(),
   type_handicap: z.string().optional(),
   besoins_adaptation: z.string().optional(),
   notes: z.string().optional(),

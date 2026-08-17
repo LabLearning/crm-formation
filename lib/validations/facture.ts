@@ -1,5 +1,13 @@
 import { z } from 'zod'
 
+// Un booléen de FormData arrive en chaîne : z.coerce.boolean() transformait
+// "false" en true (Boolean("false") === true). Ce helper parse honnêtement.
+const boolChamp = () => z.preprocess(
+  (v) => (v == null ? v : v === true || v === 'true' || v === 'on' || v === '1'),
+  z.boolean(),
+)
+
+
 export const createFactureSchema = z.object({
   client_id: z.string().uuid('Client requis'),
   type: z.enum(['facture', 'acompte', 'solde', 'avoir']).default('facture'),
@@ -15,7 +23,7 @@ export const createFactureSchema = z.object({
   taux_tva: z.coerce.number().min(0).max(100).default(20),
   financeur_type: z.string().optional().or(z.literal('')),
   financeur_nom: z.string().optional(),
-  subrogation: z.coerce.boolean().optional(),
+  subrogation: boolChamp().optional(),
   notes_internes: z.string().optional(),
 })
 

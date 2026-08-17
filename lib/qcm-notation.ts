@@ -44,7 +44,6 @@ export async function enregistrerReponses(
 
   for (const q of questions as any[]) {
     const pts = Number(q.points) || 1
-    pointsPossibles += pts
     const reponse = reponses[q.id]
 
     let estCorrect: boolean | null = null
@@ -54,7 +53,13 @@ export async function enregistrerReponses(
     let note: number | null = null
 
     if (q.type === 'choix_unique' || q.type === 'choix_multiple' || q.type === 'vrai_faux') {
-      if ((q.choix as any[])?.some((c: any) => c.est_correct === true)) questionNotable = true
+      // Seule une question avec une bonne réponse définie entre dans le
+      // dénominateur : une échelle ou un texte libre au milieu d'un QCM ne
+      // doit pas diluer le pourcentage de bonnes réponses.
+      if ((q.choix as any[])?.some((c: any) => c.est_correct === true)) {
+        questionNotable = true
+        pointsPossibles += pts
+      }
       if (reponse) {
         choixIds = [reponse]
         const choix = (q.choix as any[]).find((c: any) => c.id === reponse)
