@@ -195,7 +195,10 @@ export default async function QualiopiPage() {
     7: [{ label: 'Devis et conventions par financeur', href: '/dashboard/devis', count: nbConventions }],
     8: [{ label: 'Questionnaires de positionnement complétés', href: '/dashboard/qcm', count: nbPositionnement, warn: nbPositionnement < nbSessionsTerm / 2 }],
     9: [{ label: 'Sessions réalisées (convocations, déroulé)', href: '/dashboard/sessions', count: nbSessionsTerm }],
-    10: [{ label: 'Sessions avec déroulé pédagogique renseigné', href: '/dashboard/sessions', count: nbSessionsTerm }],
+    10: [
+      { label: "Processus d'adaptation des prestations (PDF)", href: '/api/pdf/processus/adaptation', count: 1 },
+      { label: 'Sessions avec déroulé pédagogique renseigné', href: '/dashboard/sessions', count: nbSessionsTerm },
+    ],
     11: [
       { label: 'Évaluations des acquis (questionnaires)', href: '/dashboard/qcm', count: nbAcquisQcm, warn: nbAcquisQcm < nbSessionsTerm / 2 },
       { label: 'Évaluations des acquis reprises de Dendreo', href: '/dashboard/evaluations-acquis', count: nbEvalAcquis },
@@ -204,6 +207,7 @@ export default async function QualiopiPage() {
       { label: 'Présences constatées (signature ou émargement CRM)', href: '/dashboard/emargement', count: nbEmargSignes, warn: nbEmargSignes < nbApprenants / 2 },
       { label: 'Feuilles papier numérisées et déposées', href: '/dashboard/emargement', count: nbFeuillesDeposees },
       { label: 'Absences à justifier', href: '/dashboard/absences', count: nbAbsencesSansMotif, warn: nbAbsencesSansMotif > 0 },
+      { label: 'Processus de prévention des abandons (PDF)', href: '/api/pdf/processus/abandons', count: 1 },
     ],
     13: [{ label: 'Suivi des parcours POEI', href: '/dashboard/poei', count: nbSessionsTerm > 0 ? 1 : 0 }],
     15: [{ label: 'Parcours certifiants suivis', href: '/dashboard/sessions', count: nbSessionsTerm }],
