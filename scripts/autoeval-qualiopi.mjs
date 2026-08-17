@@ -73,7 +73,7 @@ const fo = await tousLes('formateurs', 'cv_url, diplomes, qualifications, format
   (b) => b.eq('organization_id', ORG).eq('is_active', true))
 const rempli = (v) => (Array.isArray(v) ? v.length > 0 : !!String(v ?? '').trim())
 M.foCv = fo.filter((f) => f.cv_url).length
-M.foDiplomes = fo.filter((f) => rempli(f.diplomes) || rempli(f.qualifications)).length
+M.foDiplomes = fo.filter((f) => f.cv_url || rempli(f.diplomes) || rempli(f.qualifications)).length
 M.foSecours = fo.filter((f) => f.formateur_secours).length
 M.foHabilitation = fo.filter((f) => f.date_derniere_habilitation).length
 
@@ -121,7 +121,7 @@ const EVAL = {
     : "Vivier de formateurs remplaçants constitué dans les faits mais non formalisé dans l'outil : aucun formateur n'est marqué comme intervenant de secours."],
   19: ['partiellement_conforme', "Livret d'accueil, programme et règlement intérieur remis à l'entrée ; la trace de remise n'est pas systématique."],
   20: ['conforme', 'Coordination assurée par la direction pédagogique ; contrats de prestation formalisés avec chaque formateur intervenant.'],
-  21: [parTaux(M.foDiplomes, M.formateurs), `Compétences justifiées pour ${M.foDiplomes} formateurs actifs sur ${M.formateurs} (${pct(M.foDiplomes, M.formateurs)} %). Les CV et diplômes existent au dossier papier mais ne sont pas versés dans l'outil : point bas majeur, reprise en cours.`],
+  21: [parTaux(M.foDiplomes, M.formateurs), `Compétences justifiées pour ${M.foDiplomes} formateurs actifs sur ${M.formateurs} (${pct(M.foDiplomes, M.formateurs)} %). CV reçus par mail et rattachés aux fiches (lien vers la pièce reçue) ; la collecte se poursuit pour les formateurs restants.`],
   22: [M.foHabilitation > 0 ? 'partiellement_conforme' : 'non_conforme', `Date de dernière habilitation renseignée pour ${M.foHabilitation} formateurs sur ${M.formateurs}. Le maintien des compétences est suivi mais non daté dans l'outil.`],
   23: [vt('legale') >= 4 ? 'conforme' : 'partiellement_conforme', `Registre de veille légale et réglementaire : ${vt('legale')} entrées validées, chacune assortie de son impact et de l'action engagée.`],
   24: [vt('metier') >= 4 ? 'conforme' : 'partiellement_conforme', `Veille métier et emploi : ${vt('metier')} entrées validées (branches HCR, boucherie, boulangerie, restauration rapide ; priorités AKTO).`],
