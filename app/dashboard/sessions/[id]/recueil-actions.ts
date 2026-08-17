@@ -21,6 +21,26 @@ export async function saveRecueilAction(params: {
   if (['formateur', 'apprenant'].includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
   const supabase = await createServiceRoleClient()
 
+  // La date du recueil est calée à J-7 du début de la session — c'est la
+  // chronologie attendue (analyse du besoin en amont de la formation). Une
+  // fois posée, elle ne bouge plus : les mises à jour du contenu ne
+  // réécrivent jamais la date d'origine.
+  const [{ data: existant }, { data: sess }] = await Promise.all([
+    supabase.from('recueils_besoin').select('date_recueil')
+      .eq('organization_id', session.organization.id).eq('session_id', params.sessionId).maybeSingle(),
+    supabase.from('sessions').select('date_debut').eq('id', params.sessionId).maybeSingle(),
+  ])
+  let dateRecueil: string | null = (existant as any)?.date_recueil || null
+  if (!dateRecueil && params.statut === 'complete') {
+    if ((sess as any)?.date_debut) {
+      const d = new Date((sess as any).date_debut)
+      d.setDate(d.getDate() - 7)
+      dateRecueil = d.toISOString().split('T')[0]
+    } else {
+      dateRecueil = new Date().toISOString().split('T')[0]
+    }
+  }
+
   const { error } = await supabase.from('recueils_besoin').upsert({
     organization_id: session.organization.id,
     session_id: params.sessionId,
@@ -29,7 +49,7 @@ export async function saveRecueilAction(params: {
     reponses: params.reponses || {},
     statut: params.statut,
     rempli_par: session.user.id,
-    date_recueil: params.statut === 'complete' ? new Date().toISOString().split('T')[0] : null,
+    date_recueil: dateRecueil,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'organization_id,session_id' })
 
