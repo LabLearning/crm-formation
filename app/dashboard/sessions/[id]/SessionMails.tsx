@@ -9,7 +9,7 @@ import {
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate, cn } from '@/lib/utils'
 import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction, sendContratToFormateurAction } from './actions'
-import { envoyerMailApprenantAction, envoyerMailATousAction, envoyerDocumentsAuReferentAction, type MailApprenantType } from '../mails-actions'
+import { envoyerMailApprenantAction, envoyerMailATousAction, envoyerDocumentsAuReferentAction, envoyerDemandeAppreciationAction, type MailApprenantType } from '../mails-actions'
 
 interface EmailLog {
   id: string; to_email: string; to_name: string | null; subject: string
@@ -63,7 +63,7 @@ const TYPES_APPRENANT: {
 
 /** Les courriels adressables au référent de l'établissement. */
 const TYPES_REFERENT: {
-  key: 'convocation_ref' | 'attestation' | 'certificat' | 'hygiene'
+  key: 'convocation_ref' | 'attestation' | 'certificat' | 'hygiene' | 'appreciation'
   label: string
   aide: string
   match: (subject: string) => boolean
@@ -89,6 +89,11 @@ const TYPES_REFERENT: {
     aide: 'PDF unique, une page par stagiaire · contrôle sanitaire',
     match: (s) => s.startsWith("Attestations d'hygi"),
     hygieneSeulement: true,
+  },
+  {
+    key: 'appreciation', label: "Demande d'appréciation",
+    aide: "L'entreprise note la prestation — quatre questions, deux minutes (ind. 30)",
+    match: (s) => s.startsWith('Votre appréciation —'),
   },
 ]
 
@@ -213,6 +218,18 @@ export function SessionMails({
    * Beaucoup de stagiaires n'ont pas d'adresse : leur employeur, si. Le
    * référent reçoit un exemplaire par stagiaire et les remet en main propre.
    */
+  const [envoiAppreciation, setEnvoiAppreciation] = useState(false)
+  async function apercuAppreciation() {
+    setPreviewLoading('ref-appreciation')
+    const r = await envoyerDemandeAppreciationAction(sessionId, { preview: true })
+    setPreviewLoading(null)
+    if (r.success && r.data?.html) {
+      setEnvoiApprenant(null); setEnvoiReferent(null); setEnvoiTous(null)
+      setEnvoiAppreciation(true)
+      setPreview({ html: r.data.html, subject: r.data.subject, to: r.data.email || '—' })
+    } else toast('error', r.error || "Impossible de générer l'aperçu")
+  }
+
   async function apercuReferent(type: 'attestation' | 'certificat' | 'hygiene') {
     setPreviewLoading(`ref-${type}`)
     const r = await envoyerDocumentsAuReferentAction(sessionId, type, { preview: true })
@@ -271,6 +288,15 @@ export function SessionMails({
     setSending(true)
     startTransition(async () => {
       let r: any
+      if (envoiAppreciation) {
+        r = await envoyerDemandeAppreciationAction(sessionId)
+        setSending(false)
+        if (r?.success) {
+          toast('success', `Demande envoyée à ${r.data?.email}`)
+          setPreview(null); setEnvoiAppreciation(false); router.refresh()
+        } else toast('error', r?.error || 'Erreur')
+        return
+      }
       if (envoiTous) {
         r = await envoyerMailATousAction(sessionId, envoiTous.type)
         setSending(false)
@@ -517,7 +543,9 @@ export function SessionMails({
                       <button
                         onClick={() => t.key === 'convocation_ref'
                           ? openPreview('convocation')
-                          : apercuReferent(t.key as 'attestation' | 'certificat' | 'hygiene')}
+                          : t.key === 'appreciation'
+                            ? apercuAppreciation()
+                            : apercuReferent(t.key as 'attestation' | 'certificat' | 'hygiene')}
                         disabled={previewLoading === cle}
                         className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
                         {previewLoading === cle ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}

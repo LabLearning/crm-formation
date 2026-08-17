@@ -165,6 +165,18 @@ export default async function QualiopiPage() {
     }
   } catch { nbAbsencesSansMotif = 0 }
 
+  // Appréciations des parties prenantes (ind. 30) — résilient avant migration 134.
+  let nbAppreciationsEntreprise = 0
+  let nbAppreciationsFinanceur = 0
+  try {
+    const { count: c1, error: e1 } = await supabase.from('appreciations_parties_prenantes')
+      .select('id', { count: 'exact', head: true }).eq('organization_id', orgId).eq('type', 'entreprise')
+    if (!e1) nbAppreciationsEntreprise = c1 || 0
+    const { count: c2, error: e2 } = await supabase.from('appreciations_parties_prenantes')
+      .select('id', { count: 'exact', head: true }).eq('organization_id', orgId).eq('type', 'financeur')
+    if (!e2) nbAppreciationsFinanceur = c2 || 0
+  } catch { /* table absente avant migration 134 */ }
+
   // Dysfonctionnements constatés et traités (ind. 30, 31, 32).
   const [nbIncidents, nbIncidentsResolus, nbHabilitations, nbFormateursCv] = await Promise.all([
     cnt('incidents'),
@@ -231,6 +243,8 @@ export default async function QualiopiPage() {
     29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],
     30: [
       { label: 'Satisfaction à froid (J+90) recueillie', href: '/dashboard/evaluations', count: nbSatisFroid },
+      { label: 'Appréciations des entreprises clientes', href: '/dashboard/evaluations', count: nbAppreciationsEntreprise, warn: nbAppreciationsEntreprise === 0 },
+      { label: 'Appréciations des financeurs (lien de sollicitation annuelle)', href: `/appreciation/${orgId}`, count: nbAppreciationsFinanceur },
       { label: 'Dysfonctionnements constatés', href: '/dashboard/incidents', count: nbIncidents, warn: nbIncidents === 0 },
     ],
     31: [

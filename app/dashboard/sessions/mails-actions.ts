@@ -418,3 +418,68 @@ export async function envoyerDocumentsAuReferentAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true, data: { email: ref.email } }
 }
+
+/**
+ * Demande d'appréciation à l'entreprise cliente (indicateur 30) : le référent
+ * reçoit le lien du formulaire public d'appréciation de la session. L'envoi se
+ * trace ; la réponse s'enregistre dans le registre des appréciations.
+ */
+export async function envoyerDemandeAppreciationAction(
+  sessionId: string,
+  opts?: { preview?: boolean },
+): Promise<ActionResult<{ html?: string; subject?: string; email?: string | null }>> {
+  const session = await getSession()
+  if (session.user.role === 'formateur') return { success: false, error: 'Action réservée aux gestionnaires' }
+  const supabase = await createServiceRoleClient()
+
+  const { data: sess } = await supabase.from('sessions')
+    .select('id, reference, intitule, date_debut, date_fin, client_id, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+  if (!(sess as any).client_id) return { success: false, error: 'Aucun établissement rattaché à la session' }
+
+  const { data: contacts } = await supabase.from('contacts')
+    .select('prenom, nom, email, est_signataire, est_principal').eq('client_id', (sess as any).client_id)
+  const ref = (contacts || []).find((c: any) => c.est_signataire && c.email)
+    || (contacts || []).find((c: any) => c.est_principal && c.email)
+    || (contacts || []).find((c: any) => c.email)
+  if (!ref?.email) return { success: false, error: "Le référent de l'établissement n'a pas d'email renseigné" }
+
+  const { data: org } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
+  const formationNom = (sess as any).formation?.intitule || (sess as any).intitule || 'la formation'
+  const clientNom = (sess as any).client?.nom_commercial || (sess as any).client?.raison_sociale || 'votre établissement'
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/appreciation/${sessionId}`
+  const emailParams = {
+    orgName: (org as any)?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email_contact || (org as any)?.email,
+    orgLogoUrl: (org as any)?.logo_url,
+    qualiopiCertified: (org as any)?.is_qualiopi !== false,
+    recipientName: [ref.prenom, ref.nom].filter(Boolean).join(' ') || 'Madame, Monsieur',
+    subject: `Votre appréciation — ${formationNom}`,
+    docTitle: 'Votre avis compte',
+    intro: `La formation « ${formationNom} » menée chez ${clientNom} est terminée. Deux minutes suffisent pour nous dire ce qui a bien fonctionné et ce que nous devons améliorer — votre appréciation nourrit directement notre démarche qualité.`,
+    ctaLabel: 'Donner mon appréciation',
+    ctaUrl: url,
+    footerNote: 'Quatre questions, deux minutes — merci de votre retour.',
+  }
+
+  if (opts?.preview) {
+    const { buildDocumentEmailHtml } = await import('@/lib/email')
+    return { success: true, data: { html: buildDocumentEmailHtml(emailParams), subject: emailParams.subject, email: ref.email } }
+  }
+
+  const { sendDocumentEmail } = await import('@/lib/email')
+  const r = await sendDocumentEmail({
+    ...emailParams,
+    to: ref.email,
+    organizationId: session.organization.id,
+    entityType: 'session',
+    entityId: sessionId,
+    triggeredBy: session.user.id,
+  })
+  if (!r.success) return { success: false, error: r.error || "L'envoi a échoué" }
+
+  await logAudit({ action: 'send_appreciation_entreprise', entity_type: 'session', entity_id: sessionId, details: { email: ref.email } })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { email: ref.email } }
+}
