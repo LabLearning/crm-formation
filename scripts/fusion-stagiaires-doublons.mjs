@@ -40,24 +40,42 @@ const norm = (a) => `${a?.prenom || ''} ${a?.nom || ''}`.toUpperCase().normalize
 
 const [insc, apprenants, sessions] = await Promise.all([
   tout('inscriptions', 'id, session_id, apprenant_id'),
-  tout('apprenants', 'id, prenom, nom'),
-  tout('sessions', 'id, reference'),
+  tout('apprenants', 'id, prenom, nom, client_id'),
+  tout('sessions', 'id, reference, client_id'),
 ])
 const refS = new Map(sessions.map((x) => [x.id, x.reference || x.id.slice(0, 8)]))
 const app = new Map(apprenants.map((a) => [a.id, a]))
 const inscParApprenant = new Map()
 for (const i of insc) inscParApprenant.set(i.apprenant_id, (inscParApprenant.get(i.apprenant_id) || 0) + 1)
 
-// Paires : même nom, fiches différentes, même session.
-const parSessionNom = new Map()
-const paires = []
-for (const i of insc) {
-  const n = norm(app.get(i.apprenant_id))
+// Paires : même nom + même client (directement sur la fiche, ou via les
+// sessions où la personne est inscrite). Couvre les doublons dans une même
+// session ET les fiches recréées d'une session à l'autre (cas CT DIJON).
+const sessClient = new Map(sessions.map((x) => [x.id, x.client_id]))
+const clientsDe = (aid) => {
+  const set = new Set()
+  const fiche = app.get(aid)
+  if (fiche?.client_id) set.add(fiche.client_id)
+  for (const i of insc) if (i.apprenant_id === aid && sessClient.get(i.session_id)) set.add(sessClient.get(i.session_id))
+  return set
+}
+const parNom = new Map()
+for (const a of apprenants) {
+  const n = norm(a)
   if (!n) continue
-  const cle = i.session_id + '|' + n
-  if (parSessionNom.has(cle) && parSessionNom.get(cle).apprenant_id !== i.apprenant_id) {
-    paires.push({ session_id: i.session_id, a: parSessionNom.get(cle), b: i, nom: n })
-  } else parSessionNom.set(cle, i)
+  if (!parNom.has(n)) parNom.set(n, [])
+  parNom.get(n).push(a.id)
+}
+const paires = []
+for (const [nom, fiches] of parNom) {
+  if (fiches.length < 2) continue
+  for (let i = 0; i < fiches.length; i++) for (let j = i + 1; j < fiches.length; j++) {
+    const ca = clientsDe(fiches[i]), cb = clientsDe(fiches[j])
+    if (![...ca].some((c) => cb.has(c))) continue
+    const ia = insc.find((x) => x.apprenant_id === fiches[i])
+    const ib = insc.find((x) => x.apprenant_id === fiches[j])
+    paires.push({ nom, a: { apprenant_id: fiches[i], id: ia?.id }, b: { apprenant_id: fiches[j], id: ib?.id }, session_id: ia?.session_id })
+  }
 }
 
 console.log(`Paires détectées : ${paires.length}`)
@@ -101,8 +119,15 @@ for (const p of paires) {
     }
   }
 
-  // 3. Inscription en double, puis fiche orpheline si plus rien ne la retient.
-  await supabase.from('inscriptions').delete().eq('id', doublon.id)
+  // 3. Les inscriptions du doublon : re-pointées vers la fiche gardée, sauf
+  //    si elle est déjà inscrite à la même session (doublon intra-session).
+  const { data: inscDoublon } = await supabase.from('inscriptions').select('id, session_id').eq('apprenant_id', doublon.apprenant_id)
+  for (const i of inscDoublon || []) {
+    const { data: deja } = await supabase.from('inscriptions').select('id')
+      .eq('session_id', i.session_id).eq('apprenant_id', garde.apprenant_id).maybeSingle()
+    if (deja) await supabase.from('inscriptions').delete().eq('id', i.id)
+    else await supabase.from('inscriptions').update({ apprenant_id: garde.apprenant_id }).eq('id', i.id)
+  }
   const { count: reste } = await supabase.from('inscriptions').select('id', { count: 'exact', head: true }).eq('apprenant_id', doublon.apprenant_id)
   if (!reste) {
     const { error } = await supabase.from('apprenants').delete().eq('id', doublon.apprenant_id)

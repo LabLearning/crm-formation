@@ -69,6 +69,10 @@ const qok = (t) => M.q[t]?.ok || 0
 const em = await tousLes('emargements', 'session_id, est_present, signature_data')
 M.sessionsEmargees = new Set(em.filter((e) => e.est_present || e.signature_data).map((e) => e.session_id)).size
 
+const sessLivret = await tousLes('sessions', 'id, livret_sent_at, reference', (b) => b.eq('organization_id', ORG))
+M.sessionsLivret = sessLivret.filter((s) => s.livret_sent_at && !(s.reference || '').startsWith('BPF-')).length
+M.sessionsHorsBpf = sessLivret.filter((s) => !(s.reference || '').startsWith('BPF-')).length
+
 const fo = await tousLes('formateurs', 'cv_url, diplomes, qualifications, formateur_secours, date_derniere_habilitation',
   (b) => b.eq('organization_id', ORG).eq('is_active', true))
 const rempli = (v) => (Array.isArray(v) ? v.length > 0 : !!String(v ?? '').trim())
@@ -119,7 +123,7 @@ const EVAL = {
   18: [M.foSecours > 0 ? 'conforme' : 'partiellement_conforme', M.foSecours > 0
     ? `${M.foSecours} formateurs identifiés comme remplaçants au plan de continuité.`
     : "Vivier de formateurs remplaçants constitué dans les faits mais non formalisé dans l'outil : aucun formateur n'est marqué comme intervenant de secours."],
-  19: ['partiellement_conforme', "Livret d'accueil, programme et règlement intérieur remis à l'entrée ; la trace de remise n'est pas systématique."],
+  19: [parTaux(M.sessionsLivret, M.sessionsHorsBpf), `Livret d'accueil remis avec la convocation à J-1 : envoi tracé pour ${M.sessionsLivret} sessions sur ${M.sessionsHorsBpf} (${pct(M.sessionsLivret, M.sessionsHorsBpf)} %) ; le cron J-1 envoie le PDF automatiquement sur les sessions à venir.`],
   20: ['conforme', 'Coordination assurée par la direction pédagogique ; contrats de prestation formalisés avec chaque formateur intervenant.'],
   21: [parTaux(M.foDiplomes, M.formateurs), `Compétences justifiées pour ${M.foDiplomes} formateurs actifs sur ${M.formateurs} (${pct(M.foDiplomes, M.formateurs)} %). CV reçus par mail et rattachés aux fiches (lien vers la pièce reçue) ; la collecte se poursuit pour les formateurs restants.`],
   22: [M.foHabilitation > 0 ? 'partiellement_conforme' : 'non_conforme', `Date de dernière habilitation renseignée pour ${M.foHabilitation} formateurs sur ${M.formateurs}. Le maintien des compétences est suivi mais non daté dans l'outil.`],
