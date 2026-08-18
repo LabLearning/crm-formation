@@ -1136,6 +1136,42 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         <Printer className="h-3.5 w-3.5" />
                         Imprimer
                       </a>
+
+                      {/* Les réponses par stagiaire — même lecture que les
+                          questionnaires pédagogiques : note /5 et détail. */}
+                      {rep.length > 0 && (
+                        <div className="w-full pt-1">
+                          <div className="divide-y divide-surface-50 rounded-xl border border-surface-100 overflow-hidden">
+                            {rep.map((r: any) => {
+                              const a = inscriptions.find((i: any) => i.apprenant?.id === r.apprenant_id)?.apprenant
+                              return (
+                                <div key={r.id} className="px-3 py-2 flex items-center gap-3 bg-white">
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm text-surface-900">{a ? `${a.prenom} ${a.nom}` : 'Apprenant'}</span>
+                                    <span className="text-xs text-surface-400 ml-2">
+                                      {r.is_complete
+                                        ? (r.date_realisation || r.completed_at ? `le ${new Date(r.date_realisation || r.completed_at).toLocaleDateString('fr-FR')}` : 'répondu')
+                                        : 'en attente'}
+                                    </span>
+                                  </div>
+                                  {r.is_complete && r.score != null && (
+                                    <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full shrink-0',
+                                      Number(r.score) >= 70 ? 'bg-emerald-50 text-emerald-700' : Number(r.score) >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700')}>
+                                      {(Number(r.score) / 20).toFixed(1)} / 5
+                                    </span>
+                                  )}
+                                  {r.is_complete && !isFormateur && (r.detail?.[0]?.count ?? 0) > 0 && (
+                                    <button onClick={() => setDetail(r.id)}
+                                      className="btn-secondary !py-1 !px-2.5 text-xs shrink-0">
+                                      Réponses
+                                    </button>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
