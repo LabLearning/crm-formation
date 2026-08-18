@@ -40,7 +40,7 @@ export async function enregistrerGrillePortailAction(
       const { data: creee, error } = await supabase.from('qcm_reponses').insert({
         organization_id: (sess as any).organization_id,
         session_id: sessionId, qcm_id: qcmId, apprenant_id: apprenantId, is_complete: false,
-      }).select('id').single()
+      }).select('id, is_complete').single()
       if (error) { console.error('[grille portail]', error.message); continue }
       ligne = creee
     }
