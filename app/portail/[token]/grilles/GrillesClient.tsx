@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, ClipboardList, Loader2, Printer, Save } from 'lucide-react'
+import { Camera, CheckCircle2, ClipboardList, Loader2, Printer, Save } from 'lucide-react'
+import { lireFichesAction } from './lecture-actions'
 import { enregistrerGrillePortailAction } from './actions'
 
 interface Question { id: string; texte: string; type: string; choix: { id: string; texte: string }[] }
@@ -29,6 +30,54 @@ export function GrillesClient({ formateur, token, sessions }: {
   const cle = (s: SessionG, g: Grille) => `${g.qcmId}|${s.id}`
   const poser = (k: string, apprenantId: string, questionId: string, v: string) =>
     setValeurs((x) => ({ ...x, [k]: { ...(x[k] || {}), [apprenantId]: { ...((x[k] || {})[apprenantId] || {}), [questionId]: v } } }))
+
+  const [lecture, setLecture] = useState<string | null>(null)
+  const [prefill, setPrefill] = useState<Record<string, Set<string>>>({})
+
+  /** Compresse une photo de téléphone en JPEG ~1600px pour l'action serveur. */
+  function compresser(fichier: File): Promise<{ base64: string; mediaType: string }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        const max = 1600
+        const ratio = Math.min(1, max / Math.max(img.width, img.height))
+        const c = document.createElement('canvas')
+        c.width = Math.round(img.width * ratio); c.height = Math.round(img.height * ratio)
+        c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height)
+        const url = c.toDataURL('image/jpeg', 0.8)
+        resolve({ base64: url.split(',')[1], mediaType: 'image/jpeg' })
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(fichier)
+    })
+  }
+
+  async function lirePhotos(s: SessionG, g: Grille, fichiers: FileList | null) {
+    if (!fichiers?.length) return
+    const k = cle(s, g)
+    setErreur(null)
+    setLecture(k)
+    try {
+      const images = await Promise.all([...fichiers].slice(0, 6).map(compresser))
+      const r = await lireFichesAction(token, s.id, g.qcmId, images)
+      if (r.success && r.resultats) {
+        const touches = new Set(prefill[k] || [])
+        setValeurs((x) => {
+          const bloc = { ...(x[k] || {}) }
+          for (const [apprenantId, reponses] of Object.entries(r.resultats!)) {
+            bloc[apprenantId] = { ...(bloc[apprenantId] || {}), ...reponses }
+            for (const qId of Object.keys(reponses)) touches.add(`${apprenantId}|${qId}`)
+          }
+          return { ...x, [k]: bloc }
+        })
+        setPrefill((x) => ({ ...x, [k]: touches }))
+        if (r.nonReconnus?.length) setErreur(`Fiches lues, sauf : ${r.nonReconnus.join(' ; ').slice(0, 180)}`)
+      } else setErreur(r.error || 'Lecture impossible')
+    } catch {
+      setErreur('Lecture impossible — réessayez.')
+    }
+    setLecture(null)
+  }
 
   async function enregistrer(s: SessionG, g: Grille) {
     const k = cle(s, g)
@@ -85,11 +134,20 @@ export function GrillesClient({ formateur, token, sessions }: {
                   <div className="px-4 py-2.5 border-b border-surface-100 flex items-center justify-between gap-3 flex-wrap">
                     <span className="text-sm font-semibold text-surface-900">{g.jalon}</span>
                     {restants.length > 0 ? (
+                      <>
+                      <label className="btn-secondary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs cursor-pointer print:hidden">
+                        {lecture === k ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                        {lecture === k ? 'Lecture en cours…' : 'Lire des photos de fiches'}
+                        <input type="file" accept="image/*" multiple className="hidden"
+                          disabled={lecture === k}
+                          onChange={(e) => { lirePhotos(s, g, e.target.files); e.target.value = '' }} />
+                      </label>
                       <button onClick={() => enregistrer(s, g)} disabled={enCours === k}
                         className="btn-primary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs disabled:opacity-60 print:hidden">
                         {enCours === k ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                         Enregistrer les réponses
                       </button>
+                      </>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg px-2 py-1">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Tout est enregistré
@@ -124,8 +182,9 @@ export function GrillesClient({ formateur, token, sessions }: {
                                 </td>
                                 {restants.map((st) => {
                                   const v = valeurs[k]?.[st.id]?.[q.id] || ''
+                                  const luParIa = prefill[k]?.has(`${st.id}|${q.id}`)
                                   return (
-                                    <td key={st.id} className="px-2 py-1.5 align-top border-l border-surface-100 min-w-[86px]">
+                                    <td key={st.id} className={`px-2 py-1.5 align-top border-l border-surface-100 min-w-[86px] ${luParIa ? 'bg-amber-50/70' : ''}`}>
                                       {estChoix ? (
                                         <select value={v} onChange={(e) => poser(k, st.id, q.id, e.target.value)}
                                           className="input-base !py-1 !px-1.5 text-xs w-full">

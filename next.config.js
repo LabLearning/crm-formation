@@ -3,6 +3,10 @@ const { withSentryConfig } = require('@sentry/nextjs')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
+    // Lecture IA des fiches papier : les photos passent par une Server
+    // Action — la limite par défaut (1 Mo) est trop courte pour des photos
+    // de téléphone même compressées.
+    serverActions: { bodySizeLimit: '8mb' },
     // Cache client du routeur : une page déjà visitée est réaffichée
     // instantanément pendant 60s au lieu de refaire l'aller-retour serveur.
     // Les Server Actions purgent ce cache (revalidatePath), donc les
