@@ -105,8 +105,15 @@ export async function lienPieceAction(documentId: string): Promise<ActionResult>
   const session = await getSession()
   const supabase = await createServiceRoleClient()
   const { data: doc } = await supabase
-    .from('documents').select('storage_path').eq('id', documentId).eq('organization_id', session.organization.id).maybeSingle()
-  if (!doc?.storage_path) return { success: false, error: 'Document introuvable' }
+    .from('documents').select('storage_path, file_url').eq('id', documentId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!doc) return { success: false, error: 'Document introuvable' }
+
+  // Pièce archivée hors storage (lien Drive de l'archive sales@) : le lien
+  // externe fait foi.
+  if (!doc.storage_path) {
+    if ((doc as any).file_url?.startsWith('http')) return { success: true, data: { url: (doc as any).file_url } }
+    return { success: false, error: 'Document introuvable' }
+  }
 
   const { data } = await supabase.storage.from('documents').createSignedUrl((doc as any).storage_path, 3600)
   if (!data?.signedUrl) return { success: false, error: 'Lien indisponible' }
