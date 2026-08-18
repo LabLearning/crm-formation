@@ -45,7 +45,11 @@ const inscritsParSession = new Map()
 for (const i of inscriptions) inscritsParSession.set(i.session_id, (inscritsParSession.get(i.session_id) || 0) + 1)
 
 const normDossier = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
-const normNom = (s) => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9]/g, '')
+const normNom = (s) => String(s || '').toUpperCase()
+  .replace(/Œ/g, 'OE').replace(/Æ/g, 'AE')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/\b(SARL|SAS|SASU|EURL|SA|SNC)\b/g, '')
+  .replace(/[^A-Z0-9]/g, '')
 const jour = (s) => {
   if (!s) return null
   const m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/)
@@ -72,6 +76,10 @@ for (const m of MATRICE) {
   const cle = normDossier(m.dossier)
   let s = parDossier.get(cle) || null
   let mode = s ? 'dossier' : null
+  // Si la session trouvée par n° de dossier est déjà prise par une autre
+  // ligne (deux dossiers pour un même couple client/date), on retombe sur la
+  // recherche par nom parmi les sessions encore libres.
+  if (s && rattachees.has(s.id)) { s = null; mode = null }
   if (!s) {
     const nom = normNom(m.client)
     const debut = jour(m.debut)
@@ -148,3 +156,51 @@ for (const [, liste] of grappes) {
   }
 }
 console.log(`\nGrappes multi-sessions : ${nbGrappes} | sessions EXTRA dans une grappe : ${extrasJumeaux}`)
+
+// --- Règle de vérité (décision du 18/08/2026) : les sessions réelles sont
+// celles de la matrice (dossiers OPCO + POEI finis) et du BPF. Les sessions
+// TERMINÉES hors de ces deux ensembles sont présumées invalides (bruit
+// d'import, doublons). Les sessions en cours / planifiées / confirmées hors
+// matrice restent : elles n'ont juste pas encore leur dossier clos.
+console.log('\n=== CLASSEMENT FINAL (règle matrice + BPF) ===')
+const garder = []
+const enActivite = []
+const purger = []
+for (const s of sessions) {
+  if (rattachees.has(s.id) || String(s.reference || '').startsWith('BPF-')) garder.push(s)
+  else if (s.status !== 'terminee') enActivite.push(s)
+  else purger.push(s)
+}
+console.log(`À garder (matrice + BPF) : ${garder.length}`)
+console.log(`En activité hors matrice (en cours / planifiées — dossiers pas encore clos) : ${enActivite.length}`)
+console.log(`TERMINÉES hors matrice et hors BPF — présumées invalides : ${purger.length}`)
+let avecInscrits = 0
+for (const s of purger) if ((inscritsParSession.get(s.id) || 0) > 0) avecInscrits++
+console.log(`  dont avec inscriptions : ${avecInscrits} | sans aucune inscription : ${purger.length - avecInscrits}`)
+console.log('\n  Liste des présumées invalides :')
+for (const s of purger.sort((a, b) => String(a.date_debut).localeCompare(String(b.date_debut)))) {
+  const c = parClient.get(s.client_id)
+  console.log(`    ${String(s.reference || s.id.slice(0, 8)).padEnd(16)} ${String(s.date_debut).slice(0, 10)} ${String(c?.nom_commercial || c?.raison_sociale || 'sans client').slice(0, 26).padEnd(28)} ${inscritsParSession.get(s.id) || 0} insc.  ${String(s.formation?.intitule || s.intitule || '').slice(0, 40)}`)
+}
+
+
+import { writeFileSync } from 'fs'
+const exporter = []
+for (const s of sessions) {
+  const c = parClient.get(s.client_id)
+  const r = rattachees.get(s.id)
+  exporter.push({
+    ref: s.reference || s.id.slice(0, 8),
+    statut: s.status,
+    debut: s.date_debut ? String(s.date_debut).slice(0, 10) : null,
+    client: c?.nom_commercial || c?.raison_sociale || null,
+    formation: s.formation?.intitule || s.intitule || null,
+    inscrits: inscritsParSession.get(s.id) || 0,
+    classement: r ? 'matrice' : String(s.reference || '').startsWith('BPF-') ? 'bpf' : s.status !== 'terminee' ? 'en_activite' : 'presume_invalide',
+    dossier: r?.m?.dossier || s.numero_dossier_opco || null,
+    financeur: r?.m?.financeur || null,
+  })
+}
+const manquantes = nonTrouvees.filter((m) => !m.note)
+writeFileSync('/private/tmp/claude-501/-Users-brahimouchrif-Projects-crm-lablearning/04d3a660-0bb5-4829-a5e1-685cc8491e7f/scratchpad/classement.json', JSON.stringify({ sessions: exporter, manquantes }, null, 1))
+console.log('\nExport classement.json écrit —', exporter.length, 'sessions,', manquantes.length, 'manquantes')
