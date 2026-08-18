@@ -47,7 +47,7 @@ export function SansFormateurClient({ sessions, formateurs }: {
   return (
     <div className="space-y-5">
       <div>
-        <BackLink href="/dashboard/sessions" label="Sessions" />
+        <BackLink fallbackHref="/dashboard/sessions" label="Sessions" />
         <div className="flex items-center justify-between gap-3 flex-wrap mt-1">
           <h1 className="text-xl font-heading font-bold text-surface-900 flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-brand-500" /> Sessions sans formateur
