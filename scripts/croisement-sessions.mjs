@@ -204,3 +204,43 @@ for (const s of sessions) {
 const manquantes = nonTrouvees.filter((m) => !m.note)
 writeFileSync('/private/tmp/claude-501/-Users-brahimouchrif-Projects-crm-lablearning/04d3a660-0bb5-4829-a5e1-685cc8491e7f/scratchpad/classement.json', JSON.stringify({ sessions: exporter, manquantes }, null, 1))
 console.log('\nExport classement.json écrit —', exporter.length, 'sessions,', manquantes.length, 'manquantes')
+
+// --- Signaux de financement sur les présumées invalides : AGEFICE, FAFCEA ou
+// paiement personnel = session réelle hors matrice, à GARDER (décision 18/08).
+const idsPurge = purger.map((s) => s.id)
+const chunk = async (table, cols, col) => {
+  const o = []
+  for (let i = 0; i < idsPurge.length; i += 80) {
+    const { data } = await supabase.from(table).select(cols).in(col, idsPurge.slice(i, i + 80))
+    o.push(...(data || []))
+  }
+  return o
+}
+const [factures, dossiers] = await Promise.all([
+  chunk('factures', 'session_id, financeur_type, numero, montant_ttc', 'session_id'),
+  chunk('dossiers_formation', 'session_id, financeur_type, financeur_nom', 'session_id'),
+])
+const signaux = new Map()
+for (const f of factures) {
+  if (!signaux.has(f.session_id)) signaux.set(f.session_id, [])
+  signaux.get(f.session_id).push(`facture ${f.numero || ''} (${f.financeur_type || 'sans financeur'})`)
+}
+for (const d of dossiers) {
+  if (!signaux.has(d.session_id)) signaux.set(d.session_id, [])
+  signaux.get(d.session_id).push(`dossier ${d.financeur_type || '?'}${d.financeur_nom ? ' ' + d.financeur_nom : ''}`)
+}
+const proteges = []
+for (const s of purger) {
+  const sig = (signaux.get(s.id) || []).join(' ; ')
+  if (/agefice|fafcea|particulier|personnel|autofinanc/i.test(sig)) proteges.push({ s, sig })
+}
+console.log(`\n--- Signaux AGEFICE/FAFCEA/personnel parmi les ${purger.length} présumées invalides : ${proteges.length}`)
+for (const { s, sig } of proteges) console.log(`  ${s.reference} ${sig.slice(0, 90)}`)
+console.log('\n--- Toutes traces de financement sur les présumées invalides :')
+const types = {}
+for (const s of purger) for (const sig of signaux.get(s.id) || []) {
+  const t = sig.match(/\((.*)\)|dossier (\S+)/)
+  const cle = (t && (t[1] || t[2])) || '?'
+  types[cle] = (types[cle] || 0) + 1
+}
+console.log(JSON.stringify(types))
