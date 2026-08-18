@@ -9,6 +9,7 @@ import {
   GraduationCap, Mail, Phone, Building2, Camera, PenTool, Download,
   Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck, Mails, Route,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles, ReceiptEuro, Printer,
+  TrendingUp,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
 import { DerouleOperationnel } from '@/components/deroule/DerouleOperationnel'
@@ -1217,6 +1218,49 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               </button>
             </div>
           )}
+
+          {/* Progression entrée -> sortie : le positionnement porte les mêmes
+              questions que l'évaluation des acquis — l'écart entre les deux
+              scores est la preuve de progression (indicateur 11). */}
+          {(() => {
+            const typeDe = (qcmId: string) => qcmSessions.find((q: any) => q.qcm_id === qcmId)?.qcm?.type
+            const parApprenant = new Map<string, { entree?: number; sortie?: number }>()
+            for (const r of qcmReponses as any[]) {
+              if (!r.is_complete || r.score == null || !r.apprenant_id) continue
+              const t = typeDe(r.qcm_id)
+              const cle = t === 'positionnement' || t === 'entree' ? 'entree' : t === 'sortie' ? 'sortie' : null
+              if (!cle) continue
+              const e = parApprenant.get(r.apprenant_id) || {}
+              if ((e as any)[cle] == null) { (e as any)[cle] = Number(r.score); parApprenant.set(r.apprenant_id, e) }
+            }
+            const lignes = inscriptions
+              .map((i: any) => ({ nom: `${i.apprenant?.prenom || ''} ${i.apprenant?.nom || ''}`.trim(), p: parApprenant.get(i.apprenant?.id) }))
+              .filter((x: any) => x.p && x.p.entree != null && x.p.sortie != null)
+            if (!lignes.length) return null
+            return (
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                  <TrendingUp className="h-3.5 w-3.5 text-brand-500" /> Progression entrée → sortie
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {lignes.map((l: any) => {
+                    const delta = l.p.sortie - l.p.entree
+                    return (
+                      <div key={l.nom} className="flex items-center justify-between gap-3 text-sm border-b border-surface-100 pb-1.5 last:border-0">
+                        <span className="text-surface-800 truncate">{l.nom}</span>
+                        <span className="tabular-nums text-surface-500 shrink-0">
+                          {l.p.entree}% → <span className="font-semibold text-surface-900">{l.p.sortie}%</span>
+                          <span className={delta >= 0 ? 'text-emerald-600 ml-1.5' : 'text-danger-600 ml-1.5'}>
+                            {delta >= 0 ? '+' : ''}{delta}
+                          </span>
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Liste des questionnaires rattachés + suivi des réponses */}
           {qcmPedago.length === 0 ? (
