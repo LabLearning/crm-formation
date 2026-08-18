@@ -15,6 +15,7 @@ import { PoeiInterventions } from './PoeiInterventions'
 import { PoeiShell } from './PoeiShell'
 import { PoeiPilotage } from './PoeiPilotage'
 import { PoeiDocuments } from './PoeiDocuments'
+import { PoeiMandat } from './PoeiMandat'
 import { PoeiMails } from './PoeiMails'
 import { PoeiIncidents } from '@/components/poei/PoeiIncidents'
 import type { CandidatMail } from './PoeiMails'
@@ -170,6 +171,16 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       .eq('poei_id', params.id).eq('role', 'employeur').maybeSingle()
     if (!error) sigEmployeur = data
   } catch { sigEmployeur = null }
+
+  // Mandat POEI (délégation France Travail) : à faire signer, envoyé, ou
+  // signé. Résilient avant la migration 135.
+  let mandatPoei: { sent_at?: string | null; signed_at?: string | null; signataire_nom?: string | null; date_emission?: string | null } | null = null
+  try {
+    const { data, error } = await supabase.from('poei_mandats')
+      .select('sent_at, signed_at, signataire_nom, date_emission')
+      .eq('poei_id', params.id).eq('organization_id', session.organization.id).maybeSingle()
+    if (!error) mandatPoei = data
+  } catch { mandatPoei = null }
 
   // Dernier statut d'envoi d'attestation par adresse email (le plus récent gagne)
   const emailStatus: Record<string, { status: string; date: string | null }> = {}
@@ -340,12 +351,15 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           />
         }
         documents={
-          <PoeiDocuments
-            poeiId={p.id}
-            candidats={candidatsDocs}
-            devisPrevisionnel={devisByCandidat['previsionnel'] || null}
-            formationTerminee={formationTerminee}
-          />
+          <>
+            <PoeiMandat poeiId={p.id} mandat={mandatPoei} />
+            <PoeiDocuments
+              poeiId={p.id}
+              candidats={candidatsDocs}
+              devisPrevisionnel={devisByCandidat['previsionnel'] || null}
+              formationTerminee={formationTerminee}
+            />
+          </>
         }
         nbCandidats={candidats.length}
         nbInterventions={(interventions || []).length}
