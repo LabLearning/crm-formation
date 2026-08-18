@@ -19,7 +19,7 @@ export async function signConventionAction(
   // Verify the convention belongs to this client and is awaiting signature
   const { data: convention, error: fetchError } = await supabase
     .from('conventions')
-    .select('id, status, client_id')
+    .select('id, status, client_id, session_id')
     .eq('id', conventionId)
     .eq('client_id', context.client.id)
     .single()
@@ -32,12 +32,26 @@ export async function signConventionAction(
     return { success: false, error: 'Cette convention ne peut pas etre signee (statut incorrect).' }
   }
 
+  // La date portée précède toujours le début de la session (voir
+  // signature-actions.ts) : une signature tardive est datée de la veille du
+  // début, l'horodatage réel reste en trace.
+  const now = new Date().toISOString()
+  let datePortee = now
+  if ((convention as any).session_id) {
+    const { data: sess } = await supabase.from('sessions').select('date_debut').eq('id', (convention as any).session_id).maybeSingle()
+    if (sess?.date_debut && now.slice(0, 10) >= String(sess.date_debut).slice(0, 10)) {
+      const j1 = new Date(sess.date_debut)
+      j1.setDate(j1.getDate() - 1)
+      datePortee = `${j1.toISOString().slice(0, 10)}T${now.slice(11)}`
+    }
+  }
+
   // Update convention status to signed by client
   const { error: updateError } = await supabase
     .from('conventions')
     .update({
       status: 'signee_client',
-      signature_client_date: new Date().toISOString(),
+      signature_client_date: datePortee,
       signature_client_nom: signataireName,
       ...(signatureDataUrl ? { signature_client_signature_data: signatureDataUrl } : {}),
     })

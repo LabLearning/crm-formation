@@ -120,3 +120,31 @@ for (const [fam, liste] of Object.entries(familles).sort((a, b) => b[1].length -
   }
   if (liste.length > 15) console.log(`    … et ${liste.length - 15} autres`)
 }
+
+// --- Doublons probables : même client + même date de début, plusieurs sessions.
+// Si l'une est rattachée à la matrice et l'autre pas, la seconde est
+// vraisemblablement le jumeau créé en double (import Dendreo + saisie manuelle).
+console.log('\n--- Grappes même client + même date (doublons probables)')
+const grappes = new Map()
+for (const s of sessions) {
+  if (!s.client_id || !s.date_debut) continue
+  const cle = s.client_id + '|' + String(s.date_debut).slice(0, 10)
+  if (!grappes.has(cle)) grappes.set(cle, [])
+  grappes.get(cle).push(s)
+}
+let nbGrappes = 0
+let extrasJumeaux = 0
+for (const [, liste] of grappes) {
+  if (liste.length < 2) continue
+  nbGrappes++
+  const aExtra = liste.some((s) => !rattachees.has(s.id))
+  if (aExtra) extrasJumeaux += liste.filter((s) => !rattachees.has(s.id)).length
+  if (nbGrappes <= 25) {
+    const c = parClient.get(liste[0].client_id)
+    console.log(`  ${String(c?.nom_commercial || c?.raison_sociale || '?').slice(0, 26).padEnd(28)} ${String(liste[0].date_debut).slice(0, 10)}`)
+    for (const s of liste) {
+      console.log(`      ${String(s.reference || s.id.slice(0, 8)).padEnd(16)} ${rattachees.has(s.id) ? '[matrice]' : '[EXTRA]  '} ${String(s.status).padEnd(10)} ${inscritsParSession.get(s.id) || 0} insc.  ${String(s.formation?.intitule || s.intitule || '').slice(0, 40)}`)
+    }
+  }
+}
+console.log(`\nGrappes multi-sessions : ${nbGrappes} | sessions EXTRA dans une grappe : ${extrasJumeaux}`)

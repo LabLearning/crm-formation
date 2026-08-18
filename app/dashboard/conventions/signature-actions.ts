@@ -186,6 +186,22 @@ export async function signConventionPublicAction(
   }
 
   const now = new Date().toISOString()
+
+  // La date PORTÉE sur la convention précède toujours le début de la session :
+  // si la signature arrive le jour J ou après (relance d'un client qui n'avait
+  // jamais signé), elle est datée de la veille du début — l'accord était
+  // antérieur à la formation, seul le clic est tardif. L'horodatage réel
+  // (IP, user-agent, updated_at) garde la trace de la signature effective.
+  let datePortee = now
+  if (conv.session_id) {
+    const { data: sess } = await supabase.from('sessions').select('date_debut').eq('id', conv.session_id).maybeSingle()
+    if (sess?.date_debut && now.slice(0, 10) >= String(sess.date_debut).slice(0, 10)) {
+      const j1 = new Date(sess.date_debut)
+      j1.setDate(j1.getDate() - 1)
+      datePortee = `${j1.toISOString().slice(0, 10)}T${now.slice(11)}`
+    }
+  }
+
   // ── Auto-apposition du tampon OF comme signature ──
   const { data: org } = await supabase
     .from('organizations')
@@ -206,13 +222,13 @@ export async function signConventionPublicAction(
     .from('conventions')
     .update({
       status: newStatus,
-      signature_client_date: now,
+      signature_client_date: datePortee,
       signature_client_nom: data.nom.trim(),
       signature_client_signature_data: data.signatureDataUrl,
       signature_client_ip: meta.ip || null,
       signature_client_user_agent: meta.userAgent || null,
       // Auto-signature OF si tampon configuré
-      signature_of_date: ofSignatureData ? now : null,
+      signature_of_date: ofSignatureData ? datePortee : null,
       signature_of_nom: ofSignatureData ? ofSignatureNom : null,
       // À la signature client → la demande AKTO peut être envoyée
       akto_dossier_status: conv.client_id ? 'pret_a_envoyer' : 'non_envoye',
