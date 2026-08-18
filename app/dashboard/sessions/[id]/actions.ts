@@ -292,16 +292,10 @@ export async function sendConventionForSignatureAction(
     }
   }
 
-  // La signature précède le début de session d'au moins un jour ; le délai de
-  // sept jours entre recueil et signature ne vaut que pour la datation des
-  // dossiers passés, pas comme frein commercial au fil de l'eau.
-  const aujourdHui = new Date().toISOString().slice(0, 10)
-  if (sess.date_debut && String(sess.date_debut).slice(0, 10) <= aujourdHui) {
-    return {
-      success: false,
-      error: 'La session commence aujourd\'hui ou a déjà commencé : la convention doit être signée au moins la veille du début de session.',
-    }
-  }
+  // Pas de verrou sur la date de session : une convention doit pouvoir être
+  // renvoyée même après la fin de la formation (avenant, régularisation,
+  // relance d'un client qui n'a jamais signé). Seul le recueil complété
+  // conditionne l'envoi.
 
   // Convention liée (ou création)
   let convId = conventionId
