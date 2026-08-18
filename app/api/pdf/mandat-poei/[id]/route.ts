@@ -4,6 +4,7 @@ import { createElement } from 'react'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { requireApiUser } from '@/lib/api-auth'
 import { MandatPoeiPDF } from '@/lib/pdf/mandat-poei-pdf'
+import { withDocumentLogo } from '@/lib/pdf/org-logo'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .eq('id', params.id).eq('organization_id', orgId).single()
   if (!poei) return NextResponse.json({ error: 'Projet POEI introuvable' }, { status: 404 })
 
-  const [{ data: org }, { data: mandat }, { data: candidats }, { data: contacts }] = await Promise.all([
+  const [{ data: orgRaw }, { data: mandat }, { data: candidats }, { data: contacts }] = await Promise.all([
     supabase.from('organizations').select('*').eq('id', orgId).single(),
     supabase.from('poei_mandats').select('date_emission, signed_at, signature_data, signataire_nom')
       .eq('poei_id', params.id).eq('organization_id', orgId).maybeSingle(),
@@ -47,6 +48,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       ? supabase.from('contacts').select('prenom, nom, est_signataire, est_principal').eq('client_id', (poei as any).client_id)
       : Promise.resolve({ data: [] as any[] }),
   ])
+
+  // Logo version document : logo_url pointe sur la variante blanche (emails).
+  const org = await withDocumentLogo(supabase, orgRaw)
 
   // Le gérant = contact référent de la fiche client, source unique.
   const ref = (contacts || []).find((c: any) => c.est_signataire)
