@@ -21,6 +21,12 @@ export function metierStyle(nom: string): MetierStyle {
   const n = (nom || '').toLowerCase()
 
   // ── Thématiques transverses ──
+  if (n.includes('intelligence artificielle') || n.includes(' ia ') || n.startsWith('ia ') || n.includes('digital') || n.includes('crm') || n.includes('lms'))
+    return { Icon: Formation, from: '#4C1D95', to: '#7C3AED', tint: '#F5F3FF', ink: '#6D28D9', img: IMG('formation') }
+  if (n.includes('commercial') || n.includes('vente') || n.includes('fidélisation') || n.includes('fidelisation') || n.includes('création d\'entreprise') || n.includes('creation d\'entreprise'))
+    return { Icon: Management, from: '#1E3A8A', to: '#3B82F6', tint: '#EFF6FF', ink: '#1D4ED8', img: IMG('management') }
+  if (n.includes('traçab') || n.includes('tracab') || n.includes('étiquet') || n.includes('etiquet') || n.includes('allerg'))
+    return { Icon: Hygiene, from: '#0E7490', to: '#06B6D4', tint: '#ECFEFF', ink: '#0E7490', img: IMG('hygiene') }
   if (n.includes('managem') || n.includes('encadr') || n.includes('gestion') || n.includes('leader') || n.includes('rh') || n.includes('ressources humaines'))
     return { Icon: Management, from: '#312E81', to: '#4F46E5', tint: '#EEF2FF', ink: '#4338CA', img: IMG('management') }
   if (n.includes('hygièn') || n.includes('hygien') || n.includes('haccp') || n.includes('salubr') || n.includes('propreté') || n.includes('proprete') || n.includes('nettoyage'))
