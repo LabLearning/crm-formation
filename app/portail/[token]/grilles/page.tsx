@@ -26,7 +26,7 @@ export default async function GrillesPage({ params }: { params: { token: string 
 
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, reference, date_debut, intitule, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
+    .select('id, reference, date_debut, date_fin, intitule, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
     .eq('formateur_id', (context as any).formateur.id)
     .not('reference', 'like', 'BPF-%')
     .order('date_debut', { ascending: false })
@@ -69,10 +69,20 @@ export default async function GrillesPage({ params }: { params: { token: string 
   const faits = new Set((reponses || []).filter((r: any) => r.is_complete)
     .map((r: any) => `${r.session_id}|${r.qcm_id}|${r.apprenant_id}`))
 
+  // Un questionnaire ne se remplit qu'à son heure : positionnement dès le
+  // début de la session, acquis et satisfaction seulement une fois finie —
+  // sinon les formateurs remplissent en avance et le dossier devient
+  // incohérent.
+  const aujourdHui = new Date().toISOString().slice(0, 10)
   const data = (sessions || []).map((s: any) => {
+    const commencee = s.date_debut && String(s.date_debut).slice(0, 10) <= aujourdHui
+    const finie = s.date_fin ? String(s.date_fin).slice(0, 10) < aujourdHui : commencee
     const inscrits = inscriptions.filter((i: any) => i.session_id === s.id).map((i: any) => i.apprenant).filter(Boolean)
     const grilles = liens.filter((l: any) => l.session_id === s.id).map((l: any) => {
-      const jalon = JALONS[typeQcm.get(l.qcm_id) as string]
+      const type = typeQcm.get(l.qcm_id) as string
+      if (['positionnement', 'entree'].includes(type) && !commencee) return null
+      if (['sortie', 'satisfaction_chaud', 'satisfaction_froid'].includes(type) && !finie) return null
+      const jalon = JALONS[type]
       const qs = questionsParQcm.get(l.qcm_id) || []
       if (!jalon || !qs.length) return null
       const enAttente = inscrits.filter((a: any) => !faits.has(`${s.id}|${l.qcm_id}|${a.id}`))

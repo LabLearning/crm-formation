@@ -22,9 +22,23 @@ export async function enregistrerGrillePortailAction(
 
   // La session doit être à ce formateur.
   const { data: sess } = await supabase.from('sessions')
-    .select('id, organization_id').eq('id', sessionId)
+    .select('id, organization_id, date_debut, date_fin').eq('id', sessionId)
     .eq('formateur_id', (context as any).formateur.id).maybeSingle()
   if (!sess) return { success: false, error: 'Session introuvable' }
+
+  // Chaque questionnaire à son heure : pas de saisie prématurée, même par
+  // l'API — le dossier doit rester chronologiquement cohérent.
+  const { data: qcmInfo } = await supabase.from('qcm').select('type').eq('id', qcmId).maybeSingle()
+  const aujourdHui = new Date().toISOString().slice(0, 10)
+  const commencee = (sess as any).date_debut && String((sess as any).date_debut).slice(0, 10) <= aujourdHui
+  const finie = (sess as any).date_fin ? String((sess as any).date_fin).slice(0, 10) < aujourdHui : commencee
+  const type = (qcmInfo as any)?.type
+  if (['positionnement', 'entree'].includes(type) && !commencee) {
+    return { success: false, error: 'Le positionnement se remplit à partir du premier jour de la session.' }
+  }
+  if (['sortie', 'satisfaction_chaud', 'satisfaction_froid'].includes(type) && !finie) {
+    return { success: false, error: "L'évaluation des acquis et la satisfaction se remplissent une fois la session terminée." }
+  }
 
   const faits: string[] = []
   for (const [apprenantId, reponses] of Object.entries(parApprenant)) {
