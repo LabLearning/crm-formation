@@ -34,13 +34,13 @@ export function SiteFooter() {
             sans la mention de la catégorie d'action, dans le même bloc.
           */}
           <div className="mt-6 max-w-sm rounded-2xl bg-white p-4">
-            <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-12 w-auto" />
-            <p className="mt-3 text-[12px] leading-relaxed text-[#44403C]">
-              La certification qualité a été délivrée au titre de la catégorie d&apos;action suivante&nbsp;:
-              <br /><strong className="text-[#14110F]">ACTIONS DE FORMATION</strong>
+            <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-20 w-auto" />
+            <p className="mt-2.5 text-[10px] leading-snug text-[#57534E]">
+              La certification qualité a été délivrée au titre de la catégorie d&apos;action suivante&nbsp;:{' '}
+              <strong className="text-[#14110F]">ACTIONS DE FORMATION</strong>
             </p>
             <a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer"
-              className="mt-2 inline-block text-[12px] font-semibold text-[#195144] underline underline-offset-2 hover:text-[#123f34]">
+              className="mt-1.5 inline-block text-[10px] font-semibold text-[#195144] underline underline-offset-2 hover:text-[#123f34]">
               Consulter notre certificat (PDF)
             </a>
           </div>
