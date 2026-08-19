@@ -62,10 +62,10 @@ export function ReseauHandicapClient({ contacts, tableAbsente, referent }: {
       <div className="card p-4 flex items-start gap-3">
         <GraduationCap className="h-5 w-5 text-brand-500 shrink-0 mt-0.5" />
         <div className="text-sm text-surface-700 leading-relaxed">
-          <strong>Former le référent :</strong> l&apos;Agefiph et les RHF régionales proposent des webinaires
-          « référent handicap en organisme de formation » qui délivrent une <strong>attestation de participation</strong> —
-          à verser au dossier du référent (fiche formateur ou documents). Inscription via la RHF de votre région
-          ou <span className="whitespace-nowrap">agefiph.fr → Ressource Handicap Formation</span>.
+          <strong>Formation du référent — inscription confirmée :</strong> « Module 1. Les connaissances clés
+          pour le référent handicap en entreprise » (groupe JLO), <strong>jeudi 3 septembre 2026, 09h30-12h30</strong>.
+          L&apos;attestation de participation sera versée au dossier du référent à l&apos;issue du module.
+          D&apos;autres webinaires : RHF régionale (rhf-occitanie@agefiph.fr) ou agefiph.fr.
         </div>
       </div>
 
