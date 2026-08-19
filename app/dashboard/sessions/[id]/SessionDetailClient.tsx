@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
+import { SessionRetourClient } from './SessionRetourClient'
 import { DerouleOperationnel } from '@/components/deroule/DerouleOperationnel'
 import { PiecesDossier } from '@/components/sessions/PiecesDossier'
 import { etatDeroule } from '@/lib/dpo'
@@ -51,6 +52,7 @@ interface Props {
   emargements: any[]
   pointages: any[]
   rapport: any
+  retoursClient?: any[]
   evaluations?: any[]
   qcmSessions?: any[]
   qcmReponses?: any[]
@@ -111,7 +113,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -1012,6 +1014,23 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                   {rapport.status === 'valide' ? 'Validé' : rapport.status === 'soumis' ? 'Soumis' : 'Brouillon'}
                 </Badge>
               </div>
+              {/* Le contenu du rapport, rubrique par rubrique */}
+              <div className="grid gap-3 md:grid-cols-2 pt-1">
+                {[
+                  ['Contenu abordé', rapport.contenu_aborde],
+                  ['Objectifs atteints', rapport.objectifs_atteints],
+                  ['Objectifs non atteints', rapport.objectifs_non_atteints],
+                  ['Difficultés rencontrées', rapport.difficultes_rencontrees],
+                  ['Points positifs', rapport.points_positifs],
+                  ['Recommandations', rapport.recommandations],
+                  ['Commentaires généraux', rapport.commentaires_generaux],
+                ].filter(([, v]) => v).map(([l, v]) => (
+                  <div key={l as string} className="rounded-xl bg-surface-50/60 border border-surface-100 p-3">
+                    <div className="text-2xs font-semibold uppercase tracking-wider text-surface-400 mb-1">{l}</div>
+                    <div className="text-sm text-surface-800 whitespace-pre-line">{v}</div>
+                  </div>
+                ))}
+              </div>
               {isFormateur && (
                 <Link href="/dashboard/formateur-home/rapports"
                   className="btn-primary inline-flex items-center gap-2 text-sm">
@@ -1036,6 +1055,10 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               )}
             </div>
           )}
+
+          {/* Le second regard sur la même session : ce que le CLIENT en dit,
+              recueilli par téléphone — sous le rapport du formateur. */}
+          {!isFormateur && <SessionRetourClient sessionId={session.id} retours={retoursClient as any[]} />}
         </div>
       )}
 

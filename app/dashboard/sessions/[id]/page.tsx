@@ -142,6 +142,17 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     .maybeSingle()
   const rapport = rapportRes
 
+  // Retours client (appels post-formation) — appréciations d'entreprise
+  // rattachées à la session. Résilient avant migration 134.
+  let retoursClient: any[] = []
+  try {
+    const { data, error } = await supabase.from('appreciations_parties_prenantes')
+      .select('id, note_globale, commentaire, repondant_nom, repondant_fonction, created_at')
+      .eq('session_id', params.id).eq('type', 'entreprise')
+      .order('created_at', { ascending: false })
+    if (!error) retoursClient = data || []
+  } catch { retoursClient = [] }
+
   // Socle qualité : état RÉEL des 4 jalons, calculé sur les questionnaires
   // rattachés et les réponses effectivement complétées.
   const { SOCLE, estFormationHygiene } = await import('@/lib/dpo')
@@ -312,6 +323,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         emargements={(emargements || []) as any[]}
         pointages={(pointages || []) as any[]}
         rapport={rapport as any}
+        retoursClient={retoursClient as any[]}
         evaluations={(evaluations || []) as any[]}
         qcmSessions={(qcmSessions || []) as any[]}
         qcmReponses={(qcmReponses || []) as any[]}
