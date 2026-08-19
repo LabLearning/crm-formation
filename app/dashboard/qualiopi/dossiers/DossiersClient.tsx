@@ -17,6 +17,15 @@ type Filtre = 'tous' | 'incomplets' | 'majeures' | 'complets'
 export function DossiersClient({ dossiers }: { dossiers: DossierSession[] }) {
   const [q, setQ] = useState('')
   const [filtre, setFiltre] = useState<Filtre>('majeures')
+  // Filtre par pièce : « montre-moi tous les dossiers où il manque X ».
+  const [piece, setPiece] = useState<string>('')
+
+  const parPiece = useMemo(() => {
+    const n = new Map<string, number>()
+    for (const d of dossiers) for (const m of d.manquantes) n.set(m, (n.get(m) || 0) + 1)
+    return PIECES.map((p) => ({ cle: p.cle, label: p.label, n: n.get(p.cle) || 0 })).filter((p) => p.n > 0)
+      .sort((a, b) => b.n - a.n)
+  }, [dossiers])
 
   const stats = useMemo(() => ({
     total: dossiers.length,
@@ -39,11 +48,12 @@ export function DossiersClient({ dossiers }: { dossiers: DossierSession[] }) {
         if (filtre === 'incomplets' && d.manquantes.length === 0) return false
         if (filtre === 'majeures' && d.manquantesMajeures === 0) return false
         if (filtre === 'complets' && d.manquantes.length > 0) return false
+        if (piece && !d.manquantes.includes(piece)) return false
         if (!t) return true
         return [d.reference, d.intitule, d.client].filter(Boolean).some((v) => String(v).toLowerCase().includes(t))
       })
       .sort((a, b) => b.date_debut.localeCompare(a.date_debut))
-  }, [dossiers, filtre, q])
+  }, [dossiers, filtre, q, piece])
 
   const label = (cle: string) => PIECES.find((p) => p.cle === cle)?.label || cle
 
@@ -83,6 +93,13 @@ export function DossiersClient({ dossiers }: { dossiers: DossierSession[] }) {
             </button>
           ))}
         </div>
+        <select value={piece} onChange={(e) => setPiece(e.target.value)}
+          className={cn('input-base !py-2 text-sm w-fit', piece && '!border-danger-300 text-danger-700')}>
+          <option value="">Pièce manquante : toutes</option>
+          {parPiece.map((p) => (
+            <option key={p.cle} value={p.cle}>Manque : {p.label} ({p.n})</option>
+          ))}
+        </select>
         <div className="relative flex-1 max-w-sm">
           <Search className="h-4 w-4 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Référence, formation, client…"
