@@ -157,13 +157,18 @@ export interface PublicFormationDetail extends PublicFormation {
   modalites_admission: string | null
   delai_acces: string | null
   date_derniere_maj: string | null
+  version?: number | null
+  date_conception?: string | null
+  taux_satisfaction?: number | null
+  taux_reussite?: number | null
+  nombre_apprenants_total?: number | null
 }
 
 /** Détail public d'une formation (par id). */
 export async function getPublicFormation(id: string): Promise<PublicFormationDetail | null> {
   const supabase = await createServiceRoleClient()
   const { data: f } = await supabase.from('formations')
-    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap, tarif_intra_ht, tarif_inter_ht, modalites_admission, date_derniere_maj, branches')
+    .select('id, intitule, sous_titre, categorie, duree_heures, duree_jours, modalite, objectifs_pedagogiques, competences_visees, public_vise, prerequis, programme_detaille, methodes_pedagogiques, modalites_evaluation, accessibilite_handicap, tarif_intra_ht, tarif_inter_ht, modalites_admission, date_derniere_maj, branches, version, historique_versions, taux_satisfaction, taux_reussite, nombre_apprenants_total')
     .eq('id', id).eq('organization_id', ORG).eq('is_active', true).maybeSingle()
   if (!f) return null
   // Le délai d'accès est une politique de l'organisme, pas de la formation.
@@ -185,6 +190,13 @@ export async function getPublicFormation(id: string): Promise<PublicFormationDet
     modalites_admission: (f as any).modalites_admission || null,
     delai_acces: (org as any)?.delai_acces || null,
     date_derniere_maj: (f as any).date_derniere_maj || null,
+    version: (f as any).version || null,
+    date_conception: (Array.isArray((f as any).historique_versions)
+      ? (f as any).historique_versions.find((h: any) => h?.evenement === 'conception')?.date
+      : null) || null,
+    taux_satisfaction: (f as any).taux_satisfaction ?? null,
+    taux_reussite: (f as any).taux_reussite ?? null,
+    nombre_apprenants_total: (f as any).nombre_apprenants_total ?? null,
   }
 }
 

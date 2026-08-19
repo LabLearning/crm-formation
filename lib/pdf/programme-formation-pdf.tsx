@@ -208,6 +208,24 @@ export function ProgrammeFormationPDF({ formation, org, session }: ProgrammeForm
       <Page size="A4" style={shared.page}>
         <PdfDocHeader docTitle="Programme de formation" numero={formation.reference || ''} date={today} org={org} />
 
+        {/* Traçabilité du programme : conception, dernière révision, version. */}
+        {(() => {
+          const conception = Array.isArray(formation.historique_versions)
+            ? formation.historique_versions.find((h: any) => h?.evenement === 'conception')?.date
+            : null
+          const fr = (d: string) => new Date(d).toLocaleDateString('fr-FR')
+          const morceaux = [
+            conception ? `Conçu le ${fr(conception)}` : null,
+            formation.date_derniere_maj ? `mis à jour le ${fr(formation.date_derniere_maj)}` : null,
+            formation.version ? `version ${formation.version}` : null,
+          ].filter(Boolean)
+          return morceaux.length ? (
+            <Text style={{ fontSize: 7.5, color: SURFACE_500 as any, marginTop: -4, marginBottom: 8 }}>
+              {morceaux.join(' · ')}
+            </Text>
+          ) : null
+        })()}
+
         {/* Titre + chips */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ fontSize: 16, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, letterSpacing: -0.3 }}>{formation.intitule}</Text>

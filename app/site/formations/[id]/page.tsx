@@ -184,10 +184,31 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           </div>
         </aside>
       </div>
+      {(f.nombre_apprenants_total || f.taux_satisfaction != null || f.taux_reussite != null) && (
+        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-4">
+          <div className="rounded-2xl bg-[#195144]/5 border border-[#195144]/15 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Indicateurs de résultats</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {f.nombre_apprenants_total ? (
+                <div><div className="ll-display text-2xl text-[#14110F]">{f.nombre_apprenants_total}</div><div className="text-xs text-[#57534E] mt-0.5">stagiaires formés</div></div>
+              ) : null}
+              {f.taux_satisfaction != null ? (
+                <div><div className="ll-display text-2xl text-[#14110F]">{(f.taux_satisfaction / 20).toFixed(1)}/5</div><div className="text-xs text-[#57534E] mt-0.5">satisfaction des stagiaires</div></div>
+              ) : null}
+              {f.taux_reussite != null ? (
+                <div><div className="ll-display text-2xl text-[#14110F]">{f.taux_reussite}%</div><div className="text-xs text-[#57534E] mt-0.5">d’acquisition des compétences</div></div>
+              ) : null}
+            </div>
+            <p className="mt-3 text-[10px] text-[#A8A29E]">Indicateurs calculés sur les sessions réalisées, mis à jour en continu (questionnaires de satisfaction et évaluations des acquis).</p>
+          </div>
+        </div>
+      )}
       {f.date_derniere_maj && (
-        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-10 -mt-4">
+        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-10">
           <p className="text-xs text-[#A8A29E]">
-            Programme mis à jour le {new Date(f.date_derniere_maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.
+            {f.date_conception ? `Programme conçu le ${new Date(f.date_conception).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · ` : ''}
+            mis à jour le {new Date(f.date_derniere_maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {f.version ? ` · version ${f.version}` : ''}.
           </p>
         </div>
       )}
