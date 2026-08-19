@@ -165,6 +165,14 @@ export default async function QualiopiPage() {
     }
   } catch { nbAbsencesSansMotif = 0 }
 
+  // Réseau handicap (ind. 26) — résilient avant migration 136.
+  let nbReseauHandicap = 0
+  try {
+    const { count: cRh, error: eRh } = await supabase.from('reseau_handicap')
+      .select('id', { count: 'exact', head: true }).eq('organization_id', orgId)
+    if (!eRh) nbReseauHandicap = cRh || 0
+  } catch { /* table absente */ }
+
   // Appréciations des parties prenantes (ind. 30) — résilient avant migration 134.
   let nbAppreciationsEntreprise = 0
   let nbAppreciationsFinanceur = 0
@@ -241,7 +249,10 @@ export default async function QualiopiPage() {
     23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
     24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],
     25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 }],
-    26: [{ label: hasReferentHandicap ? 'Veille & réseau handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVH + (hasReferentHandicap ? 1 : 0), warn: nbVH === 0 && !hasReferentHandicap }],
+    26: [
+      { label: hasReferentHandicap ? 'Veille handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVH + (hasReferentHandicap ? 1 : 0), warn: nbVH === 0 && !hasReferentHandicap },
+      { label: 'Réseau handicap par région (contacts actualisés)', href: '/dashboard/qualiopi/handicap', count: nbReseauHandicap },
+    ],
     27: [{ label: hasNda ? 'N° DA / Qualiopi / RGPD' : 'N° déclaration d\'activité à renseigner', href: '/dashboard/settings', count: hasNda ? 1 : 0, warn: !hasNda }],
     28: [{ label: 'Satisfaction à chaud recueillie', href: '/dashboard/evaluations', count: nbSatisChaud, warn: nbSatisChaud < nbSessionsTerm / 2 }],
     29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],
