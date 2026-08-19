@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 }
 
 interface Poste {
+  pdf: string
   icone: React.ComponentType<{ className?: string }>
   titre: string
   accroche: string
@@ -24,6 +25,7 @@ const POSTES: Poste[] = [
   {
     icone: Hygiene,
     titre: 'Formateur·rice Hygiène alimentaire & HACCP',
+    pdf: '/site/documents/fiches-poste/formateur-hygiene-alimentaire-haccp.pdf',
     accroche: "Vous formez les équipes de restaurants, boucheries et boulangeries aux bonnes pratiques d'hygiène, à la méthode HACCP et au plan de maîtrise sanitaire.",
     missions: [
       "Animer des sessions intra-entreprise d'1 à 3 jours (hygiène alimentaire, PMS, nettoyage-désinfection, traçabilité, allergènes)",
@@ -41,6 +43,7 @@ const POSTES: Poste[] = [
   {
     icone: FirstAid,
     titre: 'Formateur·rice Prévention & Sécurité au travail',
+    pdf: '/site/documents/fiches-poste/formateur-prevention-securite.pdf',
     accroche: 'Vous accompagnez les établissements sur le DUERP, les gestes et postures, le SST et la sécurité incendie.',
     missions: [
       "Animer les formations DUERP, prévention des risques professionnels, gestes & postures, SST, sécurité incendie",
@@ -57,6 +60,7 @@ const POSTES: Poste[] = [
   {
     icone: ChefHat,
     titre: 'Formateur·rice Métiers de bouche',
+    pdf: '/site/documents/fiches-poste/formateur-metiers-de-bouche.pdf',
     accroche: 'Boucherie, boulangerie, pâtisserie, cuisine, barista : vous transmettez le geste professionnel en situation réelle, dans le laboratoire ou la cuisine du client.',
     missions: [
       'Animer des formations techniques en établissement (découpe, panification, pâtisserie, préparation culinaire, café)',
@@ -73,6 +77,7 @@ const POSTES: Poste[] = [
   {
     icone: Management,
     titre: 'Formateur·rice Management & Gestion en restauration',
+    pdf: '/site/documents/fiches-poste/formateur-management-gestion.pdf',
     accroche: 'Vous formez gérants et responsables : management des équipes, rentabilité, coûts matières, relation client, développement commercial.',
     missions: [
       'Animer les formations management, gestion & rentabilité, relation client et développement commercial',
@@ -89,6 +94,7 @@ const POSTES: Poste[] = [
   {
     icone: UserCheck,
     titre: 'Formateur·rice-accompagnateur·rice POEI',
+    pdf: '/site/documents/fiches-poste/formateur-accompagnateur-poei.pdf',
     accroche: "Vous préparez des demandeurs d'emploi à leur prise de poste d'équipier polyvalent en restauration rapide, en lien avec France Travail et l'employeur.",
     missions: [
       "Animer le parcours POEI (300 h max) : hygiène, sécurité, gestes métier, posture professionnelle",
@@ -163,7 +169,13 @@ export default function RecrutementPage() {
                   </ul>
                 </div>
               </div>
-              <p className="mt-4 text-xs text-[#78716C]">{p.zones}</p>
+              <div className="mt-4 flex items-center justify-between gap-4 flex-wrap">
+                <p className="text-xs text-[#78716C]">{p.zones}</p>
+                <a href={p.pdf} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] underline underline-offset-4 decoration-[#195144]/30 hover:decoration-[#195144]">
+                  Télécharger la fiche de poste (PDF)
+                </a>
+              </div>
             </article>
           )
         })}

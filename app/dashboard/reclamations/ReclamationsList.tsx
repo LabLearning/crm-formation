@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, Trash2, ArrowRight, Save,
@@ -149,7 +150,9 @@ export function ReclamationsList({ reclamations, actions, users }: ReclamationsL
                     <Badge variant={PRIORITE_COLORS[r.priorite]}>{PRIORITE_LABELS[r.priorite]}</Badge>
                     <Badge variant="default">{ORIGINE_LABELS[r.origine]}</Badge>
                   </div>
-                  <h3 className="text-sm font-semibold text-surface-900">{r.objet}</h3>
+                  <h3 className="text-sm font-semibold text-surface-900">
+                    <Link href={`/dashboard/reclamations/${r.id}`} className="hover:text-brand-600 transition-colors">{r.objet}</Link>
+                  </h3>
                   <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{r.description}</p>
                   <div className="flex items-center gap-4 mt-2 text-2xs text-surface-400">
                     <span>Reçue le {formatDate(r.date_reception, { day: 'numeric', month: 'short' })}</span>

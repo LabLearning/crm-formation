@@ -212,3 +212,35 @@ export async function deleteReclamationAction(id: string): Promise<ActionResult>
   revalidatePath('/dashboard/reclamations')
   return { success: true }
 }
+
+/** Met à jour les champs de traitement d'une réclamation (fiche détaillée). */
+export async function updateReclamationFieldsAction(id: string, formData: FormData): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+
+  const champ = (n: string) => {
+    const v = formData.get(n)
+    return v === null ? undefined : String(v).trim() || null
+  }
+  const maj: Record<string, unknown> = {}
+  for (const n of ['objet', 'description', 'analyse', 'action_corrective', 'commentaire_cloture', 'emetteur_nom', 'emetteur_email', 'emetteur_telephone'] as const) {
+    const v = champ(n)
+    if (v !== undefined) maj[n] = v
+  }
+  for (const n of ['date_analyse', 'date_resolution', 'date_cloture'] as const) {
+    const v = champ(n)
+    if (v !== undefined) maj[n] = v
+  }
+  if (champ('priorite') !== undefined) maj.priorite = champ('priorite')
+  if (Object.keys(maj).length === 0) return { success: true }
+  maj.updated_at = new Date().toISOString()
+
+  const { error } = await supabase.from('reclamations').update(maj)
+    .eq('id', id).eq('organization_id', session.organization.id)
+  if (error) { console.error('[reclamation maj]', error.message); return { success: false, error: 'Enregistrement impossible' } }
+
+  await logAudit({ action: 'update', entity_type: 'reclamation', entity_id: id, details: { champs: Object.keys(maj) } })
+  revalidatePath(`/dashboard/reclamations/${id}`)
+  revalidatePath('/dashboard/reclamations')
+  return { success: true }
+}
