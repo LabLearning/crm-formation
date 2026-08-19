@@ -76,3 +76,25 @@ export function isPlaceholderEmail(email?: string | null): boolean {
   const domain = email.trim().toLowerCase().split('@')[1]
   return !!domain && PLACEHOLDER_EMAIL_DOMAINS.has(domain)
 }
+
+/**
+ * Titre de formation en casse de phrase pour l'affichage public : majuscule
+ * au premier mot, minuscules ensuite — mais les sigles restent en capitales.
+ * Les intitulés stockés mélangent TOUT MAJUSCULE et casse normale ; on ne
+ * touche pas à la base (les documents la citent telle quelle), on n'égalise
+ * qu'à l'écran.
+ */
+export function titreFormation(intitule: string | null | undefined): string {
+  if (!intitule) return ''
+  const SIGLES = new Set(['HACCP', 'DUERP', 'SST', 'PMS', 'POEI', 'CRM', 'LMS', 'IA', 'TMS', 'HCR', 'PND', 'PSH', 'EPI', 'CAP', 'BP', 'BM', 'QCM', '360°', 'RNQ'])
+  const petits = new Set(['de', 'des', 'du', 'la', 'le', 'les', 'et', 'en', 'à', 'au', 'aux', 'pour', 'dans', 'sur', 'un', 'une', 'd', 'l'])
+  const mots = intitule.trim().split(/\s+/)
+  return mots.map((mot, i) => {
+    const nu = mot.replace(/[^A-Za-zÀ-ÿ0-9°]/g, '')
+    if (SIGLES.has(nu.toUpperCase())) return mot.toUpperCase()
+    const bas = mot.toLowerCase()
+    if (i === 0) return bas.charAt(0).toUpperCase() + bas.slice(1)
+    if (petits.has(nu.toLowerCase())) return bas
+    return bas
+  }).join(' ')
+}

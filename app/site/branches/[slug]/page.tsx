@@ -5,6 +5,7 @@ import { getBranchesData } from '@/lib/public-site-data'
 import { brancheBySlug, BRANCHES } from '../../branches'
 import { MetierVisual } from '../../MetierVisual'
 import { Reveal } from '../../Reveal'
+import { titreFormation } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,7 +70,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
                       <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${b.from}26 0%, ${b.to}73 100%)` }} />
                     </div>
                     <div className="flex flex-col flex-1 p-5">
-                      <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{f.intitule}</div>
+                      <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{titreFormation(f.intitule)}</div>
                       <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
                         {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
                         {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
