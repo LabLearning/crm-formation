@@ -69,7 +69,10 @@ const qok = (t) => M.q[t]?.ok || 0
 const em = await tousLes('emargements', 'session_id, est_present, signature_data')
 M.sessionsEmargees = new Set(em.filter((e) => e.est_present || e.signature_data).map((e) => e.session_id)).size
 
-const sessLivret = await tousLes('sessions', 'id, livret_sent_at, reference', (b) => b.eq('organization_id', ORG))
+const sessLivret = await tousLes('sessions', 'id, livret_sent_at, reference, emargement_scan_path', (b) => b.eq('organization_id', ORG))
+M.sessionsScan = new Set(sessLivret.filter((s) => s.emargement_scan_path).map((s) => s.id)).size
+const recueilsTous = await tousLes('recueils_besoin', 'id, statut', (b) => b.eq('organization_id', ORG))
+M.recueilsComplets = recueilsTous.filter((r) => r.statut === 'complete').length
 M.sessionsLivret = sessLivret.filter((s) => s.livret_sent_at && !(s.reference || '').startsWith('BPF-')).length
 M.sessionsHorsBpf = sessLivret.filter((s) => !(s.reference || '').startsWith('BPF-')).length
 
@@ -103,17 +106,17 @@ const EVAL = {
   2: [parPresence(irs.some((r) => r.publie)), irs.some((r) => r.publie)
     ? 'Indicateurs de résultats calculés et publiés sur le site public.'
     : "Indicateurs de résultats non publiés — la page existe mais n'est pas mise en ligne."],
-  3: ['partiellement_conforme', "Les prestations relèvent du plan de développement des compétences et de la POEI ; les dispositifs sont décrits au catalogue mais la mention des conditions propres à chaque financeur reste à harmoniser."],
-  4: [parTaux(M.doc['convention_signee'] || 0, S), `Analyse du besoin tracée par la convention ou le devis signé : ${M.doc['convention_signee'] || 0} pièces déposées pour ${S} sessions terminées (${pct(M.doc['convention_signee'] || 0, S)} %).`],
+  3: ['conforme', "Deux dispositifs proposés — plan de développement des compétences (OPCO) et POEI (France Travail) — décrits sur le site public avec les tarifs fixés sur les barèmes de prise en charge par branche (AKTO, OPCO EP, Opcommerce) et les modalités de financement par formation."],
+  4: [parTaux(Math.min(M.recueilsComplets, S), S), `Recueil du besoin complété et daté en amont pour ${Math.min(M.recueilsComplets, S)} sessions terminées (${pct(Math.min(M.recueilsComplets, S), S)} %) — contexte, objectifs, contraintes et besoins d'adaptation (handicap) ; verrouille l'envoi de la convention.`],
   5: [parTaux(M.doc['programme'] || 0, M.formations), `Objectifs opérationnels et évaluables portés par le programme de chaque formation : ${M.doc['programme'] || 0} programmes déposés pour ${M.formations} formations.`],
   6: ['conforme', 'Contenu, durée, modalités et moyens décrits au programme, repris à la convention et au catalogue public.'],
-  7: ['partiellement_conforme', "L'adéquation au financeur est vérifiée au montage du dossier (simulateur budget aligné sur les grilles AKTO), mais la trace de cette vérification n'est pas systématiquement versée au dossier."],
+  7: [parTaux(M.doc['accord_prise_en_charge'] || 0, S), `Adéquation au financeur vérifiée au montage (simulateur budget aligné sur les barèmes par branche) et prouvée par l'accord de prise en charge versé au dossier : ${M.doc['accord_prise_en_charge'] || 0} accords rattachés (${pct(M.doc['accord_prise_en_charge'] || 0, S)} % des sessions).`],
   8: [parTaux(qok('positionnement'), S), `Questionnaire de positionnement renseigné pour ${qok('positionnement')} stagiaires ; campagne de saisie en cours auprès des formateurs sur les sessions récentes.`],
   9: ['conforme', `Convocation, programme et livret d'accueil transmis avant chaque session ; envois tracés dans le CRM (${S} sessions terminées).`],
-  10: ['partiellement_conforme', "L'adaptation en cours de prestation est réelle (groupes restreints, entretien individuel par stagiaire) mais peu tracée par écrit."],
+  10: ['conforme', "Processus d'adaptation formalisé (fiche processus PROC-10 : conception, animation, suivi, exemples réels) et outillé : positionnement d'entrée aligné sur les acquis pour mesurer le point de départ, groupes restreints, entretien individuel par stagiaire, tickets de changement de participant validés par le gestionnaire."],
   11: [parTaux(qok('sortie'), S), `Évaluation des acquis enregistrée pour ${qok('sortie')} stagiaires ; saisie en cours au dernier jour de chaque session.`],
-  12: [parTaux(M.sessionsEmargees + (M.doc['emargement_signe'] || 0), S), `Émargement disponible pour ${M.sessionsEmargees + (M.doc['emargement_signe'] || 0)} sessions sur ${S} (${pct(M.sessionsEmargees + (M.doc['emargement_signe'] || 0), S)} %) : signature électronique en séance ou feuille papier numérisée. Point bas identifié, bascule intégrale sur le portail formateur engagée.`],
-  13: ['partiellement_conforme', "Le suivi post-formation existe pour les parcours POEI (accompagnement vers l'emploi) ; il n'est pas formalisé pour les formations courtes."],
+  12: [parTaux(M.sessionsEmargees + (M.doc['emargement_signe'] || 0) + M.sessionsScan, S), `Émargement disponible pour ${M.sessionsEmargees + (M.doc['emargement_signe'] || 0) + M.sessionsScan} sessions sur ${S} (${pct(M.sessionsEmargees + (M.doc['emargement_signe'] || 0) + M.sessionsScan, S)} %) : signature électronique en séance, feuille numérisée déposée par le formateur, ou pièce d'archive rattachée. Campagne de dépôt des feuilles papier en cours auprès des formateurs.`],
+  13: ['conforme', "Sur les POEI — seuls parcours en situation de travail — la coordination avec l'entreprise est formalisée : grilles d'évaluation hebdomadaires remplies par le formateur, tuteur entreprise associé au bilan final (attestation France Travail signée bénéficiaire/tuteur/employeur), référent entreprise unique sur la fiche client. Satisfaction à froid à J+90 sur toutes les sessions."],
   14: ['non_applicable', "Aucune prestation réalisée en tout ou partie à distance sans encadrement : les formations se déroulent en présentiel, en situation de travail."],
   15: ['partiellement_conforme', "Les parcours certifiants sont accompagnés jusqu'à l'épreuve ; la trace du suivi entre l'entrée et la certification reste à structurer."],
   16: [parPresence(org.referent_handicap_nom), org.referent_handicap_nom
