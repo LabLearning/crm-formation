@@ -54,6 +54,16 @@ export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }:
   const isActive = (href: string) => {
     const [chemin, requete] = href.split('?')
     if (chemin !== pathname && !pathname.startsWith(chemin + '/')) return false
+    // Le plus long match gagne : sur /dashboard/qualiopi/dossiers, l'entrée
+    // « Complétude des dossiers » s'allume, pas « Qualiopi » qui n'en est
+    // que le préfixe.
+    if (chemin !== pathname) {
+      const plusPrecis = navigation.some((sec) => sec.items.some((it) => {
+        const c = it.href.split('?')[0]
+        return c.length > chemin.length && (c === pathname || pathname.startsWith(c + '/'))
+      }))
+      if (plusPrecis) return false
+    }
     if (!requete) {
       // Une entrée sans paramètre ne s'allume pas quand une entrée filtrée
       // du même chemin correspond à ce que l'on regarde.
