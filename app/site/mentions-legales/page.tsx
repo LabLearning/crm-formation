@@ -15,7 +15,7 @@ export default function MentionsLegales() {
         <li><strong>SIRET :</strong> 931 658 561 00036 — RCS Montpellier — Code APE : 8559A</li>
         <li><strong>TVA intracommunautaire :</strong> FR41931658561</li>
         <li><strong>Représentant légal et directeur de la publication :</strong> Julien COLELLA, Président</li>
-        <li><strong>Téléphone :</strong> 06 10 61 26 98</li>
+        <li><strong>Téléphone :</strong> 04 51 330 330</li>
         <li><strong>Email :</strong> <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a></li>
       </ul>
 

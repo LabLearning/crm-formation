@@ -80,8 +80,8 @@ export function SiteFooter() {
             <a href="mailto:contact@lab-learning.fr" className="flex items-center gap-2 text-[#D6D3D1] hover:text-white transition-colors">
               <Mail className="h-4 w-4 shrink-0" /> contact@lab-learning.fr
             </a>
-            <a href="tel:+33695331124" className="flex items-center gap-2 text-[#D6D3D1] hover:text-white transition-colors">
-              <PhoneCall className="h-4 w-4 shrink-0" /> 06 95 33 11 24
+            <a href="tel:+33451330330" className="flex items-center gap-2 text-[#D6D3D1] hover:text-white transition-colors">
+              <PhoneCall className="h-4 w-4 shrink-0" /> 04 51 330 330
             </a>
             <div className="flex items-start gap-2 text-[#A8A29E]">
               <MapPin className="h-4 w-4 shrink-0 mt-0.5" /> 6b bd Berthelot, Bureau 3, 34000 Montpellier

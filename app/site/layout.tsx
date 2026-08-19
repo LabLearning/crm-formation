@@ -54,7 +54,7 @@ const SCHEMA_ORGANISATION = {
       url: 'https://crm.lab-learning.fr/site',
       logo: 'https://crm.lab-learning.fr/logo-lablearning.svg',
       email: 'contact@lab-learning.fr',
-      telephone: '+33610612698',
+      telephone: '+33451330330',
       vatID: 'FR41931658561',
       taxID: '93165856100036',
       address: {
@@ -76,7 +76,7 @@ const SCHEMA_ORGANISATION = {
       name: 'Lab Learning',
       parentOrganization: { '@id': 'https://crm.lab-learning.fr/site#organization' },
       url: 'https://crm.lab-learning.fr/site',
-      telephone: '+33610612698',
+      telephone: '+33451330330',
       address: {
         '@type': 'PostalAddress',
         streetAddress: '6b boulevard Berthelot, Bureau 3',
