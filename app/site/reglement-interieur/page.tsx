@@ -25,7 +25,10 @@ export default function ReglementInterieur() {
 
       <h2>Article 1 — Objet</h2>
       <p>
-        Le présent règlement est établi conformément aux dispositions des articles L.6352-3 à L.6352-5
+        <strong>Version 2 — mise à jour le 16 août 2026</strong>, à la suite de la veille légale sur les
+        organismes de formation (loi n° 2026-534 du 25 juin 2026 et article L.6352-4 modifié du code du
+        travail) ; annule et remplace la version précédente.
+        {' '}Le présent règlement est établi conformément aux dispositions des articles L.6352-3 à L.6352-5
         et R.6352-1 à R.6352-15 du code du travail. Il s&apos;applique à tous les bénéficiaires de la
         formation, pour la durée de la formation suivie. Il définit les règles générales et permanentes,
         précise la réglementation en matière d&apos;hygiène et de sécurité ainsi que les règles relatives

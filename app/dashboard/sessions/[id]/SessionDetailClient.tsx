@@ -442,6 +442,24 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       {/* ═══════════════════════════════════════════════
           ONGLET SESSION — Planning + Formateur + Pointages
           ═══════════════════════════════════════════════ */}
+      {/* Preuve de l'envoi des convocations : la date réelle du marquage,
+          confrontée au début de session — J-1 respecté ou non, ça se voit. */}
+      {tab === 'session' && session.convocations_sent_at && (() => {
+        const envoi = String(session.convocations_sent_at).slice(0, 10)
+        const debut = session.date_debut ? String(session.date_debut).slice(0, 10) : null
+        const j1ok = debut ? envoi < debut : true
+        return (
+          <div className={`card px-4 py-2.5 mb-3 flex items-center gap-2 text-sm ${j1ok ? 'border-emerald-100' : 'border-amber-200'}`}>
+            <Mail className={`h-4 w-4 shrink-0 ${j1ok ? 'text-emerald-600' : 'text-amber-600'}`} />
+            <span className="text-surface-700">
+              Convocations envoyées le <strong>{formatDate(session.convocations_sent_at, { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+              {debut ? (j1ok ? ' — au moins la veille du début de session (J-1 respecté)' : ' — après le début de session') : ''}
+            </span>
+            {j1ok && <CheckCircle2 className="h-4 w-4 text-emerald-600 ml-auto shrink-0" />}
+          </div>
+        )
+      })()}
+
       {tab === 'session' && (
         <div className="space-y-4">
           {/* Prix de vente de la session (→ convention) — éditable ici */}

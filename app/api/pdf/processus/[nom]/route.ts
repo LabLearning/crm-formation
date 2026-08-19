@@ -83,6 +83,40 @@ const PROCESSUS: Record<string, { titre: string; reference: string; intro: strin
         titre: '4. Exemples de mise en œuvre',
         paragraphes: [
           "Parcours POEI construits par enseigne (référentiels distincts par concept de restauration), groupes du matin et du soir dédoublés pour suivre les équipes de service, entretiens individuels de positionnement systématiques en restauration rapide, évaluations menées à l'oral au poste de travail lorsque l'écrit est un obstacle.",
+          "Adaptation linguistique : supports de formation traduits en bengali par le formateur (G. Pledran) pour une équipe non francophone d'un établissement de restauration rapide — la pièce est conservée au dossier de la session concernée.",
+        ],
+      },
+    ],
+  },
+  intra: {
+    titre: "Déroulé d'une formation en entreprise",
+    reference: 'PROC-06',
+    intro:
+      "Comment se déroule concrètement une action de formation intra-entreprise Lab Learning, du premier contact aux documents de clôture — chaque étape laisse sa trace dans le CRM (indicateurs 6, 9, 10, 11, 12 du RNQ).",
+    sections: [
+      {
+        titre: '1. Avant la session',
+        etapes: [
+          { quand: 'Au premier contact', quoi: "Recueil du besoin avec l'établissement : contexte, participants, niveau initial, objectifs, contraintes et besoins d'adaptation (handicap, langue). Il conditionne l'envoi de la convention.", outil: 'recueil du besoin (onglet Recueil de la session)' },
+          { quand: 'À la contractualisation', quoi: 'Convention signée électroniquement par le gérant — datée avant le début de session ; le programme et les tarifs (barèmes OPCO) y sont joints.', outil: 'convention + email_logs' },
+          { quand: 'J-1', quoi: "Convocation envoyée à chaque stagiaire (ou au référent de l'établissement) avec le programme, le règlement intérieur et le livret d'accueil.", outil: 'marquage convocations_sent_at + email_logs (cron J-1)' },
+        ],
+      },
+      {
+        titre: '2. Pendant la session (sur le lieu de travail)',
+        etapes: [
+          { quand: 'Jour 1, accueil', quoi: "Tour de table, rappel des objectifs et du déroulé, vérification des besoins d'adaptation. Émargement par demi-journée (signature électronique ou feuille papier numérisée).", outil: 'émargements de la session' },
+          { quand: 'Jour 1', quoi: "Questionnaire de positionnement individuel — mêmes questions que l'évaluation de sortie, pour mesurer la progression.", outil: 'positionnement (scores sur la session)' },
+          { quand: 'Chaque module', quoi: 'Alternance apports théoriques courts / démonstration au poste de travail / mise en pratique par le stagiaire sur son propre équipement, avec reprise individuelle des gestes non acquis.', outil: 'programme (modalités par module) + rapport du formateur' },
+          { quand: 'Dernier jour', quoi: "Évaluation des acquis, questionnaire de satisfaction à chaud, remise des supports pédagogiques aux stagiaires (envoi tracé + portail apprenant).", outil: 'évaluation de sortie + satisfaction + envoi des supports' },
+        ],
+      },
+      {
+        titre: '3. Après la session',
+        etapes: [
+          { quand: 'À la clôture', quoi: "Rapport de fin de session transmis par le formateur ; documents de clôture émis (attestation de fin de formation, certificat de réalisation, attestation d'hygiène le cas échéant) et envoyés aux stagiaires et au référent.", outil: 'rapport de session + documents de clôture' },
+          { quand: 'Dans la semaine', quoi: "Retour client par téléphone : ce que l'établissement a constaté, noté tel quel sur la session.", outil: 'retour client (onglet Rapport)' },
+          { quand: 'J+90', quoi: 'Satisfaction à froid envoyée aux stagiaires, relancée à J+97 et J+104 vers les non-répondants.', outil: 'cron satisfaction-froid + relances' },
         ],
       },
     ],
