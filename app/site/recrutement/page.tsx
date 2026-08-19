@@ -1,0 +1,192 @@
+import type { Metadata } from 'next'
+import { Hygiene, FirstAid, ChefHat, Management, UserCheck, CheckCircle2, Mail, MapPin, Briefcase, GraduationCap } from '../icons'
+
+export const metadata: Metadata = {
+  title: 'Recrutement — Devenez formateur Lab Learning',
+  description:
+    "Lab Learning recrute des formateurs indépendants : hygiène alimentaire HACCP, prévention et sécurité au travail, métiers de bouche, management en restauration, POEI. Fiches de poste et candidature.",
+  alternates: { canonical: 'https://crm.lab-learning.fr/site/recrutement' },
+}
+
+interface Poste {
+  icone: React.ComponentType<{ className?: string }>
+  titre: string
+  accroche: string
+  missions: string[]
+  profil: string[]
+  zones: string
+}
+
+/** Les fiches de poste reflètent le vrai vivier : les mêmes familles que le
+ *  catalogue. Le recrutement suit l'exigence Qualiopi (ind. 21/22) : CV,
+ *  diplômes et références vérifiés à l'entrée, compétences réévaluées. */
+const POSTES: Poste[] = [
+  {
+    icone: Hygiene,
+    titre: 'Formateur·rice Hygiène alimentaire & HACCP',
+    accroche: "Vous formez les équipes de restaurants, boucheries et boulangeries aux bonnes pratiques d'hygiène, à la méthode HACCP et au plan de maîtrise sanitaire.",
+    missions: [
+      "Animer des sessions intra-entreprise d'1 à 3 jours (hygiène alimentaire, PMS, nettoyage-désinfection, traçabilité, allergènes)",
+      'Adapter le contenu au terrain : restauration rapide, traditionnelle, métiers de bouche',
+      "Évaluer les acquis (positionnement d'entrée, évaluation de sortie) et tenir l'émargement dans nos outils",
+      'Remettre un rapport de fin de session',
+    ],
+    profil: [
+      "3 ans d'expérience minimum en hygiène alimentaire ou en qualité agroalimentaire",
+      'Formation HACCP attestée (ROFHYA apprécié) ; expérience de la formation pour adultes',
+      "Aisance avec les publics de terrain, y compris en français langue seconde",
+    ],
+    zones: 'Interventions dans toute la France — fortes demandes en Occitanie, Île-de-France, Auvergne-Rhône-Alpes',
+  },
+  {
+    icone: FirstAid,
+    titre: 'Formateur·rice Prévention & Sécurité au travail',
+    accroche: 'Vous accompagnez les établissements sur le DUERP, les gestes et postures, le SST et la sécurité incendie.',
+    missions: [
+      "Animer les formations DUERP, prévention des risques professionnels, gestes & postures, SST, sécurité incendie",
+      "Conduire l'analyse des risques avec le gérant et les équipes",
+      'Évaluer les acquis et documenter la session dans nos outils',
+    ],
+    profil: [
+      'Certification de formateur SST (INRS) ou équivalent pour les modules concernés — habilitations à jour',
+      "Expérience en prévention des risques (IPRP, HSE, ergonomie…)",
+      'Pédagogie active, cas concrets tirés du secteur CHR',
+    ],
+    zones: 'Interventions dans toute la France',
+  },
+  {
+    icone: ChefHat,
+    titre: 'Formateur·rice Métiers de bouche',
+    accroche: 'Boucherie, boulangerie, pâtisserie, cuisine, barista : vous transmettez le geste professionnel en situation réelle, dans le laboratoire ou la cuisine du client.',
+    missions: [
+      'Animer des formations techniques en établissement (découpe, panification, pâtisserie, préparation culinaire, café)',
+      "Positionner le niveau d'entrée de chaque stagiaire et mesurer la progression",
+      'Conseiller le gérant sur les organisations de production',
+    ],
+    profil: [
+      "5 ans d'expérience métier minimum (CAP/BP/BM ou expérience équivalente démontrée)",
+      "Une expérience de transmission (tutorat, apprentissage, formation) est exigée",
+      'Autonomie et adaptation aux contraintes de service',
+    ],
+    zones: 'Interventions dans toute la France, planification adaptée aux jours de fermeture des établissements',
+  },
+  {
+    icone: Management,
+    titre: 'Formateur·rice Management & Gestion en restauration',
+    accroche: 'Vous formez gérants et responsables : management des équipes, rentabilité, coûts matières, relation client, développement commercial.',
+    missions: [
+      'Animer les formations management, gestion & rentabilité, relation client et développement commercial',
+      "Travailler sur les chiffres réels de l'établissement (coûts matières, marges, plans d'action)",
+      'Structurer un plan de progression avec le dirigeant',
+    ],
+    profil: [
+      "Expérience de direction ou d'accompagnement d'établissements CHR",
+      'Solides bases en gestion (P&L restauration) et en conduite du changement',
+      'Posture de consultant-formateur, écoute et exigence',
+    ],
+    zones: 'Interventions dans toute la France',
+  },
+  {
+    icone: UserCheck,
+    titre: 'Formateur·rice-accompagnateur·rice POEI',
+    accroche: "Vous préparez des demandeurs d'emploi à leur prise de poste d'équipier polyvalent en restauration rapide, en lien avec France Travail et l'employeur.",
+    missions: [
+      "Animer le parcours POEI (300 h max) : hygiène, sécurité, gestes métier, posture professionnelle",
+      "Évaluer chaque semaine la progression des candidats (grilles hebdomadaires) et conduire le bilan final avec le tuteur et l'employeur",
+      "Coordonner avec le gestionnaire Lab Learning le suivi France Travail",
+    ],
+    profil: [
+      'Expérience en restauration rapide (management ou exploitation) ET en formation/insertion',
+      'Rigueur documentaire — le dispositif France Travail exige un suivi précis',
+      'Goût pour les publics en insertion professionnelle',
+    ],
+    zones: 'Missions longues (4 à 6 semaines) sur site — France entière selon les ouvertures',
+  },
+]
+
+export default function RecrutementPage() {
+  return (
+    <>
+      <section className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-20 pb-4">
+        <span className="ll-kicker">Recrutement</span>
+        <h1 className="mt-4 ll-display ll-fluid-h1 text-[#14110F] text-balance">
+          Devenez formateur Lab Learning
+        </h1>
+        <p className="mt-4 text-[#57534E] leading-relaxed max-w-2xl">
+          Organisme de formation certifié Qualiopi, nous formons chaque année des centaines de
+          professionnels de la restauration et des métiers de bouche, sur leur lieu de travail.
+          Nous recherchons des formateurs indépendants exigeants, praticiens de leur métier,
+          pour intervenir en sous-traitance dans toute la France.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#57534E]">
+          <span className="inline-flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> Statut indépendant, contrat de prestation par session</span>
+          <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Interventions en entreprise, France entière</span>
+          <span className="inline-flex items-center gap-1.5"><GraduationCap className="h-4 w-4" /> Outils fournis : programmes, supports, émargement et évaluations en ligne</span>
+        </div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-5 md:px-8 py-10 space-y-6">
+        {POSTES.map((p) => {
+          const Icone = p.icone
+          return (
+            <article key={p.titre} className="rounded-2xl border border-[#E7E5E4] bg-white p-6 md:p-8">
+              <div className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-[#195144]/10 text-[#195144] flex items-center justify-center shrink-0">
+                  <Icone className="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 className="ll-display text-lg md:text-xl text-[#14110F]">{p.titre}</h2>
+                  <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{p.accroche}</p>
+                </div>
+              </div>
+              <div className="mt-5 grid md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Vos missions</div>
+                  <ul className="space-y-1.5">
+                    {p.missions.map((m) => (
+                      <li key={m} className="flex gap-2 text-sm text-[#57534E]">
+                        <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" />
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Profil recherché</div>
+                  <ul className="space-y-1.5">
+                    {p.profil.map((m) => (
+                      <li key={m} className="flex gap-2 text-sm text-[#57534E]">
+                        <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" />
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-[#78716C]">{p.zones}</p>
+            </article>
+          )
+        })}
+      </section>
+
+      <section className="max-w-4xl mx-auto px-5 md:px-8 pb-20">
+        <div className="rounded-2xl bg-[#195144] text-white p-6 md:p-8">
+          <h2 className="ll-display text-xl">Candidater</h2>
+          <p className="mt-2 text-sm text-white/80 leading-relaxed max-w-2xl">
+            Envoyez votre CV, vos diplômes ou certifications, et deux références d&apos;intervention à{' '}
+            <a href="mailto:sales@lab-learning.fr?subject=Candidature formateur" className="underline decoration-white/40 hover:decoration-white">
+              sales@lab-learning.fr
+            </a>{' '}
+            en précisant la fiche de poste visée et vos zones d&apos;intervention. Conformément à notre
+            démarche qualité (Qualiopi), chaque candidature fait l&apos;objet d&apos;une vérification des
+            compétences : analyse du dossier, entretien, puis évaluation continue sur les premières sessions.
+          </p>
+          <a href="mailto:sales@lab-learning.fr?subject=Candidature formateur"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-white text-[#195144] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F5F4] transition-colors">
+            <Mail className="h-4 w-4" /> Envoyer ma candidature
+          </a>
+        </div>
+      </section>
+    </>
+  )
+}

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
-import { Calendar, MapPin, Video, Users, Clock, BookOpen } from 'lucide-react'
+import { Calendar, MapPin, Video, Users, Clock, BookOpen, ClipboardList, CheckCircle2 } from 'lucide-react'
 import type { SessionStatus } from '@/lib/types/formation'
 
 /**
@@ -37,9 +37,21 @@ export async function SessionsView({ formateurId, basePath }: { formateurId: str
       inscritsCounts[r.session_id] = (inscritsCounts[r.session_id] || 0) + 1
     }
   }
+  // État du rapport de fin de session (espace connecté uniquement)
+  const rapportsPar: Record<string, string> = {}
+  if (basePath === '/mon-espace' && sessionIds.length > 0) {
+    const { data: rapports } = await supabase
+      .from('rapports_session')
+      .select('session_id, status')
+      .eq('formateur_id', formateurId)
+      .in('session_id', sessionIds)
+    for (const r of rapports || []) rapportsPar[r.session_id] = r.status
+  }
+
   const sessionsWithCounts = (sessions || []).map((s) => ({
     ...s,
     _nb_inscrits: inscritsCounts[s.id] || 0,
+    _rapport: rapportsPar[s.id] || null,
   }))
 
   const today = new Date().toISOString().split('T')[0]
@@ -96,12 +108,33 @@ export async function SessionsView({ formateurId, basePath }: { formateurId: str
                     {s.formation?.duree_heures && <span>{s.formation.duree_heures}h</span>}
                   </div>
                   {/* Accès au détail : émargement + contenu pédagogique de la session */}
-                  <Link
-                    href={`${basePath}/emargement/${s.id}`}
-                    className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium hover:bg-brand-100 transition-colors"
-                  >
-                    <BookOpen className="h-3.5 w-3.5" /> Contenu et émargement
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    <Link
+                      href={`${basePath}/emargement/${s.id}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium hover:bg-brand-100 transition-colors"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" /> Contenu et émargement
+                    </Link>
+                    {basePath === '/mon-espace' && (
+                      ['soumis', 'valide'].includes(s._rapport || '') ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Rapport transmis
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/mon-espace/rapport/${s.id}`}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            s.status === 'terminee' && !s._rapport
+                              ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                              : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
+                          }`}
+                        >
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          {s._rapport === 'brouillon' ? 'Rapport — brouillon à transmettre' : s.status === 'terminee' ? 'Rapport à faire' : 'Rapport de session'}
+                        </Link>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
