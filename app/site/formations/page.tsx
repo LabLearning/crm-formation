@@ -108,7 +108,9 @@ export default async function SiteFormations() {
                   <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
                     {p.points.map((pt) => (
                       <li key={pt} className="flex items-center gap-1.5 text-sm text-[#44403C]">
-                        <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: p.accent }} />
+                        <span className="shrink-0 inline-flex" style={{ color: p.accent }}>
+                          <CheckCircle2 className="h-4 w-4" />
+                        </span>
                         {pt}
                       </li>
                     ))}
