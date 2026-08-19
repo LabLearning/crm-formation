@@ -39,5 +39,20 @@ export async function GET(req: Request) {
     processed++
   }
 
-  return NextResponse.json({ targetDate, sessions_processed: processed, qcm_reponses_created: created })
+  // Relances : J+97 et J+104 après la fin — uniquement vers ceux qui n'ont
+  // pas répondu. Deux relances maximum, puis on n'insiste plus.
+  let relances = 0
+  for (const decalage of [97, 104]) {
+    const d = new Date()
+    d.setDate(d.getDate() - decalage)
+    const dateRelance = d.toISOString().split('T')[0]
+    const { data: aRelancer } = await supabase
+      .from('sessions').select('id').eq('date_fin', dateRelance).eq('status', 'terminee')
+    for (const s of aRelancer || []) {
+      await notifyApprenantsForQcm(supabase, s.id, 'satisfaction_froid', { seulementEnAttente: true, relance: true })
+      relances++
+    }
+  }
+
+  return NextResponse.json({ targetDate, sessions_processed: processed, qcm_reponses_created: created, sessions_relancees: relances })
 }

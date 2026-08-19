@@ -40,7 +40,7 @@ export async function deposerAppreciationAction(
     const { data: org } = await supabase.from('organizations').select('id').eq('id', cible).maybeSingle()
     if (!org) return { success: false, error: 'Lien invalide' }
     organizationId = (org as any).id
-    type = 'financeur'
+    type = formData.get('role') === 'formateur' ? 'formateur' : 'financeur'
   }
 
   if (!note('note_globale')) return { success: false, error: 'Merci d’indiquer au moins la note globale.' }

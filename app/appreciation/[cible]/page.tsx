@@ -10,14 +10,14 @@ export const metadata = { title: 'Votre appréciation — Lab Learning' }
  * après une session, le financeur pour la sollicitation annuelle. Sans compte
  * — le lien reçu par email fait office d'accès.
  */
-export default async function AppreciationPage({ params }: { params: { cible: string } }) {
+export default async function AppreciationPage({ params, searchParams }: { params: { cible: string }; searchParams?: { role?: string } }) {
   const supabase = await createServiceRoleClient()
 
   const { data: session } = await supabase.from('sessions')
     .select('id, date_debut, date_fin, intitule, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial), organization:organization_id(name, logo_url)')
     .eq('id', params.cible).maybeSingle()
 
-  let contexte: { type: 'entreprise' | 'financeur'; titre: string; sous: string; orgNom: string; logo: string | null }
+  let contexte: { type: 'entreprise' | 'financeur' | 'formateur'; titre: string; sous: string; orgNom: string; logo: string | null }
   if (session) {
     const s: any = session
     contexte = {
@@ -31,7 +31,14 @@ export default async function AppreciationPage({ params }: { params: { cible: st
     const { data: org } = await supabase.from('organizations')
       .select('id, name, logo_url').eq('id', params.cible).maybeSingle()
     if (!org) notFound()
-    contexte = {
+    const formateur = searchParams?.role === 'formateur'
+    contexte = formateur ? {
+      type: 'formateur',
+      titre: 'Votre avis de formateur',
+      sous: `Vous intervenez pour ${(org as any).name} : dites-nous ce qui fonctionne et ce que nous devons améliorer — organisation, outils, communication, paiements.`,
+      orgNom: (org as any).name,
+      logo: (org as any).logo_url || null,
+    } : {
       type: 'financeur',
       titre: 'Votre appréciation sur notre collaboration',
       sous: `${(org as any).name} sollicite votre regard de financeur sur la qualité de la relation et des dossiers.`,

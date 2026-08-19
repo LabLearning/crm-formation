@@ -112,6 +112,14 @@ export function GrillesClient({ formateur, token, sessions }: {
 
         {erreur && <div className="mb-4 rounded-xl bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700">{erreur}</div>}
 
+        <div className="mb-6 text-xs text-surface-500 print:hidden">
+          Votre avis compte aussi :{' '}
+          <a href={`/appreciation/ff747dfe-c034-44d8-98d7-e53892263fb5?role=formateur`}
+            className="text-brand-600 font-medium hover:underline" target="_blank" rel="noreferrer">
+            deux minutes pour évaluer votre collaboration avec Lab Learning
+          </a>
+        </div>
+
         {sessions.length === 0 && (
           <div className="card p-10 text-center text-sm text-surface-500">
             Tout est à jour — aucun questionnaire en attente sur vos sessions.

@@ -23,7 +23,7 @@ function Echelle({ name, label }: { name: string; label: string }) {
   )
 }
 
-export function AppreciationForm({ cible, type }: { cible: string; type: 'entreprise' | 'financeur' }) {
+export function AppreciationForm({ cible, type }: { cible: string; type: 'entreprise' | 'financeur' | 'formateur' }) {
   const [envoi, setEnvoi] = useState(false)
   const [fini, setFini] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -52,14 +52,15 @@ export function AppreciationForm({ cible, type }: { cible: string; type: 'entrep
   return (
     <form onSubmit={soumettre} className="card p-6 space-y-5">
       <input type="text" name="site_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+      {type === 'formateur' && <input type="hidden" name="role" value="formateur" />}
 
-      <Echelle name="note_globale" label={type === 'entreprise' ? 'Satisfaction globale sur la prestation' : 'Qualité globale de la collaboration'} />
-      <Echelle name="note_organisation" label={type === 'entreprise' ? 'Organisation (convocations, planning, documents)' : 'Qualité et complétude des dossiers transmis'} />
-      <Echelle name="note_intervenant" label={type === 'entreprise' ? 'Qualité de l’intervenant' : 'Réactivité et communication'} />
+      <Echelle name="note_globale" label={type === 'entreprise' ? 'Satisfaction globale sur la prestation' : type === 'formateur' ? 'Satisfaction globale de votre collaboration avec Lab Learning' : 'Qualité globale de la collaboration'} />
+      <Echelle name="note_organisation" label={type === 'entreprise' ? 'Organisation (convocations, planning, documents)' : type === 'formateur' ? 'Organisation et outils mis à votre disposition (espace, grilles, documents)' : 'Qualité et complétude des dossiers transmis'} />
+      <Echelle name="note_intervenant" label={type === 'entreprise' ? 'Qualité de l’intervenant' : type === 'formateur' ? 'Communication et réactivité de l’équipe (planification, paiements)' : 'Réactivité et communication'} />
 
       <div>
         <div className="text-sm font-medium text-surface-800 mb-1.5">
-          {type === 'entreprise' ? 'Recommanderiez-vous Lab Learning ?' : 'La collaboration répond-elle à vos attentes ?'}
+          {type === 'entreprise' ? 'Recommanderiez-vous Lab Learning ?' : type === 'formateur' ? 'Recommanderiez-vous Lab Learning à un autre formateur ?' : 'La collaboration répond-elle à vos attentes ?'}
         </div>
         <div className="flex gap-3 text-sm">
           {['oui', 'non'].map((v) => (
@@ -74,7 +75,7 @@ export function AppreciationForm({ cible, type }: { cible: string; type: 'entrep
       <label className="block text-sm font-medium text-surface-800">
         Commentaire
         <textarea name="commentaire" rows={4} className="input-base mt-1.5 font-normal"
-          placeholder={type === 'entreprise' ? 'Ce qui a bien fonctionné, ce qui peut être amélioré…' : 'Vos observations sur nos dossiers et notre relation…'} />
+          placeholder={type === 'entreprise' ? 'Ce qui a bien fonctionné, ce qui peut être amélioré…' : type === 'formateur' ? 'Outils, organisation, supports, paiements : dites-nous tout…' : 'Vos observations sur nos dossiers et notre relation…'} />
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">

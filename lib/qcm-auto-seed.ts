@@ -211,6 +211,7 @@ export async function notifyApprenantsForQcm(
   supabase: any,
   sessionId: string,
   qcmType: QcmType,
+  opts?: { seulementEnAttente?: boolean; relance?: boolean },
 ) {
   const { createNotification } = await import('@/lib/email')
   const labels: Record<QcmType, string> = {
@@ -227,11 +228,24 @@ export async function notifyApprenantsForQcm(
     .eq('id', sessionId).single()
   if (!sess) return
 
-  const { data: inscriptions } = await supabase
+  let { data: inscriptions } = await supabase
     .from('inscriptions')
     .select('apprenant:apprenants(id, user_id, civilite, prenom, nom, email, whatsapp, whatsapp_opt_in)')
     .eq('session_id', sessionId)
     .not('status', 'in', '("annule","abandonne")')
+
+  // Relance : on ne recontacte que ceux qui n'ont pas encore répondu.
+  if (opts?.seulementEnAttente) {
+    const { data: qcmsDuType } = await supabase.from('qcm_sessions')
+      .select('qcm_id, qcm:qcm_id(type)').eq('session_id', sessionId)
+    const ids = (qcmsDuType || []).filter((l: any) => l.qcm?.type === qcmType).map((l: any) => l.qcm_id)
+    if (ids.length) {
+      const { data: faites } = await supabase.from('qcm_reponses')
+        .select('apprenant_id').eq('session_id', sessionId).in('qcm_id', ids).eq('is_complete', true)
+      const dejaFait = new Set((faites || []).map((r: any) => r.apprenant_id))
+      inscriptions = (inscriptions || []).filter((i: any) => i.apprenant && !dejaFait.has(i.apprenant.id))
+    }
+  }
 
   const { data: org } = await supabase.from('organizations').select('*').eq('id', sess.organization_id).single()
   const formationName = (sess as any).formation?.intitule || 'Formation'
@@ -271,6 +285,13 @@ export async function notifyApprenantsForQcm(
       cta: 'Répondre au questionnaire',
     },
   }
+  if (opts?.relance) {
+    for (const k of Object.keys(emailConfig) as QcmType[]) {
+      const c = emailConfig[k]
+      if (c) { c.subject = `Rappel — ${c.subject}`; c.intro = `Petit rappel : ${c.intro.charAt(0).toLowerCase()}${c.intro.slice(1)}` }
+    }
+  }
+
   const { sendWhatsAppTemplate } = await import('@/lib/whatsapp')
   const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
   const { sendDocumentEmail } = await import('@/lib/email')
