@@ -38,8 +38,17 @@ var EXTENSIONS = /\.(pdf|jpe?g|png|heic|docx?|odt|xlsx?)$/i
 var TAILLE_MAX = 25 * 1024 * 1024
 
 function pousser(pj, nom, msg) {
+  // Certaines pièces ressortent sans blob exploitable : on reconstruit le
+  // fichier depuis les octets plutôt que de copier l'objet Gmail.
+  var blob
+  try {
+    blob = Utilities.newBlob(pj.getBytes(), pj.getContentType() || 'application/pdf', nom)
+  } catch (e) {
+    Logger.log('PIÈCE ILLISIBLE ' + nom + ' : ' + e)
+    return false
+  }
   var charge = {
-    fichier: pj.copyBlob().setName(nom),
+    fichier: blob,
     type: 'auto',
     origine: 'remise_bibby',
     date_piece: Utilities.formatDate(msg.getDate(), 'Europe/Paris', 'yyyy-MM-dd'),
@@ -92,10 +101,16 @@ function collecter() {
         var de = String(msg.getFrom()).toLowerCase()
         if (de.indexOf('lab-learning.fr') === -1) continue
 
-        var pjs = msg.getAttachments({ includeInlineImages: false, includeAttachments: true })
-        for (var a = 0; a < pjs.length; a++) {
+        var pjs
+        try {
+          pjs = msg.getAttachments({ includeInlineImages: false, includeAttachments: true })
+        } catch (e) {
+          pjs = msg.getAttachments()
+        }
+        for (var a = 0; a < (pjs || []).length; a++) {
           var pj = pjs[a]
-          var nom = pj.getName()
+          if (!pj) { ignores++; continue }
+          var nom = pj.getName() || ('piece-' + a + '.pdf')
           if (IGNORER.test(nom) || !EXTENSIONS.test(nom) || pj.getSize() > TAILLE_MAX) { ignores++; continue }
           var res = pousser(pj, nom, msg)
           if (res) { deposes++ } else { ignores++ }
