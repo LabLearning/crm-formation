@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Sparkles, CheckCircle2, Pencil } from 'lucide-react'
+import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Pencil } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { createVeilleAction, deleteVeilleAction, generateVeilleSuggestionsAction, updateVeilleAction, validateVeilleAction } from './actions'
+import { createVeilleAction, deleteVeilleAction, updateVeilleAction } from './actions'
 import type { VeilleRow } from './page'
 
 const TYPES = [
@@ -25,10 +25,8 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
   const [addOpen, setAddOpen] = useState(false)
   const [editVeille, setEditVeille] = useState<VeilleRow | null>(null)
   const [defaultType, setDefaultType] = useState<VeilleType>('legale')
-  const [generating, setGenerating] = useState(false)
 
   const isDraft = (v: VeilleRow) => v.statut === 'brouillon'
-  const drafts = useMemo(() => veilles.filter(isDraft), [veilles])
 
   // Compteurs par type = uniquement les veilles VALIDÉES (celles qui comptent pour Qualiopi)
   const counts = useMemo(() => {
@@ -47,19 +45,7 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
     else toast('error', r.error || 'Erreur')
   }
 
-  async function handleValidate(id: string) {
-    const r = await validateVeilleAction(id)
-    if (r.success) { toast('success', 'Veille validée'); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-  }
 
-  async function handleGenerate() {
-    setGenerating(true)
-    const r = await generateVeilleSuggestionsAction(1)
-    if (r.success) { toast('success', `${r.data?.inserted || 0} brouillon(s) IA à valider`); router.refresh() }
-    else toast('error', r.error || 'Erreur IA')
-    setGenerating(false)
-  }
 
   return (
     <div>
@@ -71,49 +57,11 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
           <p className="text-surface-500 mt-1 text-sm">Critère 6 — indicateurs 23 · 24 · 25 · 26. Registre exigé par Qualiopi.</p>
         </div>
         <div className="flex gap-2">
-          <Button className="btn-ia" onClick={handleGenerate} isLoading={generating} icon={<Sparkles className="h-4 w-4" />}>
-            Suggérer par IA
-          </Button>
           <Button onClick={() => { setDefaultType(filter === 'all' ? 'legale' : filter); setAddOpen(true) }} icon={<Plus className="h-4 w-4" />}>
             Ajouter une veille
           </Button>
         </div>
       </div>
-
-      {/* Brouillons IA à valider */}
-      {drafts.length > 0 && (
-        <div className="card p-5 mb-6 border-brand-200 bg-brand-50/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="h-4 w-4 text-brand-600" />
-            <h2 className="text-sm font-heading font-semibold text-surface-900">Brouillons IA à valider</h2>
-            <Badge variant="info">{drafts.length}</Badge>
-          </div>
-          <p className="text-xs text-surface-500 mb-3">Vérifie et corrige chaque brouillon (sources, chiffres), puis valide. Seules les veilles validées comptent pour Qualiopi.</p>
-          <div className="space-y-2">
-            {drafts.map((v) => {
-              const c = typeConf(v.type)
-              return (
-                <div key={v.id} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-brand-100">
-                  <div className="shrink-0 h-8 w-8 rounded-lg bg-brand-50 flex items-center justify-center"><c.Icon className="h-4 w-4 text-brand-600" /></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="info">Ind. {c.ind}</Badge>
-                      {v.source && <span className="text-2xs text-surface-500">{v.source}</span>}
-                    </div>
-                    <div className="text-sm font-semibold text-surface-900 mt-0.5">{v.titre}</div>
-                    {v.resume && <div className="text-xs text-surface-600 mt-0.5">{v.resume}</div>}
-                    {v.action && <div className="text-2xs text-success-700 mt-1"><span className="font-semibold">Action :</span> {v.action}</div>}
-                  </div>
-                  <div className="flex flex-col gap-1 shrink-0">
-                    <Button size="sm" onClick={() => handleValidate(v.id)} icon={<CheckCircle2 className="h-3.5 w-3.5" />}>Valider</Button>
-                    <button onClick={() => handleDelete(v.id)} className="text-2xs text-surface-400 hover:text-danger-500">Rejeter</button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Compteurs par type */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
