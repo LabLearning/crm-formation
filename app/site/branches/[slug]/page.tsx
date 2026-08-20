@@ -7,6 +7,7 @@ import { MetierVisual } from '../../MetierVisual'
 import { Reveal } from '../../Reveal'
 import { titreFormation } from '@/lib/utils'
 import { metierStyle } from '../../metier'
+import { photoFormation } from '@/lib/formations-photos'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,7 +74,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
                         const st = metierStyle(f.intitule)
                         return (
                           <>
-                            <img loading="lazy" src={st.img} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <img loading="lazy" src={photoFormation(f.id) || st.img} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${st.from}26 0%, ${st.to}73 100%)` }} />
                           </>
                         )

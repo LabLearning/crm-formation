@@ -172,6 +172,14 @@ export async function transformerPrevisionAction(id: string): Promise<ActionResu
     .update({ statut: 'transforme', poei_id: poei.id, client_id: clientId, updated_at: new Date().toISOString() })
     .eq('id', id)
 
+  // Les candidats du vivier rattachés à la prévision suivent le projet créé,
+  // sinon ils restent bloqués « à planifier » et ne peuvent plus être validés.
+  await supabase
+    .from('candidats_vivier')
+    .update({ poei_id: poei.id, poei_prevision_id: null, updated_at: new Date().toISOString() })
+    .eq('poei_prevision_id', id)
+    .eq('organization_id', orgId)
+
   await logAudit({ action: 'transform', entity_type: 'poei_prevision', entity_id: id, details: { poei_id: poei.id } })
   revalidatePath('/dashboard/poei')
   return { success: true, data: { poeiId: poei.id } }
