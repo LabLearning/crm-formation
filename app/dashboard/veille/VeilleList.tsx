@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Sparkles, CheckCircle2, Pencil } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { createVeilleAction, deleteVeilleAction, generateVeilleSuggestionsAction, validateVeilleAction } from './actions'
+import { createVeilleAction, deleteVeilleAction, generateVeilleSuggestionsAction, updateVeilleAction, validateVeilleAction } from './actions'
 import type { VeilleRow } from './page'
 
 const TYPES = [
@@ -23,6 +23,7 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
   const router = useRouter()
   const [filter, setFilter] = useState<VeilleType | 'all'>('all')
   const [addOpen, setAddOpen] = useState(false)
+  const [editVeille, setEditVeille] = useState<VeilleRow | null>(null)
   const [defaultType, setDefaultType] = useState<VeilleType>('legale')
   const [generating, setGenerating] = useState(false)
 
@@ -169,7 +170,10 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
                       </a>
                     )}
                   </div>
-                  <button onClick={() => handleDelete(v.id)} className="p-1.5 text-surface-400 hover:text-danger-500 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button onClick={() => setEditVeille(v)} className="p-1.5 text-surface-400 hover:text-brand-600"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => handleDelete(v.id)} className="p-1.5 text-surface-400 hover:text-danger-500"><Trash2 className="h-4 w-4" /></button>
+                  </div>
                 </div>
               </div>
             )
@@ -180,19 +184,24 @@ export function VeilleList({ veilles }: { veilles: VeilleRow[] }) {
       <Modal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Ajouter une veille" size="lg">
         <VeilleForm defaultType={defaultType} onDone={() => { setAddOpen(false); router.refresh() }} />
       </Modal>
+
+      <Modal isOpen={!!editVeille} onClose={() => setEditVeille(null)} title="Modifier la veille" size="lg">
+        {editVeille && <VeilleForm defaultType={editVeille.type as VeilleType} initial={editVeille} onDone={() => { setEditVeille(null); router.refresh() }} />}
+      </Modal>
     </div>
   )
 }
 
-function VeilleForm({ defaultType, onDone }: { defaultType: VeilleType; onDone: () => void }) {
+function VeilleForm({ defaultType, initial, onDone }: { defaultType: VeilleType; initial?: VeilleRow | null; onDone: () => void }) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    const r = await createVeilleAction(new FormData(e.currentTarget))
-    if (r.success) { toast('success', 'Veille enregistrée'); onDone() }
+    const fd = new FormData(e.currentTarget)
+    const r = initial ? await updateVeilleAction(initial.id, fd) : await createVeilleAction(fd)
+    if (r.success) { toast('success', initial ? 'Veille modifiée' : 'Veille enregistrée'); onDone() }
     else toast('error', r.error || 'Erreur')
     setLoading(false)
   }
@@ -202,23 +211,23 @@ function VeilleForm({ defaultType, onDone }: { defaultType: VeilleType; onDone: 
       <div className="grid sm:grid-cols-2 gap-4">
         <Select name="type" label="Type de veille *" defaultValue={defaultType}
           options={TYPES.map((t) => ({ value: t.value, label: `Ind. ${t.ind} — ${t.label}` }))} />
-        <Input name="date_veille" type="date" label="Date" defaultValue={new Date().toISOString().split('T')[0]} />
+        <Input name="date_veille" type="date" label="Date" defaultValue={initial?.date_veille ? String(initial.date_veille).slice(0, 10) : new Date().toISOString().split('T')[0]} />
       </div>
-      <Input name="titre" label="Titre / sujet *" placeholder="Ex : Nouveau taux de prise en charge OPCO Akto" />
-      <Input name="source" label="Source" placeholder="Legifrance, Akto, presse pro, webinaire…" />
+      <Input name="titre" label="Titre / sujet *" defaultValue={initial?.titre || ''} placeholder="Ex : Nouveau taux de prise en charge OPCO Akto" />
+      <Input name="source" label="Source" defaultValue={initial?.source || ''} placeholder="Legifrance, Akto, presse pro, webinaire…" />
       <div>
         <label className="block text-sm font-medium text-surface-700 mb-1">Résumé</label>
-        <textarea name="resume" rows={2} className="input-base resize-none" placeholder="Ce que vous avez observé…" />
+        <textarea name="resume" rows={2} className="input-base resize-none" defaultValue={initial?.resume || ''} placeholder="Ce que vous avez observé…" />
       </div>
       <div>
         <label className="block text-sm font-medium text-surface-700 mb-1">Impact sur nos prestations</label>
-        <textarea name="impact" rows={2} className="input-base resize-none" placeholder="En quoi ça nous concerne…" />
+        <textarea name="impact" rows={2} className="input-base resize-none" defaultValue={initial?.impact || ''} placeholder="En quoi ça nous concerne…" />
       </div>
       <div>
         <label className="block text-sm font-medium text-surface-700 mb-1">Action déclenchée</label>
-        <textarea name="action" rows={2} className="input-base resize-none" placeholder="Mise à jour programme, info formateurs…" />
+        <textarea name="action" rows={3} className="input-base resize-none" defaultValue={initial?.action || ''} placeholder="Mise à jour programme, info formateurs…" />
       </div>
-      <Input name="lien" label="Lien source (optionnel)" placeholder="https://…" />
+      <Input name="lien" label="Lien source (optionnel)" defaultValue={initial?.lien || ''} placeholder="https://…" />
       <div className="flex justify-end gap-3 pt-1">
         <Button type="button" variant="secondary" onClick={onDone}>Annuler</Button>
         <Button type="submit" isLoading={loading} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>

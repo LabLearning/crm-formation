@@ -90,6 +90,29 @@ export async function validateVeilleAction(id: string): Promise<ActionResult> {
   return { success: true }
 }
 
+/** Modifie une entrée de veille (titre, source, résumé, impact, action, lien, date, type). */
+export async function updateVeilleAction(id: string, formData: FormData): Promise<ActionResult> {
+  const session = await getSession()
+  if (['formateur', 'apprenant'].includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const champ = (n: string) => String(formData.get(n) || '').trim() || null
+  const { error } = await supabase.from('veilles').update({
+    type: champ('type') || 'legale',
+    titre: champ('titre'),
+    source: champ('source'),
+    date_veille: champ('date_veille'),
+    resume: champ('resume'),
+    impact: champ('impact'),
+    action: champ('action'),
+    lien: champ('lien'),
+    updated_at: new Date().toISOString(),
+  }).eq('id', id).eq('organization_id', session.organization.id)
+  if (error) return { success: false, error: 'Modification impossible' }
+  await logAudit({ action: 'update', entity_type: 'veille', entity_id: id })
+  revalidatePath('/dashboard/veille')
+  return { success: true }
+}
+
 export async function deleteVeilleAction(id: string): Promise<ActionResult> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
