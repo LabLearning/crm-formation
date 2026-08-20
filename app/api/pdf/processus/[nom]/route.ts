@@ -98,6 +98,41 @@ const PROCESSUS: Record<string, { titre: string; reference: string; intro: strin
       },
     ],
   },
+  moyens: {
+    titre: 'Moyens humains, matériels et pédagogiques',
+    reference: 'PROC-17',
+    intro:
+      "Les moyens mobilisés pour chaque prestation (indicateur 17 du RNQ). L'activité étant essentiellement intra-entreprise, le principe pédagogique est de former sur l'équipement RÉEL de l'établissement — le matériel du client est un moyen pédagogique à part entière, complété par le matériel apporté par le formateur.",
+    sections: [
+      {
+        titre: '1. Moyens humains',
+        etapes: [
+          { quand: 'Au recrutement', quoi: "Chaque formateur est sélectionné sur son expérience métier et ses qualifications : CV, diplômes et habilitations sont collectés et vérifiés ; un contrat de prestation encadre chaque intervention.", outil: 'fiche formateur (CV, diplômes, habilitations, contrats)' },
+          { quand: 'En continu', quoi: 'Le maintien des compétences est suivi (attestations de formation continue, dates de dernière habilitation) ; un vivier de formateurs de secours assure la continuité de service.', outil: 'fiche formateur + vivier de secours' },
+        ],
+      },
+      {
+        titre: '2. Matériel Lab Learning (apporté par le formateur)',
+        paragraphes: [
+          "Supports pédagogiques imprimés remis aux stagiaires et déposés sur le portail apprenant ; vidéoprojecteur ou écran portable selon le lieu ; paperboard et fournitures ; thermomètre sonde étalonné et fiches d'autocontrôle pour les formations hygiène ; grilles d'audit hygiène (application AuditHygiène synchronisée au CRM) ; mannequin de secourisme et défibrillateur de formation pour les sessions SST ; extincteurs d'exercice pour les sessions incendie ; questionnaires (positionnement, évaluation des acquis, satisfaction) servis par le CRM, en ligne ou sur papier.",
+        ],
+      },
+      {
+        titre: "3. Matériel de l'établissement client (formation en cuisine)",
+        paragraphes: [
+          "La formation intra s'appuie sur l'équipement réel du site : postes de travail et plans de préparation ; enceintes froides (réfrigérateurs, congélateurs, cellule le cas échéant) et leurs relevés de température ; zones de stockage sec et réserve ; matériel de cuisson (friteuses, grills, fours, plaques) ; plonge et poste de lavage des mains ; petit matériel (planches, couteaux, bacs gastro, film, étiquettes DLC) ; produits d'entretien et plan de nettoyage affiché ; équipements de protection individuelle des salariés ; registres et documents de l'établissement (traçabilité, DUERP, PMS) utilisés comme supports d'exercice.",
+          "La disponibilité de ces moyens est vérifiée au recueil du besoin, avant la session ; le client en a connaissance par la convention (lieu et moyens de la formation).",
+        ],
+      },
+      {
+        titre: '4. Moyens documentaires et numériques',
+        etapes: [
+          { quand: 'Avant la session', quoi: 'Programme, convocation, livret d’accueil et règlement intérieur transmis aux stagiaires ; recueil du besoin complété avec l’employeur.', outil: 'CRM (documents de session) + site public' },
+          { quand: 'Pendant et après', quoi: 'Émargement, questionnaires et supports accessibles depuis les portails apprenant et formateur ; chaque pièce reste consultable au dossier de la session.', outil: 'portails (accès par lien sécurisé) + fiche session' },
+        ],
+      },
+    ],
+  },
   intra: {
     titre: "Déroulé d'une formation en entreprise",
     reference: 'PROC-06',

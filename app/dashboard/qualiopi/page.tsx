@@ -240,7 +240,11 @@ export default async function QualiopiPage() {
     13: [{ label: 'Suivi des parcours POEI', href: '/dashboard/poei', count: nbSessionsTerm > 0 ? 1 : 0 }],
     15: [{ label: 'Parcours certifiants suivis', href: '/dashboard/sessions', count: nbSessionsTerm }],
     16: [{ label: hasReferentHandicap ? 'Référent handicap renseigné' : 'Référent handicap à renseigner', href: '/dashboard/settings', count: hasReferentHandicap ? 1 : 0, warn: !hasReferentHandicap }],
-    17: [{ label: 'Formateurs & moyens', href: '/dashboard/formateurs', count: nbFormateurs }],
+    17: [
+      { label: 'Moyens humains et matériels (PDF)', href: '/api/pdf/processus/moyens', count: 1 },
+      { label: 'Fiches formateurs (CV, diplômes, contrats)', href: '/dashboard/formateurs', count: nbFormateurs },
+      { label: 'Contrats de prestation rattachés aux fiches', href: '/dashboard/formateurs', count: nbContratsForm },
+    ],
     18: [
       { label: 'Organigramme fonctionnel (PDF, généré du CRM)', href: '/api/pdf/organigramme', count: 1 },
       { label: 'Contrats formateur', href: '/dashboard/formateurs', count: nbContratsForm },
@@ -280,6 +284,7 @@ export default async function QualiopiPage() {
     { ref: 'PROC-06', titre: "Déroulé d'une formation en entreprise", href: '/api/pdf/processus/intra' },
     { ref: 'PROC-10', titre: 'Adaptation des prestations, accompagnement et suivi', href: '/api/pdf/processus/adaptation' },
     { ref: 'PROC-12', titre: 'Prévention et gestion des abandons', href: '/api/pdf/processus/abandons' },
+    { ref: 'PROC-17', titre: 'Moyens humains, matériels et pédagogiques', href: '/api/pdf/processus/moyens' },
   ]
 
   return (

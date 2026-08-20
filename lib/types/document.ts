@@ -93,7 +93,8 @@ export const DOCUMENT_TYPES_ENTREPRISE: DocumentType[] = [
 /** Pièces administratives que le formateur dépose lui-même (sous-traitance Qualiopi) */
 export const DOCUMENT_TYPES_FORMATEUR: DocumentType[] = [
   'cv', 'diplome', 'habilitation', 'attestation_formation_continue',
-  'attestation_urssaf', 'kbis', 'nda', 'responsabilite_civile', 'attestation_fiscale', 'rib', 'piece_identite', 'autre',
+  'attestation_urssaf', 'kbis', 'nda', 'responsabilite_civile', 'attestation_fiscale', 'rib', 'piece_identite',
+  'contrat_formateur', 'autre',
 ]
 
 export const SIGNATURE_STATUS_LABELS: Record<SignatureStatus, string> = {
