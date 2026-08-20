@@ -19,35 +19,37 @@ config({ path: '.env.local' })
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 const CLE = process.env.OPENAI_API_KEY
 
-/** La scène dérive de l'intitulé : chaque formation a SA photo. */
+/** La scène dérive de l'intitulé : chaque formation a SA photo.
+ *  Style des photos d'origine du site : gros plan sur les mains au travail,
+ *  aucun visage, faible profondeur de champ, lumière naturelle de fenêtre. */
 function scene(intitule) {
   const n = intitule.toLowerCase()
-  if (n.includes('haccp') || n.includes('hygièn') || n.includes('hygien') || n.includes('salubr')) return "a chef in whites demonstrating hand-washing and surface sanitation to two kitchen employees at a stainless steel prep station, cleaning supplies visible"
-  if (n.includes('nettoyage') || n.includes('désinfection') || n.includes('desinfection')) return 'a restaurant employee in gloves deep-cleaning a professional kitchen surface with spray and cloth, cleaning cart nearby'
-  if (n.includes('traçab') || n.includes('tracab') || n.includes('étiquet') || n.includes('etiquet')) return 'a kitchen worker labelling prepared food containers with date stickers in a walk-in fridge, clipboard in hand'
-  if (n.includes('allerg')) return 'a chef reviewing ingredient packaging carefully with a colleague in a professional kitchen, ingredients laid out'
-  if (n.includes('duerp') || (n.includes('prévention') && n.includes('risques')) || n.includes('prevention des risques')) return 'a trainer and a restaurant manager walking through a kitchen pointing at equipment, safety checklist on a clipboard'
-  if (n.includes('gestes et postures') || n.includes('tms')) return 'a trainer showing a warehouse-style correct lifting posture to restaurant staff with a delivery crate'
-  if (n.includes('sst') || n.includes('secour') || n.includes('sauveteur')) return 'a first-aid training session: trainees practicing on a CPR manikin in a staff room, first-aid kit open'
-  if (n.includes('incendie')) return 'an employee practicing with a fire extinguisher outdoors during a workplace fire-safety drill, trainer supervising'
-  if (n.includes('chariot')) return 'a worker operating a small forklift in a stockroom, safety vest, trainer observing'
-  if (n.includes('bouch')) return 'a butcher in a white apron demonstrating precise knife work on a cut of beef at a butcher counter'
-  if (n.includes('charcut')) return 'an artisan preparing charcuterie in a traditional French butcher workshop'
-  if (n.includes('boulanger') || n.includes('pain')) return 'a baker shaping baguette dough on a floured wooden bench in an artisan bakery, oven glowing behind'
-  if (n.includes('patiss') || n.includes('pâtiss') || n.includes('noël') || n.includes('noel')) return 'a pastry chef piping cream on entremets in a pastry lab, precise hands close-up'
-  if (n.includes('pizza')) return 'a pizzaiolo stretching dough by hand in front of a wood-fired oven'
-  if (n.includes('barista') || n.includes('café') || n.includes('cafe')) return 'a barista pouring latte art at an espresso machine, steam rising'
-  if (n.includes('moules')) return 'a chef preparing moules marinières in a large pot in a busy French coastal restaurant kitchen'
-  if (n.includes('équipier') || n.includes('equipier') || n.includes('employé polyvalent') || n.includes('employe polyvalent')) return 'a young fast-food crew member being trained at the counter by a manager, fry station in soft-focus background'
-  if (n.includes('accueil client') || n.includes('relation client') || n.includes('posture professionnelle')) return 'a smiling counter employee welcoming a customer in a modern fast-casual restaurant, warm interaction'
-  if (n.includes('vente') || n.includes('commercial') || n.includes('fidélisation') || n.includes('fidelisation')) return 'a restaurant owner in conversation with a supplier-consultant over a tablet at a café table, notebook open'
-  if (n.includes('rentabilité') || n.includes('rentabilite') || n.includes('coûts') || n.includes('couts') || n.includes('gestion')) return 'a restaurant manager reviewing cost sheets and a calculator at a back-office desk, invoices pinned to a board'
-  if (n.includes('conflits') || n.includes('médiation') || n.includes('mediation') || n.includes('communication')) return 'a calm team meeting in a restaurant dining room before service, manager mediating between two employees'
-  if (n.includes('manage') || n.includes('leader')) return 'a restaurant manager briefing their team in a kitchen before service, engaged faces'
-  if (n.includes('intelligence artificielle') || n.includes(' ia') || n.includes('crm') || n.includes('lms') || n.includes('digital')) return 'a restaurant manager and employee exploring an AI assistant on a laptop in a small back office, warm screen glow'
-  if (n.includes('création') || n.includes('creation')) return "an aspiring entrepreneur sketching a business plan at a café table, laptop and croissant beside"
-  if (n.includes('sécurité alimentaire') || n.includes('securite alimentaire') || n.includes('maîtrise des risques sanitaires') || n.includes('pms')) return 'a quality manager checking fridge temperatures with a probe thermometer and logging on a clipboard in a professional kitchen'
-  return 'a hands-on professional training session in a French food-service workplace, trainer and small group engaged'
+  if (n.includes('haccp') || n.includes('hygièn') || n.includes('hygien') || n.includes('salubr')) return "hands in blue nitrile gloves scrubbing a stainless steel worktop with soapy foam, water droplets catching the light"
+  if (n.includes('nettoyage') || n.includes('désinfection') || n.includes('desinfection')) return 'gloved hands spraying disinfectant mist onto a gleaming steel kitchen surface, microfiber cloth in the other hand'
+  if (n.includes('traçab') || n.includes('tracab') || n.includes('étiquet') || n.includes('etiquet')) return 'hands pressing a blank date label onto a clear food storage container, stacked prep containers softly blurred behind'
+  if (n.includes('allerg')) return 'hands sorting fresh ingredients into separate glass bowls on a marble counter — nuts, flour, eggs kept apart'
+  if (n.includes('duerp') || (n.includes('prévention') && n.includes('risques')) || n.includes('prevention des risques')) return 'a hand ticking a checklist on a clipboard resting on a stainless kitchen counter, blurred kitchen equipment behind'
+  if (n.includes('gestes et postures') || n.includes('tms')) return 'strong hands gripping the handles of a heavy delivery crate close to the body, knees bent, warehouse light behind'
+  if (n.includes('sst') || n.includes('secour') || n.includes('sauveteur')) return 'hands performing chest compressions on a CPR training manikin, first-aid kit open beside, no faces'
+  if (n.includes('incendie')) return 'two hands gripping a red fire extinguisher, one squeezing the lever, a soft cloud of white powder just released'
+  if (n.includes('chariot')) return 'hands on the controls and small steering wheel of a forklift, pallet racking softly blurred beyond the windshield'
+  if (n.includes('bouch')) return 'a butcher\'s hands slicing a marbled cut of beef with a chef\'s knife on a wooden block, sunlight from a window'
+  if (n.includes('charcut')) return 'artisan hands tying a cured sausage with butcher\'s twine on a rustic wooden table, terrines blurred behind'
+  if (n.includes('boulanger') || n.includes('pain')) return 'flour-dusted hands folding baguette dough on a wooden bench, flour hanging in the warm light'
+  if (n.includes('patiss') || n.includes('pâtiss') || n.includes('noël') || n.includes('noel')) return 'a pastry chef\'s hands piping cream rosettes onto a glossy entremet, piping bag in sharp focus'
+  if (n.includes('pizza')) return 'hands stretching pizza dough in the air over a floured marble counter, wood-fired oven glow blurred behind'
+  if (n.includes('barista') || n.includes('café') || n.includes('cafe')) return 'hands pouring latte art from a steel pitcher into a ceramic cup on an espresso machine tray, steam rising'
+  if (n.includes('moules')) return 'hands tossing glistening mussels in a large steel pot, steam and herbs, coastal window light'
+  if (n.includes('équipier') || n.includes('equipier') || n.includes('employé polyvalent') || n.includes('employe polyvalent')) return 'hands assembling a burger on a steel prep counter, brioche bun and fresh toppings in sharp focus, fry station bokeh behind'
+  if (n.includes('accueil client') || n.includes('relation client') || n.includes('posture professionnelle')) return 'a hand offering a paper coffee cup across a warm wooden counter to a customer\'s open hand, café bokeh behind'
+  if (n.includes('vente') || n.includes('commercial') || n.includes('fidélisation') || n.includes('fidelisation')) return 'a firm handshake over a café table with an open notebook and espresso cups, warm daylight'
+  if (n.includes('rentabilité') || n.includes('rentabilite') || n.includes('coûts') || n.includes('couts') || n.includes('gestion')) return 'hands over a calculator and blank receipts on a wooden desk, warm desk lamp glow, shallow focus'
+  if (n.includes('conflits') || n.includes('médiation') || n.includes('mediation') || n.includes('communication')) return 'two pairs of hands open in conversation across a wooden table with two coffee cups, soft window light'
+  if (n.includes('manage') || n.includes('leader')) return 'a hand moving a magnet on a kitchen planning board, chef jackets hanging blurred in the background'
+  if (n.includes('intelligence artificielle') || n.includes(' ia') || n.includes('crm') || n.includes('lms') || n.includes('digital')) return 'hands typing on a laptop on a rustic café table, abstract glowing interface softly blurred on screen, espresso beside'
+  if (n.includes('création') || n.includes('creation')) return 'hands sketching a floor plan in a notebook beside a laptop and croissant, morning window light'
+  if (n.includes('sécurité alimentaire') || n.includes('securite alimentaire') || n.includes('maîtrise des risques sanitaires') || n.includes('pms')) return 'a hand holding a digital probe thermometer into fresh produce, cold fridge light, condensation droplets'
+  return 'skilled hands at work on a professional kitchen counter, tools of the trade in sharp focus, warm natural light'
 }
 
 const { data: formations } = await supabase.from('formations')
@@ -58,7 +60,7 @@ let faites = 0, sautees = 0, erreurs = 0
 for (const f of formations || []) {
   const cible = `public/site/formations/${f.id}.webp`
   if (existsSync(cible)) { sautees++; continue }
-  const prompt = `Documentary-style photograph: ${scene(f.intitule)}. Set in France. Natural light, candid, shallow depth of field, warm muted tones, photorealistic, high quality. Strictly no visible text, no logos, no brand marks.`
+  const prompt = `Editorial close-up photograph: ${scene(f.intitule)}. Tight framing on the hands and the subject, no face visible, very shallow depth of field, bright natural window light, crisp texture detail, warm golden tones, photorealistic, high-end food magazine quality. Strictly no visible text, no logos, no brand marks.`
   try {
     const rep = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
