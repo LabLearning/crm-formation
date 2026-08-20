@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { ClipboardList, Save, CheckCircle2, AlertTriangle, Download } from 'lucide-react'
-import { Button, Badge, Select, useToast } from '@/components/ui'
+import { ClipboardList, Save, CheckCircle2, AlertTriangle, Download, Accessibility } from 'lucide-react'
+import { Button, Badge, Select, Modal, useToast } from '@/components/ui'
 import { themeOf } from '@/lib/branches'
 import { formatDate } from '@/lib/utils'
 import { saveRecueilAction } from './recueil-actions'
@@ -18,6 +18,21 @@ const THEME_LABELS: Record<string, string> = {
   management: 'Management, gestion & performance',
   metier: 'Cœur de métier',
 }
+
+// Fiche « Analyse des besoins pour les personnes en situation de handicap »
+// (procédure PSH transmise par la consultante qualité) — les intitulés
+// reprennent le document d'origine.
+const PSH_ADAPTATIONS = [
+  'Approche pédagogique adaptée',
+  'Remise à niveau',
+  'Modification du rythme',
+  'Outils adaptés (FOAD…)',
+  'Aide à la rédaction',
+  'Soutien pédagogique individuel',
+  'Cadre adapté',
+  'Temps complémentaires',
+  "Préparation renforcée à l'épreuve",
+]
 
 export function SessionRecueil({ sessionId, formationIntitule, templates, initial }: {
   sessionId: string
@@ -34,9 +49,18 @@ export function SessionRecueil({ sessionId, formationIntitule, templates, initia
   const [reponses, setReponses] = useState<Record<string, string>>(initial?.reponses || {})
   const [saving, setSaving] = useState(false)
   const [statut, setStatut] = useState<string>(initial?.statut || 'brouillon')
+  const [pshOpen, setPshOpen] = useState(false)
 
   const questions = template?.questions || []
   const filled = questions.filter((q) => (reponses[q.id] || '').trim()).length
+  const pshActif = reponses.psh_actif === 'oui'
+  const adaptations = (reponses.psh_adaptations || '').split(',').map((x) => x.trim()).filter(Boolean)
+
+  const setPsh = (cle: string, valeur: string) => setReponses((prev) => ({ ...prev, [cle]: valeur }))
+  const toggleAdaptation = (a: string) => {
+    const suivantes = adaptations.includes(a) ? adaptations.filter((x) => x !== a) : [...adaptations, a]
+    setPsh('psh_adaptations', suivantes.join(', '))
+  }
 
   async function save(newStatut: 'brouillon' | 'complete') {
     if (newStatut === 'complete' && filled < Math.ceil(questions.length / 2)) {
@@ -91,6 +115,28 @@ export function SessionRecueil({ sessionId, formationIntitule, templates, initia
         <div className="text-xs text-surface-400 pt-6 whitespace-nowrap">{filled}/{questions.length} champs</div>
       </div>
 
+      {/* Public en situation de handicap : cocher ouvre l'analyse des besoins
+          PSH (procédure dédiée) — indicateur 4 et 26. */}
+      <div className={`rounded-xl border px-4 py-3 flex items-center justify-between gap-3 ${pshActif ? 'border-brand-300 bg-brand-50/40' : 'border-surface-200'}`}>
+        <label className="flex items-center gap-2.5 text-sm text-surface-700 cursor-pointer">
+          <input
+            type="checkbox" className="h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
+            checked={pshActif}
+            onChange={(e) => {
+              setPsh('psh_actif', e.target.checked ? 'oui' : '')
+              if (e.target.checked) setPshOpen(true)
+            }}
+          />
+          <Accessibility className="h-4 w-4 text-brand-500" />
+          Stagiaire(s) en situation de handicap identifié(s)
+        </label>
+        {pshActif && (
+          <button onClick={() => setPshOpen(true)} className="text-xs font-medium text-brand-600 hover:text-brand-700 whitespace-nowrap">
+            Ouvrir la procédure PSH
+          </button>
+        )}
+      </div>
+
       <div className="space-y-4">
         {questions.map((q) => (
           <div key={q.id}>
@@ -109,6 +155,71 @@ export function SessionRecueil({ sessionId, formationIntitule, templates, initia
         <Button variant="secondary" onClick={() => save('brouillon')} isLoading={saving} icon={<Save className="h-4 w-4" />}>Enregistrer le brouillon</Button>
         <Button onClick={() => save('complete')} isLoading={saving} icon={<CheckCircle2 className="h-4 w-4" />}>Marquer comme complété</Button>
       </div>
+
+      <Modal isOpen={pshOpen} onClose={() => setPshOpen(false)} title="Procédure PSH — Analyse des besoins" size="lg">
+        <div className="space-y-4 text-sm">
+          <p className="text-surface-600 leading-relaxed">
+            Analyse des besoins pour les personnes en situation de handicap, menée avec le
+            <strong> référent handicap</strong> dès l&apos;identification. Les contacts mobilisables
+            (RHF Agefiph, Cap emploi, MDPH) sont dans le <a href="/dashboard/qualiopi/handicap" target="_blank" className="text-brand-600 hover:underline">réseau handicap</a>.
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-700 mb-1">Contraintes personnelles et professionnelles — mobilité</label>
+            <textarea rows={2} className="input-base resize-none" placeholder="Voiture, transports en commun, permis, véhicule, autres contraintes…"
+              value={reponses.psh_mobilite || ''} onChange={(e) => setPsh('psh_mobilite', e.target.value)} />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-1">Contre-indications médicales</label>
+              <textarea rows={2} className="input-base resize-none" placeholder="Avez-vous des contre-indications médicales ?"
+                value={reponses.psh_contre_indications || ''} onChange={(e) => setPsh('psh_contre_indications', e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-700 mb-1">Statut de travailleur handicapé (RQTH)</label>
+              <select className="input-base" value={reponses.psh_rqth || ''} onChange={(e) => setPsh('psh_rqth', e.target.value)}>
+                <option value="">Non renseigné</option>
+                <option value="oui">Oui</option>
+                <option value="non">Non</option>
+                <option value="en_cours">Demande en cours</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-700 mb-1">Besoins spécifiques pendant l&apos;action de formation</label>
+            <textarea rows={2} className="input-base resize-none" placeholder="Si oui, lesquels…"
+              value={reponses.psh_besoins || ''} onChange={(e) => setPsh('psh_besoins', e.target.value)} />
+          </div>
+
+          <div>
+            <div className="text-sm font-medium text-surface-700 mb-2">Besoins d&apos;adaptation pédagogique</div>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {PSH_ADAPTATIONS.map((a) => (
+                <label key={a} className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
+                    checked={adaptations.includes(a)} onChange={() => toggleAdaptation(a)} />
+                  {a}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-700 mb-1">Synthèse des compensations à mettre en place ou orientation vers des partenaires</label>
+            <textarea rows={3} className="input-base resize-none" placeholder="Compensations retenues, aménagements, orientation RHF / Cap emploi / MDPH…"
+              value={reponses.psh_compensations || ''} onChange={(e) => setPsh('psh_compensations', e.target.value)} />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-surface-100">
+            <Button variant="secondary" onClick={() => setPshOpen(false)}>Fermer</Button>
+            <Button onClick={async () => { await save('brouillon'); setPshOpen(false) }} isLoading={saving} icon={<Save className="h-4 w-4" />}>
+              Enregistrer l&apos;analyse
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
