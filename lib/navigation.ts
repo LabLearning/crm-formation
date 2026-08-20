@@ -60,6 +60,7 @@ export const navigation: NavSection[] = [
       { label: 'Carte sessions', href: '/dashboard/carte-sessions', icon: 'MapPin', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Apprenants', href: '/dashboard/apprenants', icon: 'UserCheck', module: 'apprenants' },
       { label: 'Évaluations des acquis', href: '/dashboard/evaluations-acquis', icon: 'ClipboardCheck', module: 'sessions' },
+      { label: 'Absences', href: '/dashboard/absences', icon: 'UserX', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Salles', href: '/dashboard/salles', icon: 'Building2', module: 'sessions', hideForRoles: ['commercial', 'apporteur_affaires', 'formateur', 'apprenant'] },
       { label: 'Changements', href: '/dashboard/changements', icon: 'UserCog', module: 'sessions' },
       { label: 'Audits', href: '/dashboard/audits', icon: 'ClipboardCheck', module: 'sessions' },
