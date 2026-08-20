@@ -252,8 +252,17 @@ export default async function QualiopiPage() {
     ],
     19: [{ label: "Livret d'accueil et règlement intérieur transmis", href: '/dashboard/documents', count: nbDocs }],
     20: [{ label: 'Contrats de prestation formateur', href: '/dashboard/formateurs', count: nbContratsForm }],
-    21: [{ label: 'Formateurs dont le CV est au dossier', href: '/dashboard/formateurs', count: nbFormateursCv, warn: nbFormateursCv < nbFormateurs }],
-    22: [{ label: 'Formateurs dont le maintien des compétences est daté', href: '/dashboard/formateurs', count: nbHabilitations, warn: nbHabilitations === 0 }],
+    21: [
+      { label: 'Processus recrutement & compétences formateurs (PDF)', href: '/api/pdf/processus/formateurs', count: 1 },
+      { label: "Grille d'entretien de recrutement (PDF)", href: '/api/pdf/grille-entretien', count: 1 },
+      { label: 'Formateurs dont le CV est au dossier', href: '/dashboard/formateurs', count: nbFormateursCv, warn: nbFormateursCv < nbFormateurs },
+    ],
+    22: [
+      { label: 'Plan de développement des compétences (classeur)', href: 'https://drive.google.com/file/d/1HRbYTW_d8bO2kI_iTadKQakWVsQu8neO/view', count: 1 },
+      { label: 'Formation interne « Prise en main du CRM »', href: '/dashboard/formations', count: 1 },
+      { label: 'Formation du référent handicap (module JLO du 3/09)', href: '/dashboard/qualiopi/handicap', count: 1 },
+      { label: 'Formateurs dont le maintien des compétences est daté', href: '/dashboard/formateurs', count: nbHabilitations, warn: nbHabilitations === 0 },
+    ],
     23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
     24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],
     25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 }],
@@ -285,6 +294,7 @@ export default async function QualiopiPage() {
     { ref: 'PROC-10', titre: 'Adaptation des prestations, accompagnement et suivi', href: '/api/pdf/processus/adaptation' },
     { ref: 'PROC-12', titre: 'Prévention et gestion des abandons', href: '/api/pdf/processus/abandons' },
     { ref: 'PROC-17', titre: 'Moyens humains, matériels et pédagogiques', href: '/api/pdf/processus/moyens' },
+    { ref: 'PROC-21', titre: 'Recrutement et compétences des formateurs', href: '/api/pdf/processus/formateurs' },
     { ref: 'ORG', titre: 'Organigramme fonctionnel', href: '/api/pdf/organigramme' },
   ]
 

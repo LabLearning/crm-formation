@@ -98,6 +98,35 @@ const PROCESSUS: Record<string, { titre: string; reference: string; intro: strin
       },
     ],
   },
+  formateurs: {
+    titre: 'Recrutement, qualification et développement des compétences des formateurs',
+    reference: 'PROC-21',
+    intro:
+      "Comment les formateurs sont recrutés, qualifiés, évalués et maintenus en compétence (indicateurs 21 et 22 du RNQ). Le circuit s'appuie sur la grille d'entretien de recrutement et la fiche d'évaluation du profil et des compétences (V1 — 12/10/2022).",
+    sections: [
+      {
+        titre: '1. Recruter et qualifier',
+        etapes: [
+          { quand: "À la candidature", quoi: "Entretien structuré sur la grille de recrutement : maîtrise du référentiel visé, parcours, pédagogie pratiquée, accord pour être audité en intervention. Conditions de qualification vérifiées : diplôme de niveau III ou supérieur, OU au moins deux ans d'expérience professionnelle dans la thématique.", outil: "grille d'entretien de recrutement (PDF)" },
+          { quand: 'Avant la 1re intervention', quoi: "Une progression pédagogique est demandée au candidat et validée par l'organisme — c'est la preuve de compétence dans la thématique visée. CV, diplômes et habilitations sont collectés sur la fiche formateur ; un contrat de prestation encadre chaque mission.", outil: 'fiche formateur (CV, diplômes, contrats)' },
+        ],
+      },
+      {
+        titre: '2. Évaluer en continu',
+        etapes: [
+          { quand: 'À chaque session', quoi: "Les stagiaires évaluent le formateur (questionnaire dédié : maîtrise, clarté, rythme, climat) ; les résultats sont suivis par formateur.", outil: 'questionnaire « Évaluation du formateur » (banque QCM)' },
+          { quand: 'Périodiquement', quoi: "Évaluation du profil et des compétences sur la fiche dédiée (V1 — 12/10/2022) ; audit d'intervention possible, accepté dès le recrutement.", outil: "fiche « Évaluation profil et compétences formateur »" },
+        ],
+      },
+      {
+        titre: '3. Se former — équipe et formateurs (indicateur 22)',
+        etapes: [
+          { quand: 'Au fil du plan', quoi: "Le plan de développement des compétences recense les formations de l'équipe et des formateurs ; les attestations de formation continue et les dates de dernière habilitation sont portées sur chaque fiche formateur.", outil: 'plan de développement des compétences + fiches formateurs' },
+          { quand: 'En continu', quoi: "L'équipe se forme sur ses outils et son environnement : formation interne « Prise en main du CRM », webinaires de branche (AKTO HCR), module référent handicap (JLO). Chaque participation laisse son attestation.", outil: 'programme interne CRM + attestations versées aux dossiers' },
+        ],
+      },
+    ],
+  },
   moyens: {
     titre: 'Moyens humains, matériels et pédagogiques',
     reference: 'PROC-17',
