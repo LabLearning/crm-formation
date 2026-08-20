@@ -47,7 +47,7 @@ export function ReseauHandicapClient({ contacts, tableAbsente, referent }: {
         </h1>
         <p className="text-sm text-surface-500 mt-1">
           Les contacts mobilisables par région (indicateur 26) — chaque ligne porte sa date de dernière vérification.
-          Référent handicap : <strong className="text-surface-700">{referent?.referent_handicap_nom || 'Hakim KARROUCH'}</strong>
+          Référent handicap : <strong className="text-surface-700">{referent?.referent_handicap_nom || 'Sofiane EL OUAHID'}</strong>
           {referent?.referent_handicap_telephone ? ` · ${referent.referent_handicap_telephone}` : ''}
         </p>
       </div>
