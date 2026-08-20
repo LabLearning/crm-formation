@@ -21,6 +21,8 @@ export const VISIBILITES_PAR_AUDIENCE: Record<SupportAudience, DocumentVisibilit
 export interface SessionSupport {
   id: string
   session_id: string | null
+  formation_id?: string | null
+  file_url?: string | null
   nom: string
   type: string
   description: string | null
@@ -32,11 +34,15 @@ export interface SessionSupport {
 }
 
 const SUPPORT_FIELDS =
-  'id, session_id, nom, type, description, file_name, file_size, storage_path, visibilite, created_at'
+  'id, session_id, formation_id, nom, type, description, file_name, file_size, storage_path, file_url, visibilite, created_at'
 
 /**
  * Supports pédagogiques d'une ou plusieurs sessions, filtrés pour l'audience.
- * Retourne un dictionnaire indexé par session_id (une seule requête, pas de N+1).
+ * Retourne un dictionnaire indexé par session_id (deux requêtes, pas de N+1).
+ *
+ * Une session HÉRITE des supports de sa formation : un support déposé sur la
+ * fiche formation vaut pour toutes ses sessions (et donc tous les portails),
+ * sans dupliquer les lignes. Les supports propres à la session s'y ajoutent.
  */
 export async function getSessionSupports(
   supabase: any,
@@ -46,18 +52,45 @@ export async function getSessionSupports(
   const ids = sessionIds.filter(Boolean)
   if (ids.length === 0) return {}
 
-  const { data } = await supabase
-    .from('documents')
-    .select(SUPPORT_FIELDS)
-    .in('session_id', ids)
-    .in('type', DOCUMENT_TYPES_SUPPORT)
-    .in('visibilite', VISIBILITES_PAR_AUDIENCE[audience])
-    .order('created_at', { ascending: true })
+  const { data: sessions } = await supabase
+    .from('sessions').select('id, formation_id').in('id', ids)
+  const formationIds = [...new Set((sessions || []).map((s: any) => s.formation_id).filter(Boolean))]
+
+  const [{ data: propres }, { data: herites }] = await Promise.all([
+    supabase
+      .from('documents')
+      .select(SUPPORT_FIELDS)
+      .in('session_id', ids)
+      .in('type', DOCUMENT_TYPES_SUPPORT)
+      .in('visibilite', VISIBILITES_PAR_AUDIENCE[audience])
+      .order('created_at', { ascending: true }),
+    formationIds.length
+      ? supabase
+          .from('documents')
+          .select(SUPPORT_FIELDS)
+          .is('session_id', null)
+          .in('formation_id', formationIds)
+          .in('type', DOCUMENT_TYPES_SUPPORT)
+          .in('visibilite', VISIBILITES_PAR_AUDIENCE[audience])
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] }),
+  ])
 
   const bySession: Record<string, SessionSupport[]> = {}
-  for (const doc of (data || []) as SessionSupport[]) {
+  for (const doc of (propres || []) as SessionSupport[]) {
     if (!doc.session_id) continue
     ;(bySession[doc.session_id] ||= []).push(doc)
+  }
+  const parFormation: Record<string, SessionSupport[]> = {}
+  for (const doc of (herites || []) as any[]) {
+    ;(parFormation[doc.formation_id] ||= []).push(doc)
+  }
+  for (const s of (sessions || []) as any[]) {
+    for (const doc of parFormation[s.formation_id] || []) {
+      // Pas de doublon si le même document a aussi été déposé sur la session.
+      if ((bySession[s.id] || []).some((d) => d.nom === doc.nom)) continue
+      ;(bySession[s.id] ||= []).push({ ...doc, session_id: s.id })
+    }
   }
   return bySession
 }

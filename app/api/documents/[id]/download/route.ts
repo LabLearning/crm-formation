@@ -17,6 +17,29 @@ async function portalCanAccess(supabase: any, doc: any, token: string): Promise<
   const context = await getPortalContext(token)
   if (!context) return false
   if (context.organization.id !== doc.organization_id) return false
+
+  // Support de niveau FORMATION (hérité par toutes ses sessions) : l'accès
+  // vaut si le profil est rattaché à au moins une session de cette formation.
+  if (!doc.session_id && doc.formation_id) {
+    const visibilite = doc.visibilite || 'formateur'
+    if (context.type === 'formateur') {
+      if (!VISIBILITES_PAR_AUDIENCE.formateur.includes(visibilite)) return false
+      const { data: s } = await supabase.from('sessions').select('id')
+        .eq('formation_id', doc.formation_id).eq('formateur_id', context.formateur.id).limit(1).maybeSingle()
+      return !!s
+    }
+    if (context.type === 'apprenant') {
+      if (!VISIBILITES_PAR_AUDIENCE.stagiaire.includes(visibilite)) return false
+      const { data: ins } = await supabase.from('inscriptions')
+        .select('id, session:sessions!inner(formation_id)')
+        .eq('apprenant_id', context.apprenant.id)
+        .eq('session.formation_id', doc.formation_id)
+        .not('status', 'in', '("annule","abandonne")')
+        .limit(1).maybeSingle()
+      return !!ins
+    }
+    return false
+  }
   if (!doc.session_id) return false
 
   const { data: session } = await supabase
@@ -69,10 +92,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: doc } = await supabase
     .from('documents')
-    .select('id, storage_path, file_name, organization_id, session_id, visibilite')
+    .select('id, storage_path, file_url, file_name, organization_id, session_id, formation_id, visibilite')
     .eq('id', params.id)
     .single()
-  if (!doc?.storage_path) return NextResponse.json({ error: 'Document introuvable' }, { status: 404 })
+  const lienExterne = doc?.file_url && /^https?:\/\//.test(doc.file_url) ? doc.file_url : null
+  if (!doc?.storage_path && !lienExterne) return NextResponse.json({ error: 'Document introuvable' }, { status: 404 })
 
   const portalToken = req.nextUrl.searchParams.get('token')
   if (portalToken) {
@@ -83,6 +107,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const { data: { user } } = await supabaseAuth.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
+
+  // Support stocké hors CRM (lien Drive) : redirection directe après contrôle d'accès.
+  if (!doc.storage_path && lienExterne) return NextResponse.redirect(lienExterne)
 
   // ?inline=1 → aperçu dans le navigateur (PDF, images) ; sinon téléchargement
   const inline = req.nextUrl.searchParams.get('inline') === '1'
