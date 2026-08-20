@@ -95,18 +95,37 @@ export async function getSessionSupports(
   return bySession
 }
 
-/** Tous les supports d'une session pour l'administrateur (aucun filtrage) */
+/** Tous les supports d'une session pour l'administrateur (aucun filtrage) —
+ *  y compris ceux hérités de la fiche formation. */
 export async function getAllSessionSupports(
   supabase: any,
   sessionId: string,
 ): Promise<SessionSupport[]> {
-  const { data } = await supabase
-    .from('documents')
-    .select(SUPPORT_FIELDS)
-    .eq('session_id', sessionId)
-    .in('type', DOCUMENT_TYPES_SUPPORT)
-    .order('created_at', { ascending: true })
-  return (data || []) as SessionSupport[]
+  const { data: sess } = await supabase
+    .from('sessions').select('formation_id').eq('id', sessionId).maybeSingle()
+  const [{ data: propres }, { data: herites }] = await Promise.all([
+    supabase
+      .from('documents')
+      .select(SUPPORT_FIELDS)
+      .eq('session_id', sessionId)
+      .in('type', DOCUMENT_TYPES_SUPPORT)
+      .order('created_at', { ascending: true }),
+    sess?.formation_id
+      ? supabase
+          .from('documents')
+          .select(SUPPORT_FIELDS)
+          .is('session_id', null)
+          .eq('formation_id', sess.formation_id)
+          .in('type', DOCUMENT_TYPES_SUPPORT)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] }),
+  ])
+  const tous = [...(propres || [])] as SessionSupport[]
+  for (const doc of (herites || []) as SessionSupport[]) {
+    if (tous.some((d) => d.nom === doc.nom)) continue
+    tous.push(doc)
+  }
+  return tous
 }
 
 export interface PositionnementRow {
