@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { ArrowRight, ShieldCheck } from '../icons'
 import { getPublicResultats } from '@/lib/public-site-data'
+import { createServiceRoleClient } from '@/lib/supabase/server'
+import { titreFormation } from '@/lib/utils'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
@@ -9,6 +11,18 @@ export const metadata = { title: 'Nos résultats — Lab Learning' }
 
 export default async function SiteResultats() {
   const r = await getPublicResultats()
+
+  // Indicateurs par formation : calculés depuis les sessions réalisées
+  // (jamais saisis à la main) — seules les fiches avec assez de réponses
+  // affichent un taux.
+  const supabase = await createServiceRoleClient()
+  const { data: parFormation } = await supabase
+    .from('formations')
+    .select('id, intitule, nombre_apprenants_total, taux_satisfaction, taux_reussite')
+    .eq('is_active', true).eq('site_publie', true)
+    .not('nombre_apprenants_total', 'is', null)
+    .gt('nombre_apprenants_total', 0)
+    .order('nombre_apprenants_total', { ascending: false })
 
   const stats = r ? [
     { key: 'satisfaction', label: 'Taux de satisfaction', value: r.taux_satisfaction },
@@ -60,6 +74,42 @@ export default async function SiteResultats() {
 
             {r.commentaire && <p className="mt-8 text-center text-xs text-[#A8A29E] max-w-2xl mx-auto">{r.commentaire}</p>}
           </>
+        )}
+
+        {(parFormation || []).length > 0 && (
+          <div className="mt-16">
+            <h2 className="ll-display text-2xl md:text-3xl text-[#14110F] text-balance">Résultats par formation</h2>
+            <p className="mt-3 text-[#57534E] max-w-2xl">
+              Indicateurs calculés sur les sessions réalisées : stagiaires formés, satisfaction à chaud et taux
+              d&apos;acquisition des compétences (évaluation de sortie). Un taux n&apos;est publié qu&apos;à partir de cinq réponses.
+            </p>
+            <div className="mt-7 overflow-x-auto rounded-2xl ring-1 ring-black/5 bg-white">
+              <table className="w-full text-sm min-w-[560px]">
+                <thead>
+                  <tr className="border-b border-[#E7E5E4] text-left">
+                    <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider">Formation</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Stagiaires formés</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Satisfaction</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Acquisition</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F5F5F4]">
+                  {(parFormation || []).map((f: any) => (
+                    <tr key={f.id} className="hover:bg-[#FAFAF9] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <Link href={`/site/formations/${f.id}`} className="text-[#14110F] hover:text-[#195144] transition-colors">
+                          {titreFormation(f.intitule)}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F] font-semibold">{f.nombre_apprenants_total}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '—'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         <div className="mt-14 rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-12 md:flex items-center justify-between gap-8">
