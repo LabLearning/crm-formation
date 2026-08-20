@@ -1,4 +1,5 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { resolveDocumentLogoUrl } from '@/lib/pdf/org-logo'
 import { notFound } from 'next/navigation'
 import { AppreciationForm } from './AppreciationForm'
 
@@ -14,7 +15,7 @@ export default async function AppreciationPage({ params, searchParams }: { param
   const supabase = await createServiceRoleClient()
 
   const { data: session } = await supabase.from('sessions')
-    .select('id, date_debut, date_fin, intitule, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial), organization:organization_id(name, logo_url)')
+    .select('id, date_debut, date_fin, intitule, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial), organization:organization_id(id, name, logo_url)')
     .eq('id', params.cible).maybeSingle()
 
   let contexte: { type: 'entreprise' | 'financeur' | 'formateur'; titre: string; sous: string; orgNom: string; logo: string | null }
@@ -25,7 +26,9 @@ export default async function AppreciationPage({ params, searchParams }: { param
       titre: 'Votre appréciation sur la formation',
       sous: `${s.formation?.intitule || s.intitule || 'Formation'} — ${s.client?.nom_commercial || s.client?.raison_sociale || ''}${s.date_debut ? ` · ${new Date(s.date_debut).toLocaleDateString('fr-FR')}` : ''}`,
       orgNom: s.organization?.name || 'Lab Learning',
-      logo: s.organization?.logo_url || null,
+      // La page est sur fond clair : le logo BLANC des emails y est invisible,
+      // on résout la variante document (foncée) comme pour les PDF.
+      logo: await resolveDocumentLogoUrl(supabase, s.organization),
     }
   } else {
     const { data: org } = await supabase.from('organizations')
@@ -37,13 +40,13 @@ export default async function AppreciationPage({ params, searchParams }: { param
       titre: 'Votre avis de formateur',
       sous: `Vous intervenez pour ${(org as any).name} : dites-nous ce qui fonctionne et ce que nous devons améliorer — organisation, outils, communication, paiements.`,
       orgNom: (org as any).name,
-      logo: (org as any).logo_url || null,
+      logo: await resolveDocumentLogoUrl(supabase, org),
     } : {
       type: 'financeur',
       titre: 'Votre appréciation sur notre collaboration',
       sous: `${(org as any).name} sollicite votre regard de financeur sur la qualité de la relation et des dossiers.`,
       orgNom: (org as any).name,
-      logo: (org as any).logo_url || null,
+      logo: await resolveDocumentLogoUrl(supabase, org),
     }
   }
 
