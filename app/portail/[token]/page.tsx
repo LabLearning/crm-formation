@@ -26,7 +26,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
         .from('inscriptions')
         .select(`
         *,
-        session:sessions(reference, date_debut, date_fin, horaires, lieu, status,
+        session:sessions(id, reference, date_debut, date_fin, horaires, lieu, status,
           formation:formation_id(intitule, duree_heures, modalite)
         )
       `)
@@ -46,6 +46,18 @@ export default async function PortalHomePage({ params }: { params: { token: stri
     const allInscriptions = inscriptions || []
     const enCours = allInscriptions.filter((i) => ['inscrit', 'confirme', 'en_cours'].includes(i.status))
     const terminees = allInscriptions.filter((i) => i.status === 'complete')
+
+    // Le compteur reflète ce que l'onglet Documents affiche vraiment :
+    // documents nominatifs + supports pédagogiques (hérités compris) +
+    // documents d'accueil (livret + règlement intérieur).
+    const { getSessionSupports } = await import('@/lib/session-contenu')
+    const sessionIds = allInscriptions.map((i: any) => i.session?.id).filter(Boolean)
+    const supportsParSession = await getSessionSupports(supabase, sessionIds, 'stagiaire')
+    const supportsUniques = new Set(Object.values(supportsParSession).flat().map((d: any) => d.nom)).size
+    const { data: orgLivret } = await supabase
+      .from('organizations').select('livret_accueil_url').eq('id', context.organization.id).single()
+    const docsAccueil = ((orgLivret as any)?.livret_accueil_url ? 1 : 0) + 1 // + règlement intérieur
+    const totalDocs = (docsCount || 0) + supportsUniques + docsAccueil
 
     return (
       <div className="space-y-5 animate-fade-in">
@@ -72,7 +84,7 @@ export default async function PortalHomePage({ params }: { params: { token: stri
           </Link>
           <Link href={`${basePath}/documents`} className="portal-stat">
             <div className="portal-stat-icon bg-purple-50"><FileText className="h-5 w-5 text-purple-600" /></div>
-            <div><div className="text-[11px] text-surface-500 leading-tight">Documents</div><div className="text-xl font-bold text-purple-600">{docsCount || 0}</div></div>
+            <div><div className="text-[11px] text-surface-500 leading-tight">Documents</div><div className="text-xl font-bold text-purple-600">{totalDocs}</div></div>
           </Link>
         </div>
 
