@@ -426,6 +426,20 @@ export async function sendBrandedEmail(params: {
  * Construit le HTML de l'email « document » (même rendu que sendDocumentEmail),
  * pour l'aperçu avant envoi comme pour l'envoi réel.
  */
+/**
+ * Bloc « documents d'accueil » ajouté aux convocations : livret d'accueil
+ * (PDF de l'organisme) et règlement intérieur (PDF public du site). La remise
+ * avant l'entrée en formation est contrôlée par l'indicateur 9 du RNQ.
+ */
+export function blocDocumentsAccueil(org?: { livret_accueil_url?: string | null } | null): string {
+  const ri = 'https://crm.lab-learning.fr/api/pdf/reglement-interieur'
+  const style = 'color:#195144;font-weight:600;'
+  const liens: string[] = []
+  if (org?.livret_accueil_url) liens.push(`<a href="${org.livret_accueil_url}" style="${style}">le livret d'accueil</a>`)
+  liens.push(`<a href="${ri}" style="${style}">le règlement intérieur</a>`)
+  return `<br><br>Avant votre entrée en formation, nous vous invitons à consulter ${liens.join(' et ')}. Ces documents restent disponibles à tout moment sur votre portail apprenant.`
+}
+
 export function buildDocumentEmailHtml(params: {
   orgName: string
   orgEmail?: string

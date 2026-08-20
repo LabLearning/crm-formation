@@ -102,6 +102,15 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
     }
   }
 
+  // Documents d'accueil (livret + règlement intérieur) : remis avant l'entrée
+  // en formation (indicateur 9), toujours téléchargeables depuis le portail.
+  let livretUrl: string | null = null
+  if (context.type === 'apprenant') {
+    const { data: orgDoc } = await supabase
+      .from('organizations').select('livret_accueil_url').eq('id', context.organization.id).single()
+    livretUrl = (orgDoc as any)?.livret_accueil_url || null
+  }
+
   // Also get pending signatures
   const email = context.type === 'apprenant' ? context.apprenant.email : context.type === 'formateur' ? (context as any).formateur.email : null
   let pendingSignatures: { id: string; signataire_nom: string; status: string; token: string; document: { nom: string; type: string } }[] = []
@@ -124,6 +133,29 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
 
       {/* Pending signatures — signature dessinée en ligne */}
       <PendingSignatures token={params.token} signatures={pendingSignatures} />
+
+      {/* Documents d'accueil : livret + règlement intérieur */}
+      {context.type === 'apprenant' && (
+        <div className="card p-5">
+          <h2 className="text-sm font-heading font-semibold text-surface-900 mb-3">Documents d&apos;accueil</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {livretUrl && (
+              <a href={livretUrl} target="_blank" rel="noreferrer"
+                className="flex items-center gap-3 rounded-xl border border-surface-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50/40 transition-colors">
+                <FileText className="h-5 w-5 text-brand-500 shrink-0" />
+                <span className="text-sm text-surface-700">Livret d&apos;accueil</span>
+                <Download className="h-4 w-4 text-surface-400 ml-auto" />
+              </a>
+            )}
+            <a href="/api/pdf/reglement-interieur" target="_blank" rel="noreferrer"
+              className="flex items-center gap-3 rounded-xl border border-surface-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50/40 transition-colors">
+              <FileText className="h-5 w-5 text-brand-500 shrink-0" />
+              <span className="text-sm text-surface-700">Règlement intérieur</span>
+              <Download className="h-4 w-4 text-surface-400 ml-auto" />
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Supports pédagogiques par formation */}
       {supportsParSession.length > 0 && (

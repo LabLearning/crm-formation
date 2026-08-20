@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     .neq('status', 'annulee')
     .neq('status', 'terminee')
 
-  const { createNotification, sendDocumentEmail } = await import('@/lib/email')
+  const { createNotification, sendDocumentEmail, blocDocumentsAccueil } = await import('@/lib/email')
   const { sendWhatsAppTemplate } = await import('@/lib/whatsapp')
   const { renderToBuffer } = await import('@react-pdf/renderer')
   const { createElement } = await import('react')
@@ -141,7 +141,7 @@ export async function GET(req: Request) {
             recipientName: [a.civilite, a.prenom, a.nom].filter(Boolean).join(' ').trim() || 'Madame, Monsieur',
             subject: `Convocation — ${formationNom} (${dateStr})`,
             docTitle: 'Convocation à votre formation',
-            intro: `Nous avons le plaisir de vous convoquer à la session de formation suivante. Vous trouverez votre convocation détaillée en pièce jointe.`,
+            intro: `Nous avons le plaisir de vous convoquer à la session de formation suivante. Vous trouverez votre convocation détaillée en pièce jointe.${blocDocumentsAccueil(org as any)}`,
             metadata: [
               ['Formation', formationNom],
               ['Début', dateDebutLong],
@@ -158,6 +158,47 @@ export async function GET(req: Request) {
           totalEmails++
         } catch (e) { console.error('[email convoc]', e) }
       }
+    }
+
+    // Repli : les apprenants SANS email reçoivent leur convocation via le
+    // référent de l'établissement — un seul mail au contact du client, avec
+    // la liste des stagiaires concernés (la remise est ainsi toujours prouvée).
+    const sansEmail = (inscriptions || []).map((i: any) => i.apprenant).filter((a: any) => a && !a.email)
+    if (sansEmail.length > 0) {
+      try {
+        const { data: sessClient } = await supabase
+          .from('sessions').select('client_id').eq('id', sess.id).single()
+        if ((sessClient as any)?.client_id) {
+          const { data: contact } = await supabase
+            .from('contacts').select('prenom, nom, email')
+            .eq('client_id', (sessClient as any).client_id).not('email', 'is', null)
+            .order('created_at', { ascending: true }).limit(1).maybeSingle()
+          if ((contact as any)?.email) {
+            const org = await getOrg(sess.organization_id)
+            const noms = sansEmail.map((a: any) => [a.prenom, a.nom].filter(Boolean).join(' ')).join(', ')
+            await sendDocumentEmail({
+              to: (contact as any).email,
+              orgName: org?.name || 'Lab Learning',
+              orgEmail: org?.email_contact || org?.email,
+              orgLogoUrl: org?.logo_url,
+              qualiopiCertified: org?.is_qualiopi !== false,
+              recipientName: [(contact as any).prenom, (contact as any).nom].filter(Boolean).join(' ') || 'Madame, Monsieur',
+              subject: `Convocation de vos salariés — ${(sess as any).formation?.intitule || 'formation'} (${new Date(sess.date_debut).toLocaleDateString('fr-FR')})`,
+              docTitle: 'Convocation à transmettre à vos salariés',
+              intro: `Certains de vos salariés inscrits à la session n'ont pas d'adresse email individuelle : nous vous transmettons leur convocation, à leur remettre. Stagiaires concernés : <strong>${noms}</strong>.${blocDocumentsAccueil(org as any)}`,
+              metadata: [
+                ['Formation', (sess as any).formation?.intitule || ''],
+                ['Début', new Date(sess.date_debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })],
+                ['Lieu', (sess as any).lieu || 'votre établissement'],
+              ],
+              organizationId: sess.organization_id,
+              entityType: 'session',
+              entityId: sess.id,
+            })
+            totalEmails++
+          }
+        }
+      } catch (e) { console.error('[convoc referent]', e) }
     }
 
     // Notifier le formateur (fiche mission récap)

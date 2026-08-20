@@ -61,7 +61,8 @@ export async function envoyerMailApprenantAction(
   const dateFinLong = fmtLong((sess as any).date_fin || (sess as any).date_debut)
   const lieuStr = (sess as any).lieu || 'le lieu indiqué dans votre convocation'
   const sujet = `Convocation — ${formationNom} (${dateStr})`
-  const intro = `Nous avons le plaisir de vous convoquer à la session de formation suivante. Vous trouverez votre convocation détaillée en pièce jointe.`
+  const { blocDocumentsAccueil } = await import('@/lib/email')
+  const intro = `Nous avons le plaisir de vous convoquer à la session de formation suivante. Vous trouverez votre convocation détaillée en pièce jointe.${blocDocumentsAccueil(org as any)}`
   const meta: Array<[string, string]> = [
     ['Formation', formationNom],
     ['Début', dateDebutLong],

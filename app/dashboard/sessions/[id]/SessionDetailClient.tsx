@@ -453,7 +453,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <Mail className={`h-4 w-4 shrink-0 ${j1ok ? 'text-emerald-600' : 'text-amber-600'}`} />
             <span className="text-surface-700">
               Convocations envoyées le <strong>{formatDate(session.convocations_sent_at, { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-              {debut ? (j1ok ? ' — au moins la veille du début de session (J-1 respecté)' : ' — après le début de session') : ''}
+              {debut ? (j1ok ? ' — en amont du début de session' : ' — après le début de session') : ''}
             </span>
             {j1ok && <CheckCircle2 className="h-4 w-4 text-emerald-600 ml-auto shrink-0" />}
           </div>
