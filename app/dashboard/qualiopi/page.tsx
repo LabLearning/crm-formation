@@ -302,7 +302,12 @@ export default async function QualiopiPage() {
       { label: 'Constats traités et clôturés', href: '/dashboard/incidents', count: nbIncidentsResolus },
       { label: 'Analyse des causes / bilans', href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 },
     ],
-    32: [{ label: "Plan d'amélioration continue", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
+    32: [
+      { label: "Plan d'amélioration continue — tableau de suivi (PDF)", href: '/api/pdf/plan-amelioration', count: 1 },
+      { label: "Mesures d'amélioration suivies (réclamations, aléas, abandons, veille)", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 },
+      { label: 'Réclamations traitées et datées', href: '/dashboard/reclamations', count: nbRecla },
+      { label: "Questionnaire d'abandon J+1 (banque QCM)", href: '/dashboard/qcm', count: 1 },
+    ],
   }
 
   // Fiches processus maison — visibles en tête de page, pas seulement dans le
@@ -314,6 +319,7 @@ export default async function QualiopiPage() {
     { ref: 'PROC-17', titre: 'Moyens humains, matériels et pédagogiques', href: '/api/pdf/processus/moyens' },
     { ref: 'PROC-21', titre: 'Recrutement et compétences des formateurs', href: '/api/pdf/processus/formateurs' },
     { ref: 'VEILLE', titre: 'Registre de veille (actions datées)', href: '/api/pdf/veille-registre' },
+    { ref: 'PLAN', titre: "Plan d'amélioration continue", href: '/api/pdf/plan-amelioration' },
     { ref: 'ORG', titre: 'Organigramme fonctionnel', href: '/api/pdf/organigramme' },
   ]
 
