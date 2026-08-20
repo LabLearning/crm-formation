@@ -270,8 +270,28 @@ export default async function QualiopiPage() {
     32: [{ label: "Plan d'amélioration continue", href: '/dashboard/reclamations', count: nbActions, warn: nbActions === 0 }],
   }
 
+  // Fiches processus maison — visibles en tête de page, pas seulement dans le
+  // détail des indicateurs : l'auditeur les demande en premier.
+  const fichesProcessus = [
+    { ref: 'PROC-06', titre: "Déroulé d'une formation en entreprise", href: '/api/pdf/processus/intra' },
+    { ref: 'PROC-10', titre: 'Adaptation des prestations, accompagnement et suivi', href: '/api/pdf/processus/adaptation' },
+    { ref: 'PROC-12', titre: 'Prévention et gestion des abandons', href: '/api/pdf/processus/abandons' },
+  ]
+
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-5">
+      <div className="card p-4">
+        <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Fiches processus (PDF)</div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {fichesProcessus.map((f) => (
+            <a key={f.ref} href={f.href} target="_blank" rel="noreferrer"
+              className="flex items-start gap-2.5 rounded-xl border border-surface-200 px-3.5 py-3 hover:border-brand-300 hover:bg-brand-50/40 transition-colors">
+              <span className="text-[11px] font-bold text-brand-600 mt-0.5 shrink-0">{f.ref}</span>
+              <span className="text-sm text-surface-700 leading-snug">{f.titre}</span>
+            </a>
+          ))}
+        </div>
+      </div>
       <QualiopiDashboard
         indicateurs={(indicateurs || []) as QualiopiIndicateur[]}
         initialized={(indicateurs || []).length > 0}
