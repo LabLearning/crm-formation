@@ -39,20 +39,38 @@ export async function GET(req: Request) {
     processed++
   }
 
-  // Relances : J+97 et J+104 après la fin — uniquement vers ceux qui n'ont
-  // pas répondu. Deux relances maximum, puis on n'insiste plus.
+  // Relances MENSUELLES : toute session finie depuis plus de 97 jours dont des
+  // stagiaires n'ont pas répondu est relancée, puis re-relancée tous les 30
+  // jours (dernière relance tracée dans qcm_sessions.date_rappel_j90).
+  // Un plafond par exécution étale le rattrapage des sessions anciennes sans
+  // inonder les boîtes ; chaque envoi reste tracé dans email_logs.
+  const PLAFOND_PAR_JOUR = 40
   let relances = 0
-  for (const decalage of [97, 104]) {
-    const d = new Date()
-    d.setDate(d.getDate() - decalage)
-    const dateRelance = d.toISOString().split('T')[0]
-    const { data: aRelancer } = await supabase
-      .from('sessions').select('id').eq('date_fin', dateRelance).eq('status', 'terminee')
-    for (const s of aRelancer || []) {
-      await notifyApprenantsForQcm(supabase, s.id, 'satisfaction_froid', { seulementEnAttente: true, relance: true })
-      relances++
-    }
+  const seuilFin = new Date(); seuilFin.setDate(seuilFin.getDate() - 97)
+  const seuilRelance = new Date(); seuilRelance.setDate(seuilRelance.getDate() - 30)
+
+  const { data: jalons } = await supabase
+    .from('qcm_sessions')
+    .select('id, session_id, date_rappel_j90, qcm:qcm_id(type), session:session_id(status, date_fin)')
+    .not('session_id', 'is', null)
+
+  const candidats = (jalons || []).filter((j: any) =>
+    j.qcm?.type === 'satisfaction_froid' &&
+    j.session?.status === 'terminee' &&
+    j.session?.date_fin && j.session.date_fin <= seuilFin.toISOString().split('T')[0] &&
+    (!j.date_rappel_j90 || j.date_rappel_j90 <= seuilRelance.toISOString().split('T')[0]),
+  )
+  // Les plus anciennes jamais relancées d'abord
+  candidats.sort((a: any, b: any) => String(a.date_rappel_j90 || '0').localeCompare(String(b.date_rappel_j90 || '0')))
+
+  for (const j of candidats.slice(0, PLAFOND_PAR_JOUR)) {
+    const nb = await notifyApprenantsForQcm(supabase, (j as any).session_id, 'satisfaction_froid', { seulementEnAttente: true, relance: true })
+    await supabase.from('qcm_sessions').update({
+      rappel_j90: true,
+      date_rappel_j90: new Date().toISOString().split('T')[0],
+    }).eq('id', (j as any).id)
+    if (Number(nb) > 0) relances++
   }
 
-  return NextResponse.json({ targetDate, sessions_processed: processed, qcm_reponses_created: created, sessions_relancees: relances })
+  return NextResponse.json({ targetDate, sessions_processed: processed, qcm_reponses_created: created, sessions_relancees: relances, relances_en_attente: Math.max(0, candidats.length - PLAFOND_PAR_JOUR) })
 }

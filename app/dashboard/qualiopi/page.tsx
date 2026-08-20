@@ -119,6 +119,14 @@ export default async function QualiopiPage() {
     if (!error) nbFormBesoin = count || 0
   } catch { nbFormBesoin = 0 }
 
+  // Relances à froid tracées dans l'historique des mails (ind. 30).
+  let nbRelancesFroid = 0
+  try {
+    const { count } = await supabase.from('email_logs').select('*', { count: 'exact', head: true })
+      .eq('organization_id', orgId).ilike('subject', 'Rappel — Trois mois%')
+    nbRelancesFroid = count || 0
+  } catch { nbRelancesFroid = 0 }
+
   // Feuilles d'émargement papier numérisées et déposées au dossier (ind. 12).
   const nbFeuillesDeposees = await cnt('documents', (q) => q.eq('type', 'emargement_signe'))
 
@@ -284,6 +292,7 @@ export default async function QualiopiPage() {
     29: [{ label: 'Registre des réclamations', href: '/dashboard/reclamations', count: nbRecla, warn: nbRecla === 0 }],
     30: [
       { label: 'Satisfaction à froid (J+90) recueillie', href: '/dashboard/evaluations', count: nbSatisFroid },
+      { label: 'Relances à froid mensuelles envoyées (tracées)', href: '/dashboard/evaluations', count: nbRelancesFroid },
       { label: 'Appréciations des entreprises clientes', href: '/dashboard/evaluations', count: nbAppreciationsEntreprise, warn: nbAppreciationsEntreprise === 0 },
       { label: 'Appréciations des financeurs (lien de sollicitation annuelle)', href: `/appreciation/${orgId}`, count: nbAppreciationsFinanceur },
       { label: 'Appréciations des formateurs (lien depuis leurs grilles)', href: `/appreciation/${orgId}?role=formateur`, count: nbAppreciationsFormateur },
