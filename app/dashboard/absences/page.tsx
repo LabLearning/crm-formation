@@ -18,40 +18,36 @@ export default async function AbsencesPage() {
   const supabase = await createServiceRoleClient()
 
   // Pagination PARALLÈLE : le nombre total est connu d'un count, puis toutes
-  // les pages partent ensemble — la table dépasse 60 000 lignes, le chargement
+  // les pages partent ensemble — la table dépasse 10 000 lignes, le chargement
   // séquentiel de tout l'historique rendait la page inutilisable.
-  const pagesParalleles = async (base: () => any, colonnes: string) => {
-    const { count } = await base().select(colonnes, { count: 'exact', head: true })
+  // Les filtres s'appliquent APRÈS .select() (contrainte du client Supabase).
+  const pagesParalleles = async (colonnes: string, filtres: (q: any) => any) => {
+    const { count } = await filtres(
+      supabase.from('emargements').select(colonnes, { count: 'exact', head: true }))
     const nb = Math.ceil((count || 0) / 1000)
     const lots = await Promise.all(Array.from({ length: nb }, (_, i) =>
-      base().select(colonnes).range(i * 1000, i * 1000 + 999).then((r: any) => r.data || [])))
+      filtres(supabase.from('emargements').select(colonnes))
+        .range(i * 1000, i * 1000 + 999).then((r: any) => r.data || [])))
     return lots.flat()
   }
 
   // 1) Les absences candidates : non présent, non signé, sans motif — seul
-  //    sous-ensemble utile (quelques milliers de lignes, pas 60 000).
+  //    sous-ensemble utile (quelques milliers de lignes).
   const absencesBrutes = await pagesParalleles(
-    () => supabase.from('emargements')
-      .eq('organization_id', session.organization.id)
+    'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
+    (q) => q.eq('organization_id', session.organization.id)
       .or('est_present.is.null,est_present.eq.false')
       .is('signature_data', null)
       .is('motif_absence', null),
-    'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
   )
 
   // 2) Les sessions où la présence est réellement suivie (≥ 1 présent ou
   //    1 signature) : colonnes minimales, en parallèle.
   const [presents, signes] = await Promise.all([
-    pagesParalleles(
-      () => supabase.from('emargements')
-        .eq('organization_id', session.organization.id).eq('est_present', true),
-      'session_id',
-    ),
-    pagesParalleles(
-      () => supabase.from('emargements')
-        .eq('organization_id', session.organization.id).not('signature_data', 'is', null),
-      'session_id',
-    ),
+    pagesParalleles('session_id',
+      (q) => q.eq('organization_id', session.organization.id).eq('est_present', true)),
+    pagesParalleles('session_id',
+      (q) => q.eq('organization_id', session.organization.id).not('signature_data', 'is', null)),
   ])
   const suivies = new Set([...presents, ...signes].map((r: any) => r.session_id))
 
