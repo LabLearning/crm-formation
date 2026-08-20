@@ -17,43 +17,67 @@ export default async function AbsencesPage() {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
-  const pages = async (fn: (f: number, t: number) => any) => {
-    const out: any[] = []
-    for (let f = 0; ; f += 500) {
-      const { data, error } = await fn(f, f + 499)
-      if (error) throw new Error(error.message)
-      out.push(...(data || []))
-      if ((data || []).length < 500) break
-    }
-    return out
+  // Pagination PARALLÈLE : le nombre total est connu d'un count, puis toutes
+  // les pages partent ensemble — la table dépasse 60 000 lignes, le chargement
+  // séquentiel de tout l'historique rendait la page inutilisable.
+  const pagesParalleles = async (base: () => any, colonnes: string) => {
+    const { count } = await base().select(colonnes, { count: 'exact', head: true })
+    const nb = Math.ceil((count || 0) / 1000)
+    const lots = await Promise.all(Array.from({ length: nb }, (_, i) =>
+      base().select(colonnes).range(i * 1000, i * 1000 + 999).then((r: any) => r.data || [])))
+    return lots.flat()
   }
 
-  const em = await pages((f, t) => supabase.from('emargements')
-    .select('id, session_id, apprenant_id, date, creneau, est_present, motif_absence, signature_data, apprenant:apprenant_id(prenom, nom)')
-    .eq('organization_id', session.organization.id).range(f, t))
+  // 1) Les absences candidates : non présent, non signé, sans motif — seul
+  //    sous-ensemble utile (quelques milliers de lignes, pas 60 000).
+  const absencesBrutes = await pagesParalleles(
+    () => supabase.from('emargements')
+      .eq('organization_id', session.organization.id)
+      .or('est_present.is.null,est_present.eq.false')
+      .is('signature_data', null)
+      .is('motif_absence', null),
+    'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
+  )
 
+  // 2) Les sessions où la présence est réellement suivie (≥ 1 présent ou
+  //    1 signature) : colonnes minimales, en parallèle.
+  const [presents, signes] = await Promise.all([
+    pagesParalleles(
+      () => supabase.from('emargements')
+        .eq('organization_id', session.organization.id).eq('est_present', true),
+      'session_id',
+    ),
+    pagesParalleles(
+      () => supabase.from('emargements')
+        .eq('organization_id', session.organization.id).not('signature_data', 'is', null),
+      'session_id',
+    ),
+  ])
+  const suivies = new Set([...presents, ...signes].map((r: any) => r.session_id))
+
+  // Les sessions où aucune présence n'a jamais été enregistrée sont exclues :
+  // leurs lignes ne sont pas des absences, ce sont des présences jamais
+  // numérisées (l'émargement papier fait foi).
   const parSession = new Map<string, any[]>()
-  for (const e of em) {
+  for (const e of absencesBrutes) {
+    if (!suivies.has(e.session_id)) continue
     if (!parSession.has(e.session_id)) parSession.set(e.session_id, [])
     parSession.get(e.session_id)!.push(e)
   }
-
-  // Seules les sessions où la présence est réellement suivie portent des
-  // absences au sens propre.
   const sessionsAvecAbsences: { sessionId: string; absences: any[] }[] = []
-  for (const [sessionId, rows] of parSession) {
-    const presents = rows.filter((r) => r.est_present || r.signature_data).length
-    if (presents === 0) continue
-    const absences = rows.filter((r) => !r.est_present && !r.signature_data && !r.motif_absence)
+  for (const [sessionId, absences] of parSession) {
     if (absences.length) sessionsAvecAbsences.push({ sessionId, absences })
   }
 
   const ids = sessionsAvecAbsences.map((x) => x.sessionId)
-  const sessions = ids.length
-    ? await pages((f, t) => supabase.from('sessions')
+  const lotsSessions = await Promise.all(
+    Array.from({ length: Math.ceil(ids.length / 200) }, (_, i) =>
+      supabase.from('sessions')
         .select('id, reference, date_debut, date_fin, intitule, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)')
-        .in('id', ids).range(f, t))
-    : []
+        .in('id', ids.slice(i * 200, i * 200 + 200))
+        .then((r) => r.data || [])),
+  )
+  const sessions = lotsSessions.flat()
   const sessionPar = new Map(sessions.map((s: any) => [s.id, s]))
 
   const groupes = sessionsAvecAbsences
