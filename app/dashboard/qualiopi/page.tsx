@@ -285,13 +285,14 @@ export default async function QualiopiPage() {
     { ref: 'PROC-10', titre: 'Adaptation des prestations, accompagnement et suivi', href: '/api/pdf/processus/adaptation' },
     { ref: 'PROC-12', titre: 'Prévention et gestion des abandons', href: '/api/pdf/processus/abandons' },
     { ref: 'PROC-17', titre: 'Moyens humains, matériels et pédagogiques', href: '/api/pdf/processus/moyens' },
+    { ref: 'ORG', titre: 'Organigramme fonctionnel', href: '/api/pdf/organigramme' },
   ]
 
   return (
     <div className="animate-fade-in space-y-5">
       <div className="card p-4">
-        <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Fiches processus (PDF)</div>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Fiches processus & organigramme (PDF)</div>
+        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {fichesProcessus.map((f) => (
             <a key={f.ref} href={f.href} target="_blank" rel="noreferrer"
               className="flex items-start gap-2.5 rounded-xl border border-surface-200 px-3.5 py-3 hover:border-brand-300 hover:bg-brand-50/40 transition-colors">
