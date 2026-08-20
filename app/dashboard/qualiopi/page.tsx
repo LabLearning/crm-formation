@@ -263,9 +263,18 @@ export default async function QualiopiPage() {
       { label: 'Formation du référent handicap (module JLO du 3/09)', href: '/dashboard/qualiopi/handicap', count: 1 },
       { label: 'Formateurs dont le maintien des compétences est daté', href: '/dashboard/formateurs', count: nbHabilitations, warn: nbHabilitations === 0 },
     ],
-    23: [{ label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 }],
-    24: [{ label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 }],
-    25: [{ label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 }],
+    23: [
+      { label: 'Registre de veille — actions datées (PDF)', href: '/api/pdf/veille-registre', count: 1 },
+      { label: 'Veille légale & réglementaire', href: '/dashboard/veille', count: nbVL, warn: nbVL === 0 },
+    ],
+    24: [
+      { label: 'Registre de veille — actions datées (PDF)', href: '/api/pdf/veille-registre', count: 1 },
+      { label: 'Veille métier & emploi', href: '/dashboard/veille', count: nbVM, warn: nbVM === 0 },
+    ],
+    25: [
+      { label: 'Registre de veille — actions datées (PDF)', href: '/api/pdf/veille-registre', count: 1 },
+      { label: 'Veille pédagogique & techno', href: '/dashboard/veille', count: nbVP, warn: nbVP === 0 },
+    ],
     26: [
       { label: hasReferentHandicap ? 'Veille handicap' : 'Référent/veille handicap à constituer', href: '/dashboard/veille', count: nbVH + (hasReferentHandicap ? 1 : 0), warn: nbVH === 0 && !hasReferentHandicap },
       { label: 'Réseau handicap par région (contacts actualisés)', href: '/dashboard/qualiopi/handicap', count: nbReseauHandicap },
@@ -295,6 +304,7 @@ export default async function QualiopiPage() {
     { ref: 'PROC-12', titre: 'Prévention et gestion des abandons', href: '/api/pdf/processus/abandons' },
     { ref: 'PROC-17', titre: 'Moyens humains, matériels et pédagogiques', href: '/api/pdf/processus/moyens' },
     { ref: 'PROC-21', titre: 'Recrutement et compétences des formateurs', href: '/api/pdf/processus/formateurs' },
+    { ref: 'VEILLE', titre: 'Registre de veille (actions datées)', href: '/api/pdf/veille-registre' },
     { ref: 'ORG', titre: 'Organigramme fonctionnel', href: '/api/pdf/organigramme' },
   ]
 
