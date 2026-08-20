@@ -23,6 +23,9 @@ export async function GET() {
     supabase.from('veilles')
       .select('type, titre, date_veille, source, resume, action')
       .eq('organization_id', orgId)
+      // Seules les entrées VALIDÉES paraissent au registre : 2-3 par
+      // indicateur, chacune avec une action concrète démontrable.
+      .eq('statut', 'validee')
       .order('date_veille', { ascending: false }),
     supabase.from('organizations').select('*').eq('id', orgId).single(),
   ])
