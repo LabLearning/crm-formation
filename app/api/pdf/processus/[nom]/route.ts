@@ -73,14 +73,23 @@ const PROCESSUS: Record<string, { titre: string; reference: string; intro: strin
         ],
       },
       {
-        titre: '3. Adapter le suivi',
+        titre: '3. Adaptation spécifique — formations hygiène (audit en établissement)',
+        etapes: [
+          { quand: "En début d'intervention", quoi: "Le formateur réalise l'audit d'hygiène de l'établissement : locaux, températures, stockage, traçabilité, plan de nettoyage — constats relevés poste par poste.", outil: "audit hygiène terrain (AuditHygiène, synchronisé au CRM)" },
+          { quand: "À l'analyse", quoi: 'Les non-conformités sont hiérarchisées par criticité ; les non-conformités MAJEURES deviennent les axes prioritaires de la formation.', outil: "rapport d'audit (non-conformités par criticité)" },
+          { quand: 'Pendant la formation', quoi: "Le déroulé est réaxé sur les non-conformités majeures relevées : chaque apport théorique s'appuie sur un constat réel de l'établissement, la mise en pratique corrige le poste concerné.", outil: 'déroulé pédagogique ajusté + notes de session' },
+          { quand: 'En clôture', quoi: "La levée des non-conformités est vérifiée avec l'équipe ; les points restants sont remis à l'exploitant sous forme de plan d'actions.", outil: "plan d'actions remis + DUERP le cas échéant" },
+        ],
+      },
+      {
+        titre: '4. Adapter le suivi',
         etapes: [
           { quand: 'Au dernier jour', quoi: "L'évaluation des acquis mesure l'atteinte des objectifs ; un stagiaire en difficulté fait l'objet de recommandations écrites au bilan (POEI) ou d'une proposition de renforcement.", outil: 'évaluation des acquis + grilles POEI' },
           { quand: 'Après la formation', quoi: 'La satisfaction à chaud puis à froid (J+90) vérifie que les acquis servent en poste ; les écarts remontent au plan d’amélioration.', outil: 'questionnaires de satisfaction + plan d’amélioration' },
         ],
       },
       {
-        titre: '4. Exemples de mise en œuvre',
+        titre: '5. Exemples de mise en œuvre',
         paragraphes: [
           "Parcours POEI construits par enseigne (référentiels distincts par concept de restauration), groupes du matin et du soir dédoublés pour suivre les équipes de service, entretiens individuels de positionnement systématiques en restauration rapide, évaluations menées à l'oral au poste de travail lorsque l'écrit est un obstacle.",
           "Adaptation linguistique : supports de formation traduits en bengali par le formateur (G. Pledran) pour une équipe non francophone d'un établissement de restauration rapide — la pièce est conservée au dossier de la session concernée.",
