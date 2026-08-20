@@ -323,13 +323,24 @@ export async function updatePoeiCandidatAction(candidatId: string, poeiId: strin
   }
 
   // Champs POEI du candidat
-  const { error } = await supabase.from("poei_candidats").update({
+  const champsCandidat: Record<string, any> = {
     identifiant_ft: str(formData, "identifiant_ft"),
     poste_vise: str(formData, "poste_vise"),
     type_contrat: str(formData, "type_contrat"),
     date_embauche_prevue: str(formData, "date_embauche_prevue"),
     numero_convention: str(formData, "numero_convention"),
-  }).eq('id', candidatId).eq('organization_id', session.organization.id)
+    entretien: str(formData, "entretien"),
+    entretien_date: str(formData, "entretien_date"),
+  }
+  let { error } = await supabase.from("poei_candidats").update(champsCandidat)
+    .eq('id', candidatId).eq('organization_id', session.organization.id)
+  if (error && /entretien/.test(error.message)) {
+    // Migration 137 pas encore appliquée : on sauve le reste sans bloquer.
+    delete champsCandidat.entretien
+    delete champsCandidat.entretien_date
+    ;({ error } = await supabase.from("poei_candidats").update(champsCandidat)
+      .eq('id', candidatId).eq('organization_id', session.organization.id))
+  }
   if (error) return { success: false, error: 'Erreur mise à jour candidat' }
 
   await logAudit({ action: 'update', entity_type: 'poei_candidat', entity_id: candidatId })

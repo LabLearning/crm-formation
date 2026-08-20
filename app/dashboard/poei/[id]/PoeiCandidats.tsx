@@ -262,7 +262,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                 <button onClick={() => setEditCand(c)} className="flex-1 min-w-0 text-left group">
                   <div className="text-sm font-medium text-surface-900 truncate group-hover:text-brand-600 transition-colors">{nom(c)}</div>
                   <div className="text-xs text-surface-500 truncate">
-                    {[c.apprenant?.email, c.poste_vise, c.type_contrat ? TYPE_CONTRAT_LABELS[c.type_contrat] : null, c.identifiant_ft ? `FT ${c.identifiant_ft}` : null, (c as any).numero_convention ? `Conv. ${(c as any).numero_convention}` : null].filter(Boolean).join(' · ') || '—'}
+                    {[c.apprenant?.email, c.poste_vise, c.type_contrat ? TYPE_CONTRAT_LABELS[c.type_contrat] : null, c.identifiant_ft ? `FT ${c.identifiant_ft}` : null, (c as any).numero_convention ? `Conv. ${(c as any).numero_convention}` : null, (c as any).entretien ? `Entretien${(c as any).entretien_date ? ` du ${new Date((c as any).entretien_date).toLocaleDateString('fr-FR')}` : ' mené'}` : null].filter(Boolean).join(' · ') || '—'}
                   </div>
                 </button>
 
@@ -609,6 +609,18 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                 <Input id="e_date_embauche_prevue" name="date_embauche_prevue" type="date" label="Embauche prévue" defaultValue={editCand.date_embauche_prevue || ''} />
               </div>
               <Input id="e_numero_convention" name="numero_convention" label="N° de convention" defaultValue={(editCand as any).numero_convention || ''} />
+              {/* Entretien de recrutement/positionnement — trace d'individualisation (ind. 4/10) */}
+              <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+                <div className="col-span-2">
+                  <label htmlFor="e_entretien" className="block text-sm font-medium text-surface-700 mb-1.5">Entretien (compte rendu)</label>
+                  <textarea
+                    id="e_entretien" name="entretien" rows={4} className="input-base resize-y"
+                    defaultValue={(editCand as any).entretien || ''}
+                    placeholder="Motivation, parcours, disponibilités, besoins d'adaptation repérés, conclusion de l'entretien…"
+                  />
+                </div>
+                <Input id="e_entretien_date" name="entretien_date" type="date" label="Date de l'entretien" defaultValue={(editCand as any).entretien_date || ''} />
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-1">
               <Button type="button" variant="secondary" onClick={() => setEditCand(null)}>Annuler</Button>

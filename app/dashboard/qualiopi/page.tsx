@@ -221,6 +221,10 @@ export default async function QualiopiPage() {
     9: [{ label: 'Sessions réalisées (convocations, déroulé)', href: '/dashboard/sessions', count: nbSessionsTerm }],
     10: [
       { label: "Processus d'adaptation des prestations (PDF)", href: '/api/pdf/processus/adaptation', count: 1 },
+      { label: 'Recueils du besoin (contexte, adaptations, handicap)', href: '/dashboard/sessions', count: nbRecueils },
+      { label: 'Positionnements individuels à l’entrée', href: '/dashboard/qcm', count: nbPositionnement },
+      { label: 'Procédure PSH dans le recueil (analyse des besoins)', href: '/dashboard/sessions', count: 1 },
+      { label: 'Réseau handicap par région (contacts vérifiés)', href: '/dashboard/qualiopi/handicap', count: 1 },
       { label: 'Sessions avec déroulé pédagogique renseigné', href: '/dashboard/sessions', count: nbSessionsTerm },
     ],
     11: [
