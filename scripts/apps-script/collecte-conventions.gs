@@ -17,12 +17,13 @@
 var CRM = 'https://crm.lab-learning.fr/api/ingest/piece'
 var SECRET = 'REMPLACER_PAR_LE_CRON_SECRET'
 
-// Conventions et avenants, sur 12 mois glissants, reçus comme envoyés.
+// Conventions et avenants depuis janvier 2026 (l'archive Drive couvre avant),
+// reçus comme envoyés.
 var REQUETES = [
-  'has:attachment filename:convention newer_than:12m',
-  'has:attachment filename:avenant newer_than:12m',
-  'has:attachment subject:convention newer_than:12m',
-  'has:attachment subject:(convention signée) newer_than:12m',
+  'has:attachment filename:convention after:2026/01/01',
+  'has:attachment filename:avenant after:2026/01/01',
+  'has:attachment subject:convention after:2026/01/01',
+  'has:attachment subject:(convention signée) after:2026/01/01',
 ]
 
 var IGNORER = /^(image\d{3,}|logo|signature|unnamed|outlook-)/i
