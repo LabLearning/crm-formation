@@ -36,17 +36,18 @@ const PROCESSUS: Record<string, { titre: string; reference: string; intro: strin
         ],
       },
       {
-        titre: "3. Traiter l'abandon avéré",
+        titre: "3. Traiter l'absence puis l'abandon avéré (circuit V1 — avril 2024)",
         etapes: [
-          { quand: "À l'abandon", quoi: "L'inscription passe au statut « abandonné » ; le motif est recueilli auprès du stagiaire (questionnaire d'abandon ou entretien téléphonique) et consigné.", outil: 'inscription (statut) + motif d’absence « Abandon de la formation »' },
-          { quand: 'Sous 7 jours', quoi: "L'employeur et, le cas échéant, le financeur sont informés ; la facturation est ajustée au réalisé (certificat de réalisation au prorata des heures).", outil: 'certificat de réalisation (heures réalisées) + facture' },
+          { quand: 'Absence prévenue', quoi: "Le motif est recueilli (maladie, problème impérieux…) et consigné ; les modalités de rattrapage sont convenues avec le stagiaire et l'employeur.", outil: "motif d'absence sur l'émargement" },
+          { quand: 'Absence non prévenue', quoi: "Appel au stagiaire et à l'employeur le cas échéant, doublé d'un mail : la relance est immédiate, sa trace conservée.", outil: 'écran Absences à justifier + email tracé (email_logs)' },
+          { quand: "À l'abandon", quoi: "L'inscription passe au statut « abandonné » ; le questionnaire d'abandon est adressé à J+1 ; les CGV s'appliquent pour la facturation ; une réintégration ou une nouvelle formation est proposée quand le projet le permet.", outil: "inscription (statut) + questionnaire d'abandon J+1 + CGV" },
           { quand: 'Au fil du registre', quoi: "L'abandon est analysé comme dysfonctionnement : cause, action corrective éventuelle, entrée au plan d'amélioration continue.", outil: 'registre des dysfonctionnements + plan d’amélioration' },
         ],
       },
       {
-        titre: "4. Questionnaire d'abandon",
+        titre: "4. Questionnaire d'abandon (J+1)",
         paragraphes: [
-          "Trois questions posées au stagiaire qui interrompt son parcours, par téléphone ou par écrit : (1) Quelle est la raison principale de votre arrêt ? (2) La formation correspondait-elle à ce qui vous avait été annoncé ? (3) Qu'aurait-il fallu changer pour que vous poursuiviez ? Les réponses sont consignées au dossier de la session et nourrissent l'analyse des causes.",
+          "Adressé au stagiaire dès le lendemain de l'abandon, par téléphone ou par écrit : (1) Pourquoi avez-vous arrêté votre formation ? (2) Avez-vous changé d'objectif, de projet ? (3) Avez-vous une remarque sur le déroulement de la formation ? (4) Avez-vous une remarque sur le formateur ? (5) Avez-vous une remarque sur la formation ? (6) Souhaitez-vous qu'on vous recontacte afin d'étudier un autre projet de formation ? Les réponses sont consignées au dossier de la session et nourrissent l'analyse des causes.",
         ],
       },
     ],
