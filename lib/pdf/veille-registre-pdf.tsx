@@ -15,6 +15,7 @@ export interface EntreeVeille {
   source: string | null
   resume: string | null
   action: string | null
+  lien?: string | null
 }
 
 const TYPES: Array<[string, string]> = [
@@ -57,6 +58,9 @@ export function VeilleRegistrePDF({ org, entrees, dateEdition }: { org: any; ent
                   ) : null}
                   {e.resume ? (
                     <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.45, marginTop: 2 }}>{e.resume}</Text>
+                  ) : null}
+                  {e.lien ? (
+                    <Text style={{ fontSize: 7.5, color: SURFACE_500, marginTop: 1 }}>Document : {e.lien}</Text>
                   ) : null}
                   {e.action ? (
                     <Text style={{ fontSize: 8, color: SURFACE_900, lineHeight: 1.45, marginTop: 2 }}>

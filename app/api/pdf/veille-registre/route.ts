@@ -21,7 +21,7 @@ export async function GET() {
 
   const [{ data: entrees }, { data: org }] = await Promise.all([
     supabase.from('veilles')
-      .select('type, titre, date_veille, source, resume, action')
+      .select('type, titre, date_veille, source, resume, action, lien')
       .eq('organization_id', orgId)
       // Seules les entrées VALIDÉES paraissent au registre : 2-3 par
       // indicateur, chacune avec une action concrète démontrable.
