@@ -207,6 +207,7 @@ export async function POST(request: NextRequest) {
       supabase, orgId, fichier.name,
       String(form.get('objet') || '').trim(),
       String(form.get('date_mail') || '').trim(),
+      type,
     )
     if ('erreur' in trouve) return NextResponse.json(trouve.erreur, { status: trouve.statut })
     sessionId = trouve.id
@@ -382,6 +383,7 @@ async function deviner(
   nomFichier: string,
   objet?: string,
   dateMailFournie?: string,
+  typePiece?: string,
 ): Promise<
   { id: string; clientId: string | null; apprenantId?: string | null; libelle: string }
   | { erreur: any; statut: number }
@@ -449,18 +451,52 @@ async function deviner(
       statut: 404,
     }
   }
-  if (sessions.length > 1) {
+  let retenues = sessions
+  if (retenues.length > 1) {
+    // 1er départage : la formation nommée dans le fichier (« Convention_HA »,
+    // « CONVENTION DUERP DON BAILO ») — un client suit souvent hygiène ET
+    // DUERP la même semaine, deux sessions légitimes.
+    const n = nomFichier.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    const familles: Array<[RegExp, RegExp]> = [
+      [/duerp|document\s*unique|\bdu\b|prevention/, /duerp|document unique|prevention/i],
+      [/hygien|\bha\b|haccp|alimentaire/, /hygien|alimentaire|haccp/i],
+      [/\bsst\b|secouris/, /secouris|sst/i],
+      [/nettoyage|desinfection|pnd/, /nettoyage|desinfection/i],
+      [/tracab|etiquet/, /tracab|etiquet/i],
+      [/manage/, /manage/i],
+    ]
+    const famille = familles.find(([reFichier]) => reFichier.test(n))
+    if (famille) {
+      const ids = retenues.map((s: any) => s.id)
+      const { data: avecFormation } = await supabase
+        .from('sessions').select('id, reference, date_debut, formation:formations(intitule)').in('id', ids)
+      const filtrees = (avecFormation || []).filter((s: any) => famille[1].test(s.formation?.intitule || ''))
+      if (filtrees.length >= 1) retenues = filtrees
+    }
+  }
+  if (retenues.length > 1 && typePiece) {
+    // 2e départage : la session à qui il MANQUE ce type de pièce. Une remise
+    // porte la convention de chaque dossier ; celle déjà en base a déjà trouvé
+    // sa session, la nouvelle va au trou restant.
+    const { data: dejaLa } = await supabase
+      .from('documents').select('session_id').eq('type', typePiece)
+      .in('session_id', retenues.map((s: any) => s.id))
+    const couvertes = new Set((dejaLa || []).map((d: any) => d.session_id))
+    const manquantes = retenues.filter((s: any) => !couvertes.has(s.id))
+    if (manquantes.length === 1) retenues = manquantes
+  }
+  if (retenues.length > 1) {
     return {
       erreur: {
-        error: `${client.raison_sociale} : ${sessions.length} sessions possibles autour du ${dateMail}`,
+        error: `${client.raison_sociale} : ${retenues.length} sessions possibles autour du ${dateMail}`,
         ambigu: true,
-        candidats: sessions.map((s: any) => `${s.reference} (${s.date_debut})`),
+        candidats: retenues.map((s: any) => `${s.reference} (${s.date_debut})`),
       },
       statut: 409,
     }
   }
 
-  return { id: sessions[0].id, clientId: client.id, libelle: sessions[0].reference }
+  return { id: retenues[0].id, clientId: client.id, libelle: retenues[0].reference }
 }
 
 
