@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck,
   Calendar, ListChecks, Star, Users, CheckSquare,
-  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro,
+  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro, MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
@@ -28,6 +28,7 @@ const apprenantNav: NavItem[] = [
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: ClipboardCheck },
   { label: 'Questionnaires', short: 'QCM', href: '/questionnaires', icon: ListChecks },
+  { label: 'Contact formateur', short: 'Contact', href: '/contact', icon: MessageCircle },
 ]
 
 const formateurNav: NavItem[] = [
@@ -36,6 +37,7 @@ const formateurNav: NavItem[] = [
   { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
   { label: 'Emargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
   { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
+  { label: 'Messages', short: 'Messages', href: '/messages', icon: MessageCircle },
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
