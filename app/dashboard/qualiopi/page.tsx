@@ -295,9 +295,9 @@ export default async function QualiopiPage() {
     30: [
       { label: 'Satisfaction à froid (J+90) recueillie', href: '/dashboard/evaluations', count: nbSatisFroid },
       { label: 'Relances à froid mensuelles envoyées (tracées)', href: '/dashboard/evaluations', count: nbRelancesFroid },
-      { label: 'Appréciations des entreprises clientes', href: '/dashboard/evaluations', count: nbAppreciationsEntreprise, warn: nbAppreciationsEntreprise === 0 },
-      { label: 'Appréciations des financeurs (lien de sollicitation annuelle)', href: `/appreciation/${orgId}`, count: nbAppreciationsFinanceur },
-      { label: 'Appréciations des formateurs (lien depuis leurs grilles)', href: `/appreciation/${orgId}?role=formateur`, count: nbAppreciationsFormateur },
+      { label: 'Appréciations des entreprises clientes', href: '/dashboard/qualiopi/appreciations', count: nbAppreciationsEntreprise, warn: nbAppreciationsEntreprise === 0 },
+      { label: 'Appréciations des financeurs (lien de sollicitation annuelle)', href: '/dashboard/qualiopi/appreciations', count: nbAppreciationsFinanceur },
+      { label: 'Appréciations des formateurs (lien depuis leurs grilles)', href: '/dashboard/qualiopi/appreciations', count: nbAppreciationsFormateur },
       { label: 'Dysfonctionnements constatés', href: '/dashboard/incidents', count: nbIncidents, warn: nbIncidents === 0 },
     ],
     31: [
