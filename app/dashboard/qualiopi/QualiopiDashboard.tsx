@@ -164,7 +164,7 @@ export function QualiopiDashboard({ indicateurs, initialized, crmEvidence }: Qua
         <div className="card p-5 mb-6 border-warning-200 bg-warning-50/40">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="h-4 w-4 text-warning-600" />
-            <h2 className="text-sm font-heading font-semibold text-surface-900">À combler avant l'audit du 17 août</h2>
+            <h2 className="text-sm font-heading font-semibold text-surface-900">À combler pour l'audit</h2>
             <Badge variant="warning">{gaps.length}</Badge>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">

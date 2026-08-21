@@ -169,7 +169,9 @@ export default async function QualiopiPage() {
     }
     for (const rows of parSession.values()) {
       if (!rows.some((r) => r.est_present || r.signature_data)) continue
-      nbAbsencesSansMotif += rows.filter((r) => !r.est_present && !r.signature_data && !r.motif_absence).length
+      // est_present=false uniquement : null = créneau pas encore passé
+      // (session en cours), ce n'est pas une absence.
+      nbAbsencesSansMotif += rows.filter((r) => r.est_present === false && !r.signature_data && !r.motif_absence).length
     }
   } catch { nbAbsencesSansMotif = 0 }
 
