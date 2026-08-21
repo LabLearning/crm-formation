@@ -9,10 +9,12 @@ type Periode = 'actives' | 'passees' | 'toutes'
 
 /**
  * Complétude documentaire par session, pour la pastille de la liste :
- * vert = rien ne manque (convention signée + émargement signé + contrat
- * formateur), ambre = convention OK mais pièce manquante, rose = pas de
- * convention signée. La convention signée peut être un document déposé ou
- * une signature électronique aboutie dans le module conventions.
+ * vert = rien ne manque (convention signée + contrat formateur), ambre =
+ * convention OK mais contrat formateur manquant, rose = pas de convention
+ * signée. L'émargement n'entre pas dans le critère : la présence est tenue
+ * par les questionnaires, tous les émargements sont réputés couverts.
+ * La convention signée peut être un document déposé ou une signature
+ * électronique aboutie dans le module conventions.
  */
 async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, { etat: string; manque: string[] }>> {
   const pieces = new Map<string, Set<string>>()
@@ -20,7 +22,7 @@ async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, 
     const { data } = await supabase.from('documents')
       .select('session_id, type')
       .eq('organization_id', orgId)
-      .in('type', ['convention_signee', 'emargement_signe', 'contrat_formateur'])
+      .in('type', ['convention_signee', 'contrat_formateur'])
       .not('session_id', 'is', null)
       .range(from, from + 999)
     for (const d of data || []) {
@@ -41,7 +43,6 @@ async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, 
 
   const LIBELLES: Record<string, string> = {
     convention_signee: 'convention signée',
-    emargement_signe: 'émargement signé',
     contrat_formateur: 'contrat formateur',
   }
   const out = new Map<string, { etat: string; manque: string[] }>()
@@ -84,7 +85,7 @@ export default async function SessionsPage({
     const d = dossiers.get(s.id)
     return {
       _dossier: d?.etat || 'incomplet',
-      _dossier_manque: d?.manque || ['convention signée', 'émargement signé', 'contrat formateur'],
+      _dossier_manque: d?.manque || ['convention signée', 'contrat formateur'],
     }
   }
 

@@ -72,9 +72,11 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
     // effectivement publié sur le site, pas le total interne des fiches.
     supabase.from('formations').select('id', { count: 'exact', head: true })
       .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true),
-    // "Apprenants formés" s'aligne sur l'indicateur publié (page Résultats) :
-    // les stagiaires formés sur sessions réalisées, pas le carnet d'apprenants.
-    supabase.from('indicateurs_resultats').select('nb_stagiaires')
+    // "Apprenants formés" et "sessions réalisées" s'alignent sur l'indicateur
+    // publié (page Résultats) : mêmes chiffres partout sur le site, calés sur
+    // la période auditée — le comptage live inclut des sessions tout juste
+    // basculées « terminée » que l'indicateur n'a pas encore intégrées.
+    supabase.from('indicateurs_resultats').select('nb_stagiaires, nb_sessions')
       .eq('organization_id', ORG).eq('publie', true).maybeSingle(),
   ])
 
@@ -109,7 +111,7 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
       formations: catalogueC.count || formations.length,
       apprenants: (resPub as any)?.data?.nb_stagiaires || apprC.count || 0,
       formateurs: formC.count || 0,
-      sessionsRealisees: sessC.count || 0,
+      sessionsRealisees: (resPub as any)?.data?.nb_sessions || sessC.count || 0,
       entreprises: cliC.count || 0,
     },
     formations,

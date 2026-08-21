@@ -49,15 +49,15 @@ const PERIODE_LABELS: Record<string, string> = {
 }
 
 // Pastille d'état du dossier : vert = pièces complètes (convention signée +
-// émargement signé + contrat formateur), ambre = convention OK mais pièce
-// manquante, rose = pas de convention signée. Le détail est dans l'infobulle.
+// contrat formateur), ambre = convention OK mais contrat manquant, rose =
+// pas de convention signée. Le détail est dans l'infobulle.
 function dotFor(s: any): string {
   if (s._dossier === 'complet') return 'bg-emerald-500'
   if (s._dossier === 'partiel') return 'bg-amber-400'
   return 'bg-rose-400'
 }
 function dotTitle(s: any): string {
-  if (s._dossier === 'complet') return 'Dossier complet : convention signée, émargement signé, contrat formateur'
+  if (s._dossier === 'complet') return 'Dossier complet : convention signée, contrat formateur'
   return `Manque : ${(s._dossier_manque || []).join(', ')}`
 }
 
