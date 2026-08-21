@@ -43,7 +43,11 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
   const [autre, setAutre] = useState('')
   const [enCours, setEnCours] = useState(false)
 
-  const total = useMemo(() => groupes.reduce((a, g) => a + g.absences.length, 0), [groupes])
+  // Le compte parlant est en stagiaires, pas en demi-journées : une absence
+  // de trois jours ferait sinon six « absences » à l'écran.
+  const total = useMemo(
+    () => groupes.reduce((a, g) => a + new Set(g.absences.map((x) => x.apprenantId)).size, 0),
+    [groupes])
   const selection = useMemo(() => Object.entries(coches).filter(([, v]) => v).map(([k]) => k), [coches])
 
   function cocherStagiaire(g: Groupe, apprenantId: string, valeur: boolean) {
@@ -70,7 +74,7 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
       <div>
         <h1 className="text-2xl font-heading font-bold text-surface-900 tracking-heading">Absences à justifier</h1>
         <p className="text-sm text-surface-500 mt-1">
-          {total} absence(s) sans motif sur les sessions dont la présence est suivie dans le CRM.
+          {total} stagiaire(s) absent(s) sans motif sur les sessions dont la présence est suivie dans le CRM.
           Toute absence doit être justifiée au dossier (indicateur 12) — cochez, choisissez le motif, appliquez.
         </p>
       </div>
@@ -119,7 +123,7 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
                 <span className="text-sm text-surface-500"> — {g.client}</span>
                 <div className="text-xs text-surface-400 truncate">{g.formation} · {g.dateDebut ? formatDate(g.dateDebut) : ''}</div>
               </div>
-              <span className="text-xs font-semibold text-amber-600 tabular-nums shrink-0">{g.absences.length}</span>
+              <span className="text-xs font-semibold text-amber-600 tabular-nums shrink-0">{parStagiaire.size} stagiaire(s)</span>
               {ouvert ? <ChevronDown className="h-4 w-4 text-surface-400" /> : <ChevronRight className="h-4 w-4 text-surface-400" />}
             </button>
             {ouvert && (
@@ -133,7 +137,12 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
                         className="h-4 w-4 accent-surface-900" />
                       <span className="text-sm text-surface-900 flex-1">{absences[0].apprenant}</span>
                       <span className="text-xs text-surface-500">
-                        {absences.map((a) => `${formatDate(a.date, { day: 'numeric', month: 'short' })} ${CRENEAU[a.creneau] || a.creneau}`).join(' · ')}
+                        {absences.length <= 3
+                          ? absences.map((a) => `${formatDate(a.date, { day: 'numeric', month: 'short' })} ${CRENEAU[a.creneau] || a.creneau}`).join(' · ')
+                          : (() => {
+                              const dates = absences.map((a) => String(a.date)).sort()
+                              return `${absences.length} demi-journées · du ${formatDate(dates[0], { day: 'numeric', month: 'short' })} au ${formatDate(dates[dates.length - 1], { day: 'numeric', month: 'short' })}`
+                            })()}
                       </span>
                     </label>
                   )
