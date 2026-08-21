@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, Trash2, ArrowRight, Save,
@@ -38,6 +39,9 @@ const sourceOptions = [
 
 export function ReclamationsList({ reclamations, actions, users }: ReclamationsListProps) {
   const { toast } = useToast()
+  const routerNav = useRouter()
+  // Carte action dépliée : le détail (dates, résultat) s'affiche au clic.
+  const [actionOuverte, setActionOuverte] = useState<string | null>(null)
   const [tab, setTab] = useState<'reclamations' | 'actions'>('reclamations')
   const [search, setSearch] = useState('')
   const [createRecOpen, setCreateRecOpen] = useState(false)
@@ -141,7 +145,8 @@ export function ReclamationsList({ reclamations, actions, users }: ReclamationsL
       {tab === 'reclamations' && (
         <div className="space-y-3">
           {reclamations.map((r) => (
-            <div key={r.id} className="card p-5 hover:shadow-card transition-shadow">
+            <div key={r.id} onClick={() => routerNav.push(`/dashboard/reclamations/${r.id}`)}
+              className="card p-5 hover:shadow-card transition-shadow cursor-pointer">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -160,7 +165,7 @@ export function ReclamationsList({ reclamations, actions, users }: ReclamationsL
                     {r.responsable && <span>Resp : {r.responsable.first_name} {r.responsable.last_name}</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                   {r.status === 'recue' && (
                     <Button size="sm" onClick={() => handleStatusChange(r.id, 'en_analyse')} icon={<ArrowRight className="h-3.5 w-3.5" />}>Analyser</Button>
                   )}
@@ -190,7 +195,8 @@ export function ReclamationsList({ reclamations, actions, users }: ReclamationsL
       {tab === 'actions' && (
         <div className="space-y-3">
           {actions.map((a) => (
-            <div key={a.id} className="card p-5 hover:shadow-card transition-shadow">
+            <div key={a.id} onClick={() => setActionOuverte(actionOuverte === a.id ? null : a.id)}
+              className="card p-5 hover:shadow-card transition-shadow cursor-pointer">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -199,13 +205,23 @@ export function ReclamationsList({ reclamations, actions, users }: ReclamationsL
                     <Badge variant="default">{a.source}</Badge>
                   </div>
                   <h3 className="text-sm font-semibold text-surface-900">{a.titre}</h3>
-                  {a.description && <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{a.description}</p>}
+                  {a.description && (
+                    <p className={`text-xs text-surface-500 mt-0.5 whitespace-pre-line ${actionOuverte === a.id ? '' : 'line-clamp-2'}`}>{a.description}</p>
+                  )}
                   <div className="flex items-center gap-4 mt-2 text-2xs text-surface-400">
                     {a.date_echeance && <span>Échéance : {formatDate(a.date_echeance, { day: 'numeric', month: 'short' })}</span>}
                     {a.responsable && <span>Resp : {a.responsable.first_name} {a.responsable.last_name}</span>}
                   </div>
+                  {actionOuverte === a.id && (
+                    <div className="mt-3 pt-3 border-t border-surface-100 grid gap-1.5 text-xs text-surface-600">
+                      {(a as any).date_planifiee && <div><span className="text-surface-400">Planifiée : </span>{formatDate((a as any).date_planifiee, { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                      {(a as any).date_realisation && <div><span className="text-surface-400">Réalisée : </span>{formatDate((a as any).date_realisation, { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                      {(a as any).date_verification && <div><span className="text-surface-400">Efficacité vérifiée : </span>{formatDate((a as any).date_verification, { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                      {(a as any).resultat && <div><span className="text-surface-400">Résultat : </span>{(a as any).resultat}</div>}
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-1 shrink-0">
+                <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                   {a.status === 'planifiee' && (
                     <Button size="sm" variant="secondary" onClick={() => handleActionStatus(a.id, 'en_cours')}>Démarrer</Button>
                   )}
