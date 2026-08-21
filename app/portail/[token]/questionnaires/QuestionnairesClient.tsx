@@ -129,14 +129,21 @@ export default function QuestionnairesClient({
                       <span>Envoyé le {formatDate(r.created_at, { day: 'numeric', month: 'short' })}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => r.qcm && setSelected({ reponseId: r.id, qcm: r.qcm })}
-                    disabled={!r.qcm || !r.qcm.questions || r.qcm.questions.length === 0}
-                    className="shrink-0 flex items-center gap-1 px-4 py-2 rounded-xl bg-warning-100 text-warning-700 text-sm font-medium hover:bg-warning-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Commencer
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+                  {(r as any)._disponible_le ? (
+                    <span className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-100 text-surface-500 text-sm font-medium">
+                      <Clock className="h-4 w-4" />
+                      Disponible le {formatDate((r as any)._disponible_le, { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => r.qcm && setSelected({ reponseId: r.id, qcm: r.qcm })}
+                      disabled={!r.qcm || !r.qcm.questions || r.qcm.questions.length === 0}
+                      className="shrink-0 flex items-center gap-1 px-4 py-2 rounded-xl bg-warning-100 text-warning-700 text-sm font-medium hover:bg-warning-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Commencer
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

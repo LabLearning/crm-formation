@@ -40,10 +40,28 @@ export default async function PortalQuestionnairesPage({ params }: { params: { t
       .order('completed_at', { ascending: false }),
   ])
 
+  // Le questionnaire à froid mesure ce qui reste appliqué trois mois après :
+  // il est verrouillé jusqu'à J+90 après la fin de session.
+  const sessionIds = [...new Set((pendingReponses || []).map((r: any) => r.session_id).filter(Boolean))]
+  const { data: sessionsFin } = sessionIds.length
+    ? await supabase.from('sessions').select('id, date_fin').in('id', sessionIds)
+    : { data: [] as any[] }
+  const finPar = new Map((sessionsFin || []).map((s: any) => [s.id, s.date_fin]))
+  const aujourdhui = new Date().toISOString().slice(0, 10)
+  const pendingAvecVerrou = (pendingReponses || []).map((r: any) => {
+    if (r.qcm?.type !== 'satisfaction_froid') return r
+    const fin = finPar.get(r.session_id)
+    if (!fin) return r
+    const dispo = new Date(fin + 'T00:00:00Z')
+    dispo.setUTCDate(dispo.getUTCDate() + 90)
+    const dispoStr = dispo.toISOString().slice(0, 10)
+    return dispoStr > aujourdhui ? { ...r, _disponible_le: dispoStr } : r
+  })
+
   return (
     <QuestionnairesClient
       token={params.token}
-      pendingReponses={(pendingReponses || []) as any[]}
+      pendingReponses={pendingAvecVerrou as any[]}
       completedReponses={(completedReponses || []) as any[]}
     />
   )
