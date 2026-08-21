@@ -2,6 +2,7 @@ import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ContactFormateurClient } from './ContactFormateurClient'
+import { ToastProvider } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,10 +46,12 @@ export default async function PortalContactPage({ params }: { params: { token: s
     .order('created_at')
 
   return (
-    <ContactFormateurClient
-      token={params.token}
-      formateurs={formateurs}
-      messages={(messages || []) as any[]}
-    />
+    <ToastProvider>
+      <ContactFormateurClient
+        token={params.token}
+        formateurs={formateurs}
+        messages={(messages || []) as any[]}
+      />
+    </ToastProvider>
   )
 }

@@ -2,6 +2,7 @@ import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { MessagesFormateurClient } from './MessagesFormateurClient'
+import { ToastProvider } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,5 +28,5 @@ export default async function PortalMessagesPage({ params }: { params: { token: 
     .eq('auteur', 'apprenant')
     .eq('lu', false)
 
-  return <MessagesFormateurClient token={params.token} messages={(messages || []) as any[]} />
+  return <ToastProvider><MessagesFormateurClient token={params.token} messages={(messages || []) as any[]} /></ToastProvider>
 }

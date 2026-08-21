@@ -2,6 +2,7 @@ import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { MesEmargementsClient } from './MesEmargementsClient'
+import { ToastProvider } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,5 +45,5 @@ export default async function PortalEmargementsPage({ params }: { params: { toke
     })),
   }))
 
-  return <MesEmargementsClient token={params.token} groupes={groupes} />
+  return <ToastProvider><MesEmargementsClient token={params.token} groupes={groupes} /></ToastProvider>
 }
