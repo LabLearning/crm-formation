@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { UserX, ChevronDown, ChevronRight, Check, Loader2 } from 'lucide-react'
+import { UserX, ChevronDown, ChevronRight, Check, Loader2, ClipboardList, FileText } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { justifierAbsencesAction } from './actions'
@@ -87,6 +87,28 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
           {total} stagiaire(s) absent(s) sans motif sur les sessions dont la présence est suivie dans le CRM.
           Toute absence doit être justifiée au dossier (indicateur 12) — cochez, choisissez le motif, appliquez.
         </p>
+      </div>
+
+      {/* Quand l'absence devient un abandon, le questionnaire J+1 prend le
+          relais (PROC-12) : le circuit complet est visible depuis cette page. */}
+      <div className="card p-4 flex items-center gap-3 flex-wrap">
+        <ClipboardList className="h-4 w-4 text-brand-500 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-heading font-semibold text-surface-900">Questionnaire d&apos;abandon (J+1)</div>
+          <p className="text-xs text-surface-500 mt-0.5">
+            Si l&apos;absence devient un abandon : questionnaire envoyé au stagiaire à J+1 (6 questions — cause,
+            projet, remarques, reprise), cause analysée, action d&apos;amélioration si récurrence.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/dashboard/qcm" className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
+            <ClipboardList className="h-3.5 w-3.5" /> Voir le questionnaire
+          </Link>
+          <a href="/api/pdf/processus/abandons" target="_blank" rel="noopener noreferrer"
+            className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> Fiche PROC-12
+          </a>
+        </div>
       </div>
 
       {/* Barre d'application du motif */}
