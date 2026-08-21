@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Document, Page, View, Text } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image } from '@react-pdf/renderer'
 import { PdfSectionTitle, PdfDocHeader, PdfDocFooter, shared, BRAND_GREEN, BRAND_LIGHT, SURFACE_500, SURFACE_700, SURFACE_900 } from './components'
 
 interface AttestationFormationProps {
@@ -11,7 +11,10 @@ interface AttestationFormationProps {
 }
 
 export function AttestationFormationPDF({ apprenant, session, formation, org, assiduite }: AttestationFormationProps) {
-  const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  // L'attestation est datée de la fin de formation, pas du jour du
+  // téléchargement — le document reste cohérent quel que soit le moment où
+  // il est réédité.
+  const today = new Date(session?.date_fin || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   const numero = `ATT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`
 
   return (
@@ -91,7 +94,13 @@ export function AttestationFormationPDF({ apprenant, session, formation, org, as
           <Text style={{ fontSize: 8, color: SURFACE_500 }}>Fait à {org.city || '___________'}, le {today}</Text>
           <View style={{ marginTop: 15 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org.name}</Text>
-            <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', width: 200 }} />
+            <View style={{ height: 80, width: 200, position: 'relative' }}>
+              {org.tampon_signature_url ? (
+                <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 160, height: 80, objectFit: 'contain' }} />
+              ) : (
+                <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', width: 200 }} />
+              )}
+            </View>
             <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet</Text>
           </View>
         </View>
