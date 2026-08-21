@@ -834,15 +834,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           <div className="flex items-center gap-2 shrink-0">
                             {!em.est_present && canEmarge && (
                               <button
-                                onClick={() => setSigningEmargement({ id: em.id, name: `${apprenant?.prenom} ${apprenant?.nom}` })}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 transition-colors"
-                              >
-                                <PenTool className="h-3.5 w-3.5" /> Faire signer
-                              </button>
-                            )}
-
-                            {!em.est_present && canEmarge && (
-                              <button
                                 onClick={() => handleTogglePresence(em.id, em.est_present)}
                                 disabled={isPending}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-100 text-surface-600 text-xs font-medium hover:bg-surface-200 transition-colors"
