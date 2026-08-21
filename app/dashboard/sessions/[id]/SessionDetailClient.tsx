@@ -810,9 +810,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           <div className={cn('h-9 w-9 rounded-full flex items-center justify-center shrink-0',
                             isSigned ? 'bg-emerald-100' : em.est_present ? 'bg-emerald-100' : 'bg-surface-100'
                           )}>
-                            {isSigned
-                              ? <PenTool className="h-4 w-4 text-emerald-600" />
-                              : em.est_present
+                            {/* Icône unique pour tous les présents, signés ou non :
+                                la feuille PDF reste la référence des signatures. */}
+                            {em.est_present
                               ? <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                               : <XCircle className="h-4 w-4 text-surface-300" />
                             }
@@ -832,13 +832,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
                           {/* Actions */}
                           <div className="flex items-center gap-2 shrink-0">
-                            {isSigned && em.signature_data && (
-                              <a href={em.signature_data} target="_blank" rel="noopener noreferrer"
-                                className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 transition-colors">
-                                <PenTool className="h-3.5 w-3.5 text-emerald-600" />
-                              </a>
-                            )}
-
                             {!em.est_present && canEmarge && (
                               <button
                                 onClick={() => setSigningEmargement({ id: em.id, name: `${apprenant?.prenom} ${apprenant?.nom}` })}
@@ -858,13 +851,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                               </button>
                             )}
 
-                            {/* Présent sans signature électronique : pastille à la même
-                                taille que celle de la signature — lignes uniformes. */}
-                            {em.est_present && !isSigned && (
-                              <span className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                              </span>
-                            )}
                           </div>
                           <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
                             {em.est_present ? 'Présent' : 'Absent'}
