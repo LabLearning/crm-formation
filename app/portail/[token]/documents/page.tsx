@@ -177,7 +177,6 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
               <tr className="border-b border-surface-100">
                 <th className="text-left text-xs font-semibold text-surface-500 uppercase tracking-wider px-6 py-3">Document</th>
                 <th className="text-left text-xs font-semibold text-surface-500 uppercase tracking-wider px-6 py-3">Type</th>
-                <th className="text-left text-xs font-semibold text-surface-500 uppercase tracking-wider px-6 py-3 hidden md:table-cell">Date</th>
                 <th className="text-right text-xs font-semibold text-surface-500 uppercase tracking-wider px-6 py-3"></th>
               </tr>
             </thead>
@@ -191,7 +190,6 @@ export default async function PortalDocumentsPage({ params }: { params: { token:
                     </div>
                   </td>
                   <td className="px-6 py-3.5"><Badge variant="default">{(DOCUMENT_TYPE_LABELS as any)[doc.type || 'autre']}</Badge></td>
-                  <td className="px-6 py-3.5 hidden md:table-cell text-sm text-surface-500">{formatDate(doc.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-3.5 text-right">
                     {downloadUrls[doc.id] && (
                       <a href={downloadUrls[doc.id]} target="_blank" rel="noopener noreferrer"

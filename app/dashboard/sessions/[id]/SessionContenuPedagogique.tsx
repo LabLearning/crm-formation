@@ -243,7 +243,6 @@ export function SessionContenuPedagogique({
                         {d.file_size ? <span className="text-surface-400">· {fmtSize(d.file_size)}</span> : null}
                       </span>
                     )}
-                    <span className="text-surface-400">{formatDate(d.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                 </div>
                 {/* Visibilité modifiable directement dans la liste */}
