@@ -133,6 +133,7 @@ export default async function AbsencesPage() {
           motif: abs[0].motif_absence,
           dates: abs.map((a) => String(a.date)).sort(),
           nb: abs.length,
+          ids: abs.map((a) => a.id),
         })).sort((a, b) => a.apprenant.localeCompare(b.apprenant, 'fr')),
       }
     })

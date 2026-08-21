@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { UserX, ChevronDown, ChevronRight, Check, Loader2, ClipboardList, FileText } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
-import { justifierAbsencesAction } from './actions'
+import { justifierAbsencesAction, modifierAbsencesAction } from './actions'
 
 const MOTIFS = [
   'Maladie / arrêt de travail',
@@ -34,7 +34,7 @@ interface GroupeJustifie {
   formation: string
   client: string
   dateDebut: string
-  stagiaires: { apprenant: string; motif: string; dates: string[]; nb: number }[]
+  stagiaires: { apprenant: string; motif: string; dates: string[]; nb: number; ids: string[] }[]
 }
 
 /**
@@ -52,6 +52,20 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
   const [motif, setMotif] = useState(MOTIFS[0])
   const [autre, setAutre] = useState('')
   const [enCours, setEnCours] = useState(false)
+  const [editionJustifiee, setEditionJustifiee] = useState<string | null>(null)
+  const [motifEdition, setMotifEdition] = useState<string>(MOTIFS[0])
+  const [enCoursEdition, setEnCoursEdition] = useState(false)
+
+  async function modifier(ids: string[], mode: 'motif' | 'sans_motif' | 'present', nouveauMotif?: string) {
+    setEnCoursEdition(true)
+    const r = await modifierAbsencesAction(ids, mode, nouveauMotif)
+    setEnCoursEdition(false)
+    if (r.success) {
+      toast('success', mode === 'present' ? 'Requalifié en présence' : mode === 'sans_motif' ? 'Remis dans les absences à justifier' : 'Motif modifié')
+      setEditionJustifiee(null)
+      router.refresh()
+    } else toast('error', r.error || 'Erreur')
+  }
 
   // Le compte parlant est en stagiaires, pas en demi-journées : une absence
   // de trois jours ferait sinon six « absences » à l'écran.
@@ -206,18 +220,41 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
                   <div className="text-xs text-surface-400 truncate">{g.formation} · {g.dateDebut ? formatDate(g.dateDebut) : ''}</div>
                 </Link>
                 <div className="divide-y divide-surface-100">
-                  {g.stagiaires.map((s, i) => (
-                    <div key={i} className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
-                      <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span className="text-sm text-surface-900">{s.apprenant}</span>
-                      <span className="text-xs text-surface-500">
-                        {s.nb <= 2
-                          ? s.dates.map((d) => formatDate(d, { day: 'numeric', month: 'short' })).join(' · ')
-                          : `${s.nb} demi-journées · du ${formatDate(s.dates[0], { day: 'numeric', month: 'short' })} au ${formatDate(s.dates[s.dates.length - 1], { day: 'numeric', month: 'short' })}`}
-                      </span>
-                      <span className="ml-auto text-xs font-medium text-surface-700 bg-surface-100 rounded-full px-2.5 py-1">{s.motif}</span>
-                    </div>
-                  ))}
+                  {g.stagiaires.map((s, i) => {
+                    const cle = `${g.sessionId}:${i}`
+                    const enEdition = editionJustifiee === cle
+                    return (
+                      <div key={i} className="px-4 py-2.5">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span className="text-sm text-surface-900">{s.apprenant}</span>
+                          <span className="text-xs text-surface-500">
+                            {s.nb <= 2
+                              ? s.dates.map((d) => formatDate(d, { day: 'numeric', month: 'short' })).join(' · ')
+                              : `${s.nb} demi-journées · du ${formatDate(s.dates[0], { day: 'numeric', month: 'short' })} au ${formatDate(s.dates[s.dates.length - 1], { day: 'numeric', month: 'short' })}`}
+                          </span>
+                          <span className="ml-auto text-xs font-medium text-surface-700 bg-surface-100 rounded-full px-2.5 py-1">{s.motif}</span>
+                          <button onClick={() => { setEditionJustifiee(enEdition ? null : cle); setMotifEdition(s.motif) }}
+                            className="text-xs text-surface-400 hover:text-surface-700 transition-colors">
+                            Modifier
+                          </button>
+                        </div>
+                        {enEdition && (
+                          <div className="mt-2.5 flex items-center gap-2 flex-wrap pl-7">
+                            <select value={motifEdition} onChange={(e) => setMotifEdition(e.target.value)} className="input-base !w-auto text-xs !py-1.5">
+                              {[...new Set([...MOTIFS, s.motif])].map((m) => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                            <button disabled={enCoursEdition} onClick={() => modifier(s.ids, 'motif', motifEdition)}
+                              className="btn-primary !py-1.5 !px-3 text-xs disabled:opacity-50">Changer le motif</button>
+                            <button disabled={enCoursEdition} onClick={() => modifier(s.ids, 'sans_motif')}
+                              className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-50">Remettre à justifier</button>
+                            <button disabled={enCoursEdition} onClick={() => modifier(s.ids, 'present')}
+                              className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-50">Marquer présent</button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             ))}
