@@ -32,9 +32,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let formations: MetadataRoute.Sitemap = []
   try {
     const supabase = await createServiceRoleClient()
+    // Seules les fiches publiées au catalogue entrent au sitemap : indexer
+    // les doublons dépubliés ferait concurrencer les fiches entre elles.
     const { data } = await supabase.from('formations')
       .select('id, date_derniere_maj, updated_at')
-      .eq('organization_id', ORG).eq('is_active', true).limit(500)
+      .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true).limit(500)
     formations = (data || []).map((f: any) => ({
       url: `${BASE}/formations/${f.id}`,
       lastModified: f.date_derniere_maj || f.updated_at || undefined,
