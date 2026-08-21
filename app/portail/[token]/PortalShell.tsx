@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck,
   Calendar, ListChecks, Star, Users, CheckSquare,
-  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro, MessageCircle,
+  Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro, MessageCircle, ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
@@ -29,6 +29,7 @@ const apprenantNav: NavItem[] = [
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: ClipboardCheck },
   { label: 'Questionnaires', short: 'QCM', href: '/questionnaires', icon: ListChecks },
   { label: 'Contact formateur', short: 'Contact', href: '/contact', icon: MessageCircle },
+  { label: 'Réclamations', short: 'Réclam.', href: '/reclamations', icon: ShieldAlert },
 ]
 
 const formateurNav: NavItem[] = [
