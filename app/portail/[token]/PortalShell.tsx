@@ -24,6 +24,7 @@ interface PortalShellProps { context: PortalContext; children: React.ReactNode }
 const apprenantNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Mes formations', short: 'Formations', href: '/formations', icon: GraduationCap },
+  { label: 'Émargements', short: 'Émargements', href: '/mes-emargements', icon: CheckSquare },
   { label: 'Documents', short: 'Docs', href: '/documents', icon: FileText },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: ClipboardCheck },
   { label: 'Questionnaires', short: 'QCM', href: '/questionnaires', icon: ListChecks },
