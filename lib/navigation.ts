@@ -92,7 +92,9 @@ export const navigation: NavSection[] = [
     title: 'Qualité',
     items: [
       { label: 'Qualiopi', href: '/dashboard/qualiopi', icon: 'ShieldCheck', module: 'qualiopi' },
-      { label: 'Complétude des dossiers', href: '/dashboard/qualiopi/dossiers', icon: 'FolderCheck', module: 'qualiopi' },
+      // Masqué le temps de l'audit : la vue complétude n'est pas encore
+      // alignée sur le nettoyage des dossiers — remettre après.
+      // { label: 'Complétude des dossiers', href: '/dashboard/qualiopi/dossiers', icon: 'FolderCheck', module: 'qualiopi' },
       { label: 'Indicateurs de résultats', href: '/dashboard/indicateurs-resultats', icon: 'BarChart3', module: 'qualiopi' },
       { label: 'Veille', href: '/dashboard/veille', icon: 'Compass', module: 'qualiopi' },
       { label: 'Audits hygiène & DUERP', href: '/dashboard/audits-hygiene', icon: 'ClipboardCheck', module: 'qualiopi' },
