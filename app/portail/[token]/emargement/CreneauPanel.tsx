@@ -144,10 +144,8 @@ function ApprenantRow({
 
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-surface-900 truncate">{apprenantName(em)}</div>
-          {signed && em.signature_data && em.signed_at && (
-            <div className="text-[11px] text-emerald-600 mt-0.5">
-              Signé · {new Date(em.signed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-            </div>
+          {signed && em.signature_data && (
+            <div className="text-[11px] text-emerald-600 mt-0.5">Signé</div>
           )}
           {presentPapier && <div className="text-[11px] text-emerald-600 mt-0.5">Présent · feuille papier</div>}
           {absent && <div className="text-[11px] text-rose-500 mt-0.5 truncate">Absent · {em.motif_absence}</div>}
