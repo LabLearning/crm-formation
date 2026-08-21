@@ -1,27 +1,9 @@
 import Link from 'next/link'
-import { Mail, PhoneCall, MapPin, ArrowRight } from './icons'
+import { Mail, PhoneCall, MapPin } from './icons'
 
 export function SiteFooter() {
   return (
     <footer className="bg-[#14110F] text-[#E7E5E4]">
-      {/* Bande d'appel : la dernière chose qu'on lit avant de partir. */}
-      <div className="max-w-6xl mx-auto px-5 md:px-8 pt-14">
-        <div className="rounded-3xl bg-gradient-to-br from-[#195144] to-[#0e352c] p-7 md:p-10 md:flex md:items-center md:justify-between gap-8">
-          <div>
-            <h2 className="ll-display text-2xl md:text-3xl text-white text-balance">Un projet de formation&nbsp;?</h2>
-            <p className="mt-2 text-sm md:text-[15px] text-white/75 max-w-lg leading-relaxed">
-              Hygiène, sécurité, POEI, management : on vous rappelle sous 24&nbsp;h avec un plan
-              et le financement qui va avec.
-            </p>
-          </div>
-          <Link href="/site/contact"
-            className="mt-5 md:mt-0 inline-flex items-center gap-2 shrink-0 rounded-full bg-white text-[#14110F] px-6 py-3 text-sm font-semibold hover:bg-[#F5F5F4] transition-colors">
-            Parlons-en
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
-
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 grid gap-10 md:grid-cols-12">
         <div className="md:col-span-5">
           <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-9 w-auto brightness-0 invert opacity-90" />

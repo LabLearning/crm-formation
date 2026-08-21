@@ -17,6 +17,30 @@ export interface PublicFormation {
   tarif_intra_ht: number | null
 }
 
+/**
+ * Sessions réalisées par programme, agrégées par intitulé normalisé : les
+ * sessions historiques pointent parfois vers des fiches doublons dépubliées,
+ * le rapprochement par titre rattache leur volume à la fiche publiée.
+ */
+export async function getSessionsRealiseesParTitre(): Promise<Map<string, number>> {
+  const supabase = await createServiceRoleClient()
+  const out = new Map<string, number>()
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase.from('sessions')
+      .select('id, formation:formation_id(intitule)')
+      .eq('organization_id', ORG).eq('status', 'terminee')
+      .range(from, from + 999)
+    for (const s of (data || []) as any[]) {
+      const k = norm(s.formation?.intitule)
+      if (k) out.set(k, (out.get(k) || 0) + 1)
+    }
+    if (!data || data.length < 1000) break
+  }
+  return out
+}
+
+export const normTitre = norm
+
 export interface PublicSiteData {
   stats: { formations: number; apprenants: number; formateurs: number; sessionsRealisees: number; entreprises: number }
   formations: PublicFormation[]
@@ -32,7 +56,7 @@ export interface PublicSiteData {
 export async function getPublicSiteData(): Promise<PublicSiteData> {
   const supabase = await createServiceRoleClient()
 
-  const [formationsRes, franchisesRes, apprC, formC, sessC, cliC] = await Promise.all([
+  const [formationsRes, franchisesRes, apprC, formC, sessC, cliC, catalogueC, resPub] = await Promise.all([
     supabase.from('formations')
       .select('id, intitule, categorie, duree_heures, modalite, objectifs_pedagogiques, tarif_inter_ht, tarif_intra_ht')
       .eq('organization_id', ORG).eq('is_active', true).order('intitule'),
@@ -44,6 +68,14 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
     supabase.from('formateurs').select('id', { count: 'exact', head: true }).eq('organization_id', ORG).eq('is_active', true),
     supabase.from('sessions').select('id', { count: 'exact', head: true }).eq('organization_id', ORG).eq('status', 'terminee'),
     supabase.from('clients').select('id', { count: 'exact', head: true }).eq('organization_id', ORG).eq('type', 'entreprise'),
+    // Le chiffre "programmes au catalogue" doit être celui du catalogue
+    // effectivement publié sur le site, pas le total interne des fiches.
+    supabase.from('formations').select('id', { count: 'exact', head: true })
+      .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true),
+    // "Apprenants formés" s'aligne sur l'indicateur publié (page Résultats) :
+    // les stagiaires formés sur sessions réalisées, pas le carnet d'apprenants.
+    supabase.from('indicateurs_resultats').select('nb_stagiaires')
+      .eq('organization_id', ORG).eq('publie', true).maybeSingle(),
   ])
 
   // Dédoublonnage par intitulé normalisé
@@ -74,8 +106,8 @@ export async function getPublicSiteData(): Promise<PublicSiteData> {
 
   return {
     stats: {
-      formations: formations.length,
-      apprenants: apprC.count || 0,
+      formations: catalogueC.count || formations.length,
+      apprenants: (resPub as any)?.data?.nb_stagiaires || apprC.count || 0,
       formateurs: formC.count || 0,
       sessionsRealisees: sessC.count || 0,
       entreprises: cliC.count || 0,

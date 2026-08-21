@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, ShieldCheck } from '../icons'
-import { getPublicResultats } from '@/lib/public-site-data'
+import { getPublicResultats, getSessionsRealiseesParTitre, normTitre } from '@/lib/public-site-data'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { titreFormation } from '@/lib/utils'
 import { Kicker } from '../Kicker'
@@ -16,13 +16,16 @@ export default async function SiteResultats() {
   // (jamais saisis à la main) — seules les fiches avec assez de réponses
   // affichent un taux.
   const supabase = await createServiceRoleClient()
-  const { data: parFormation } = await supabase
-    .from('formations')
-    .select('id, intitule, nombre_apprenants_total, taux_satisfaction, taux_reussite')
-    .eq('is_active', true).eq('site_publie', true)
-    .not('nombre_apprenants_total', 'is', null)
-    .gt('nombre_apprenants_total', 0)
-    .order('nombre_apprenants_total', { ascending: false })
+  const [{ data: parFormation }, sessionsParTitre] = await Promise.all([
+    supabase
+      .from('formations')
+      .select('id, intitule, duree_heures, nombre_apprenants_total, taux_satisfaction, taux_reussite')
+      .eq('is_active', true).eq('site_publie', true)
+      .not('nombre_apprenants_total', 'is', null)
+      .gt('nombre_apprenants_total', 0)
+      .order('nombre_apprenants_total', { ascending: false }),
+    getSessionsRealiseesParTitre(),
+  ])
 
   const stats = r ? [
     { key: 'satisfaction', label: 'Taux de satisfaction', value: r.taux_satisfaction },
@@ -88,6 +91,7 @@ export default async function SiteResultats() {
                 <thead>
                   <tr className="border-b border-[#E7E5E4] text-left">
                     <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider">Formation</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Sessions réalisées</th>
                     <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Stagiaires formés</th>
                     <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Satisfaction</th>
                     <th className="px-5 py-3.5 text-xs font-semibold text-[#78716C] uppercase tracking-wider text-right">Acquisition</th>
@@ -100,7 +104,9 @@ export default async function SiteResultats() {
                         <Link href={`/site/formations/${f.id}`} className="text-[#14110F] hover:text-[#195144] transition-colors">
                           {titreFormation(f.intitule)}
                         </Link>
+                        {f.duree_heures ? <span className="block text-xs text-[#A8A29E] mt-0.5">{f.duree_heures} heures</span> : null}
                       </td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F]">{sessionsParTitre.get(normTitre(f.intitule)) || '—'}</td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F] font-semibold">{f.nombre_apprenants_total}</td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '—'}</td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '—'}</td>

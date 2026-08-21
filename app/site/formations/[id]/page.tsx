@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, ClipboardCheck, Accessibility, ShieldCheck, BookOpen, ListView, Bulb } from '../../icons'
-import { getPublicFormation } from '@/lib/public-site-data'
+import { getPublicFormation, getSessionsRealiseesParTitre, normTitre } from '@/lib/public-site-data'
 import { tarifsOpcoPourFormation } from '@/lib/opco-tarifs'
 import { metierStyle } from '../../metier'
 import { titreFormation } from '@/lib/utils'
@@ -45,6 +45,7 @@ function Prose({ text }: { text: string }) {
 export default async function SiteFormationDetail({ params }: { params: { id: string } }) {
   const f = await getPublicFormation(params.id)
   if (!f) notFound()
+  const sessionsRealisees = (await getSessionsRealiseesParTitre()).get(normTitre(f.intitule)) || 0
   // Le tarif public est le barème de prise en charge de la branche : nos prix
   // sont calés sur les montants OPCO, pas sur un tarif catalogue.
   const tarifsOpco = tarifsOpcoPourFormation(f)
@@ -186,11 +187,14 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           </div>
         </aside>
       </div>
-      {(f.nombre_apprenants_total || f.taux_satisfaction != null || f.taux_reussite != null) && (
+      {(sessionsRealisees > 0 || f.nombre_apprenants_total || f.taux_satisfaction != null || f.taux_reussite != null) && (
         <div className="max-w-4xl mx-auto px-5 md:px-8 pb-4">
           <div className="rounded-2xl bg-[#195144]/5 border border-[#195144]/15 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Indicateurs de résultats</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {sessionsRealisees > 0 ? (
+                <div><div className="ll-display text-2xl text-[#14110F]">{sessionsRealisees}</div><div className="text-xs text-[#57534E] mt-0.5">sessions réalisées</div></div>
+              ) : null}
               {f.nombre_apprenants_total ? (
                 <div><div className="ll-display text-2xl text-[#14110F]">{f.nombre_apprenants_total}</div><div className="text-xs text-[#57534E] mt-0.5">stagiaires formés</div></div>
               ) : null}
@@ -201,7 +205,11 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
                 <div><div className="ll-display text-2xl text-[#14110F]">{f.taux_reussite}%</div><div className="text-xs text-[#57534E] mt-0.5">d’acquisition des compétences</div></div>
               ) : null}
             </div>
-            <p className="mt-3 text-[10px] text-[#A8A29E]">Indicateurs calculés sur les sessions réalisées, mis à jour en continu (questionnaires de satisfaction et évaluations des acquis).</p>
+            <p className="mt-3 text-[10px] text-[#A8A29E]">
+              Indicateurs calculés sur les sessions réalisées, mis à jour en continu (questionnaires de satisfaction
+              et évaluations des acquis). Un taux n&apos;est publié qu&apos;à partir de cinq réponses.{' '}
+              <Link href="/site/resultats" className="underline underline-offset-2 hover:text-[#195144]">Tous nos résultats</Link>
+            </p>
           </div>
         </div>
       )}
