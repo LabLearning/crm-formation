@@ -29,7 +29,7 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
     .single()
   if (!a) redirect('/dashboard/apprenants')
 
-  const [{ data: inscriptions }, { data: qcmReponses }, { data: evals }, { data: docs }, { data: clients }] = await Promise.all([
+  const [{ data: inscriptions }, { data: qcmReponses }, { data: evals }, { data: docs }, { data: clients }, { data: emargements }] = await Promise.all([
     supabase.from('inscriptions')
       .select('id, status, session:sessions(id, reference, date_debut, date_fin, status, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial, sigle))')
       .eq('apprenant_id', params.id).order('date_inscription', { ascending: false }),
@@ -41,7 +41,17 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
       .eq('apprenant_id', params.id).order('date_evaluation', { ascending: false }),
     supabase.from('documents').select('id, nom, type, created_at').eq('apprenant_id', params.id).order('created_at', { ascending: false }),
     supabase.from('clients').select('id, raison_sociale').eq('organization_id', session.organization.id).eq('type', 'entreprise').order('raison_sociale'),
+    supabase.from('emargements')
+      .select('id, session_id, date, creneau, est_present, motif_absence, session:session_id(id, reference, formation:formation_id(intitule))')
+      .eq('apprenant_id', params.id).order('date', { ascending: false }),
   ])
+
+  // Émargements regroupés par session : présence globale + absences motivées.
+  const emParSession = new Map<string, any[]>()
+  for (const e of (emargements || []) as any[]) {
+    if (!emParSession.has(e.session_id)) emParSession.set(e.session_id, [])
+    emParSession.get(e.session_id)!.push(e)
+  }
 
   const insList = (inscriptions || []) as any[]
   const now = new Date().toISOString().slice(0, 10)
@@ -123,6 +133,43 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
           </div>
         )}
       </div>
+
+      {/* Émargements : la présence par session, absences motivées comprises */}
+      {emParSession.size > 0 && (
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-brand-500" />
+            <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Émargements ({emParSession.size} session{emParSession.size > 1 ? 's' : ''})</span>
+          </div>
+          <div className="divide-y divide-surface-100">
+            {[...emParSession.entries()].map(([sessionId, lignes]) => {
+              const presents = lignes.filter((l: any) => l.est_present).length
+              const absences = lignes.filter((l: any) => !l.est_present)
+              const dates = lignes.map((l: any) => String(l.date)).sort()
+              return (
+                <Link key={sessionId} href={`/dashboard/sessions/${sessionId}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
+                  <CheckCircle2 className={`h-4 w-4 shrink-0 ${absences.length === 0 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-surface-900 truncate">
+                      {lignes[0].session?.formation?.intitule || lignes[0].session?.reference || 'Session'}
+                    </div>
+                    <div className="text-xs text-surface-500">
+                      {formatDate(dates[0], { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {dates.length > 1 && dates[0] !== dates[dates.length - 1]
+                        ? ` – ${formatDate(dates[dates.length - 1], { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                      {absences.length > 0 && absences[0].motif_absence ? ` · Absence : ${absences[0].motif_absence}` : ''}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-semibold tabular-nums shrink-0 ${absences.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {presents}/{lignes.length} présent{presents > 1 ? 's' : ''}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* QCM */}
       {(qcmReponses || []).length > 0 && (
