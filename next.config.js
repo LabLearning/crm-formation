@@ -16,6 +16,19 @@ const nextConfig = {
       static: 300,
     },
   },
+  // Le site vitrine répond sur lab-learning.fr : l'hôte nu (et www) est
+  // réécrit vers /site — les liens internes du site étant déjà en /site/…,
+  // seule la racine a besoin d'être mappée ; le reste passe tel quel.
+  async rewrites() {
+    const hosts = ['lab-learning.fr', 'www.lab-learning.fr']
+    return {
+      beforeFiles: hosts.map((h) => ({
+        source: '/',
+        has: [{ type: 'host', value: h }],
+        destination: '/site',
+      })),
+    }
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
