@@ -27,6 +27,15 @@ interface Groupe {
   absences: { id: string; apprenant: string; apprenantId: string; date: string; creneau: string }[]
 }
 
+interface GroupeJustifie {
+  sessionId: string
+  reference: string
+  formation: string
+  client: string
+  dateDebut: string
+  stagiaires: { apprenant: string; motif: string; dates: string[]; nb: number }[]
+}
+
 /**
  * Justification des absences en rafale (indicateur 12).
  *
@@ -34,7 +43,7 @@ interface Groupe {
  * deux créneaux, parfois plusieurs jours — puis un motif s'applique à tout ce
  * qui est coché.
  */
-export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
+export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; justifies?: GroupeJustifie[] }) {
   const { toast } = useToast()
   const router = useRouter()
   const [ouverts, setOuverts] = useState<Record<string, boolean>>({})
@@ -128,7 +137,7 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
             </button>
             {ouvert && (
               <div className="border-t border-surface-100 divide-y divide-surface-100">
-                {[...parStagiaire.entries()].map(([apprenantId, absences]) => {
+                {[...parStagiaire.entries()].map(([apprenantId, absences]: [string, Groupe['absences']]) => {
                   const toutes = absences.every((a) => coches[a.id])
                   return (
                     <label key={apprenantId} className="px-4 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-surface-50">
@@ -152,6 +161,42 @@ export function AbsencesList({ groupes }: { groupes: Groupe[] }) {
           </div>
         )
       })}
+
+      {/* Trace des justifications : les absences motivées restent au dossier
+          (indicateur 12) — stagiaire, dates, motif, par session. */}
+      {justifies.length > 0 && (
+        <div className="pt-4">
+          <h2 className="text-lg font-heading font-bold text-surface-900 tracking-heading">Absences justifiées</h2>
+          <p className="text-sm text-surface-500 mt-1 mb-4">
+            {justifies.reduce((a, g) => a + g.stagiaires.length, 0)} justification(s) au dossier — la trace conservée pour l&apos;audit.
+          </p>
+          <div className="space-y-3">
+            {justifies.map((g) => (
+              <div key={g.sessionId} className="card overflow-hidden">
+                <div className="px-4 py-3 border-b border-surface-100">
+                  <span className="text-sm font-medium text-surface-900">{g.reference}</span>
+                  <span className="text-sm text-surface-500"> — {g.client}</span>
+                  <div className="text-xs text-surface-400 truncate">{g.formation} · {g.dateDebut ? formatDate(g.dateDebut) : ''}</div>
+                </div>
+                <div className="divide-y divide-surface-100">
+                  {g.stagiaires.map((s, i) => (
+                    <div key={i} className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
+                      <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span className="text-sm text-surface-900">{s.apprenant}</span>
+                      <span className="text-xs text-surface-500">
+                        {s.nb <= 2
+                          ? s.dates.map((d) => formatDate(d, { day: 'numeric', month: 'short' })).join(' · ')
+                          : `${s.nb} demi-journées · du ${formatDate(s.dates[0], { day: 'numeric', month: 'short' })} au ${formatDate(s.dates[s.dates.length - 1], { day: 'numeric', month: 'short' })}`}
+                      </span>
+                      <span className="ml-auto text-xs font-medium text-surface-700 bg-surface-100 rounded-full px-2.5 py-1">{s.motif}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

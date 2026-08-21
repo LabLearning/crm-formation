@@ -32,14 +32,23 @@ export default async function AbsencesPage() {
   }
 
   // 1) Les absences candidates : non présent, non signé, sans motif — seul
-  //    sous-ensemble utile (quelques milliers de lignes).
-  const absencesBrutes = await pagesParalleles(
-    'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
-    (q) => q.eq('organization_id', session.organization.id)
-      .or('est_present.is.null,est_present.eq.false')
-      .is('signature_data', null)
-      .is('motif_absence', null),
-  )
+  //    sous-ensemble utile (quelques milliers de lignes). Les justifiées sont
+  //    chargées à part : elles restent affichées comme TRACE (indicateur 12).
+  const [absencesBrutes, justifieesBrutes] = await Promise.all([
+    pagesParalleles(
+      'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
+      (q) => q.eq('organization_id', session.organization.id)
+        .or('est_present.is.null,est_present.eq.false')
+        .is('signature_data', null)
+        .is('motif_absence', null),
+    ),
+    pagesParalleles(
+      'id, session_id, apprenant_id, date, creneau, motif_absence, apprenant:apprenant_id(prenom, nom)',
+      (q) => q.eq('organization_id', session.organization.id)
+        .eq('est_present', false)
+        .not('motif_absence', 'is', null),
+    ),
+  ])
 
   // 2) Les sessions où la présence est réellement suivie (≥ 1 présent ou
   //    1 signature) : colonnes minimales, en parallèle.
@@ -65,7 +74,13 @@ export default async function AbsencesPage() {
     if (absences.length) sessionsAvecAbsences.push({ sessionId, absences })
   }
 
-  const ids = sessionsAvecAbsences.map((x) => x.sessionId)
+  const parSessionJustifiees = new Map<string, any[]>()
+  for (const e of justifieesBrutes) {
+    if (!parSessionJustifiees.has(e.session_id)) parSessionJustifiees.set(e.session_id, [])
+    parSessionJustifiees.get(e.session_id)!.push(e)
+  }
+
+  const ids = [...new Set([...sessionsAvecAbsences.map((x) => x.sessionId), ...parSessionJustifiees.keys()])]
   const lotsSessions = await Promise.all(
     Array.from({ length: Math.ceil(ids.length / 200) }, (_, i) =>
       supabase.from('sessions')
@@ -98,9 +113,34 @@ export default async function AbsencesPage() {
     })
     .sort((a, b) => String(b.dateDebut).localeCompare(String(a.dateDebut)))
 
+  // Trace des absences justifiées : par session, un stagiaire + son motif.
+  const groupesJustifies = [...parSessionJustifiees.entries()]
+    .map(([sessionId, lignes]) => {
+      const s: any = sessionPar.get(sessionId)
+      const parStagiaire = new Map<string, any[]>()
+      for (const l of lignes) {
+        if (!parStagiaire.has(l.apprenant_id)) parStagiaire.set(l.apprenant_id, [])
+        parStagiaire.get(l.apprenant_id)!.push(l)
+      }
+      return {
+        sessionId,
+        reference: s?.reference || '(sans référence)',
+        formation: s?.formation?.intitule || s?.intitule || '',
+        client: s?.client?.nom_commercial || s?.client?.raison_sociale || '—',
+        dateDebut: s?.date_debut || '',
+        stagiaires: [...parStagiaire.values()].map((abs) => ({
+          apprenant: `${abs[0].apprenant?.prenom || ''} ${abs[0].apprenant?.nom || ''}`.trim() || 'Stagiaire',
+          motif: abs[0].motif_absence,
+          dates: abs.map((a) => String(a.date)).sort(),
+          nb: abs.length,
+        })).sort((a, b) => a.apprenant.localeCompare(b.apprenant, 'fr')),
+      }
+    })
+    .sort((a, b) => String(b.dateDebut).localeCompare(String(a.dateDebut)))
+
   return (
     <div className="animate-fade-in">
-      <AbsencesList groupes={groupes} />
+      <AbsencesList groupes={groupes} justifies={groupesJustifies} />
     </div>
   )
 }
