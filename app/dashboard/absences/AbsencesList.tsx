@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { UserX, ChevronDown, ChevronRight, Check, Loader2, ClipboardList, FileText } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
-import { justifierAbsencesAction, modifierAbsencesAction } from './actions'
+import { justifierAbsencesAction, modifierAbsencesAction, lienQuestionnaireAbandonAction } from './actions'
 
 const MOTIFS = [
   'Maladie / arrêt de travail',
@@ -34,7 +34,7 @@ interface GroupeJustifie {
   formation: string
   client: string
   dateDebut: string
-  stagiaires: { apprenant: string; motif: string; dates: string[]; nb: number; ids: string[] }[]
+  stagiaires: { apprenant: string; motif: string; dates: string[]; nb: number; ids: string[]; apprenantId: string }[]
 }
 
 /**
@@ -44,7 +44,11 @@ interface GroupeJustifie {
  * deux créneaux, parfois plusieurs jours — puis un motif s'applique à tout ce
  * qui est coché.
  */
-export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; justifies?: GroupeJustifie[] }) {
+export function AbsencesList({ groupes, justifies = [], questionnaireAbandon = null }: {
+  groupes: Groupe[]
+  justifies?: GroupeJustifie[]
+  questionnaireAbandon?: { titre: string; questions: string[] } | null
+}) {
   const { toast } = useToast()
   const router = useRouter()
   const [ouverts, setOuverts] = useState<Record<string, boolean>>({})
@@ -55,6 +59,19 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
   const [editionJustifiee, setEditionJustifiee] = useState<string | null>(null)
   const [motifEdition, setMotifEdition] = useState<string>(MOTIFS[0])
   const [enCoursEdition, setEnCoursEdition] = useState(false)
+
+  const [apercu, setApercu] = useState(false)
+  const [lienEnCours, setLienEnCours] = useState<string | null>(null)
+
+  async function copierLien(sessionId: string, apprenantId: string) {
+    setLienEnCours(apprenantId)
+    const r = await lienQuestionnaireAbandonAction(sessionId, apprenantId)
+    setLienEnCours(null)
+    if (r.success && r.data?.url) {
+      try { await navigator.clipboard.writeText(r.data.url) } catch { /* copie refusée : le lien reste dans le toast */ }
+      toast('success', `Lien copié : ${r.data.url}`)
+    } else toast('error', r.error || 'Erreur')
+  }
 
   async function modifier(ids: string[], mode: 'motif' | 'sans_motif' | 'present', nouveauMotif?: string) {
     setEnCoursEdition(true)
@@ -115,14 +132,26 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/dashboard/qcm" className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
-            <ClipboardList className="h-3.5 w-3.5" /> Voir le questionnaire
-          </Link>
+          <button onClick={() => setApercu((v) => !v)} className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
+            <ClipboardList className="h-3.5 w-3.5" /> {apercu ? 'Masquer' : 'Voir le questionnaire'}
+          </button>
           <a href="/api/pdf/processus/abandons" target="_blank" rel="noopener noreferrer"
             className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Fiche PROC-12
           </a>
         </div>
+        {apercu && questionnaireAbandon && (
+          <div className="w-full mt-2 rounded-xl bg-surface-50 border border-surface-100 p-4">
+            <div className="text-xs font-semibold text-surface-900 mb-2">{questionnaireAbandon.titre}</div>
+            <ol className="space-y-1.5 text-xs text-surface-600 list-decimal list-inside">
+              {questionnaireAbandon.questions.map((q, i) => <li key={i}>{q}</li>)}
+            </ol>
+            <p className="text-2xs text-surface-400 mt-3">
+              Le lien personnel de chaque stagiaire se génère depuis sa ligne ci-dessous (« Lien questionnaire ») —
+              accès portail sans mot de passe, réponse tracée dans le CRM.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Barre d'application du motif */}
@@ -250,6 +279,11 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
                               className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-50">Remettre à justifier</button>
                             <button disabled={enCoursEdition} onClick={() => modifier(s.ids, 'present')}
                               className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-50">Marquer présent</button>
+                            <button disabled={lienEnCours === s.apprenantId} onClick={() => copierLien(g.sessionId, s.apprenantId)}
+                              className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-50 inline-flex items-center gap-1.5">
+                              {lienEnCours === s.apprenantId ? <Loader2 className="h-3 w-3 animate-spin" /> : <ClipboardList className="h-3 w-3" />}
+                              Lien questionnaire
+                            </button>
                           </div>
                         )}
                       </div>

@@ -134,14 +134,33 @@ export default async function AbsencesPage() {
           dates: abs.map((a) => String(a.date)).sort(),
           nb: abs.length,
           ids: abs.map((a) => a.id),
+          apprenantId: abs[0].apprenant_id,
         })).sort((a, b) => a.apprenant.localeCompare(b.apprenant, 'fr')),
       }
     })
     .sort((a, b) => String(b.dateDebut).localeCompare(String(a.dateDebut)))
 
+  // Le questionnaire d'abandon, affiché directement sur la page : ses
+  // questions se consultent sans quitter l'écran, le lien s'envoie par
+  // stagiaire depuis chaque ligne.
+  const { data: qcmAbandon } = await supabase.from('qcm')
+    .select('id, titre, questions:qcm_questions(texte, position)')
+    .eq('organization_id', session.organization.id)
+    .eq('type', 'abandon')
+    .limit(1).maybeSingle()
+
   return (
     <div className="animate-fade-in">
-      <AbsencesList groupes={groupes} justifies={groupesJustifies} />
+      <AbsencesList
+        groupes={groupes}
+        justifies={groupesJustifies}
+        questionnaireAbandon={qcmAbandon ? {
+          titre: (qcmAbandon as any).titre,
+          questions: ((qcmAbandon as any).questions || [])
+            .sort((a: any, b: any) => a.position - b.position)
+            .map((q: any) => q.texte),
+        } : null}
+      />
     </div>
   )
 }

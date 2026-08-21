@@ -45,6 +45,56 @@ export async function justifierAbsencesAction(
 }
 
 /**
+ * Prépare le questionnaire d'abandon pour un stagiaire : jalon + invitation
+ * créés s'ils manquent, et retour du lien personnel (portail, sans mot de
+ * passe) prêt à envoyer par mail ou WhatsApp.
+ */
+export async function lienQuestionnaireAbandonAction(
+  sessionId: string,
+  apprenantId: string,
+): Promise<ActionResult & { data?: { url: string } }> {
+  const session = await getSession()
+  if (!ROLES.includes(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const { data: qcm } = await supabase.from('qcm')
+    .select('id').eq('organization_id', orgId).eq('type', 'abandon').limit(1).maybeSingle()
+  if (!qcm) return { success: false, error: "Questionnaire d'abandon introuvable" }
+
+  let { data: jalon } = await supabase.from('qcm_sessions')
+    .select('id').eq('session_id', sessionId).eq('qcm_id', qcm.id).limit(1).maybeSingle()
+  if (!jalon) {
+    const { data: cree, error } = await supabase.from('qcm_sessions')
+      .insert({ organization_id: orgId, qcm_id: qcm.id, session_id: sessionId })
+      .select('id').single()
+    if (error) return { success: false, error: error.message }
+    jalon = cree
+  }
+
+  const { data: invitation } = await supabase.from('qcm_reponses')
+    .select('id').eq('qcm_session_id', jalon.id).eq('apprenant_id', apprenantId).limit(1).maybeSingle()
+  if (!invitation) {
+    const { randomBytes } = await import('crypto')
+    const { error } = await supabase.from('qcm_reponses').insert({
+      organization_id: orgId, qcm_id: qcm.id, qcm_session_id: jalon.id,
+      session_id: sessionId, apprenant_id: apprenantId,
+      token: randomBytes(24).toString('hex'), is_complete: false,
+    })
+    if (error) return { success: false, error: error.message }
+  }
+
+  const { data: apprenant } = await supabase.from('apprenants')
+    .select('id, email').eq('id', apprenantId).maybeSingle()
+  const { getOrCreateApprenantToken } = await import('@/lib/portal-token')
+  const token = await getOrCreateApprenantToken(supabase, apprenantId, orgId, apprenant?.email || null)
+  if (!token) return { success: false, error: 'Impossible de générer le lien portail' }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+  return { success: true, data: { url: `${appUrl}/portail/${token}/questionnaires` } }
+}
+
+/**
  * Modifie des absences déjà justifiées : nouveau motif, retour dans la file
  * « à justifier » (motif effacé), ou requalification en présence (l'absence
  * était une erreur de saisie).
