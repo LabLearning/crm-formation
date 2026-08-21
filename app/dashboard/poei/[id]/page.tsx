@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Building2, GraduationCap, Calendar } from 'lucide-react'
+import { ArrowLeft, Building2, GraduationCap, Calendar, CheckSquare, FileText } from 'lucide-react'
 import { Badge, BackLink } from '@/components/ui'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'
 import { formatDate, companyLabel } from '@/lib/utils'
@@ -352,6 +352,29 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
         }
         documents={
           <>
+            {/* Feuilles d'émargement de la session POEI : vierge à faire
+                signer, et l'état signé tel que tenu dans le CRM. */}
+            {(p as any).session?.id && (
+              <div className="card p-4 flex items-center gap-3 flex-wrap">
+                <CheckSquare className="h-4 w-4 text-brand-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-heading font-semibold text-surface-900">Feuilles d&apos;émargement</div>
+                  <p className="text-xs text-surface-500 mt-0.5">
+                    Session {(p as any).session.reference || ''} — feuille à faire signer et feuille d&apos;état des présences.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a href={`/api/pdf/emargement/${(p as any).session.id}`} target="_blank" rel="noopener noreferrer"
+                    className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" /> Feuille vierge
+                  </a>
+                  <a href={`/api/pdf/emargement-signe/${(p as any).session.id}`} target="_blank" rel="noopener noreferrer"
+                    className="btn-secondary !py-1.5 !px-3 text-xs inline-flex items-center gap-1.5">
+                    <CheckSquare className="h-3.5 w-3.5" /> Feuille des présences
+                  </a>
+                </div>
+              </div>
+            )}
             <PoeiMandat poeiId={p.id} mandat={mandatPoei} />
             <PoeiDocuments
               poeiId={p.id}
