@@ -7,8 +7,8 @@ import { BackLink } from '@/components/ui/BackLink'
 export const dynamic = 'force-dynamic'
 
 const TYPES: Record<string, { label: string; Icon: any }> = {
-  entreprise: { label: 'Entreprises clientes', Icon: Building2 },
   formateur: { label: 'Formateurs', Icon: GraduationCap },
+  entreprise: { label: 'Entreprises clientes', Icon: Building2 },
   financeur: { label: 'Financeurs', Icon: Landmark },
 }
 
