@@ -811,10 +811,13 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                             isSigned ? 'bg-emerald-100' : em.est_present ? 'bg-emerald-100' : 'bg-surface-100'
                           )}>
                             {/* Icône unique pour tous les présents, signés ou non :
-                                la feuille PDF reste la référence des signatures. */}
+                                la feuille PDF reste la référence des signatures.
+                                null = créneau pas encore passé (session en cours). */}
                             {em.est_present
                               ? <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              : <XCircle className="h-4 w-4 text-surface-300" />
+                              : em.est_present === false
+                              ? <XCircle className="h-4 w-4 text-surface-300" />
+                              : <Clock className="h-4 w-4 text-surface-300" />
                             }
                           </div>
                           <div className="flex-1 min-w-0">
@@ -844,7 +847,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
                           </div>
                           <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
-                            {em.est_present ? 'Présent' : em.motif_absence ? `Absent · ${em.motif_absence}` : 'Absent'}
+                            {em.est_present ? 'Présent' : em.est_present === false ? (em.motif_absence ? `Absent · ${em.motif_absence}` : 'Absent') : 'À venir'}
                           </span>
                         </div>
                       )

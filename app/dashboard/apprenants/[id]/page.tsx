@@ -143,8 +143,10 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
           </div>
           <div className="divide-y divide-surface-100">
             {[...emParSession.entries()].map(([sessionId, lignes]) => {
-              const presents = lignes.filter((l: any) => l.est_present).length
-              const absences = lignes.filter((l: any) => !l.est_present)
+              // null = créneau pas encore passé : ni présent ni absent
+              const faits = lignes.filter((l: any) => l.est_present !== null)
+              const presents = faits.filter((l: any) => l.est_present).length
+              const absences = faits.filter((l: any) => l.est_present === false)
               const dates = lignes.map((l: any) => String(l.date)).sort()
               return (
                 <Link key={sessionId} href={`/dashboard/sessions/${sessionId}`}
@@ -162,7 +164,7 @@ export default async function ApprenantDetailPage({ params }: { params: { id: st
                     </div>
                   </div>
                   <span className={`text-xs font-semibold tabular-nums shrink-0 ${absences.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {presents}/{lignes.length} présent{presents > 1 ? 's' : ''}
+                    {presents}/{faits.length || lignes.length} présent{presents > 1 ? 's' : ''}
                   </span>
                 </Link>
               )

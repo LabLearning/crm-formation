@@ -1,7 +1,7 @@
 import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { CheckCircle2, XCircle, CheckSquare } from 'lucide-react'
+import { CheckCircle2, XCircle, CheckSquare, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -41,7 +41,10 @@ export default async function PortalEmargementsPage({ params }: { params: { toke
       )}
 
       {[...parSession.entries()].map(([sessionId, lignes]) => {
-        const presents = lignes.filter((l) => l.est_present).length
+        // Les créneaux pas encore passés (est_present null) ne comptent ni
+        // en présence ni en absence — ils sont « à venir ».
+        const faits = lignes.filter((l) => l.est_present !== null)
+        const presents = faits.filter((l) => l.est_present).length
         return (
           <div key={sessionId} className="card overflow-hidden">
             <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-3">
@@ -51,8 +54,8 @@ export default async function PortalEmargementsPage({ params }: { params: { toke
                   {lignes[0].session?.formation?.intitule || lignes[0].session?.reference || 'Formation'}
                 </div>
               </div>
-              <span className={`text-xs font-semibold tabular-nums shrink-0 ${presents === lignes.length ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {presents}/{lignes.length} présent{presents > 1 ? 's' : ''}
+              <span className={`text-xs font-semibold tabular-nums shrink-0 ${presents === faits.length ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {presents}/{faits.length || lignes.length} présent{presents > 1 ? 's' : ''}
               </span>
             </div>
             <div className="divide-y divide-surface-50">
@@ -60,13 +63,15 @@ export default async function PortalEmargementsPage({ params }: { params: { toke
                 <div key={l.id} className="px-4 py-2.5 flex items-center gap-3">
                   {l.est_present
                     ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    : <XCircle className="h-4 w-4 text-surface-300 shrink-0" />}
+                    : l.est_present === false
+                    ? <XCircle className="h-4 w-4 text-surface-300 shrink-0" />
+                    : <Clock className="h-4 w-4 text-surface-300 shrink-0" />}
                   <span className="text-sm text-surface-900">
                     {formatDate(l.date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                   <span className="text-xs text-surface-500">{CRENEAU[l.creneau] || l.creneau}</span>
                   <span className={`ml-auto text-xs font-medium ${l.est_present ? 'text-emerald-600' : 'text-surface-400'}`}>
-                    {l.est_present ? 'Présent' : l.motif_absence ? `Absent · ${l.motif_absence}` : 'Absent'}
+                    {l.est_present ? 'Présent' : l.est_present === false ? (l.motif_absence ? `Absent · ${l.motif_absence}` : 'Absent') : 'À venir'}
                   </span>
                 </div>
               ))}

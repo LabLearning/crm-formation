@@ -37,8 +37,10 @@ export default async function AbsencesPage() {
   const [absencesBrutes, justifieesBrutes] = await Promise.all([
     pagesParalleles(
       'id, session_id, apprenant_id, date, creneau, apprenant:apprenant_id(prenom, nom)',
+      // Seul est_present=false est une absence ; null = créneau pas encore
+      // passé (session en cours), ce n'est pas une absence à justifier.
       (q) => q.eq('organization_id', session.organization.id)
-        .or('est_present.is.null,est_present.eq.false')
+        .eq('est_present', false)
         .is('signature_data', null)
         .is('motif_absence', null),
     ),
