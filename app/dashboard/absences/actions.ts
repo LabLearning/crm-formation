@@ -8,15 +8,6 @@ import type { ActionResult } from '@/lib/types'
 
 const ROLES = ['super_admin', 'gestionnaire', 'directeur_commercial']
 
-export const MOTIFS_ABSENCE = [
-  'Maladie / arrêt de travail',
-  'Raison professionnelle (service, remplacement)',
-  'Raison personnelle ou familiale',
-  'Retard — présent en partie',
-  'Abandon de la formation',
-  'Absence injustifiée',
-] as const
-
 /**
  * Justifie une ou plusieurs absences d'un coup (indicateur 12) : le même
  * motif s'applique à toutes les lignes sélectionnées — typiquement les deux
@@ -40,7 +31,10 @@ export async function justifierAbsencesAction(
     .eq('est_present', false)
     .select('id')
 
-  if (error) return { success: false, error: 'Enregistrement impossible' }
+  if (error) {
+    console.error('[absences] justification:', error.message)
+    return { success: false, error: `Enregistrement impossible : ${error.message}` }
+  }
 
   await logAudit({
     action: 'update', entity_type: 'emargement', entity_id: emargementIds[0],
