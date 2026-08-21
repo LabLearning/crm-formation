@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/site'],
+        allow: ['/'],
         disallow: [
           '/dashboard',
           '/portail',
@@ -25,6 +25,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://crm.lab-learning.fr/sitemap.xml',
+    sitemap: 'https://www.lab-learning.fr/sitemap.xml',
   }
 }

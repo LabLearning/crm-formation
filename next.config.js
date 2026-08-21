@@ -16,17 +16,44 @@ const nextConfig = {
       static: 300,
     },
   },
-  // Le site vitrine répond sur lab-learning.fr : l'hôte nu (et www) est
-  // réécrit vers /site — les liens internes du site étant déjà en /site/…,
-  // seule la racine a besoin d'être mappée ; le reste passe tel quel.
+  // Le site vitrine répond sur lab-learning.fr avec des URLs PROPRES :
+  // lab-learning.fr/formations sert /site/formations en interne, et les
+  // anciennes URLs /site/… redirigent vers la version propre. Les préfixes
+  // sont énumérés (pas de catch-all) pour ne jamais intercepter /api,
+  // /_next ni les fichiers statiques du dossier public.
+  async redirects() {
+    const hosts = ['lab-learning.fr', 'www.lab-learning.fr']
+    // Seules les SECTIONS de pages redirigent (/site/formations -> /formations) :
+    // les fichiers publics sous /site/ (logos, photos, documents) ne doivent
+    // surtout pas être redirigés, ils n'existent qu'à ce chemin.
+    const sections = [
+      'formations', 'branches', 'resultats', 'a-propos', 'partenaires',
+      'financements', 'contact', 'recrutement', 'reclamation',
+      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies',
+    ]
+    return hosts.flatMap((h) => [
+      { source: '/site', has: [{ type: 'host', value: h }], destination: '/', permanent: true },
+      ...sections.flatMap((s) => [
+        { source: `/site/${s}`, has: [{ type: 'host', value: h }], destination: `/${s}`, permanent: true },
+        { source: `/site/${s}/:path*`, has: [{ type: 'host', value: h }], destination: `/${s}/:path*`, permanent: true },
+      ]),
+    ])
+  },
   async rewrites() {
     const hosts = ['lab-learning.fr', 'www.lab-learning.fr']
+    const sections = [
+      'formations', 'branches', 'resultats', 'a-propos', 'partenaires',
+      'financements', 'contact', 'recrutement', 'reclamation',
+      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies',
+    ]
     return {
-      beforeFiles: hosts.map((h) => ({
-        source: '/',
-        has: [{ type: 'host', value: h }],
-        destination: '/site',
-      })),
+      beforeFiles: hosts.flatMap((h) => [
+        { source: '/', has: [{ type: 'host', value: h }], destination: '/site' },
+        ...sections.flatMap((s) => [
+          { source: `/${s}`, has: [{ type: 'host', value: h }], destination: `/site/${s}` },
+          { source: `/${s}/:path*`, has: [{ type: 'host', value: h }], destination: `/site/${s}/:path*` },
+        ]),
+      ]),
     }
   },
   typescript: {

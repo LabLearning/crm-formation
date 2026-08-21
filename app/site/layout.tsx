@@ -11,14 +11,15 @@ import { SiteFooter } from './SiteFooter'
  * par le template.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL('https://crm.lab-learning.fr'),
+  // Le domaine public de référence : les canonicals consolident le SEO sur
+  // lab-learning.fr, même quand la page est servie via crm.lab-learning.fr/site.
+  metadataBase: new URL('https://www.lab-learning.fr'),
   title: {
     default: 'Lab Learning — Formations Qualiopi métiers de bouche & CHR',
     template: '%s | Lab Learning',
   },
   description:
     'Organisme de formation certifié Qualiopi : hygiène HACCP, sécurité, management pour la restauration, boucherie, boulangerie, pâtisserie. Financement OPCO.',
-  alternates: { canonical: '/site' },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',

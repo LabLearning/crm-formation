@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Recrutement — Devenez formateur Lab Learning',
   description:
     "Lab Learning recrute des formateurs indépendants : hygiène alimentaire HACCP, prévention et sécurité au travail, métiers de bouche, management en restauration, POEI. Fiches de poste et candidature.",
-  alternates: { canonical: 'https://crm.lab-learning.fr/site/recrutement' },
+  alternates: { canonical: '/recrutement' },
 }
 
 interface Poste {

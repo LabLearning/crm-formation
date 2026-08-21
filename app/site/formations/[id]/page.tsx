@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   return {
     title: titreFormation(f.intitule).slice(0, 58),
     description,
-    alternates: { canonical: `/site/formations/${f.id}` },
+    alternates: { canonical: `/formations/${f.id}` },
     openGraph: {
       title: titreFormation(f.intitule),
       description,
