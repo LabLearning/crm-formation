@@ -858,14 +858,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                               </button>
                             )}
 
-                            {em.est_present && !isSigned && canEmarge && (
-                              <button
-                                onClick={() => handleTogglePresence(em.id, em.est_present)}
-                                disabled={isPending}
-                                className="text-xs text-surface-400 hover:text-red-500 transition-colors"
-                              >
-                                Annuler
-                              </button>
+                            {/* Présent sans signature électronique : pastille à la même
+                                taille que celle de la signature — lignes uniformes. */}
+                            {em.est_present && !isSigned && (
+                              <span className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              </span>
                             )}
                           </div>
                           <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
