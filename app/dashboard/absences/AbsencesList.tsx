@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { UserX, ChevronDown, ChevronRight, Check, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/ui'
@@ -124,17 +125,20 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
         }
         return (
           <div key={g.sessionId} className="card overflow-hidden">
-            <button onClick={() => setOuverts((o) => ({ ...o, [g.sessionId]: !ouvert }))}
-              className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-surface-50 transition-colors">
+            <div className="w-full px-4 py-3 flex items-center gap-3">
               <UserX className="h-4 w-4 text-amber-500 shrink-0" />
-              <div className="flex-1 min-w-0">
+              {/* La session est cliquable : on retrouve les mêmes absences
+                  sur sa feuille de pointage — c'est la preuve croisée. */}
+              <Link href={`/dashboard/sessions/${g.sessionId}`} className="flex-1 min-w-0 hover:opacity-75 transition-opacity">
                 <span className="text-sm font-medium text-surface-900">{g.reference}</span>
                 <span className="text-sm text-surface-500"> — {g.client}</span>
                 <div className="text-xs text-surface-400 truncate">{g.formation} · {g.dateDebut ? formatDate(g.dateDebut) : ''}</div>
-              </div>
+              </Link>
               <span className="text-xs font-semibold text-amber-600 tabular-nums shrink-0">{parStagiaire.size} stagiaire(s)</span>
-              {ouvert ? <ChevronDown className="h-4 w-4 text-surface-400" /> : <ChevronRight className="h-4 w-4 text-surface-400" />}
-            </button>
+              <button onClick={() => setOuverts((o) => ({ ...o, [g.sessionId]: !ouvert }))} className="p-1 -m-1">
+                {ouvert ? <ChevronDown className="h-4 w-4 text-surface-400" /> : <ChevronRight className="h-4 w-4 text-surface-400" />}
+              </button>
+            </div>
             {ouvert && (
               <div className="border-t border-surface-100 divide-y divide-surface-100">
                 {[...parStagiaire.entries()].map(([apprenantId, absences]: [string, Groupe['absences']]) => {
@@ -173,11 +177,12 @@ export function AbsencesList({ groupes, justifies = [] }: { groupes: Groupe[]; j
           <div className="space-y-3">
             {justifies.map((g) => (
               <div key={g.sessionId} className="card overflow-hidden">
-                <div className="px-4 py-3 border-b border-surface-100">
+                <Link href={`/dashboard/sessions/${g.sessionId}`}
+                  className="block px-4 py-3 border-b border-surface-100 hover:bg-surface-50 transition-colors">
                   <span className="text-sm font-medium text-surface-900">{g.reference}</span>
                   <span className="text-sm text-surface-500"> — {g.client}</span>
                   <div className="text-xs text-surface-400 truncate">{g.formation} · {g.dateDebut ? formatDate(g.dateDebut) : ''}</div>
-                </div>
+                </Link>
                 <div className="divide-y divide-surface-100">
                   {g.stagiaires.map((s, i) => (
                     <div key={i} className="px-4 py-2.5 flex items-center gap-3 flex-wrap">

@@ -844,7 +844,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
                           </div>
                           <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
-                            {em.est_present ? 'Présent' : 'Absent'}
+                            {em.est_present ? 'Présent' : em.motif_absence ? `Absent · ${em.motif_absence}` : 'Absent'}
                           </span>
                         </div>
                       )
