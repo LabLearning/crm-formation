@@ -24,6 +24,11 @@ export async function enregistrerRetourClientAction(sessionId: string, formData:
   if (!verbatim) return { success: false, error: 'Notez ce que le client a dit — même en deux phrases.' }
   const note = Number(formData.get('note'))
 
+  // Date de l'appel réel (report des notes papier) — c'est elle qui fait foi
+  // dans le registre, pas le moment de la saisie.
+  const dateAppel = String(formData.get('date_appel') || '').trim()
+  const dateAppelValide = /^\d{4}-\d{2}-\d{2}$/.test(dateAppel) && dateAppel <= new Date().toISOString().slice(0, 10)
+
   const { error } = await supabase.from('appreciations_parties_prenantes').insert({
     organization_id: session.organization.id,
     type: 'entreprise',
@@ -33,6 +38,7 @@ export async function enregistrerRetourClientAction(sessionId: string, formData:
     commentaire: verbatim,
     repondant_nom: String(formData.get('interlocuteur') || '').trim().slice(0, 120) || null,
     repondant_fonction: `${String(formData.get('fonction') || '').trim().slice(0, 80) || 'Contact client'} — recueilli par téléphone`,
+    ...(dateAppelValide ? { created_at: `${dateAppel}T12:00:00Z` } : {}),
   })
   if (error) { console.error('[retour client]', error.message); return { success: false, error: 'Enregistrement impossible (migration 134 appliquée ?)' } }
 

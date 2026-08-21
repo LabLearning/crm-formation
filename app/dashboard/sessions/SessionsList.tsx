@@ -48,12 +48,17 @@ const PERIODE_LABELS: Record<string, string> = {
   toutes: 'Toutes',
 }
 
-// Pastille de couleur stable par session (repère visuel, style Dendreo)
-const DOT_PALETTE = ['bg-emerald-400', 'bg-purple-400', 'bg-amber-400', 'bg-sky-400', 'bg-rose-400', 'bg-teal-400', 'bg-indigo-400']
-function dotFor(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return DOT_PALETTE[h % DOT_PALETTE.length]
+// Pastille d'état du dossier : vert = pièces complètes (convention signée +
+// émargement signé + contrat formateur), ambre = convention OK mais pièce
+// manquante, rose = pas de convention signée. Le détail est dans l'infobulle.
+function dotFor(s: any): string {
+  if (s._dossier === 'complet') return 'bg-emerald-500'
+  if (s._dossier === 'partiel') return 'bg-amber-400'
+  return 'bg-rose-400'
+}
+function dotTitle(s: any): string {
+  if (s._dossier === 'complet') return 'Dossier complet : convention signée, émargement signé, contrat formateur'
+  return `Manque : ${(s._dossier_manque || []).join(', ')}`
 }
 
 // Créneau horaire du 1er jour (horaires_jours) ou champ horaires
@@ -270,7 +275,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                     onClick={() => window.location.href = `/dashboard/sessions/${s.id}`}
                     className={`flex items-center gap-3 px-4 py-2.5 hover:bg-surface-50/70 transition-colors cursor-pointer ${isToday(s) ? 'bg-brand-50/30' : ''}`}>
                     {/* Pastille couleur */}
-                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotFor(s.id)}`} />
+                    <span title={dotTitle(s)} className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotFor(s)}`} />
                     {/* Horaire */}
                     <span className="text-xs font-mono text-surface-500 w-24 shrink-0">{timeRange(s) || '—'}</span>
                     {/* Titre */}
@@ -332,7 +337,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
                     className={`bg-white rounded-xl border border-surface-200/70 p-3 hover:border-surface-300 hover:shadow-card transition-all cursor-pointer ${isToday(s) ? 'ring-1 ring-brand-300' : ''}`}>
                     <div className="flex items-start justify-between gap-1.5">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${dotFor(s.id)}`} />
+                        <span title={dotTitle(s)} className={`h-2 w-2 rounded-full shrink-0 ${dotFor(s)}`} />
                         <span className="text-xs font-semibold text-surface-900 truncate leading-snug">{getSessionTitle(s)}</span>
                       </div>
                       <div onClick={(e) => e.stopPropagation()} className="shrink-0 -mt-1 -mr-1">{sessionMenu(s)}</div>

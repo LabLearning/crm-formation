@@ -78,6 +78,12 @@ export function SessionRetourClient({ sessionId, retours }: {
               <input name="fonction" placeholder="Gérant, responsable…" className="input-base mt-1" />
             </label>
           </div>
+          {/* Les appels sont notés sur papier à chaud puis reportés ici : la
+              date saisie est celle de l'appel réel, pas celle de la saisie. */}
+          <label className="text-xs text-surface-500 block sm:max-w-[240px]">Date de l&apos;appel
+            <input name="date_appel" type="date" defaultValue={new Date().toISOString().slice(0, 10)}
+              className="input-base mt-1" required />
+          </label>
           <div>
             <div className="text-xs text-surface-500 mb-1.5">Satisfaction exprimée (facultatif)</div>
             <div className="flex gap-1.5">

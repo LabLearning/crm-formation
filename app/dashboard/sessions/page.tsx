@@ -7,6 +7,54 @@ export const dynamic = 'force-dynamic'
 
 type Periode = 'actives' | 'passees' | 'toutes'
 
+/**
+ * Complétude documentaire par session, pour la pastille de la liste :
+ * vert = rien ne manque (convention signée + émargement signé + contrat
+ * formateur), ambre = convention OK mais pièce manquante, rose = pas de
+ * convention signée. La convention signée peut être un document déposé ou
+ * une signature électronique aboutie dans le module conventions.
+ */
+async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, { etat: string; manque: string[] }>> {
+  const pieces = new Map<string, Set<string>>()
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase.from('documents')
+      .select('session_id, type')
+      .eq('organization_id', orgId)
+      .in('type', ['convention_signee', 'emargement_signe', 'contrat_formateur'])
+      .not('session_id', 'is', null)
+      .range(from, from + 999)
+    for (const d of data || []) {
+      if (!pieces.has(d.session_id)) pieces.set(d.session_id, new Set())
+      pieces.get(d.session_id)!.add(d.type)
+    }
+    if (!data || data.length < 1000) break
+  }
+  const { data: convElec } = await supabase.from('conventions')
+    .select('session_id')
+    .eq('organization_id', orgId)
+    .not('session_id', 'is', null)
+    .or('status.eq.signee_complete,signature_client_date.not.is.null')
+  for (const c of convElec || []) {
+    if (!pieces.has(c.session_id)) pieces.set(c.session_id, new Set())
+    pieces.get(c.session_id)!.add('convention_signee')
+  }
+
+  const LIBELLES: Record<string, string> = {
+    convention_signee: 'convention signée',
+    emargement_signe: 'émargement signé',
+    contrat_formateur: 'contrat formateur',
+  }
+  const out = new Map<string, { etat: string; manque: string[] }>()
+  for (const [sid, set] of pieces) {
+    const manque = Object.keys(LIBELLES).filter((t) => !set.has(t)).map((t) => LIBELLES[t])
+    out.set(sid, {
+      etat: manque.length === 0 ? 'complet' : set.has('convention_signee') ? 'partiel' : 'incomplet',
+      manque,
+    })
+  }
+  return out
+}
+
 export default async function SessionsPage({
   searchParams,
 }: {
@@ -31,6 +79,15 @@ export default async function SessionsPage({
       ? [...list].sort((a, b) => (a.date_debut || '').localeCompare(b.date_debut || ''))
       : list
 
+  const dossiers = await etatsDossiers(supabase, orgId)
+  const avecDossier = (s: any) => {
+    const d = dossiers.get(s.id)
+    return {
+      _dossier: d?.etat || 'incomplet',
+      _dossier_manque: d?.manque || ['convention signée', 'émargement signé', 'contrat formateur'],
+    }
+  }
+
   // ── Voie rapide : tout en 1 requête SQL (RPC sessions_page_data).
   // Évite 8 allers-retours, les .in() à 371 UUIDs dans l'URL et le
   // plafond PostgREST de 1000 lignes (1705 inscriptions, 1220 apprenants).
@@ -39,6 +96,7 @@ export default async function SessionsPage({
     if (!error && data && Array.isArray(data.sessions)) {
       const sessionsWithCounts = sortSessions(data.sessions).map((s: any) => ({
         ...s,
+        ...avecDossier(s),
         _nb_inscrits: (s._inscrits_ids || []).length,
         _inscrits_ids: s._inscrits_ids || [],
         _formation_ids: s._formation_ids || [],
@@ -137,6 +195,7 @@ export default async function SessionsPage({
     const inscritsIds = inscritsBySession[s.id] || []
     return {
       ...s,
+      ...avecDossier(s),
       _nb_inscrits: inscritsIds.length,
       _inscrits_ids: inscritsIds,
       _formation_ids: formationsBySession[s.id] || [],
