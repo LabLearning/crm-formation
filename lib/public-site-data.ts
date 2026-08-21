@@ -151,7 +151,10 @@ export async function getBranchesData(): Promise<BrancheData[]> {
     rows = withCols.data || []
   }
 
-  // Dédoublonnage par intitulé normalisé
+  // Dédoublonnage par intitulé normalisé. Les fiches publiées passent en
+  // premier : sinon un doublon dépublié du même intitulé peut « gagner » la
+  // place et faire disparaître la fiche phare du catalogue.
+  rows.sort((a: any, b: any) => Number(b.site_publie === true) - Number(a.site_publie === true))
   const seen = new Set<string>()
   const formations: (PublicFormation & BrancheFormationInput)[] = []
   for (const f of rows) {

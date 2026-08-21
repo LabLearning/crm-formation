@@ -16,18 +16,24 @@ type Periode = 'actives' | 'passees' | 'toutes'
  * La convention signée peut être un document déposé ou une signature
  * électronique aboutie dans le module conventions.
  */
-async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, { etat: string; manque: string[] }>> {
-  const pieces = new Map<string, Set<string>>()
+async function etatsDossiers(supabase: any, orgId: string) {
+  const convSessions = new Set<string>()
+  const contratSessions = new Set<string>()
+  // Le contrat de prestation vaut pour le formateur : rangé sur sa fiche,
+  // il couvre toutes ses sessions même sans lien session direct.
+  const formateursAvecContrat = new Set<string>()
   for (let from = 0; ; from += 1000) {
     const { data } = await supabase.from('documents')
-      .select('session_id, type')
+      .select('session_id, formateur_id, type')
       .eq('organization_id', orgId)
       .in('type', ['convention_signee', 'contrat_formateur'])
-      .not('session_id', 'is', null)
       .range(from, from + 999)
     for (const d of data || []) {
-      if (!pieces.has(d.session_id)) pieces.set(d.session_id, new Set())
-      pieces.get(d.session_id)!.add(d.type)
+      if (d.type === 'convention_signee' && d.session_id) convSessions.add(d.session_id)
+      if (d.type === 'contrat_formateur') {
+        if (d.session_id) contratSessions.add(d.session_id)
+        if (d.formateur_id) formateursAvecContrat.add(d.formateur_id)
+      }
     }
     if (!data || data.length < 1000) break
   }
@@ -36,24 +42,8 @@ async function etatsDossiers(supabase: any, orgId: string): Promise<Map<string, 
     .eq('organization_id', orgId)
     .not('session_id', 'is', null)
     .or('status.eq.signee_complete,signature_client_date.not.is.null')
-  for (const c of convElec || []) {
-    if (!pieces.has(c.session_id)) pieces.set(c.session_id, new Set())
-    pieces.get(c.session_id)!.add('convention_signee')
-  }
-
-  const LIBELLES: Record<string, string> = {
-    convention_signee: 'convention signée',
-    contrat_formateur: 'contrat formateur',
-  }
-  const out = new Map<string, { etat: string; manque: string[] }>()
-  for (const [sid, set] of pieces) {
-    const manque = Object.keys(LIBELLES).filter((t) => !set.has(t)).map((t) => LIBELLES[t])
-    out.set(sid, {
-      etat: manque.length === 0 ? 'complet' : set.has('convention_signee') ? 'partiel' : 'incomplet',
-      manque,
-    })
-  }
-  return out
+  for (const c of convElec || []) convSessions.add(c.session_id)
+  return { convSessions, contratSessions, formateursAvecContrat }
 }
 
 export default async function SessionsPage({
@@ -82,10 +72,13 @@ export default async function SessionsPage({
 
   const dossiers = await etatsDossiers(supabase, orgId)
   const avecDossier = (s: any) => {
-    const d = dossiers.get(s.id)
+    const conv = dossiers.convSessions.has(s.id)
+    const contrat = dossiers.contratSessions.has(s.id) ||
+      (s.formateur_id && dossiers.formateursAvecContrat.has(s.formateur_id))
+    const manque = [...(conv ? [] : ['convention signée']), ...(contrat ? [] : ['contrat formateur'])]
     return {
-      _dossier: d?.etat || 'incomplet',
-      _dossier_manque: d?.manque || ['convention signée', 'contrat formateur'],
+      _dossier: manque.length === 0 ? 'complet' : conv ? 'partiel' : 'incomplet',
+      _dossier_manque: manque,
     }
   }
 
