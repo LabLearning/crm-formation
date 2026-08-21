@@ -19,7 +19,7 @@ export default async function ReclamationPage({ params }: { params: { id: string
       apprenant:apprenant_id(prenom, nom),
       client:client_id(raison_sociale, nom_commercial),
       session:session_id(reference, intitule, date_debut),
-      responsable:responsable_id(prenom, nom)`)
+      responsable:responsable_id(first_name, last_name)`)
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .maybeSingle()
