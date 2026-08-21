@@ -820,8 +820,13 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-surface-900">{apprenant?.prenom} {apprenant?.nom}</div>
                             <div className="text-xs text-surface-400 flex items-center gap-2">
-                              {apprenant?.entreprise && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{apprenant.entreprise}</span>}
-                              {isSigned && <span className="text-emerald-500">Signé</span>}
+                              {/* Même sous-titre pour tous : l'établissement (celui du
+                                  stagiaire, sinon le client de la session). */}
+                              {(apprenant?.entreprise || (session as any).client?.raison_sociale) && (
+                                <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />
+                                  {apprenant?.entreprise || (session as any).client?.nom_commercial || (session as any).client?.raison_sociale}
+                                </span>
+                              )}
                             </div>
                           </div>
 
