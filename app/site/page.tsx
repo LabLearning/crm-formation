@@ -324,7 +324,7 @@ export default async function SiteHome() {
         </div>
       </section>
 
-            {/* ── MINI-FAQ : lever les dernières objections avant le CTA ── */}
+      {/* ── MINI-FAQ : lever les dernières objections avant le CTA ── */}
       <section className="max-w-3xl mx-auto px-5 md:px-8 py-16 md:py-20">
         <div className="text-center mb-10">
           <Kicker center className="mb-4 justify-center">Questions fréquentes</Kicker>
@@ -355,7 +355,7 @@ export default async function SiteHome() {
         </div>
       </section>
 
-{/* ── CTA ── */}
+      {/* ── CTA ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-24">
         <Reveal>
         <div className="rounded-[32px] bg-[#14110F] text-white px-6 md:px-16 py-16 md:py-20 text-center relative overflow-hidden">
