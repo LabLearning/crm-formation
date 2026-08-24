@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Pencil, Trash2, Users, QrCode,
   Calendar, MapPin, Video, Clock, User as UserIcon, Building2,
-  List, LayoutGrid,
+  List, LayoutGrid, FolderPlus,
 } from 'lucide-react'
 import { Button, Badge, Modal, useToast, RowMenu, PoeiBadge } from '@/components/ui'
 import { SessionForm } from './SessionForm'
@@ -218,9 +219,16 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
             {periode !== 'toutes' && <span className="text-surface-400"> · {PERIODE_LABELS[periode].toLowerCase()}</span>}
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
-          Nouvelle session
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Le circuit commercial : client -> apprenants -> formation -> session */}
+          <Link href="/dashboard/dossiers/nouveau"
+            className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
+            <FolderPlus className="h-4 w-4" /> Nouveau dossier
+          </Link>
+          <Button variant="secondary" onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
+            Session seule
+          </Button>
+        </div>
       </div>
 
       {/* Filtres + switch de vue */}
