@@ -102,30 +102,44 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }} />
       <section className="relative overflow-hidden border-b border-[#195144]/10">
         <div className="absolute inset-0 -z-10 bg-[#195144]" />
-        <img src={photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25" />
-        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.92) 45%, rgba(18,63,52,0.75) 100%)' }} />
+        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.96) 45%, rgba(18,63,52,0.9) 100%)' }} />
         <div className="absolute inset-0 -z-10 opacity-[0.15]" style={{ background: 'radial-gradient(60% 80% at 80% 0%, #6366F1 0%, transparent 60%)' }} />
-        <div className="max-w-4xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white">
-          <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Toutes les formations
-          </Link>
-          {f.categorie && <div className="mt-6"><span className="ll-kicker ll-kicker--light">{f.categorie}</span></div>}
-          <h1 className="mt-2 ll-display text-3xl md:text-[52px] leading-[1.02] text-balance text-white">{titreFormation(f.intitule)}</h1>
-          {f.sous_titre && <p className="mt-4 text-lg md:text-xl text-white/75 max-w-2xl">{f.sous_titre}</p>}
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            {f.duree_heures ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Clock className="h-4 w-4" />{f.duree_heures} heures</span> : null}
-            {f.duree_jours ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Calendar className="h-4 w-4" />{f.duree_jours} jour{f.duree_jours > 1 ? 's' : ''}</span> : null}
-            {f.modalite ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Monitor className="h-4 w-4" />{MODALITE[f.modalite] || f.modalite}</span> : null}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
+          <div className="lg:col-span-7">
+            <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Toutes les formations
+            </Link>
+            {f.categorie && <div className="mt-6"><span className="ll-kicker ll-kicker--light">{f.categorie}</span></div>}
+            <h1 className="mt-2 ll-display text-3xl md:text-[48px] leading-[1.02] text-balance text-white">{titreFormation(f.intitule)}</h1>
+            {f.sous_titre && <p className="mt-4 text-lg md:text-xl text-white/75 max-w-2xl">{f.sous_titre}</p>}
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              {f.duree_heures ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Clock className="h-4 w-4" />{f.duree_heures} heures</span> : null}
+              {f.duree_jours ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Calendar className="h-4 w-4" />{f.duree_jours} jour{f.duree_jours > 1 ? 's' : ''}</span> : null}
+              {f.modalite ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Monitor className="h-4 w-4" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
+            </div>
           </div>
+          {/* La photo de la formation, en carte visible — plus un filigrane */}
+          {(photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img) && (
+            <div className="hidden lg:block lg:col-span-5 mt-8 lg:mt-6">
+              <div className="relative rounded-[28px] overflow-hidden ring-1 ring-white/20 shadow-2xl shadow-black/30 aspect-[3/2] rotate-1">
+                <img src={photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img || ''} alt=""
+                  className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
       <div className="max-w-4xl mx-auto px-5 md:px-8 py-14 grid lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-10">
+        <div className="lg:col-span-2 space-y-5">
           {f.objectifs.length > 0 && (
-            <section>
-              <h2 className="flex items-center gap-2 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-4"><Target className="h-5 w-5 text-[#195144]" />Objectifs pédagogiques</h2>
+            <section className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
+              <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
+                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><Target className="h-5 w-5 text-[#195144]" /></span>
+                Objectifs pédagogiques
+              </h2>
               <ul className="space-y-2.5">
                 {f.objectifs.map((o, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-[#57534E]"><CheckCircle2 className="h-5 w-5 text-[#195144] shrink-0 mt-0.5" /><span>{o}</span></li>
@@ -134,8 +148,11 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             </section>
           )}
           {f.competences_visees.length > 0 && (
-            <section>
-              <h2 className="flex items-center gap-2 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-4"><ListChecks className="h-5 w-5 text-[#195144]" />Compétences visées</h2>
+            <section className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
+              <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
+                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><ListChecks className="h-5 w-5 text-[#195144]" /></span>
+                Compétences visées
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {f.competences_visees.map((c, i) => (
                   <span key={i} className="rounded-full border border-[#195144]/15 bg-[#195144]/5 px-3.5 py-1.5 text-sm text-[#195144]">{c}</span>
@@ -144,8 +161,11 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             </section>
           )}
           {sections.map((s) => (
-            <section key={s.title}>
-              <h2 className="flex items-center gap-2 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-4"><s.Icon className="h-5 w-5 text-[#195144]" />{s.title}</h2>
+            <section key={s.title} className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
+              <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
+                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><s.Icon className="h-5 w-5 text-[#195144]" /></span>
+                {s.title}
+              </h2>
               {s.content}
             </section>
           ))}
