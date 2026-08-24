@@ -7,6 +7,7 @@ import { StoryChapter } from './StoryChapter'
 import { Reveal } from './Reveal'
 import { Kicker } from './Kicker'
 import { Marquee } from './Marquee'
+import { PhotoStrip } from './PhotoStrip'
 import { BRANCHES } from './branches'
 
 export const dynamic = 'force-dynamic'
@@ -130,6 +131,26 @@ export default async function SiteHome() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── SUR LE TERRAIN : bandeau photo défilant ── */}
+      <section className="py-14 md:py-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 mb-7">
+          <Kicker className="mb-3">Sur le terrain</Kicker>
+          <h2 className="ll-display ll-fluid-h2 text-[#14110F]">La formation, là où elle sert</h2>
+        </div>
+        <PhotoStrip photos={[
+          '/site/formations/8ecde6a5-2c18-4986-a4f9-8284f0a8ed04.webp',
+          '/site/formations/1f49d299-aae7-4b99-8ae8-4e3ff30beda8.webp',
+          '/site/formations/df3380ba-cdfc-44a6-b05d-88dacc6e67a8.webp',
+          '/site/formations/744f87d8-2448-4812-83b0-41659f8a0c1c.webp',
+          '/site/formations/d0e0d5e2-e030-41db-9410-9551eab859eb.webp',
+          '/site/formations/02e7b672-a240-460e-a07a-c5bd05f9781a.webp',
+          '/site/formations/ee0ad136-b3c4-48c6-8e9c-db41804c2be3.webp',
+          '/site/formations/acbea88f-a944-4dea-b21d-9c18e27962b5.webp',
+          '/site/formations/13d9e648-b08b-4dee-9bad-f060f0dd9cb7.webp',
+          '/site/formations/061983bf-0572-42ed-8022-4a5a7cc52e1f.webp',
+        ]} />
       </section>
 
       {/* ── BRANCHES MÉTIER ── */}

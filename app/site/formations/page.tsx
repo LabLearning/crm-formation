@@ -25,6 +25,7 @@ const SECTEURS = [
 const PHARES = [
   {
     Icon: Hygiene,
+    photo: '/site/formations/8ecde6a5-2c18-4986-a4f9-8284f0a8ed04.webp',
     titre: 'Hygiène alimentaire & HACCP',
     texte:
       "Notre cœur d'activité : bonnes pratiques d'hygiène, méthode HACCP, plan de maîtrise sanitaire, nettoyage-désinfection, traçabilité et étiquetage — sur votre lieu de travail, avec vos équipes, adapté à votre production.",
@@ -34,6 +35,7 @@ const PHARES = [
   },
   {
     Icon: FirstAid,
+    photo: '/site/formations/a2ebdd72-170c-4baa-b7a0-e7d8e5f7418d.webp',
     titre: 'Prévention des risques professionnels',
     texte:
       "DUERP, gestes & postures, sauveteur secouriste du travail, sécurité incendie : la sécurité de vos équipes, traitée avec le même sérieux que celle de vos clients — et déclinée selon les risques réels de votre secteur.",
@@ -43,6 +45,7 @@ const PHARES = [
   },
   {
     Icon: UserCheck,
+    photo: '/site/formations/5ddb8e71-17a7-46cc-a907-8858ddbdfaac.webp',
     titre: 'POEI — Équipier polyvalent en restauration rapide',
     texte:
       "Vous ouvrez ou vous recrutez ? La Préparation Opérationnelle à l'Emploi forme vos futurs équipiers AVANT l'embauche, financée par France Travail. Nous gérons tout : recrutement, formation, suivi hebdomadaire, bilan avec le tuteur.",
@@ -52,6 +55,7 @@ const PHARES = [
   },
   {
     Icon: Management,
+    photo: '/site/formations/c9320e26-90c7-4e89-8654-651690927de3.webp',
     titre: 'Management & gestion en restauration',
     texte:
       "Rentabilité, coûts matières, management d'équipe, relation client, développement commercial : des formations pour gérants et responsables, travaillées sur les chiffres réels de votre établissement.",
@@ -61,6 +65,7 @@ const PHARES = [
   },
   {
     Icon: Bulb,
+    photo: '/site/formations/5facf6ca-108c-45a6-8809-bb5276169ec7.webp',
     titre: 'Intelligence artificielle au quotidien',
     texte:
       "Découvrir et utiliser l'IA dans votre commerce : gagner du temps sur les tâches administratives, la communication, les réseaux sociaux et la relation client — sans jargon, avec des cas concrets de votre métier.",
@@ -94,14 +99,17 @@ export default async function SiteFormations() {
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-6 space-y-5">
         {PHARES.map((p, i) => (
           <Reveal key={p.titre} delay={(i % 2) * 80}>
-            <article className="rounded-3xl bg-white ring-1 ring-black/5 hover:ring-black/10 ll-lift overflow-hidden">
-              <div className="p-6 md:p-8 md:flex md:items-start md:gap-8">
-                <div
-                  className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 mb-4 md:mb-0"
-                  style={{ backgroundColor: `${p.accent}14`, color: p.accent }}
-                >
-                  <p.Icon className="h-6 w-6" />
-                </div>
+            <article className="rounded-3xl bg-white ring-1 ring-black/5 hover:ring-black/10 ll-lift overflow-hidden md:grid md:grid-cols-[300px,1fr]">
+              {/* La photo de la formation phare, pleine hauteur — l'image
+                  alterne gauche/droite pour rythmer la page. */}
+              <div className={`relative h-44 md:h-auto ${i % 2 === 1 ? 'md:order-2' : ''}`}>
+                <img loading="lazy" src={(p as any).photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <span className="absolute top-4 left-4 h-11 w-11 rounded-2xl flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-sm"
+                  style={{ color: p.accent }}>
+                  <p.Icon className="h-5 w-5" />
+                </span>
+              </div>
+              <div className="p-6 md:p-8">
                 <div className="flex-1 min-w-0">
                   <h2 className="ll-display text-xl md:text-2xl text-[#14110F]">{p.titre}</h2>
                   <p className="mt-2.5 text-[15px] text-[#57534E] leading-relaxed max-w-3xl">{p.texte}</p>

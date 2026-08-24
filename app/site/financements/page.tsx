@@ -50,15 +50,22 @@ export default function SiteFinancements() {
     <>
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 ll-grid-faint" />
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
-          <Kicker className="mb-5"><Banknote className="h-4 w-4" /> Financements</Kicker>
-          <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
-            Vos formations, <span className="text-[#195144]">financées</span>.
-          </h1>
-          <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
-            De l’ouverture avec la POEI à la formation continue de vos équipes, nos formations sont éligibles
-            aux principaux dispositifs. On vous accompagne de bout en bout dans le montage du dossier.
-          </p>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12 lg:grid lg:grid-cols-12 lg:items-center lg:gap-10">
+          <div className="lg:col-span-7">
+            <Kicker className="mb-5"><Banknote className="h-4 w-4" /> Financements</Kicker>
+            <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
+              Vos formations, <span className="text-[#195144]">financées</span>.
+            </h1>
+            <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
+              De l’ouverture avec la POEI à la formation continue de vos équipes, nos formations sont éligibles
+              aux principaux dispositifs. On vous accompagne de bout en bout dans le montage du dossier.
+            </p>
+          </div>
+          {/* Illustration flottante : l'euro clay, ombre portée, léger flottement */}
+          <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
+            <img src="/site/illustrations/financement.webp" alt="" aria-hidden="true"
+              className="w-72 xl:w-80 ll-float drop-shadow-xl" />
+          </div>
         </div>
       </section>
 

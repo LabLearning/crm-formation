@@ -113,7 +113,9 @@ const POSTES: Poste[] = [
 export default function RecrutementPage() {
   return (
     <>
-      <section className="max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-20 pb-4">
+      <section className="relative max-w-4xl mx-auto px-5 md:px-8 pt-16 md:pt-20 pb-4">
+        <img src="/site/illustrations/formation.webp" alt="" aria-hidden="true"
+          className="hidden lg:block absolute -right-16 top-14 w-44 xl:w-52 ll-float drop-shadow-xl" />
         <span className="ll-kicker">Recrutement</span>
         <h1 className="mt-4 ll-display ll-fluid-h1 text-[#14110F] text-balance">
           Devenez formateur Lab Learning

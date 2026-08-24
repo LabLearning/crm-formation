@@ -8,6 +8,9 @@ export default function SiteContact() {
   return (
     <section className="relative overflow-hidden max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-20">
       <div className="absolute inset-0 -z-10 ll-grid-faint" />
+      {/* Illustration flottante en marge du hero */}
+      <img src="/site/illustrations/contact.webp" alt="" aria-hidden="true"
+        className="hidden lg:block absolute right-8 top-16 w-52 xl:w-60 ll-float drop-shadow-xl" />
       <Kicker className="mb-5">Contact</Kicker>
       <h1 className="ll-display ll-fluid-h1 text-[#14110F] text-balance max-w-3xl">Parlons de votre projet de formation</h1>
       <p className="mt-5 text-lg md:text-xl text-[#57534E] max-w-2xl">
