@@ -15,7 +15,7 @@ import {
   CallIcon, CalendarCheckIcon, MapPinIcon, ConnectIcon, Store03Icon,
   HeartHandshakeIcon, Award01Icon, BookOpen01Icon, ListViewIcon, BulbIcon,
   ManagerIcon, CleaningBucketIcon, FirstAidKitIcon, GraduationScrollIcon,
-  StarIcon,
+  StarIcon, ArrowDown01Icon,
 } from '@hugeicons/core-free-icons'
 
 type P = { className?: string; strokeWidth?: number }
@@ -91,3 +91,4 @@ export const UtensilsCrossed = make(KitchenUtensilsIcon)
 export const Sandwich = make(Hamburger01Icon)
 export const Wine = make(Restaurant03Icon)
 export const Star = make(StarIcon)
+export const ChevronDown = make(ArrowDown01Icon)
