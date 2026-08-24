@@ -10,7 +10,21 @@ import { creerDossierCompletAction } from './actions'
 interface ClientRef { id: string; raison_sociale: string | null; nom_commercial: string | null; siret: string | null; ville: string | null }
 interface FormationRef { id: string; intitule: string; duree_heures: number | null; duree_jours: number | null }
 interface FormateurRef { id: string; prenom: string | null; nom: string | null }
-interface ApprenantLigne { prenom: string; nom: string; email: string; poste: string }
+interface ApprenantLigne {
+  prenom: string; nom: string; email: string; poste: string
+  civilite: string; sexe: string; telephone: string
+  date_naissance: string; lieu_naissance: string; numero_securite_sociale: string
+  adresse: string; code_postal: string; ville: string; type_contrat: string
+  situation_handicap: boolean; type_handicap: string; besoins_adaptation: string
+}
+
+const LIGNE_VIDE: ApprenantLigne = {
+  prenom: '', nom: '', email: '', poste: '',
+  civilite: '', sexe: '', telephone: '',
+  date_naissance: '', lieu_naissance: '', numero_securite_sociale: '',
+  adresse: '', code_postal: '', ville: '', type_contrat: '',
+  situation_handicap: false, type_handicap: '', besoins_adaptation: '',
+}
 
 const ETAPES = [
   { n: 1, label: 'Client', Icon: Building2 },
@@ -42,8 +56,11 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
   const [nc, setNc] = useState({ raison: '', email: '', telephone: '', adresse: '', code_postal: '', ville: '' })
   const [contact, setContact] = useState({ prenom: '', nom: '', email: '', telephone: '' })
 
-  // Étape 2 — apprenants
-  const [apprenants, setApprenants] = useState<ApprenantLigne[]>([{ prenom: '', nom: '', email: '', poste: '' }])
+  // Étape 2 — apprenants (fiche complète dépliable par ligne)
+  const [apprenants, setApprenants] = useState<ApprenantLigne[]>([{ ...LIGNE_VIDE }])
+  const [detailOuvert, setDetailOuvert] = useState<number | null>(null)
+  const majApprenant = (i: number, patch: Partial<ApprenantLigne>) =>
+    setApprenants((list) => list.map((x, j) => (j === i ? { ...x, ...patch } : x)))
 
   // Étape 3 — formation
   const [rechercheFormation, setRechercheFormation] = useState('')
@@ -221,18 +238,70 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
             Les apprenants sont rattachés à <strong className="text-surface-900">{modeClient === 'existant' ? (clientChoisi?.nom_commercial || clientChoisi?.raison_sociale) : nc.raison}</strong>.
           </div>
           {apprenants.map((a, i) => (
-            <div key={i} className="grid grid-cols-[1fr,1fr,1.2fr,1fr,36px] gap-2 items-center">
-              <input value={a.prenom} onChange={(e) => setApprenants(apprenants.map((x, j) => j === i ? { ...x, prenom: e.target.value } : x))} placeholder="Prénom" className="input-base !py-2" />
-              <input value={a.nom} onChange={(e) => setApprenants(apprenants.map((x, j) => j === i ? { ...x, nom: e.target.value } : x))} placeholder="Nom *" className="input-base !py-2" />
-              <input value={a.email} onChange={(e) => setApprenants(apprenants.map((x, j) => j === i ? { ...x, email: e.target.value } : x))} placeholder="Email (portail)" className="input-base !py-2" />
-              <input value={a.poste} onChange={(e) => setApprenants(apprenants.map((x, j) => j === i ? { ...x, poste: e.target.value } : x))} placeholder="Poste" className="input-base !py-2" />
-              <button onClick={() => setApprenants(apprenants.filter((_, j) => j !== i))} disabled={apprenants.length === 1}
-                className="h-9 w-9 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 flex items-center justify-center">
-                <Trash2 className="h-4 w-4" />
-              </button>
+            <div key={i} className="rounded-xl border border-surface-100">
+              <div className="grid grid-cols-[1fr,1fr,1.2fr,1fr,auto,36px] gap-2 items-center p-2">
+                <input value={a.prenom} onChange={(e) => majApprenant(i, { prenom: e.target.value })} placeholder="Prénom" className="input-base !py-2" />
+                <input value={a.nom} onChange={(e) => majApprenant(i, { nom: e.target.value })} placeholder="Nom *" className="input-base !py-2" />
+                <input value={a.email} onChange={(e) => majApprenant(i, { email: e.target.value })} placeholder="Email (portail)" className="input-base !py-2" />
+                <input value={a.poste} onChange={(e) => majApprenant(i, { poste: e.target.value })} placeholder="Poste" className="input-base !py-2" />
+                <button onClick={() => setDetailOuvert(detailOuvert === i ? null : i)}
+                  className={cn('px-2.5 py-2 rounded-lg text-xs font-medium transition-colors',
+                    detailOuvert === i ? 'bg-surface-900 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200')}>
+                  Détails
+                </button>
+                <button onClick={() => { setApprenants(apprenants.filter((_, j) => j !== i)); if (detailOuvert === i) setDetailOuvert(null) }}
+                  disabled={apprenants.length === 1}
+                  className="h-9 w-9 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 flex items-center justify-center">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              {detailOuvert === i && (
+                <div className="border-t border-surface-100 bg-surface-50/40 p-3 space-y-3">
+                  <div className="grid sm:grid-cols-4 gap-2.5">
+                    <select value={a.civilite} onChange={(e) => majApprenant(i, { civilite: e.target.value })} className="input-base !py-2">
+                      <option value="">Civilité</option><option value="M.">M.</option><option value="Mme">Mme</option>
+                    </select>
+                    <select value={a.sexe} onChange={(e) => majApprenant(i, { sexe: e.target.value })} className="input-base !py-2">
+                      <option value="">Sexe</option><option value="H">Homme</option><option value="F">Femme</option>
+                    </select>
+                    <input value={a.telephone} onChange={(e) => majApprenant(i, { telephone: e.target.value })} placeholder="Téléphone" className="input-base !py-2" />
+                    <input value={a.type_contrat} onChange={(e) => majApprenant(i, { type_contrat: e.target.value })} placeholder="Contrat (CDI, CDD…)" className="input-base !py-2" />
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-2.5">
+                    <label className="text-xs text-surface-500">Date de naissance
+                      <input type="date" value={a.date_naissance} onChange={(e) => majApprenant(i, { date_naissance: e.target.value })} className="input-base !py-2 mt-1" />
+                    </label>
+                    <label className="text-xs text-surface-500">Lieu de naissance
+                      <input value={a.lieu_naissance} onChange={(e) => majApprenant(i, { lieu_naissance: e.target.value })} className="input-base !py-2 mt-1" />
+                    </label>
+                    <label className="text-xs text-surface-500">N° de sécurité sociale
+                      <input value={a.numero_securite_sociale} onChange={(e) => majApprenant(i, { numero_securite_sociale: e.target.value })} className="input-base !py-2 mt-1" />
+                    </label>
+                  </div>
+                  <div className="grid sm:grid-cols-[2fr,100px,1fr] gap-2.5">
+                    <input value={a.adresse} onChange={(e) => majApprenant(i, { adresse: e.target.value })} placeholder="Adresse" className="input-base !py-2" />
+                    <input value={a.code_postal} onChange={(e) => majApprenant(i, { code_postal: e.target.value })} placeholder="CP" className="input-base !py-2" />
+                    <input value={a.ville} onChange={(e) => majApprenant(i, { ville: e.target.value })} placeholder="Ville" className="input-base !py-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="inline-flex items-center gap-2 text-sm text-surface-700">
+                      <input type="checkbox" checked={a.situation_handicap}
+                        onChange={(e) => majApprenant(i, { situation_handicap: e.target.checked })}
+                        className="h-4 w-4 accent-surface-900" />
+                      Situation de handicap (le référent handicap est prévenu)
+                    </label>
+                    {a.situation_handicap && (
+                      <div className="grid sm:grid-cols-2 gap-2.5">
+                        <input value={a.type_handicap} onChange={(e) => majApprenant(i, { type_handicap: e.target.value })} placeholder="Type (visuel, moteur…)" className="input-base !py-2" />
+                        <input value={a.besoins_adaptation} onChange={(e) => majApprenant(i, { besoins_adaptation: e.target.value })} placeholder="Besoins d'adaptation" className="input-base !py-2" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
-          <button onClick={() => setApprenants([...apprenants, { prenom: '', nom: '', email: '', poste: '' }])}
+          <button onClick={() => setApprenants([...apprenants, { ...LIGNE_VIDE }])}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700">
             <Plus className="h-4 w-4" /> Ajouter un apprenant
           </button>

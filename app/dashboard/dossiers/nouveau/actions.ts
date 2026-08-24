@@ -57,20 +57,34 @@ export async function creerDossierCompletAction(formData: FormData): Promise<Act
   }
   if (!clientId) return { success: false, error: 'Choisissez un client ou créez-en un' }
 
-  // ── 2. Les apprenants ──
-  let apprenants: Array<{ prenom?: string; nom?: string; email?: string; poste?: string }> = []
+  // ── 2. Les apprenants — fiche complète (état civil, adresse, n° sécu…) ──
+  let apprenants: Array<Record<string, any>> = []
   try { apprenants = JSON.parse(String(formData.get('apprenants') || '[]')) } catch { /* liste vide */ }
-  apprenants = apprenants.filter((a) => (a.nom || a.prenom || '').trim())
+  apprenants = apprenants.filter((a) => ((a.nom || a.prenom || '') as string).trim())
   if (!apprenants.length) return { success: false, error: 'Ajoutez au moins un apprenant' }
 
+  const champ = (v: any) => (typeof v === 'string' && v.trim() ? v.trim() : null)
   const { data: crees, error: eApp } = await supabase.from('apprenants').insert(
     apprenants.map((a) => ({
       organization_id: orgId,
       client_id: clientId,
-      prenom: (a.prenom || '').trim() || null,
-      nom: (a.nom || '').trim() || null,
-      email: (a.email || '').trim() || null,
-      poste: (a.poste || '').trim() || null,
+      civilite: champ(a.civilite),
+      prenom: champ(a.prenom),
+      nom: champ(a.nom),
+      email: champ(a.email),
+      telephone: champ(a.telephone),
+      poste: champ(a.poste),
+      sexe: champ(a.sexe),
+      date_naissance: champ(a.date_naissance),
+      lieu_naissance: champ(a.lieu_naissance),
+      numero_securite_sociale: champ(a.numero_securite_sociale),
+      adresse: champ(a.adresse),
+      code_postal: champ(a.code_postal),
+      ville: champ(a.ville),
+      type_contrat: champ(a.type_contrat),
+      situation_handicap: !!a.situation_handicap,
+      type_handicap: champ(a.type_handicap),
+      besoins_adaptation: champ(a.besoins_adaptation),
     })),
   ).select('id')
   if (eApp) {
