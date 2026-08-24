@@ -31,6 +31,7 @@ export default async function SiteHome() {
       desc: 'Avant même l’ouverture, on recrute et on forme vos futurs salariés via la POEI (Préparation Opérationnelle à l’Emploi), financée par France Travail. Vous démarrez avec une équipe opérationnelle dès le premier jour.',
       bullets: ['POEI financée par France Travail', 'Recrutement + formation avant l’ouverture', 'Équipe opérationnelle dès le jour 1'],
       Icon: DoorOpen, from: '#134E4A', to: '#0F766E',
+      img: '/site/formations/5ddb8e71-17a7-46cc-a907-8858ddbdfaac.webp',
       chips: [{ Icon: Briefcase, label: 'POEI · France Travail' }, { Icon: Users, label: 'Recrutement inclus' }],
     },
     {
@@ -38,6 +39,7 @@ export default async function SiteHome() {
       desc: 'Une fois ouvert, on forme vos équipes en poste en continu via le plan de développement des compétences, financé par votre OPCO. La montée en compétence suit le rythme de votre établissement.',
       bullets: ['Plan de développement des compétences', 'Financé par votre OPCO', 'Formations métier pendant l’activité'],
       Icon: TrendingUp, from: '#1E3A8A', to: '#4338CA',
+      img: '/site/metiers/cuisine.webp',
       chips: [{ Icon: Building2, label: 'OPCO' }, { Icon: CheckCircle2, label: `${fmt(stats.sessionsRealisees)} sessions réalisées` }],
       flip: true,
     },
@@ -46,6 +48,7 @@ export default async function SiteHome() {
       desc: 'Pour ancrer durablement les compétences, notre plateforme e-learning Learnexa prolonge la formation en ligne : vos équipes se forment à leur rythme, où qu’elles soient, avec un suivi de la progression.',
       bullets: ['Notre plateforme e-learning Learnexa', 'Modules à la demande, accessibles partout', 'Suivi de la progression en continu'],
       Icon: MonitorPlay, from: '#4C1D95', to: '#7C3AED',
+      img: '/site/formations/5facf6ca-108c-45a6-8809-bb5276169ec7.webp',
       chips: [{ Icon: Laptop, label: 'Plateforme Learnexa' }, { Icon: GraduationCap, label: `${fmt(stats.apprenants)} apprenants` }],
       href: 'https://learnexa.fr', cta: 'Découvrir Learnexa',
     },

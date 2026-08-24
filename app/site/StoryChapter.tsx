@@ -13,6 +13,8 @@ export interface ChapterProps {
   from: string
   to: string
   chips: Chip[]
+  /** Photo terrain : remplace le fond dégradé par l'image teintée + scrim. */
+  img?: string
   href?: string
   cta?: string
   flip?: boolean
@@ -53,9 +55,21 @@ export function StoryChapter(p: ChapterProps) {
       {/* Visuel */}
       <div className={p.flip ? 'lg:order-1' : ''}>
         <div className="group relative rounded-[28px] overflow-hidden aspect-[4/3] ring-1 ring-black/5 shadow-xl shadow-black/10" style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
-          <div className="absolute inset-0 opacity-[0.16]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+          {p.img ? (
+            <>
+              {/* Photo terrain teintée aux couleurs du chapitre + scrim bas */}
+              <img loading="lazy" src={p.img} alt="" aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(155deg, ${p.from}B3 0%, ${p.to}33 55%, transparent 100%)` }} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 opacity-[0.16]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+              <div className="absolute -right-8 -bottom-10 text-white/12 transition-transform duration-700 group-hover:scale-105"><Big className="h-56 w-56" strokeWidth={1} /></div>
+            </>
+          )}
           <span className="ll-index absolute right-5 top-1 text-[8rem] md:text-[11rem] leading-none text-white/10 select-none">{num}</span>
-          <div className="absolute -right-8 -bottom-10 text-white/12 transition-transform duration-700 group-hover:scale-105"><Big className="h-56 w-56" strokeWidth={1} /></div>
           <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-1 ring-white/25 self-start">
               <Big className="h-6 w-6 text-white" />
