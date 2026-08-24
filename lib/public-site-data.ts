@@ -303,6 +303,76 @@ export async function getPublicTeam(): Promise<PublicFormateur[]> {
 }
 
 /** Indicateurs de résultats publiés (indicateur Qualiopi 2). Null si non publiés. */
+/**
+ * Témoignages clients LIVE : les appréciations d'entreprises du registre
+ * Qualiopi (ind. 30) avec verbatim et bonne note — la preuve sociale du site
+ * n'est jamais rédigée à la main, elle vient du terrain.
+ */
+export async function getPublicTemoignages(limit = 9): Promise<Array<{
+  note: number; commentaire: string; nom: string; fonction: string | null; entreprise: string | null
+}>> {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data } = await supabase.from('appreciations_parties_prenantes')
+      .select('note_globale, commentaire, repondant_nom, repondant_fonction, client:client_id(raison_sociale, nom_commercial)')
+      .eq('organization_id', ORG).eq('type', 'entreprise')
+      .not('commentaire', 'is', null).gte('note_globale', 4)
+      .order('created_at', { ascending: false }).limit(limit)
+    return (data || [])
+      .filter((a: any) => (a.commentaire || '').trim().length > 15)
+      .map((a: any) => ({
+        note: a.note_globale,
+        commentaire: a.commentaire.trim(),
+        nom: a.repondant_nom || 'Client Lab Learning',
+        fonction: (a.repondant_fonction || '').replace(' — recueilli par téléphone', '') || null,
+        entreprise: a.client?.nom_commercial || a.client?.raison_sociale || null,
+      }))
+  } catch { return [] }
+}
+
+/**
+ * Formations les plus suivies (fiches publiées) : photo, durée, tarif et
+ * satisfaction — la vitrine « populaires » de l'accueil.
+ */
+export async function getFormationsPopulaires(limit = 3): Promise<any[]> {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data } = await supabase.from('formations')
+      .select('id, intitule, categorie, duree_heures, duree_jours, tarif_inter_ht, tarif_intra_ht, taux_satisfaction, nombre_apprenants_total')
+      .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true)
+      .not('nombre_apprenants_total', 'is', null)
+      .order('nombre_apprenants_total', { ascending: false }).limit(limit)
+    return data || []
+  } catch { return [] }
+}
+
+/**
+ * Formations liées (même catégorie, fiche publiée) : le maillage interne des
+ * fiches — trois suggestions en pied de page.
+ */
+export async function getFormationsLiees(excludeId: string, categorie: string | null, limit = 3): Promise<any[]> {
+  try {
+    const supabase = await createServiceRoleClient()
+    let q = supabase.from('formations')
+      .select('id, intitule, categorie, duree_heures, taux_satisfaction')
+      .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true)
+      .neq('id', excludeId)
+      .order('nombre_apprenants_total', { ascending: false, nullsFirst: false })
+      .limit(limit)
+    if (categorie) q = q.eq('categorie', categorie)
+    const { data } = await q
+    if (data && data.length >= 2) return data
+    // Pas assez dans la catégorie : on complète toutes catégories confondues
+    const { data: autres } = await supabase.from('formations')
+      .select('id, intitule, categorie, duree_heures, taux_satisfaction')
+      .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true)
+      .neq('id', excludeId)
+      .order('nombre_apprenants_total', { ascending: false, nullsFirst: false })
+      .limit(limit)
+    return autres || []
+  } catch { return [] }
+}
+
 export async function getPublicResultats(): Promise<any | null> {
   try {
     const supabase = await createServiceRoleClient()

@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/site/financements', label: 'Financements' },
   { href: '/site/partenaires', label: 'Clients' },
   { href: '/site/a-propos', label: 'À propos' },
+  { href: '/site/faq', label: 'FAQ' },
   { href: '/site/contact', label: 'Contact' },
 ]
 

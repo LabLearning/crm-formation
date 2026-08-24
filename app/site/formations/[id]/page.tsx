@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Clock, Monitor, Calendar, ArrowRight, ArrowLeft, CheckCircle2, Target, Users, ListChecks, ClipboardCheck, Accessibility, ShieldCheck, BookOpen, ListView, Bulb } from '../../icons'
-import { getPublicFormation, getSessionsRealiseesParTitre, normTitre } from '@/lib/public-site-data'
+import { getPublicFormation, getSessionsRealiseesParTitre, normTitre, getFormationsLiees } from '@/lib/public-site-data'
 import { tarifsOpcoPourFormation } from '@/lib/opco-tarifs'
 import { metierStyle } from '../../metier'
 import { titreFormation } from '@/lib/utils'
@@ -45,7 +45,22 @@ function Prose({ text }: { text: string }) {
 export default async function SiteFormationDetail({ params }: { params: { id: string } }) {
   const f = await getPublicFormation(params.id)
   if (!f) notFound()
-  const sessionsRealisees = (await getSessionsRealiseesParTitre()).get(normTitre(f.intitule)) || 0
+  const [sessionsParTitre, liees] = await Promise.all([
+    getSessionsRealiseesParTitre(),
+    getFormationsLiees(f.id, f.categorie),
+  ])
+  const sessionsRealisees = sessionsParTitre.get(normTitre(f.intitule)) || 0
+
+  // Fil d'Ariane balisé : Accueil > Formations > fiche — résultats enrichis.
+  const schemaBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://www.lab-learning.fr/' },
+      { '@type': 'ListItem', position: 2, name: 'Formations', item: 'https://www.lab-learning.fr/formations' },
+      { '@type': 'ListItem', position: 3, name: titreFormation(f.intitule) },
+    ],
+  }
   // Le tarif public est le barème de prise en charge de la branche : nos prix
   // sont calés sur les montants OPCO, pas sur un tarif catalogue.
   const tarifsOpco = tarifsOpcoPourFormation(f)
@@ -100,6 +115,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumb) }} />
       <section className="relative overflow-hidden border-b border-[#195144]/10">
         <div className="absolute inset-0 -z-10 bg-[#195144]" />
         {/* La photo en fond opacité, comme avant — le hero reste sobre */}
@@ -231,6 +247,39 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             {f.version ? ` · version ${f.version}` : ''}.
           </p>
         </div>
+      )}
+
+      {/* Maillage interne : trois formations liées, photo + durée + note */}
+      {liees.length >= 2 && (
+        <section className="border-t border-[#195144]/10 bg-[#FAFAFA]">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 py-14">
+            <h2 className="ll-display text-2xl md:text-3xl text-[#14110F] mb-8">À découvrir aussi</h2>
+            <div className="grid gap-5 md:grid-cols-3">
+              {liees.map((l: any) => (
+                <Link key={l.id} href={`/site/formations/${l.id}`}
+                  className="group flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-lg hover:shadow-black/5 ll-lift">
+                  {photoFormation(l.id) && (
+                    <div className="relative h-36 overflow-hidden">
+                      <img loading="lazy" src={photoFormation(l.id)!} alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                  )}
+                  <div className="p-5 flex items-center justify-between gap-3 flex-1">
+                    <div>
+                      <div className="font-heading font-semibold text-sm text-[#14110F] leading-snug">{titreFormation(l.intitule)}</div>
+                      <div className="text-xs text-[#78716C] mt-1">
+                        {[l.duree_heures ? `${l.duree_heures} h` : null, l.taux_satisfaction != null ? `${(l.taux_satisfaction / 20).toFixed(1)}/5` : null].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                    <span className="shrink-0 h-9 w-9 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
     </>
   )

@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { ArrowRight, ShieldCheck, GraduationCap, Users, CheckCircle2, Building2, UserCheck, Banknote, SlidersHorizontal, Briefcase, DoorOpen, TrendingUp, MonitorPlay, Laptop } from './icons'
-import { getPublicSiteData, getBranchesData } from '@/lib/public-site-data'
+import { getPublicSiteData, getBranchesData, getPublicTemoignages, getFormationsPopulaires } from '@/lib/public-site-data'
+import { Temoignages } from './Temoignages'
+import { photoFormation } from '@/lib/formations-photos'
+import { titreFormation } from '@/lib/utils'
+import { Star, Clock } from './icons'
 import { CountUp } from './CountUp'
 import { MetierVisual } from './MetierVisual'
 import { StoryChapter } from './StoryChapter'
@@ -22,7 +26,9 @@ const POURQUOI = [
 ]
 
 export default async function SiteHome() {
-  const [{ stats, franchises }, branches] = await Promise.all([getPublicSiteData(), getBranchesData()])
+  const [{ stats, franchises }, branches, temoignages, populaires] = await Promise.all([
+    getPublicSiteData(), getBranchesData(), getPublicTemoignages(), getFormationsPopulaires(3),
+  ])
   const brancheCount = new Map(branches.map((b) => [b.slug, b.total]))
 
   const chapitres = [
@@ -238,6 +244,77 @@ export default async function SiteHome() {
             <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
               Voir tous nos clients <ArrowRight className="h-4 w-4" />
             </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── TÉMOIGNAGES : verbatims réels du registre d'appréciations ── */}
+      {temoignages.length >= 2 && (
+        <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
+          <div className="max-w-2xl mb-10">
+            <Kicker className="mb-4">Ce qu'ils en disent</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">La parole aux établissements formés</h2>
+            <p className="mt-3 text-[#57534E]">
+              Appréciations recueillies après chaque formation, dans le cadre de notre démarche qualité Qualiopi.
+            </p>
+          </div>
+          <Reveal><Temoignages items={temoignages} /></Reveal>
+          <div className="mt-8 text-center">
+            <Link href="/site/resultats" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+              Voir tous nos résultats <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── FORMATIONS POPULAIRES : les plus suivies, données live ── */}
+      {populaires.length >= 2 && (
+        <section className="bg-[#FAFAFA] border-y border-[#195144]/10">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-10">
+              <div className="max-w-2xl">
+                <Kicker className="mb-4">Les plus demandées</Kicker>
+                <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Nos formations les plus suivies</h2>
+              </div>
+              <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+                Toutes nos formations <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {populaires.map((p: any, i: number) => (
+                <Reveal key={p.id} delay={(i % 3) * 80} className="h-full">
+                  <Link href={`/site/formations/${p.id}`}
+                    className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-xl hover:shadow-black/5 ll-lift">
+                    {photoFormation(p.id) && (
+                      <div className="relative h-44 overflow-hidden">
+                        <img loading="lazy" src={photoFormation(p.id)!} alt=""
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        {p.taux_satisfaction != null && (
+                          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#14110F] shadow-sm">
+                            <Star className="h-3.5 w-3.5 text-[#F59E0B]" /> {(p.taux_satisfaction / 20).toFixed(1)}/5
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="p-5 md:p-6 flex flex-col flex-1">
+                      <div className="font-heading font-semibold text-[#14110F] leading-snug">{titreFormation(p.intitule)}</div>
+                      <div className="mt-3 flex items-center gap-4 text-xs text-[#78716C]">
+                        {p.duree_heures && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{p.duree_heures} h</span>}
+                        {p.nombre_apprenants_total && <span>{p.nombre_apprenants_total} stagiaires formés</span>}
+                      </div>
+                      <div className="mt-auto pt-4 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[#195144]">
+                          {p.tarif_inter_ht ? `${Number(p.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.` : p.tarif_intra_ht ? `${Number(p.tarif_intra_ht).toLocaleString('fr-FR')} € HT` : 'Sur devis'}
+                        </span>
+                        <span className="h-9 w-9 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
       )}

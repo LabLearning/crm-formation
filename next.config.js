@@ -29,7 +29,7 @@ const nextConfig = {
     const sections = [
       'formations', 'branches', 'resultats', 'a-propos', 'partenaires',
       'financements', 'contact', 'recrutement', 'reclamation',
-      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies',
+      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies', 'faq',
     ]
     return hosts.flatMap((h) => [
       { source: '/site', has: [{ type: 'host', value: h }], destination: '/', permanent: true },
@@ -44,7 +44,7 @@ const nextConfig = {
     const sections = [
       'formations', 'branches', 'resultats', 'a-propos', 'partenaires',
       'financements', 'contact', 'recrutement', 'reclamation',
-      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies',
+      'reglement-interieur', 'mentions-legales', 'cgv', 'confidentialite', 'cookies', 'faq',
     ]
     return {
       beforeFiles: hosts.flatMap((h) => [

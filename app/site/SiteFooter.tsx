@@ -51,6 +51,7 @@ export function SiteFooter() {
             <li><Link href="/site/partenaires" className="text-[#D6D3D1] hover:text-white transition-colors">Clients</Link></li>
             <li><Link href="/site/resultats" className="text-[#D6D3D1] hover:text-white transition-colors">Nos résultats</Link></li>
             <li><Link href="/site/a-propos" className="text-[#D6D3D1] hover:text-white transition-colors">À propos</Link></li>
+            <li><Link href="/site/faq" className="text-[#D6D3D1] hover:text-white transition-colors">Questions fréquentes</Link></li>
             <li><Link href="/site/recrutement" className="text-[#D6D3D1] hover:text-white transition-colors">Recrutement</Link></li>
             <li><Link href="/site/contact" className="text-[#D6D3D1] hover:text-white transition-colors">Contact</Link></li>
           </ul>
