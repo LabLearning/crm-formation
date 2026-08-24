@@ -126,43 +126,76 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── STATS (live) ── */}
-      <section className="border-y border-[#195144]/10 bg-[#FAFAFA]">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 md:divide-x md:divide-[#195144]/10">
-          {[
-            { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
-            { v: stats.apprenants, l: 'apprenants formés', Icon: Users },
-            { v: stats.sessionsRealisees, l: 'sessions réalisées', Icon: CheckCircle2 },
-            { v: stats.entreprises, l: 'entreprises accompagnées', Icon: Building2 },
-          ].map((s, i) => (
-            <div key={s.l} className={i > 0 ? 'md:pl-8' : ''}>
-              <div className="flex items-center gap-1.5 text-[#195144] mb-2"><s.Icon className="h-4 w-4" /></div>
-              <div className="ll-display text-4xl md:text-[52px] text-[#14110F] leading-none"><CountUp value={s.v} /></div>
-              <div className="text-xs text-[#78716C] mt-2 uppercase tracking-wide">{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── PREUVES / FRANCHISES (marquee live) ── */}
+      {franchises.length > 0 && (
+        <section className="bg-[#FAFAFA] border-y border-[#195144]/10 py-16 md:py-20 overflow-hidden">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 text-center">
+            <Kicker center className="mb-4 justify-center">Ils nous font confiance</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
+            <p className="mt-3 text-[#57534E] max-w-xl mx-auto">Des enseignes multi-sites nous confient la montée en compétence de leurs équipes, partout en France.</p>
+          </div>
+          <div className="mt-10">
+            <Marquee items={franchises.map((f) => ({ nom: f.nom, logo_url: f.logo_url, nombre_etablissements: f.nombre_etablissements }))} />
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+              Voir tous nos clients <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+      )}
 
-      {/* ── SUR LE TERRAIN : bandeau photo défilant ── */}
-      <section className="py-14 md:py-16 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 mb-7">
-          <Kicker className="mb-3">Sur le terrain</Kicker>
-          <h2 className="ll-display ll-fluid-h2 text-[#14110F]">La formation, là où elle sert</h2>
-        </div>
-        <PhotoStrip photos={[
-          '/site/formations/8ecde6a5-2c18-4986-a4f9-8284f0a8ed04.webp',
-          '/site/formations/1f49d299-aae7-4b99-8ae8-4e3ff30beda8.webp',
-          '/site/formations/df3380ba-cdfc-44a6-b05d-88dacc6e67a8.webp',
-          '/site/formations/744f87d8-2448-4812-83b0-41659f8a0c1c.webp',
-          '/site/formations/d0e0d5e2-e030-41db-9410-9551eab859eb.webp',
-          '/site/formations/02e7b672-a240-460e-a07a-c5bd05f9781a.webp',
-          '/site/formations/ee0ad136-b3c4-48c6-8e9c-db41804c2be3.webp',
-          '/site/formations/acbea88f-a944-4dea-b21d-9c18e27962b5.webp',
-          '/site/formations/13d9e648-b08b-4dee-9bad-f060f0dd9cb7.webp',
-          '/site/formations/061983bf-0572-42ed-8022-4a5a7cc52e1f.webp',
-        ]} />
-      </section>
+      {/* ── FORMATIONS POPULAIRES : les plus suivies, données live ── */}
+      {populaires.length >= 2 && (
+        <section className="bg-[#FAFAFA] border-y border-[#195144]/10">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-10">
+              <div className="max-w-2xl">
+                <Kicker className="mb-4">Les plus demandées</Kicker>
+                <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Nos formations les plus suivies</h2>
+              </div>
+              <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+                Toutes nos formations <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {populaires.map((p: any, i: number) => (
+                <Reveal key={p.id} delay={(i % 3) * 80} className="h-full">
+                  <Link href={`/site/formations/${p.id}`}
+                    className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-xl hover:shadow-black/5 ll-lift">
+                    {photoFormation(p.id) && (
+                      <div className="relative h-44 overflow-hidden">
+                        <img loading="lazy" src={photoFormation(p.id)!} alt=""
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        {p.taux_satisfaction != null && (
+                          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#14110F] shadow-sm">
+                            <Star className="h-3.5 w-3.5 text-[#F59E0B]" /> {(p.taux_satisfaction / 20).toFixed(1)}/5
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="p-5 md:p-6 flex flex-col flex-1">
+                      <div className="font-heading font-semibold text-[#14110F] leading-snug">{titreFormation(p.intitule)}</div>
+                      <div className="mt-3 flex items-center gap-4 text-xs text-[#78716C]">
+                        {p.duree_heures && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{p.duree_heures} h</span>}
+                        {p.nombre_apprenants_total && <span>{p.nombre_apprenants_total} stagiaires formés</span>}
+                      </div>
+                      <div className="mt-auto pt-4 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[#195144]">
+                          {p.tarif_inter_ht ? `${Number(p.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.` : p.tarif_intra_ht ? `${Number(p.tarif_intra_ht).toLocaleString('fr-FR')} € HT` : 'Sur devis'}
+                        </span>
+                        <span className="h-9 w-9 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── BRANCHES MÉTIER ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
@@ -229,24 +262,25 @@ export default async function SiteHome() {
         </div>
       </section>
 
-      {/* ── PREUVES / FRANCHISES (marquee live) ── */}
-      {franchises.length > 0 && (
-        <section className="bg-[#FAFAFA] border-y border-[#195144]/10 py-16 md:py-20 overflow-hidden">
-          <div className="max-w-6xl mx-auto px-5 md:px-8 text-center">
-            <Kicker center className="mb-4 justify-center">Ils nous font confiance</Kicker>
-            <h2 className="ll-display ll-fluid-h2 text-[#14110F] tracking-heading">Des réseaux franchisés nationaux</h2>
-            <p className="mt-3 text-[#57534E] max-w-xl mx-auto">Des enseignes multi-sites nous confient la montée en compétence de leurs équipes, partout en France.</p>
-          </div>
-          <div className="mt-10">
-            <Marquee items={franchises.map((f) => ({ nom: f.nom, logo_url: f.logo_url, nombre_etablissements: f.nombre_etablissements }))} />
-          </div>
-          <div className="mt-10 text-center">
-            <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
-              Voir tous nos clients <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </section>
-      )}
+      {/* ── SUR LE TERRAIN : bandeau photo défilant ── */}
+      <section className="py-14 md:py-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 mb-7">
+          <Kicker className="mb-3">Sur le terrain</Kicker>
+          <h2 className="ll-display ll-fluid-h2 text-[#14110F]">La formation, là où elle sert</h2>
+        </div>
+        <PhotoStrip photos={[
+          '/site/formations/8ecde6a5-2c18-4986-a4f9-8284f0a8ed04.webp',
+          '/site/formations/1f49d299-aae7-4b99-8ae8-4e3ff30beda8.webp',
+          '/site/formations/df3380ba-cdfc-44a6-b05d-88dacc6e67a8.webp',
+          '/site/formations/744f87d8-2448-4812-83b0-41659f8a0c1c.webp',
+          '/site/formations/d0e0d5e2-e030-41db-9410-9551eab859eb.webp',
+          '/site/formations/02e7b672-a240-460e-a07a-c5bd05f9781a.webp',
+          '/site/formations/ee0ad136-b3c4-48c6-8e9c-db41804c2be3.webp',
+          '/site/formations/acbea88f-a944-4dea-b21d-9c18e27962b5.webp',
+          '/site/formations/13d9e648-b08b-4dee-9bad-f060f0dd9cb7.webp',
+          '/site/formations/061983bf-0572-42ed-8022-4a5a7cc52e1f.webp',
+        ]} />
+      </section>
 
       {/* ── TÉMOIGNAGES : verbatims réels du registre d'appréciations ── */}
       {temoignages.length >= 2 && (
@@ -267,59 +301,61 @@ export default async function SiteHome() {
         </section>
       )}
 
-      {/* ── FORMATIONS POPULAIRES : les plus suivies, données live ── */}
-      {populaires.length >= 2 && (
-        <section className="bg-[#FAFAFA] border-y border-[#195144]/10">
-          <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
-            <div className="flex items-end justify-between gap-6 flex-wrap mb-10">
-              <div className="max-w-2xl">
-                <Kicker className="mb-4">Les plus demandées</Kicker>
-                <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Nos formations les plus suivies</h2>
-              </div>
-              <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
-                Toutes nos formations <ArrowRight className="h-4 w-4" />
-              </Link>
+      {/* ── STATS (live) ── */}
+      <section className="border-y border-[#195144]/10 bg-[#FAFAFA]">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 md:divide-x md:divide-[#195144]/10">
+          {[
+            { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
+            { v: stats.apprenants, l: 'apprenants formés', Icon: Users },
+            { v: stats.sessionsRealisees, l: 'sessions réalisées', Icon: CheckCircle2 },
+            { v: stats.entreprises, l: 'entreprises accompagnées', Icon: Building2 },
+          ].map((s, i) => (
+            <div key={s.l} className={i > 0 ? 'md:pl-8' : ''}>
+              <div className="flex items-center gap-1.5 text-[#195144] mb-2"><s.Icon className="h-4 w-4" /></div>
+              <div className="ll-display text-4xl md:text-[52px] text-[#14110F] leading-none"><CountUp value={s.v} /></div>
+              <div className="text-xs text-[#78716C] mt-2 uppercase tracking-wide">{s.l}</div>
             </div>
-            <div className="grid gap-5 md:grid-cols-3">
-              {populaires.map((p: any, i: number) => (
-                <Reveal key={p.id} delay={(i % 3) * 80} className="h-full">
-                  <Link href={`/site/formations/${p.id}`}
-                    className="group h-full flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-xl hover:shadow-black/5 ll-lift">
-                    {photoFormation(p.id) && (
-                      <div className="relative h-44 overflow-hidden">
-                        <img loading="lazy" src={photoFormation(p.id)!} alt=""
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        {p.taux_satisfaction != null && (
-                          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#14110F] shadow-sm">
-                            <Star className="h-3.5 w-3.5 text-[#F59E0B]" /> {(p.taux_satisfaction / 20).toFixed(1)}/5
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div className="p-5 md:p-6 flex flex-col flex-1">
-                      <div className="font-heading font-semibold text-[#14110F] leading-snug">{titreFormation(p.intitule)}</div>
-                      <div className="mt-3 flex items-center gap-4 text-xs text-[#78716C]">
-                        {p.duree_heures && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{p.duree_heures} h</span>}
-                        {p.nombre_apprenants_total && <span>{p.nombre_apprenants_total} stagiaires formés</span>}
-                      </div>
-                      <div className="mt-auto pt-4 flex items-center justify-between">
-                        <span className="text-sm font-semibold text-[#195144]">
-                          {p.tarif_inter_ht ? `${Number(p.tarif_inter_ht).toLocaleString('fr-FR')} € HT / pers.` : p.tarif_intra_ht ? `${Number(p.tarif_intra_ht).toLocaleString('fr-FR')} € HT` : 'Sur devis'}
-                        </span>
-                        <span className="h-9 w-9 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
-                          <ArrowRight className="h-4 w-4" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+          ))}
+        </div>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pb-10 -mt-2 text-center">
+          <Link href="/site/resultats" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+            Tous nos indicateurs de résultats <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
 
-      {/* ── CTA ── */}
+            {/* ── MINI-FAQ : lever les dernières objections avant le CTA ── */}
+      <section className="max-w-3xl mx-auto px-5 md:px-8 py-16 md:py-20">
+        <div className="text-center mb-10">
+          <Kicker center className="mb-4 justify-center">Questions fréquentes</Kicker>
+          <h2 className="ll-display ll-fluid-h2 text-[#14110F]">Avant de vous lancer</h2>
+        </div>
+        <div className="space-y-3">
+          {[
+            { q: 'Combien coûte une formation, et qui la finance ?', r: "Dans la plupart des cas, votre OPCO prend en charge tout ou partie de la formation — nos tarifs sont calés sur les barèmes de votre branche, le reste à charge est souvent nul. On monte le dossier avec vous." },
+            { q: 'La formation a-t-elle lieu dans mon établissement ?', r: "Oui, c'est notre spécialité : le formateur vient chez vous, forme vos équipes sur leur poste, avec votre matériel — sans fermer et sur vos horaires." },
+            { q: 'Sous quel délai peut-on démarrer ?', r: "Une session se planifie généralement sous 2 à 4 semaines après validation du devis et de la prise en charge." },
+            { q: 'Êtes-vous certifiés Qualiopi ?', r: "Oui — certification Qualiopi actions de formation, condition du financement OPCO et France Travail. Nous sommes aussi inscrits sur la liste DRAAF pour l'hygiène alimentaire." },
+          ].map((f, i) => (
+            <details key={i} className="group rounded-2xl bg-white ring-1 ring-black/5 open:ring-[#195144]/20 open:shadow-lg open:shadow-black/5 transition-shadow">
+              <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4">
+                <span className="font-heading font-semibold text-sm md:text-base text-[#14110F]">{f.q}</span>
+                <span className="shrink-0 h-7 w-7 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] transition-transform group-open:rotate-90">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </summary>
+              <div className="px-5 pb-4 -mt-1 text-sm text-[#57534E] leading-relaxed">{f.r}</div>
+            </details>
+          ))}
+        </div>
+        <div className="mt-7 text-center">
+          <Link href="/site/faq" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+            Toutes les questions fréquentes <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+{/* ── CTA ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-24">
         <Reveal>
         <div className="rounded-[32px] bg-[#14110F] text-white px-6 md:px-16 py-16 md:py-20 text-center relative overflow-hidden">
