@@ -72,7 +72,9 @@ export default async function SiteHome() {
             </div>
             <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
               Former les métiers de bouche avec l’exigence du{' '}
-              <span className="italic bg-gradient-to-r from-[#195144] to-[#2F9A72] bg-clip-text text-transparent">geste juste</span>.
+              {/* inline-block + marges compensées : le clip du dégradé englobe
+                  les jambages et le débord de l'italique au lieu de les couper */}
+              <span className="italic inline-block bg-gradient-to-r from-[#195144] to-[#2F9A72] bg-clip-text text-transparent px-2 -mx-2 pb-3 -mb-3">geste juste</span>.
             </h1>
             <p className="mt-7 text-lg md:text-xl text-[#57534E] max-w-xl leading-relaxed">
               Du recrutement à la rentabilité, on est à vos côtés : ouverture avec la POEI, montée en compétence
