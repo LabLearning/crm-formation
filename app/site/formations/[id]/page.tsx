@@ -102,37 +102,27 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }} />
       <section className="relative overflow-hidden border-b border-[#195144]/10">
         <div className="absolute inset-0 -z-10 bg-[#195144]" />
-        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.96) 45%, rgba(18,63,52,0.9) 100%)' }} />
+        {/* La photo en fond opacité, comme avant — le hero reste sobre */}
+        <img src={photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.92) 45%, rgba(18,63,52,0.75) 100%)' }} />
         <div className="absolute inset-0 -z-10 opacity-[0.15]" style={{ background: 'radial-gradient(60% 80% at 80% 0%, #6366F1 0%, transparent 60%)' }} />
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
-          <div className="lg:col-span-7">
-            <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
-              <ArrowLeft className="h-4 w-4" /> Toutes les formations
-            </Link>
-            {f.categorie && <div className="mt-6"><span className="ll-kicker ll-kicker--light">{f.categorie}</span></div>}
-            <h1 className="mt-2 ll-display text-3xl md:text-[48px] leading-[1.02] text-balance text-white">{titreFormation(f.intitule)}</h1>
-            {f.sous_titre && <p className="mt-4 text-lg md:text-xl text-white/75 max-w-2xl">{f.sous_titre}</p>}
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              {f.duree_heures ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Clock className="h-4 w-4" />{f.duree_heures} heures</span> : null}
-              {f.duree_jours ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Calendar className="h-4 w-4" />{f.duree_jours} jour{f.duree_jours > 1 ? 's' : ''}</span> : null}
-              {f.modalite ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Monitor className="h-4 w-4" />{MODALITE[f.modalite] || f.modalite}</span> : null}
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
-            </div>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white">
+          <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Toutes les formations
+          </Link>
+          {f.categorie && <div className="mt-6"><span className="ll-kicker ll-kicker--light">{f.categorie}</span></div>}
+          <h1 className="mt-2 ll-display text-3xl md:text-[52px] leading-[1.02] text-balance text-white max-w-3xl">{titreFormation(f.intitule)}</h1>
+          {f.sous_titre && <p className="mt-4 text-lg md:text-xl text-white/75 max-w-2xl">{f.sous_titre}</p>}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {f.duree_heures ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Clock className="h-4 w-4" />{f.duree_heures} heures</span> : null}
+            {f.duree_jours ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Calendar className="h-4 w-4" />{f.duree_jours} jour{f.duree_jours > 1 ? 's' : ''}</span> : null}
+            {f.modalite ? <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><Monitor className="h-4 w-4" />{MODALITE[f.modalite] || f.modalite}</span> : null}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-sm"><ShieldCheck className="h-4 w-4" />Certifié Qualiopi</span>
           </div>
-          {/* La photo de la formation, en carte visible — plus un filigrane */}
-          {(photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img) && (
-            <div className="hidden lg:block lg:col-span-5 mt-8 lg:mt-6">
-              <div className="relative rounded-[28px] overflow-hidden ring-1 ring-white/20 shadow-2xl shadow-black/30 aspect-[3/2] rotate-1">
-                <img src={photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img || ''} alt=""
-                  className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-5 md:px-8 py-14 grid lg:grid-cols-3 gap-10">
+      <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 grid lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-5">
           {f.objectifs.length > 0 && (
             <section className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
@@ -208,7 +198,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
         </aside>
       </div>
       {(sessionsRealisees > 0 || f.nombre_apprenants_total || f.taux_satisfaction != null || f.taux_reussite != null) && (
-        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-4">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pb-4">
           <div className="rounded-2xl bg-[#195144]/5 border border-[#195144]/15 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Indicateurs de résultats</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -234,7 +224,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
         </div>
       )}
       {f.date_derniere_maj && (
-        <div className="max-w-4xl mx-auto px-5 md:px-8 pb-10">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 pb-10">
           <p className="text-xs text-[#A8A29E]">
             {f.date_conception ? `Programme conçu le ${new Date(f.date_conception).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · ` : ''}
             mis à jour le {new Date(f.date_derniere_maj).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
