@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X, ArrowRight, ChevronDown } from './icons'
-import { BRANCHES_BASE } from '@/lib/branches'
+import { Menu, X, ArrowRight, ChevronDown, GraduationCap, Banknote } from './icons'
+import { BRANCHES } from './branches'
 
 /**
  * Navigation du site : le logo ramène à l'accueil (pas d'entrée « Accueil »
@@ -63,18 +63,39 @@ export function SiteNav() {
             </Link>
             {dropdown && (
               <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3">
-                <div className="w-[340px] rounded-2xl bg-white ring-1 ring-black/5 shadow-xl shadow-black/10 p-2">
-                  {BRANCHES_BASE.map((b) => (
-                    <Link key={b.slug} href={`/site/branches/${b.slug}`} onClick={() => setDropdown(false)}
-                      className="block px-4 py-2.5 rounded-xl hover:bg-[#195144]/5 transition-colors">
-                      <span className="block text-sm font-semibold text-[#14110F]">{b.label}</span>
-                      <span className="block text-xs text-[#78716C] mt-0.5">{b.tagline}</span>
-                    </Link>
-                  ))}
-                  <div className="mt-1 pt-1 border-t border-[#F0EEE9]">
+                <div className="w-[560px] rounded-3xl bg-white ring-1 ring-black/5 shadow-2xl shadow-black/15 p-3">
+                  {/* Un métier par carte : photo vignette teintée + icône + texte */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {BRANCHES.map((b) => (
+                      <Link key={b.slug} href={`/site/branches/${b.slug}`} onClick={() => setDropdown(false)}
+                        className="group/item flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#FAFAF9] transition-colors">
+                        <span className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden ring-1 ring-black/5">
+                          <img loading="lazy" src={`/site/metiers/${b.img}.webp`} alt=""
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover/item:scale-110" />
+                          <span className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${b.from}66, transparent 70%)` }} />
+                          <span className="absolute bottom-1 left-1 h-5 w-5 rounded-md bg-white/85 backdrop-blur-sm flex items-center justify-center" style={{ color: b.from }}>
+                            <b.Icon className="h-3 w-3" />
+                          </span>
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#14110F] leading-snug">{b.label}</span>
+                          <span className="block text-xs text-[#78716C] mt-0.5 truncate">{b.tagline}</span>
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-[#F0EEE9] grid grid-cols-2 gap-1.5">
                     <Link href="/site/formations" onClick={() => setDropdown(false)}
-                      className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold text-[#195144] hover:bg-[#195144]/5 transition-colors">
-                      Toutes nos formations <ArrowRight className="h-4 w-4" />
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#195144] hover:bg-[#195144]/5 transition-colors">
+                      <span className="h-8 w-8 rounded-lg bg-[#195144]/8 flex items-center justify-center shrink-0"><GraduationCap className="h-4 w-4" /></span>
+                      Toutes nos formations
+                      <ArrowRight className="h-4 w-4 ml-auto" />
+                    </Link>
+                    <Link href="/site/financements" onClick={() => setDropdown(false)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#195144] hover:bg-[#195144]/5 transition-colors">
+                      <span className="h-8 w-8 rounded-lg bg-[#195144]/8 flex items-center justify-center shrink-0"><Banknote className="h-4 w-4" /></span>
+                      Faire financer
+                      <ArrowRight className="h-4 w-4 ml-auto" />
                     </Link>
                   </div>
                 </div>
@@ -118,12 +139,16 @@ export function SiteNav() {
               Toutes nos formations
               <ArrowRight className="h-4 w-4" />
             </Link>
-            {BRANCHES_BASE.map((b) => (
+            {BRANCHES.map((b) => (
               <Link key={b.slug} href={`/site/branches/${b.slug}`} onClick={() => setOpen(false)}
-                className={`flex items-center justify-between pl-6 pr-3 py-2.5 rounded-2xl text-sm transition-colors ${
+                className={`flex items-center gap-3 pl-4 pr-3 py-2 rounded-2xl text-sm transition-colors ${
                   pathname.startsWith(`/site/branches/${b.slug}`) ? 'bg-[#195144]/8 text-[#195144] font-medium' : 'text-[#57534E] hover:bg-black/[0.03]'
                 }`}>
-                {b.label}
+                <span className="relative h-9 w-9 shrink-0 rounded-lg overflow-hidden ring-1 ring-black/5">
+                  <img loading="lazy" src={`/site/metiers/${b.img}.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <span className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${b.from}55, transparent 70%)` }} />
+                </span>
+                <span className="flex-1">{b.label}</span>
                 <ArrowRight className="h-3.5 w-3.5 opacity-30" />
               </Link>
             ))}
