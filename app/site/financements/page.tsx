@@ -2,8 +2,13 @@ import Link from 'next/link'
 import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen, UserCheck } from '../icons'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
+import { createServiceRoleClient } from '@/lib/supabase/server'
+import { SimulateurPriseEnCharge } from './SimulateurPriseEnCharge'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Financements — Lab Learning' }
+
+const ORG = process.env.PUBLIC_SITE_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
 
 const DISPOSITIFS = [
   {
@@ -45,7 +50,15 @@ const ETAPES = [
   { Icon: GraduationCap, t: 'On forme et on certifie', d: 'Évaluation des acquis et attestation en fin de parcours.' },
 ]
 
-export default function SiteFinancements() {
+export default async function SiteFinancements() {
+  // Fiches publiées avec leur branche : la matière du simulateur.
+  const supabase = await createServiceRoleClient()
+  const { data: formationsSimu } = await supabase.from('formations')
+    .select('id, intitule, duree_heures, duree_jours, branches')
+    .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true)
+    .not('branches', 'is', null)
+    .order('nombre_apprenants_total', { ascending: false, nullsFirst: false })
+
   return (
     <>
       <section className="relative overflow-hidden">
@@ -59,6 +72,30 @@ export default function SiteFinancements() {
             De l’ouverture avec la POEI à la formation continue de vos équipes, nos formations sont éligibles
             aux principaux dispositifs. On vous accompagne de bout en bout dans le montage du dossier.
           </p>
+        </div>
+      </section>
+
+      {/* ── SIMULATEUR : l'outil de conversion de la page ── */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
+        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+          <div className="lg:col-span-2">
+            <Kicker className="mb-4">Simulateur</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Estimez votre prise en charge en 1 minute</h2>
+            <p className="mt-4 text-[#57534E] leading-relaxed">
+              Votre SIRET, votre activité, la formation visée : on vous affiche le barème de prise en charge
+              de votre branche — et on vérifie ensuite le montant réel auprès de votre OPCO.
+            </p>
+            <ul className="mt-5 space-y-2">
+              {['Barèmes AKTO et OPCO EP réels', 'Estimation immédiate, sans engagement', 'Étude détaillée gratuite sous 24-48 h'].map((p) => (
+                <li key={p} className="flex items-center gap-2 text-sm text-[#44403C]">
+                  <span className="text-[#195144]"><FileCheck2 className="h-4 w-4" /></span>{p}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="lg:col-span-3">
+            <SimulateurPriseEnCharge formations={(formationsSimu || []) as any[]} />
+          </div>
         </div>
       </section>
 
