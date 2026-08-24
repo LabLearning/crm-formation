@@ -6,7 +6,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Pencil, Trash2, Save,
   UserCheck, Building2, Mail, Phone, Accessibility,
-  GraduationCap, Calendar, AlertTriangle, ClipboardPaste,, FolderPlus } from 'lucide-react'
+  GraduationCap, Calendar, AlertTriangle, ClipboardPaste, FolderPlus,
+} from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu, PaginationBar } from '@/components/ui'
 import {
   createApprenantAction, updateApprenantAction,
