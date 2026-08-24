@@ -99,20 +99,24 @@ export default async function SiteFormations() {
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-6 space-y-5">
         {PHARES.map((p, i) => (
           <Reveal key={p.titre} delay={(i % 2) * 80}>
-            <article className="rounded-3xl bg-white ring-1 ring-black/5 hover:ring-black/10 ll-lift overflow-hidden md:grid md:grid-cols-[300px,1fr]">
-              {/* La photo de la formation phare, pleine hauteur — l'image
-                  alterne gauche/droite pour rythmer la page. */}
-              <div className={`relative h-44 md:h-auto ${i % 2 === 1 ? 'md:order-2' : ''}`}>
-                <img loading="lazy" src={(p as any).photo} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                <span className="absolute top-4 left-4 h-11 w-11 rounded-2xl flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-sm"
-                  style={{ color: p.accent }}>
-                  <p.Icon className="h-5 w-5" />
-                </span>
+            <article className="group rounded-3xl bg-white ring-1 ring-black/5 hover:ring-black/10 ll-lift overflow-hidden">
+              {/* En-tête photo façon tuiles métier de l'accueil : image + teinte
+                  de la formation + scrim, titre posé sur la photo. */}
+              <div className="relative h-48 md:h-56 overflow-hidden">
+                <img loading="lazy" src={(p as any).photo} alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(155deg, ${p.accent}99 0%, ${p.accent}26 55%, transparent 100%)` }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute inset-0 p-5 md:p-7 flex flex-col justify-between">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm ring-1 ring-white/25 self-start">
+                    <p.Icon className="h-5 w-5 text-white" />
+                  </span>
+                  <h2 className="ll-display text-2xl md:text-3xl text-white drop-shadow-md text-balance">{p.titre}</h2>
+                </div>
               </div>
-              <div className="p-6 md:p-8">
+              <div className="p-6 md:p-8 md:pt-6">
                 <div className="flex-1 min-w-0">
-                  <h2 className="ll-display text-xl md:text-2xl text-[#14110F]">{p.titre}</h2>
-                  <p className="mt-2.5 text-[15px] text-[#57534E] leading-relaxed max-w-3xl">{p.texte}</p>
+                  <p className="text-[15px] text-[#57534E] leading-relaxed max-w-3xl">{p.texte}</p>
                   <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
                     {p.points.map((pt) => (
                       <li key={pt} className="flex items-center gap-1.5 text-sm text-[#44403C]">

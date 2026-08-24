@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: 'À propos — Lab Learning' }
 
 const VALEURS = [
-  { Icon: Target, img: '/site/illustrations/toque.webp', t: 'Le geste juste', d: "Une pédagogie ancrée dans le réel du métier : on apprend en faisant, sur les gestes qui comptent en production." },
-  { Icon: HeartHandshake, img: '/site/illustrations/partenariat.webp', t: 'Proximité', d: "Des formateurs praticiens qui interviennent au plus près de vos équipes et de vos contraintes d'exploitation." },
-  { Icon: Award, img: '/site/illustrations/certificat.webp', t: 'Exigence', d: "Des parcours structurés, évalués et certifiés Qualiopi, pensés pour une montée en compétence durable." },
+  { Icon: Target, t: 'Le geste juste', d: "Une pédagogie ancrée dans le réel du métier : on apprend en faisant, sur les gestes qui comptent en production." },
+  { Icon: HeartHandshake, t: 'Proximité', d: "Des formateurs praticiens qui interviennent au plus près de vos équipes et de vos contraintes d'exploitation." },
+  { Icon: Award, t: 'Exigence', d: "Des parcours structurés, évalués et certifiés Qualiopi, pensés pour une montée en compétence durable." },
 ]
 
 export default async function SiteAPropos() {
@@ -67,8 +67,7 @@ export default async function SiteAPropos() {
         <div className="grid md:grid-cols-3 gap-4">
           {VALEURS.map((v) => (
             <div key={v.t} className="group rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-lg hover:shadow-black/5 hover:border-[#195144]/25 ll-lift">
-              <img loading="lazy" src={v.img} alt="" aria-hidden="true"
-                className="h-24 w-24 object-contain mb-4 transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-2" />
+              <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4"><v.Icon className="h-5 w-5 text-[#195144]" /></span>
               <div className="font-heading font-semibold text-lg text-[#14110F]">{v.t}</div>
               <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{v.d}</p>
             </div>
