@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Plus, Search, Building2, User, Pencil, Trash2, Mail, Phone, MapPin } from 'lucide-react'
+import { Plus, Search, Building2, User, Pencil, Trash2, Mail, Phone, MapPin, FolderPlus } from 'lucide-react'
 import { Button, Badge, Modal, useToast, RowMenu, PaginationBar } from '@/components/ui'
 import { ClientForm } from './ClientForm'
 import { deleteClientAction } from './actions'
@@ -85,9 +86,16 @@ export function ClientsList({ clients, users = [], franchises = [], canAssign = 
             {new Intl.NumberFormat('fr-FR').format(total)} client{total > 1 ? 's' : ''} enregistré{total > 1 ? 's' : ''}
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
-          Nouveau client
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Le circuit standard : le dossier complet crée client + apprenants + session */}
+          <Link href="/dashboard/dossiers/nouveau"
+            className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
+            <FolderPlus className="h-4 w-4" /> Nouveau dossier
+          </Link>
+          <Button variant="secondary" onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>
+            Client seul
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

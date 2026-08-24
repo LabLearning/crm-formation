@@ -6,8 +6,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Pencil, Trash2, Save,
   UserCheck, Building2, Mail, Phone, Accessibility,
-  GraduationCap, Calendar, AlertTriangle, ClipboardPaste,
-} from 'lucide-react'
+  GraduationCap, Calendar, AlertTriangle, ClipboardPaste,, FolderPlus } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu, PaginationBar } from '@/components/ui'
 import {
   createApprenantAction, updateApprenantAction,
@@ -95,8 +94,12 @@ export function ApprenantsList({ apprenants, clients, sessions, inscriptions, to
           <p className="text-surface-500 mt-1 text-sm">{new Intl.NumberFormat('fr-FR').format(total)} apprenant{total > 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/dashboard/dossiers/nouveau"
+            className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
+            <FolderPlus className="h-4 w-4" /> Nouveau dossier
+          </Link>
           <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<ClipboardPaste className="h-4 w-4" />}>Importer depuis un texte</Button>
-          <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Nouvel apprenant</Button>
+          <Button variant="secondary" onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Apprenant seul</Button>
         </div>
       </div>
 
