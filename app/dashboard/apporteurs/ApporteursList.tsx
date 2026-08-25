@@ -36,7 +36,11 @@ function ApporteurForm({ apporteur, onDone }: { apporteur?: ApporteurAffaires; o
     const result = apporteur
       ? await updateApporteurAction(apporteur.id, fd)
       : await createApporteurAction(fd)
-    if (result.success) { toast('success', apporteur ? 'Mis à jour' : 'Apporteur créé'); onDone() }
+    if (result.success) {
+      toast('success', apporteur ? 'Mis à jour' : "Apporteur créé — invitation envoyée pour créer son compte")
+      if ((result as any).warning) toast('error', (result as any).warning)
+      onDone()
+    }
     else if (result.errors) setErrors(result.errors)
     else toast('error', result.error || 'Erreur')
     setIsLoading(false)
