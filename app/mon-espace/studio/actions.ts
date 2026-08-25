@@ -116,7 +116,7 @@ export async function genererDocumentBrandeAction(
         model: 'gpt-4o',
         temperature: 0.3,
         text: { format: { type: 'json_object' } },
-        instructions: `Tu prépares des documents de formation professionnels en FRANÇAIS pour des restaurants et métiers de bouche. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null}]}. Contenu clair, opérationnel, fidèle aux sources. Tableaux pour les plans/plannings, listes pour les consignes. 8 sections maximum.`,
+        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables : titres courts et percutants, sous-titre qui situe l'usage, phrases nettes, vocabulaire métier exact. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null}]}. Règles de composition : commence par une courte section d'introduction (1-2 paragraphes) qui pose le contexte et l'objectif ; utilise des TABLEAUX (colonnes/lignes) pour tout ce qui est planning, fréquences, responsabilités ou relevés ; des LISTES pour les consignes et points de contrôle ; chaque titre de section est une action ou un thème clair (jamais « Section 1 »). Contenu fidèle aux sources, sans rien inventer ; complète seulement la mise en forme. 4 à 8 sections.`,
         input: [{ role: 'user', content: contenuUser }],
       }),
     })
@@ -150,6 +150,13 @@ export async function genererDocumentBrandeAction(
   try {
     const { renderToBuffer } = await import('@react-pdf/renderer')
     const { DocumentBrandePDF } = await import('@/lib/pdf/document-brande-pdf')
+    // Logo Lab Learning (variante sombre) pour le footer
+    let labLogoUrl: string | null = null
+    try {
+      const { data: org } = await supabase.from('organizations').select('*').eq('id', orgId).single()
+      const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
+      labLogoUrl = ((await withDocumentLogo(supabase, org)) as any)?.logo_url || null
+    } catch { /* footer texte en repli */ }
     const buffer = await renderToBuffer(createElement(DocumentBrandePDF, {
       doc: structure,
       franchiseNom: marqueNom,
@@ -157,6 +164,7 @@ export async function genererDocumentBrandeAction(
       couleur, couleur2,
       formateurNom: `${context.formateur.prenom || ''} ${context.formateur.nom || ''}`.trim() || null,
       dateStr: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      labLogoUrl,
     }) as any)
 
     const slug = String(structure.titre).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
