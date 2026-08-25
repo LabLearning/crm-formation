@@ -36,6 +36,7 @@ export const createLeadSchema = z.object({
   est_qualiopi: boolChamp().optional(),
   est_organisme_formation: boolChamp().optional(),
   franchise_id: z.string().uuid().optional().or(z.literal('')),
+  apporteur_id: z.string().uuid().optional().or(z.literal('')),
   adresse: z.string().optional(),
   code_postal: z.string().optional(),
   ville: z.string().optional(),

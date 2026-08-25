@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState } from 'react'
 import {
   Plus, Pencil, Trash2, Euro, Percent,
@@ -127,9 +129,9 @@ export function ApporteursList({ apporteurs }: ApporteursListProps) {
                   <Handshake className="h-4 w-4 text-surface-600" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-surface-900">
+                  <Link href={`/dashboard/apporteurs/${a.id}`} className="text-sm font-semibold text-surface-900 hover:text-brand-600 transition-colors">
                     {a.prenom} {a.nom}
-                  </div>
+                  </Link>
                   {a.raison_sociale && (
                     <div className="text-xs text-surface-500">{a.raison_sociale}</div>
                   )}

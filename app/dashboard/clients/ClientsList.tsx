@@ -17,6 +17,7 @@ interface ClientsListProps {
   clients: Client[]
   users?: OrgUser[]
   franchises?: { id: string; nom: string }[]
+  apporteurs?: { id: string; label: string }[]
   canAssign?: boolean
   total: number
   page: number
@@ -25,7 +26,7 @@ interface ClientsListProps {
   initialType: string
 }
 
-export function ClientsList({ clients, users = [], franchises = [], canAssign = false, total, page, perPage, initialSearch, initialType }: ClientsListProps) {
+export function ClientsList({ clients, users = [], franchises = [], apporteurs = [], canAssign = false, total, page, perPage, initialSearch, initialType }: ClientsListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -226,13 +227,13 @@ export function ClientsList({ clients, users = [], franchises = [], canAssign = 
 
       {/* Create Modal */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau client" size="lg">
-        <ClientForm users={users} franchises={franchises} canAssign={canAssign} onSuccess={() => { setCreateOpen(false); toast('success', 'Client créé') }} onCancel={() => setCreateOpen(false)} />
+        <ClientForm users={users} franchises={franchises} apporteurs={apporteurs} canAssign={canAssign} onSuccess={() => { setCreateOpen(false); toast('success', 'Client créé') }} onCancel={() => setCreateOpen(false)} />
       </Modal>
 
       {/* Edit Modal */}
       <Modal isOpen={!!editClient} onClose={() => setEditClient(null)} title="Modifier le client" size="lg">
         {editClient && (
-          <ClientForm client={editClient} users={users} franchises={franchises} canAssign={canAssign} onSuccess={() => { setEditClient(null); toast('success', 'Client mis à jour') }} onCancel={() => setEditClient(null)} />
+          <ClientForm client={editClient} users={users} franchises={franchises} apporteurs={apporteurs} canAssign={canAssign} onSuccess={() => { setEditClient(null); toast('success', 'Client mis à jour') }} onCancel={() => setEditClient(null)} />
         )}
       </Modal>
     </div>

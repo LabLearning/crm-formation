@@ -17,6 +17,7 @@ interface ClientFormProps {
   users?: { id: string; first_name: string | null; last_name: string | null }[]
   canAssign?: boolean
   franchises?: { id: string; nom: string }[]
+  apporteurs?: { id: string; label: string }[]
 }
 
 const typeOptions = Object.entries(CLIENT_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }))
@@ -29,7 +30,7 @@ const tailleOptions = [
   { value: 'GE', label: 'Grande entreprise (5000+)' },
 ]
 
-export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign = false, franchises = [] }: ClientFormProps) {
+export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign = false, franchises = [], apporteurs = [] }: ClientFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [clientType, setClientType] = useState(client?.type || 'entreprise')
   // Rattachement à un réseau de franchise (repris du lead à la conversion, éditable ici)
@@ -244,6 +245,15 @@ export function ClientForm({ client, onSuccess, onCancel, users = [], canAssign 
             <Select id="taille_entreprise" name="taille_entreprise" label="Taille" options={tailleOptions} value={tailleEntreprise} onChange={(e) => setTailleEntreprise(e.target.value)} />
             <Input id="effectif_libelle" name="effectif_libelle" label="Effectif" value={effectifLibelle} onChange={(e) => setEffectifLibelle(e.target.value)} placeholder="Ex: 10 à 19 salariés" />
           </div>
+
+          {/* Apporteur d'affaires à l'origine du client (commissions) */}
+          {apporteurs.length > 0 && (
+            <Select
+              id="apporteur_id" name="apporteur_id" label="Apporteur d'affaires"
+              options={[{ value: '', label: '— Aucun —' }, ...apporteurs.map((a) => ({ value: a.id, label: a.label }))]}
+              defaultValue={(client as any)?.apporteur_id || ''}
+            />
+          )}
 
           {/* Rattachement à un réseau de franchise (établissement multi-sites) */}
           {franchises.length > 0 && (

@@ -89,7 +89,19 @@ export default async function ClientsPage({
     .eq('is_active', true)
     .order('nom')
 
-  const [{ data: clients, count }, { data: users }, { data: franchises }] = await Promise.all([clientsQuery, usersPromise, franchisesPromise])
+  const apporteursPromise = supabase
+    .from('apporteurs_affaires')
+    .select('id, type, raison_sociale, nom, prenom, nom_enseigne')
+    .eq('organization_id', session.organization.id)
+    .eq('is_active', true)
+    .order('raison_sociale')
+
+  const [{ data: clients, count }, { data: users }, { data: franchises }, { data: apporteurs }] = await Promise.all([clientsQuery, usersPromise, franchisesPromise, apporteursPromise])
+
+  const apporteursOptions = (apporteurs || []).map((a: any) => ({
+    id: a.id,
+    label: a.nom_enseigne || a.raison_sociale || `${a.prenom || ''} ${a.nom || ''}`.trim() || 'Apporteur',
+  }))
 
   // Attache le nom de l'assigné pour l'affichage
   const userMap = new Map((users || []).map((u: any) => [u.id, u]))
@@ -106,6 +118,7 @@ export default async function ClientsPage({
         clients={clientsWithAssignee as Client[]}
         users={(users || []) as any[]}
         franchises={(franchises || []) as any[]}
+        apporteurs={apporteursOptions}
         canAssign={canAssign}
         total={count || 0}
         page={page}
