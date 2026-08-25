@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Trash2, Users, FileText, GraduationCap, Pencil, Mail, Send, CheckCircle2, XCircle, Paperclip, Euro, Download } from 'lucide-react'
 import { Button, Badge, Modal, Input, Select, useToast, SearchSelect, RowMenu } from '@/components/ui'
-import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction } from '../actions'
+import { addPoeiCandidatAction, removePoeiCandidatAction, updateCandidatStatutAction, updatePoeiCandidatAction, sendAttestationsEntreeAction, generateDevisPerCandidatAction, generateDevisPrevisionnelPoeiAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction, savePoeiEmailTemplateAction, declarerAbandonCandidatAction } from '../actions'
 import { PoeiSection } from './PoeiSection'
 import { CANDIDAT_STATUT_LABELS, TYPE_CONTRAT_LABELS } from '@/lib/types/poei'
 import type { PoeiCandidat } from '@/lib/types/poei'
@@ -163,6 +163,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [editCand, setEditCand] = useState<PoeiCandidat | null>(null)
+  const [abandonCand, setAbandonCand] = useState<PoeiCandidat | null>(null)
   // Aperçu email avant envoi
   const [previewTargets, setPreviewTargets] = useState<PoeiCandidat[] | null>(null)
   const [subject, setSubject] = useState('')
@@ -222,8 +223,25 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
   }
 
   async function handleStatut(id: string, statut: string) {
+    // L'abandon n'est pas un simple statut : il porte date, heures et prorata
+    // de facturation — il passe par sa propre modal.
+    if (statut === 'abandonne') { setAbandonCand(candidats.find((x) => x.id === id) || null); return }
     const r = await updateCandidatStatutAction(id, poeiId, statut)
     if (r.success) router.refresh(); else toast('error', r.error || 'Erreur')
+  }
+
+  async function handleAbandon(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!abandonCand) return
+    setSaving(true)
+    const r = await declarerAbandonCandidatAction(abandonCand.id, poeiId, new FormData(e.currentTarget))
+    setSaving(false)
+    if (r.success) {
+      toast('success', 'Abandon déclaré — facture recalculée au prorata')
+      if ((r as any).warning) toast('error', (r as any).warning)
+      setAbandonCand(null)
+      router.refresh()
+    } else toast('error', r.error || 'Erreur')
   }
 
   async function handleRemove(id: string) {
@@ -264,6 +282,12 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                   <div className="text-xs text-surface-500 truncate">
                     {[c.apprenant?.email, c.poste_vise, c.type_contrat ? TYPE_CONTRAT_LABELS[c.type_contrat] : null, c.identifiant_ft ? `FT ${c.identifiant_ft}` : null, (c as any).numero_convention ? `Conv. ${(c as any).numero_convention}` : null, (c as any).entretien ? `Entretien${(c as any).entretien_date ? ` du ${new Date((c as any).entretien_date).toLocaleDateString('fr-FR')}` : ' mené'}` : null].filter(Boolean).join(' · ') || '—'}
                   </div>
+                  {c.statut === 'abandonne' && (c as any).date_abandon && (
+                    <div className="text-xs text-red-600 mt-0.5">
+                      Abandon le {new Date((c as any).date_abandon).toLocaleDateString('fr-FR')}
+                      {(c as any).heures_effectuees != null ? ` · ${Number((c as any).heures_effectuees).toLocaleString('fr-FR')} h effectuées (facturées au prorata)` : ''}
+                    </div>
+                  )}
                 </button>
 
                 <select value={c.statut} onChange={(e) => handleStatut(c.id, e.target.value)} className="text-xs rounded-lg border border-surface-200 px-2 py-1 bg-white shrink-0" title="Statut du candidat">
@@ -277,6 +301,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                   width={260}
                   items={[
                     { label: 'Modifier les informations', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditCand(c) },
+                    { label: 'Déclarer un abandon', icon: <XCircle className="h-4 w-4" />, onClick: () => setAbandonCand(c) },
                     { label: 'Retirer du projet', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleRemove(c.id), danger: true },
                   ]}
                 />
@@ -587,6 +612,37 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
       </Modal>
 
       {/* Édition */}
+      {/* Déclaration d'abandon : date + heures réelles → facture au prorata */}
+      <Modal isOpen={!!abandonCand} onClose={() => setAbandonCand(null)}
+        title={`Déclarer l'abandon — ${abandonCand ? nom(abandonCand) : ''}`}
+        description="Les heures réellement effectuées servent à la facturation au prorata (modèle France Travail)."
+        size="md">
+        {abandonCand && (
+          <form onSubmit={handleAbandon} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Input id="date_abandon" name="date_abandon" type="date" label="Date de l'abandon *"
+                defaultValue={new Date().toISOString().slice(0, 10)} required />
+              <Input id="heures_effectuees" name="heures_effectuees" type="number" step="0.5" min="0"
+                label="Heures réellement effectuées *" placeholder="ex. 120" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-800 mb-1.5">Motif</label>
+              <textarea name="motif_abandon" rows={3} className="input-base resize-none"
+                placeholder="Ce que le candidat ou l'employeur a indiqué — alimente l'analyse des causes d'abandon (PROC-12)" />
+            </div>
+            <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-800">
+              La facture du candidat sera recalculée : heures effectuées × taux horaire du projet.
+              Si elle est déjà émise, un avoir sera à prévoir. Le questionnaire d&apos;abandon est préparé
+              automatiquement pour l&apos;apprenant.
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setAbandonCand(null)}>Annuler</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Déclaration…' : "Déclarer l'abandon"}</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
       <Modal isOpen={!!editCand} onClose={() => setEditCand(null)} title="Modifier le candidat" size="md">
         {editCand && (
           <form onSubmit={handleEdit} className="space-y-4">

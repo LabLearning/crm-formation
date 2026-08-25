@@ -687,20 +687,37 @@ export async function generateFacturesPerCandidatPoeiAction(
     if ((ags || []).length === 1) agenceFtId = ags![0].id
   }
 
-  const { data: candidats } = await supabase
-    .from('poei_candidats')
-    .select('id, numero_engagement, apprenant:apprenants(nom, prenom)')
-    .eq('poei_id', poeiId).order('created_at', { ascending: true })
+  // Lecture résiliente : les colonnes d'abandon n'existent qu'après la
+  // migration 140 — sans elles, tout le monde est facturé plein temps.
+  let candidats: any[] | null = null
+  {
+    const r = await supabase.from('poei_candidats')
+      .select('id, numero_engagement, statut, heures_effectuees, date_abandon, apprenant:apprenants(nom, prenom)')
+      .eq('poei_id', poeiId).order('created_at', { ascending: true })
+    if (r.error) {
+      const r2 = await supabase.from('poei_candidats')
+        .select('id, numero_engagement, statut, apprenant:apprenants(nom, prenom)')
+        .eq('poei_id', poeiId).order('created_at', { ascending: true })
+      candidats = r2.data
+    } else candidats = r.data
+  }
   if (!candidats || candidats.length === 0) return { success: false, error: 'Aucun candidat à facturer' }
 
   const duree = Number(poei.duree_heures)
   const taux = Number(poei.montant_horaire)
-  const montantHt = Math.round(duree * taux * 100) / 100
   const formationNom = (poei as any).formation?.intitule || 'Formation POEI'
   const today = new Date().toISOString().slice(0, 10)
   const echeance = new Date(); echeance.setDate(echeance.getDate() + 60)
 
-  const applyLigneEtTotaux = async (factureId: string, nom: string) => {
+  // Heures facturables d'un candidat : le prorata du temps passé en cas
+  // d'abandon (modèle France Travail), la durée du projet sinon.
+  const heuresDe = (c: any) =>
+    c.statut === 'abandonne' && c.heures_effectuees != null ? Number(c.heures_effectuees) : duree
+
+  const applyLigneEtTotaux = async (factureId: string, nom: string, c: any) => {
+    const heures = heuresDe(c)
+    const montantHt = Math.round(heures * taux * 100) / 100
+    const abandon = c.statut === 'abandonne' && c.heures_effectuees != null
     await supabase.from('facture_lignes').delete().eq('facture_id', factureId)
     // Présentation identique à la facture France Travail : une ligne au nom du
     // participant, le temps de présence en sous-titre, quantité 1 et le montant
@@ -708,7 +725,7 @@ export async function generateFacturesPerCandidatPoeiAction(
     await supabase.from('facture_lignes').insert({
       facture_id: factureId,
       designation: nom,
-      description: `Temps de présence : ${duree.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`,
+      description: `Temps de présence : ${heures.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}${abandon ? ` sur ${duree.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} prévues — abandon${c.date_abandon ? ` le ${new Date(c.date_abandon).toLocaleDateString('fr-FR')}` : ''}, facturation au prorata` : ''}`,
       quantite: 1, unite: 'forfait', prix_unitaire_ht: montantHt, montant_ht: montantHt, position: 0,
     })
     // TVA 0 → HT = TTC = restant
@@ -748,7 +765,7 @@ export async function generateFacturesPerCandidatPoeiAction(
     if (existing) {
       // On ne retouche pas une facture déjà émise/envoyée/payée
       if (['emise', 'envoyee', 'payee_partiellement', 'payee'].includes(existing.status)) { skipped++; continue }
-      await applyLigneEtTotaux(existing.id, nom)
+      await applyLigneEtTotaux(existing.id, nom, c)
       updated++
       continue
     }
@@ -768,7 +785,7 @@ export async function generateFacturesPerCandidatPoeiAction(
       created_by: session.user.id,
     }).select('id').single()
     if (error || !fac) continue
-    await applyLigneEtTotaux(fac.id, nom)
+    await applyLigneEtTotaux(fac.id, nom, c)
     created++
   }
 
@@ -1427,4 +1444,126 @@ export async function refusePoeiInterventionAction(interventionId: string, motif
   revalidatePath('/mon-espace')
   revalidatePath(`/dashboard/poei/${iv.poei_id}`)
   return { success: true }
+}
+
+/**
+ * Déclare l'ABANDON d'un candidat POEI : statut, date, heures réellement
+ * effectuées et motif — puis recalcule sa facture au prorata du temps passé
+ * (modèle France Travail : on ne facture que les heures suivies). La facture
+ * n'est retouchée que tant qu'elle est en brouillon ; émise, on signale qu'un
+ * avoir ou une correction manuelle s'impose. Le questionnaire d'abandon
+ * (PROC-12) est préparé pour l'apprenant dans la foulée.
+ */
+export async function declarerAbandonCandidatAction(
+  candidatId: string,
+  poeiId: string,
+  formData: FormData,
+): Promise<ActionResult & { warning?: string }> {
+  const session = await getSession()
+  if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
+  const orgId = session.organization.id
+  const supabase = await createServiceRoleClient()
+
+  const dateAbandon = String(formData.get('date_abandon') || '').trim() || new Date().toISOString().slice(0, 10)
+  const heures = parseFloat(String(formData.get('heures_effectuees') || '').replace(',', '.'))
+  const motif = String(formData.get('motif_abandon') || '').trim() || null
+  if (!(heures >= 0)) return { success: false, error: 'Indiquez les heures réellement effectuées (0 accepté)' }
+
+  const { data: cand } = await supabase.from('poei_candidats')
+    .select('id, poei_id, apprenant_id, inscription_id, apprenant:apprenants(prenom, nom)')
+    .eq('id', candidatId).eq('organization_id', orgId).maybeSingle()
+  if (!cand || cand.poei_id !== poeiId) return { success: false, error: 'Candidat introuvable' }
+
+  const { data: poei } = await supabase.from('poei')
+    .select('id, session_id, duree_heures, montant_horaire')
+    .eq('id', poeiId).eq('organization_id', orgId).maybeSingle()
+  if (!poei) return { success: false, error: 'Projet introuvable' }
+  const dureeProjet = Number(poei.duree_heures) || 0
+  if (dureeProjet && heures > dureeProjet) {
+    return { success: false, error: `Les heures effectuées (${heures}) dépassent la durée du projet (${dureeProjet} h)` }
+  }
+
+  // 1. Le candidat
+  const { error: eCand } = await supabase.from('poei_candidats').update({
+    statut: 'abandonne',
+    date_abandon: dateAbandon,
+    heures_effectuees: heures,
+    motif_abandon: motif,
+  }).eq('id', candidatId)
+  if (eCand) {
+    if ((eCand as any).code === '42703') return { success: false, error: 'Colonnes absentes : appliquer la migration 140_abandon_candidat_poei.sql' }
+    return { success: false, error: eCand.message }
+  }
+
+  // 2. L'inscription liée suit le même statut
+  if (cand.inscription_id) {
+    await supabase.from('inscriptions').update({
+      status: 'abandonne', date_annulation: dateAbandon, motif_annulation: motif || 'Abandon en cours de POEI',
+    }).eq('id', cand.inscription_id)
+  }
+
+  // 3. La facture du candidat, au prorata
+  let warning: string | undefined
+  const taux = Number(poei.montant_horaire) || 0
+  if (taux > 0) {
+    const montantProrata = Math.round(heures * taux * 100) / 100
+    const marker = `[POEI-FACT:${poeiId}:${candidatId}]`
+    const { data: fac } = await supabase.from('factures')
+      .select('id, status').eq('organization_id', orgId).ilike('notes_internes', `%${marker}%`).maybeSingle()
+    if (fac) {
+      if (fac.status === 'brouillon') {
+        const nom = `${(cand as any).apprenant?.prenom || ''} ${(cand as any).apprenant?.nom || ''}`.trim() || 'Candidat'
+        await supabase.from('facture_lignes').delete().eq('facture_id', fac.id)
+        await supabase.from('facture_lignes').insert({
+          facture_id: fac.id,
+          designation: nom,
+          description: `Temps de présence : ${heures.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}${dureeProjet ? ` sur ${dureeProjet.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} prévues` : ''} — abandon le ${new Date(dateAbandon).toLocaleDateString('fr-FR')}, facturation au prorata`,
+          quantite: 1, unite: 'forfait', prix_unitaire_ht: montantProrata, montant_ht: montantProrata, position: 0,
+        })
+        await supabase.from('factures').update({
+          montant_ht: montantProrata, montant_tva: 0, montant_ttc: montantProrata, montant_restant: montantProrata,
+        }).eq('id', fac.id)
+      } else {
+        warning = 'La facture de ce candidat est déjà émise : prévoir un avoir ou une correction manuelle.'
+      }
+    }
+  }
+
+  // 4. Le questionnaire d'abandon (PROC-12), préparé pour l'apprenant
+  try {
+    if (cand.apprenant_id && poei.session_id) {
+      const { data: qcm } = await supabase.from('qcm')
+        .select('id').eq('organization_id', orgId).eq('type', 'abandon').limit(1).maybeSingle()
+      if (qcm) {
+        let { data: jalon } = await supabase.from('qcm_sessions')
+          .select('id').eq('session_id', poei.session_id).eq('qcm_id', qcm.id).limit(1).maybeSingle()
+        if (!jalon) {
+          const { data: cree } = await supabase.from('qcm_sessions')
+            .insert({ organization_id: orgId, qcm_id: qcm.id, session_id: poei.session_id })
+            .select('id').single()
+          jalon = cree
+        }
+        if (jalon) {
+          const { data: deja } = await supabase.from('qcm_reponses')
+            .select('id').eq('qcm_session_id', jalon.id).eq('apprenant_id', cand.apprenant_id).limit(1).maybeSingle()
+          if (!deja) {
+            const { randomBytes } = await import('crypto')
+            await supabase.from('qcm_reponses').insert({
+              organization_id: orgId, qcm_id: qcm.id, qcm_session_id: jalon.id,
+              session_id: poei.session_id, apprenant_id: cand.apprenant_id,
+              token: randomBytes(24).toString('hex'), is_complete: false,
+            })
+          }
+        }
+      }
+    }
+  } catch { /* le questionnaire est un plus, pas un bloqueur */ }
+
+  await logAudit({
+    action: 'abandon_candidat_poei', entity_type: 'poei_candidat', entity_id: candidatId,
+    details: { poei_id: poeiId, date_abandon: dateAbandon, heures_effectuees: heures, motif },
+  })
+  revalidatePath(`/dashboard/poei/${poeiId}`)
+  revalidatePath('/dashboard/factures')
+  return { success: true, warning }
 }
