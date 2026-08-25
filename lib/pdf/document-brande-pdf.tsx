@@ -9,13 +9,22 @@ import { SURFACE_200, SURFACE_400, SURFACE_500, SURFACE_700, SURFACE_900 } from 
  * numérotées, listes à puces carrées, tableaux zébrés, footer avec le logo
  * Lab Learning et la pagination. Structure générique produite par l'IA.
  */
+export interface EtapeProcess {
+  numero?: number
+  titre: string
+  details?: string[]
+  /** Point de contrôle critique : badge rouge sur la carte d'étape. */
+  ccp?: string | null
+}
+
 export interface SectionBrandee {
   titre?: string
-  type?: 'paragraphes' | 'liste' | 'tableau'
+  type?: 'paragraphes' | 'liste' | 'tableau' | 'etapes'
   paragraphes?: string[]
   items?: string[]
   colonnes?: string[]
   lignes?: string[][]
+  etapes?: EtapeProcess[]
 }
 
 export interface DocumentBrande {
@@ -28,6 +37,14 @@ const s = StyleSheet.create({
   page: { paddingTop: 0, paddingBottom: 58, paddingHorizontal: 0, fontSize: 9.5, fontFamily: 'Satoshi', color: SURFACE_900 },
 })
 
+/** Luminance perçue 0-1 : décide de l'encre (blanc ou sombre) sur la couleur. */
+function luminance(hexCouleur: string): number {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hexCouleur)
+  if (!m) return 0
+  const n = parseInt(m[1], 16)
+  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255
+}
+
 /** Assombrit légèrement une couleur hex — simule la profondeur du bandeau. */
 function fonce(hexCouleur: string, facteur = 0.72): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hexCouleur)
@@ -39,7 +56,7 @@ function fonce(hexCouleur: string, facteur = 0.72): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
 
-export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur2, formateurNom, dateStr, labLogoUrl }: {
+export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur2, formateurNom, dateStr, labLogoUrl, paysage }: {
   doc: DocumentBrande
   franchiseNom: string
   logoUrl?: string | null
@@ -49,14 +66,24 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
   dateStr: string
   /** Logo Lab Learning (variante sombre) pour le footer. */
   labLogoUrl?: string | null
+  /** Orientation héritée du document source (organigrammes, plannings larges). */
+  paysage?: boolean
 }) {
   const accent = couleur || '#195144'
   const accent2 = couleur2 || fonce(accent, 1.25)
-  const sombre = fonce(accent)
+  const claire = luminance(accent) > 0.6
+  // Marque claire (jaune, orange vif…) : bandeaux encrés sombre, fonds plus
+  // profonds pour garder du blanc lisible sur les en-têtes de tableaux.
+  const sombre = fonce(accent, claire ? 0.42 : 0.72)
+  const encre = claire ? '#1C1917' : '#FFFFFF'
+  const CCP_ROUGE = '#B91C1C'
+  const sections = (doc.sections || []).filter((sec) =>
+    (sec.paragraphes || []).length || (sec.items || []).length ||
+    (sec.colonnes && sec.lignes && sec.lignes.length) || (sec.etapes || []).length)
 
   return (
     <Document>
-      <Page size="A4" style={s.page}>
+      <Page size="A4" orientation={paysage ? 'landscape' : 'portrait'} style={s.page}>
         {/* ── Couverture : double bande de couleur, logo en carte flottante ── */}
         <View style={{ backgroundColor: sombre, paddingHorizontal: 40, paddingTop: 30, paddingBottom: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -69,12 +96,12 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
         <View style={{ backgroundColor: accent, paddingHorizontal: 40, paddingTop: 18, paddingBottom: 24 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1, paddingRight: 18 }}>
-              <Text style={{ fontSize: 9, fontWeight: 700, color: '#FFFFFF', opacity: 0.85, textTransform: 'uppercase', letterSpacing: 1.8 }}>
+              <Text style={{ fontSize: 9, fontWeight: 700, color: encre, opacity: 0.85, textTransform: 'uppercase', letterSpacing: 1.8 }}>
                 {franchiseNom}
               </Text>
-              <Text style={{ fontSize: 23, fontWeight: 900, color: '#FFFFFF', marginTop: 7, lineHeight: 1.12 }}>{doc.titre}</Text>
+              <Text style={{ fontSize: 23, fontWeight: 900, color: encre, marginTop: 7, lineHeight: 1.12 }}>{doc.titre}</Text>
               {doc.sous_titre ? (
-                <Text style={{ fontSize: 10, color: '#FFFFFF', opacity: 0.85, marginTop: 6, lineHeight: 1.4 }}>{doc.sous_titre}</Text>
+                <Text style={{ fontSize: 10, color: encre, opacity: 0.85, marginTop: 6, lineHeight: 1.4 }}>{doc.sous_titre}</Text>
               ) : null}
             </View>
             {logoUrl ? (
@@ -91,12 +118,12 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
 
         {/* ── Corps ── */}
         <View style={{ paddingHorizontal: 40, paddingTop: 22 }}>
-          {doc.sections.map((sec, i) => (
+          {sections.map((sec, i) => (
             <View key={i} wrap={false} style={{ marginBottom: 16 }}>
               {sec.titre ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: accent, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
-                    <Text style={{ fontSize: 10, fontWeight: 900, color: '#FFFFFF' }}>{i + 1}</Text>
+                    <Text style={{ fontSize: 10, fontWeight: 900, color: encre }}>{i + 1}</Text>
                   </View>
                   <Text style={{ fontSize: 12.5, fontWeight: 700, color: SURFACE_900 }}>{sec.titre}</Text>
                   <View style={{ flex: 1, height: 0.75, backgroundColor: SURFACE_200, marginLeft: 10 }} />
@@ -130,6 +157,29 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
                       {(sec.colonnes || []).map((_, k) => (
                         <Text key={k} style={{ flex: 1, fontSize: 8.5, lineHeight: 1.45, color: SURFACE_700, paddingVertical: 6, paddingHorizontal: 8 }}>{l[k] || ''}</Text>
                       ))}
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+
+              {(sec.etapes || []).length > 0 ? (
+                <View>
+                  {(sec.etapes || []).map((e, j) => (
+                    <View key={j} wrap={false} style={{ flexDirection: 'row', borderWidth: 0.75, borderColor: SURFACE_200, borderRadius: 8, padding: 9, marginBottom: 6, backgroundColor: j % 2 ? '#FAFAF9' : '#FFFFFF' }}>
+                      <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: sombre, alignItems: 'center', justifyContent: 'center', marginRight: 8, marginTop: 1 }}>
+                        <Text style={{ fontSize: 9, fontWeight: 900, color: '#FFFFFF' }}>{e.numero ?? j + 1}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10, fontWeight: 700, color: SURFACE_900 }}>{e.titre}</Text>
+                        {(e.details || []).map((d, k) => (
+                          <Text key={k} style={{ fontSize: 8.8, lineHeight: 1.5, color: SURFACE_700, marginTop: 1.5 }}>{d}</Text>
+                        ))}
+                        {e.ccp ? (
+                          <View style={{ alignSelf: 'flex-start', backgroundColor: CCP_ROUGE, borderRadius: 4, paddingVertical: 2.5, paddingHorizontal: 6, marginTop: 4 }}>
+                            <Text style={{ fontSize: 7.5, fontWeight: 700, color: '#FFFFFF' }}>CCP — {e.ccp}</Text>
+                          </View>
+                        ) : null}
+                      </View>
                     </View>
                   ))}
                 </View>

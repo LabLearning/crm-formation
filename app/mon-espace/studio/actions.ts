@@ -11,6 +11,28 @@ import { getSession } from '@/lib/auth'
  * franchise (couleurs déduites du logo à la première génération puis
  * mémorisées). Le PDF est archivé dans les documents de la session.
  */
+
+/** Remplace les glyphes absents de la police PDF (≥, ≤, ✓…) — sinon ils
+ *  sortent en lettres parasites (« e », « d ») dans le document. */
+function assainirTexte(v: string): string {
+  return v
+    .replace(/≥/g, '>=').replace(/≤/g, '<=')
+    .replace(/[✓✔☑]/g, '').replace(/[✗✘]/g, 'X')
+    .replace(/[−–—]/g, (m) => (m === '−' ? '-' : m))
+    .replace(/\u00a0/g, ' ')
+    .trim()
+}
+function assainirStructure(x: any): any {
+  if (typeof x === 'string') return assainirTexte(x)
+  if (Array.isArray(x)) return x.map(assainirStructure)
+  if (x && typeof x === 'object') {
+    const o: any = {}
+    for (const k of Object.keys(x)) o[k] = assainirStructure(x[k])
+    return o
+  }
+  return x
+}
+
 export async function genererDocumentBrandeAction(
   formData: FormData,
 ): Promise<{ success: boolean; error?: string; data?: { documentId: string } }> {
@@ -116,7 +138,7 @@ export async function genererDocumentBrandeAction(
         model: 'gpt-4o',
         temperature: 0.3,
         text: { format: { type: 'json_object' } },
-        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables : titres courts et percutants, sous-titre qui situe l'usage, phrases nettes, vocabulaire métier exact. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null}]}. Règles de composition : commence par une courte section d'introduction (1-2 paragraphes) qui pose le contexte et l'objectif ; utilise des TABLEAUX (colonnes/lignes) pour tout ce qui est planning, fréquences, responsabilités ou relevés ; des LISTES pour les consignes et points de contrôle ; chaque titre de section est une action ou un thème clair (jamais « Section 1 »). Contenu fidèle aux sources, sans rien inventer ; complète seulement la mise en forme. 4 à 8 sections.`,
+        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "orientation": "portrait"|"paysage", "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null, "etapes": [{"numero": number, "titre": string, "details": string[], "ccp": string|null}]|null}]}. RÈGLES ABSOLUES : (1) reprends TOUT le contenu des sources, rien ne doit disparaître — chaque étape, chaque valeur, chaque consigne ; (2) un PROCESSUS séquentiel (réception -> stockage -> cuisson…) devient une section "etapes" : une étape par carte avec ses détails, et son point de contrôle critique dans "ccp" s'il y en a un ; s'il y a plusieurs filières, une section d'étapes PAR filière ; (3) les caractéristiques produits, plannings, fréquences deviennent des TABLEAUX ; les consignes et points de contrôle des LISTES ; (4) le TITRE est un vrai titre humain, jamais un nom de fichier ni des underscores ; (5) écris >= et <= (jamais les symboles), pas de caractères spéciaux décoratifs ; (6) titres de sections actifs et courts ; (7) "orientation" reprend celle du document source (une page large type organigramme ou planning -> "paysage", sinon "portrait"). 10 sections maximum.`,
         input: [{ role: 'user', content: contenuUser }],
       }),
     })
@@ -129,6 +151,7 @@ export async function genererDocumentBrandeAction(
     console.error('[studio ia]', e?.message)
     return { success: false, error: 'La génération IA a échoué — réessayez' }
   }
+  structure = assainirStructure(structure)
   if (!structure?.titre || !Array.isArray(structure.sections) || structure.sections.length === 0) {
     return { success: false, error: 'Le contenu généré est vide — précisez vos consignes' }
   }
@@ -165,6 +188,7 @@ export async function genererDocumentBrandeAction(
       formateurNom: `${context.formateur.prenom || ''} ${context.formateur.nom || ''}`.trim() || null,
       dateStr: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
       labLogoUrl,
+      paysage: structure.orientation === 'paysage',
     }) as any)
 
     const slug = String(structure.titre).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
