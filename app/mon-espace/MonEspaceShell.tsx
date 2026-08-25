@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck, Calendar,
   ListChecks, Star, Users, CheckSquare, Receipt, UserPlus, Building2,
-  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro, Route,
+  LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro, Route, Sparkles,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -31,6 +31,7 @@ const formateurNav: NavItem[] = [
   { label: 'Déroulé opérationnel', short: 'Déroulé', href: '/deroule', icon: Route },
   { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
   { label: 'Émargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
+  { label: 'Studio documents', short: 'Studio', href: '/studio', icon: Sparkles },
   { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
@@ -170,20 +171,34 @@ export function MonEspaceShell({ user, orgName, children, impersonatedBy }: { us
         {/* Desktop tab nav */}
         <div className="border-t border-surface-100">
           <div className="max-w-6xl mx-auto px-6">
-            <nav className="flex gap-1 -mb-px overflow-x-auto">
-              {nav.map((item) => (
-                <Link key={item.href} href={basePath + item.href}
-                  className={cn('flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                    isActive(item.href)
-                      ? 'border-b-2 text-[#195245]'
-                      : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
-                  )}
-                  style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              ))}
+            <nav className="flex items-center gap-1 -mb-px overflow-x-auto min-w-0">
+              {nav.map((item) => {
+                // Studio : pastille dégradé vert + Sparkles, la feature IA se voit
+                if (item.href === '/studio') {
+                  return (
+                    <Link key={item.href} href={basePath + item.href}
+                      className={cn('flex items-center gap-1.5 mx-1 my-1.5 px-4 py-1.5 rounded-full text-sm font-semibold text-white whitespace-nowrap',
+                        'bg-gradient-to-r from-[#195144] to-[#2F9A72] shadow-sm hover:opacity-90 transition-opacity',
+                        isActive(item.href) && 'ring-2 ring-[#195144]/25')}>
+                      <Sparkles className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  )
+                }
+                return (
+                  <Link key={item.href} href={basePath + item.href}
+                    className={cn('flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                      isActive(item.href)
+                        ? 'border-b-2 text-[#195245]'
+                        : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
+                    )}
+                    style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
             </nav>
           </div>
         </div>

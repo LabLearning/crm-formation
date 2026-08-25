@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Sparkles, Upload, Loader2, FileText, Download, X } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { genererDocumentBrandeAction } from './actions'
+import { genererDocumentBrandeAction } from '@/app/mon-espace/studio/actions'
 
 interface SessionRef { id: string; libelle: string; franchise: string | null }
 interface DocGenere { id: string; nom: string; created_at: string }
@@ -15,8 +15,7 @@ interface DocGenere { id: string; nom: string; created_at: string }
  * ce qu'il veut, et récupère un PDF propre aux couleurs de la franchise.
  * (Sparkles assumé : c'est une vraie feature IA.)
  */
-export function StudioClient({ token, sessions, generes }: {
-  token: string
+export function StudioClient({ sessions, generes }: {
   sessions: SessionRef[]
   generes: DocGenere[]
 }) {
@@ -46,7 +45,7 @@ export function StudioClient({ token, sessions, generes }: {
     fd.set('session_id', sessionId)
     fd.delete('fichiers')
     for (const f of fichiers) fd.append('fichiers', f)
-    const r = await genererDocumentBrandeAction(token, fd)
+    const r = await genererDocumentBrandeAction(fd)
     setEnCours(false)
     if (r.success && r.data?.documentId) {
       toast('success', 'Document généré et rangé dans la session')
@@ -126,7 +125,7 @@ export function StudioClient({ token, sessions, generes }: {
         </div>
 
         {dernierDoc && (
-          <a href={`/api/documents/${dernierDoc}/download?token=${token}`} target="_blank" rel="noopener noreferrer"
+          <a href={`/api/documents/${dernierDoc}/download`} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold py-3 hover:bg-emerald-100 transition-colors">
             <Download className="h-4 w-4" /> Télécharger le document généré
           </a>
@@ -140,7 +139,7 @@ export function StudioClient({ token, sessions, generes }: {
           </div>
           <div className="divide-y divide-surface-50">
             {generes.map((d) => (
-              <a key={d.id} href={`/api/documents/${d.id}/download?token=${token}`} target="_blank" rel="noopener noreferrer"
+              <a key={d.id} href={`/api/documents/${d.id}/download`} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
                 <FileText className="h-4 w-4 text-brand-500 shrink-0" />
                 <span className="flex-1 text-sm text-surface-900 truncate">{d.nom}</span>

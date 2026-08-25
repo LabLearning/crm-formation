@@ -3,22 +3,25 @@
 import { createElement } from 'react'
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { getPortalContext } from '@/lib/portal-auth'
+import { getSession } from '@/lib/auth'
 
 /**
- * Studio formateur : à partir de photos/notes prises en mission, l'IA
- * structure un document propre, mis en page aux couleurs de la franchise
- * (couleurs déduites du logo à la première génération puis mémorisées).
- * Le PDF est archivé dans les documents de la session.
+ * Studio formateur (espace connecté) : à partir de photos/notes prises en
+ * mission, l'IA structure un document propre, mis en page aux couleurs de la
+ * franchise (couleurs déduites du logo à la première génération puis
+ * mémorisées). Le PDF est archivé dans les documents de la session.
  */
 export async function genererDocumentBrandeAction(
-  token: string,
   formData: FormData,
 ): Promise<{ success: boolean; error?: string; data?: { documentId: string } }> {
-  const context = await getPortalContext(token)
-  if (!context || context.type !== 'formateur') return { success: false, error: 'Accès non autorisé' }
+  const session = await getSession()
+  if (session.user.role !== 'formateur') return { success: false, error: 'Accès non autorisé' }
   const supabase = await createServiceRoleClient()
-  const orgId = (context as any).organization?.id
+  const orgId = session.organization.id
+  const { data: formateurRow } = await supabase.from('formateurs')
+    .select('id, prenom, nom').eq('user_id', session.user.id).maybeSingle()
+  if (!formateurRow) return { success: false, error: 'Fiche formateur introuvable' }
+  const context = { formateur: formateurRow }
 
   const sessionId = String(formData.get('session_id') || '').trim()
   const titreDemande = String(formData.get('titre') || '').trim()
@@ -176,7 +179,7 @@ export async function genererDocumentBrandeAction(
     }).select('id').single()
     if (eDoc) throw new Error(eDoc.message)
 
-    revalidatePath(`/portail/${token}/studio`)
+    revalidatePath('/mon-espace/studio')
     return { success: true, data: { documentId: docRow.id } }
   } catch (e: any) {
     console.error('[studio pdf]', e?.message)

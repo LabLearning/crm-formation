@@ -1,29 +1,27 @@
-import { getPortalContext } from '@/lib/portal-auth'
+import { resolveFormateur } from '../_formateur/guard'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { ToastProvider } from '@/components/ui'
-import { StudioClient } from './StudioClient'
+import { StudioClient } from '@/components/formateur/StudioClient'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Studio documents du formateur : ses sessions, ses générations passées —
- * l'IA met en page ses notes de mission aux couleurs de la franchise.
+ * Studio documents du formateur (espace connecté) : photos/notes de mission
+ * structurées par l'IA en PDF brandé aux couleurs de la franchise.
  */
-export default async function PortalStudioPage({ params }: { params: { token: string } }) {
-  const context = await getPortalContext(params.token)
-  if (!context || context.type !== 'formateur') redirect('/portail/expired')
-
+export default async function EspaceStudioPage() {
+  const { formateurId } = await resolveFormateur()
   const supabase = await createServiceRoleClient()
+
   const [{ data: sessions }, { data: generes }] = await Promise.all([
     supabase.from('sessions')
       .select('id, reference, date_debut, status, client:client_id(raison_sociale, nom_commercial, franchise:franchise_id(nom)), formation:formation_id(intitule)')
-      .eq('formateur_id', context.formateur.id)
+      .eq('formateur_id', formateurId)
       .order('date_debut', { ascending: false })
       .limit(40),
     supabase.from('documents')
       .select('id, nom, created_at, session_id')
-      .eq('formateur_id', context.formateur.id)
+      .eq('formateur_id', formateurId)
       .eq('origine', 'studio_formateur')
       .order('created_at', { ascending: false })
       .limit(20),
@@ -32,7 +30,6 @@ export default async function PortalStudioPage({ params }: { params: { token: st
   return (
     <ToastProvider>
       <StudioClient
-        token={params.token}
         sessions={(sessions || []).map((s: any) => ({
           id: s.id,
           libelle: [
