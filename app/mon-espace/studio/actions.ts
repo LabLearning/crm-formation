@@ -196,7 +196,6 @@ export async function genererDocumentBrandeAction(
         body: JSON.stringify({
           model: 'claude-sonnet-5',
           max_tokens: 16000,
-          temperature: 0.1,
           system: PROMPT_STUDIO,
           messages: [
             { role: 'user', content: blocs },
