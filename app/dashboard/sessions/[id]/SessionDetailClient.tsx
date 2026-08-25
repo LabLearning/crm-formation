@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ApprenantHoverCard } from '@/components/apprenants/ApprenantHoverCard'
 import {
   ArrowLeft, Calendar, MapPin, Clock, Users, UserCheck, CheckCircle2,
   XCircle, ChevronDown, ChevronUp, LogIn, LogOut, FileText, Plus, Loader2,
@@ -903,7 +904,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         {a?.id
-                          ? <Link href={`/dashboard/apprenants/${a.id}`} className="text-sm font-medium text-surface-900 hover:text-brand-600 transition-colors">{a?.prenom} {a?.nom}</Link>
+                          ? <ApprenantHoverCard apprenant={a}><Link href={`/dashboard/apprenants/${a.id}`} className="text-sm font-medium text-surface-900 hover:text-brand-600 transition-colors">{a?.prenom} {a?.nom}</Link></ApprenantHoverCard>
                           : <span className="text-sm font-medium text-surface-900">{a?.prenom} {a?.nom}</span>}
                         <Badge variant={ins.status === 'confirme' ? 'success' : ins.status === 'inscrit' ? 'info' : 'default'}>
                           {ins.status === 'confirme' ? 'Confirmé' : ins.status === 'inscrit' ? 'Inscrit' : ins.status}

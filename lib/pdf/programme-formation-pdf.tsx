@@ -193,7 +193,9 @@ function DureePill({ children }: { children: React.ReactNode }) {
 const MODALITE = (m: string) => m === 'presentiel' ? 'Présentiel' : m === 'distanciel' ? 'Distanciel' : 'Mixte'
 
 export function ProgrammeFormationPDF({ formation, org, session }: ProgrammeFormationProps) {
-  const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  // Date du document = dernière mise à jour du programme, jamais la date de téléchargement.
+  const dateDoc = new Date(formation.date_derniere_maj || formation.updated_at || formation.created_at || Date.now())
+    .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   const jours: any[] = session && Array.isArray(session.horaires_jours) ? session.horaires_jours : []
   const sessionLieu = session ? [session.lieu, session.adresse, [session.code_postal, session.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ') : ''
   const weeks = parseProgramme(formation.programme_detaille || '')
@@ -206,7 +208,7 @@ export function ProgrammeFormationPDF({ formation, org, session }: ProgrammeForm
   return (
     <Document title={`Programme — ${formation.intitule || ''}`} author={org?.name || 'Lab Learning'}>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Programme de formation" numero={formation.reference || ''} date={today} org={org} />
+        <PdfDocHeader docTitle="Programme de formation" numero={formation.reference || ''} date={dateDoc} org={org} />
 
         {/* Traçabilité du programme : conception, dernière révision, version. */}
         {(() => {
