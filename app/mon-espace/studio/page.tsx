@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/ui'
 import { StudioClient } from '@/components/formateur/StudioClient'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 /**
  * Studio documents du formateur (espace connecté) : photos/notes de mission

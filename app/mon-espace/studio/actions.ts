@@ -33,15 +33,24 @@ function assainirStructure(x: any): any {
   return x
 }
 
-/** Orientation de la 1re page d'un PDF : lit MediaBox (+ /Rotate) dans les octets. */
-function pdfEstPaysage(buf: Buffer): boolean | null {
-  const tete = buf.toString('latin1', 0, Math.min(buf.length, 200000))
-  const mb = /\/MediaBox\s*\[\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(tete)
-  if (!mb) return null
-  let large = parseFloat(mb[3]) - parseFloat(mb[1]) > parseFloat(mb[4]) - parseFloat(mb[2])
-  const rot = /\/Rotate\s+(90|270)/.exec(tete)
-  if (rot) large = !large
-  return large
+/** Orientation de la 1re page d'un PDF — pdf-lib d'abord, sinon vote
+ *  majoritaire sur tous les MediaBox du fichier. */
+async function pdfEstPaysage(buf: Buffer): Promise<boolean | null> {
+  try {
+    const { PDFDocument } = await import('pdf-lib')
+    const docPdf = await PDFDocument.load(buf, { ignoreEncryption: true, updateMetadata: false })
+    const page = docPdf.getPage(0)
+    const { width, height } = page.getSize()
+    return page.getRotation().angle % 180 === 90 ? height > width : width > height
+  } catch { /* PDF exotique : heuristique octets ci-dessous */ }
+  const texte = buf.toString('latin1')
+  let larges = 0, hauts = 0
+  for (const m of texte.matchAll(/\/MediaBox\s*\[\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\]/g)) {
+    if (parseFloat(m[3]) - parseFloat(m[1]) > parseFloat(m[4]) - parseFloat(m[2])) larges++
+    else hauts++
+  }
+  if (!larges && !hauts) return null
+  return larges >= hauts
 }
 
 /** Orientation d'une image PNG/JPEG : lit les dimensions dans les en-têtes. */
@@ -119,7 +128,7 @@ export async function genererDocumentBrandeAction(
       if (sourcePaysage === null) sourcePaysage = imageEstPaysage(buf, f.type)
     } else if (f.type === 'application/pdf' || nomBas.endsWith('.pdf')) {
       pdfs.push({ nom: f.name, b64: buf.toString('base64') })
-      if (sourcePaysage === null) sourcePaysage = pdfEstPaysage(buf)
+      if (sourcePaysage === null) sourcePaysage = await pdfEstPaysage(buf)
     } else if (nomBas.endsWith('.docx')) {
       try {
         const mammoth = await import('mammoth')
@@ -141,8 +150,11 @@ export async function genererDocumentBrandeAction(
     }
   }
 
+  const claudeKey = process.env.ANTHROPIC_API_KEY
   const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return { success: false, error: 'Clé IA non configurée (OPENAI_API_KEY)' }
+  if (!claudeKey && !apiKey) return { success: false, error: 'Clé IA non configurée' }
+
+  const PROMPT_STUDIO = `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "orientation": "portrait"|"paysage", "etiquettes": string[], "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "icone": "temperature"|"controle"|"alerte"|"cuisson"|"froid"|"temps"|"nettoyage"|"securite"|"stockage"|"produit"|"personnel"|"document"|"reception"|"service", "ton": "normal"|"attention"|"critique", "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null, "etapes": [{"numero": number, "titre": string, "details": string[], "ccp": string|null}]|null}]}. RÈGLES ABSOLUES : (1) tu REPRODUIS le document source INTÉGRALEMENT : même ordre, mêmes sections, chaque étape, chaque valeur, chaque consigne, chaque ligne de liste — tu ne résumes JAMAIS, tu ne condenses JAMAIS, tu ne fusionnes pas des sections ; un document de 15 pages donne un JSON long, c'est normal ; (2) un PROCESSUS séquentiel (réception -> stockage -> cuisson…) devient une section "etapes" : une étape par carte avec ses détails, et son point de contrôle critique dans "ccp" s'il y en a un ; s'il y a plusieurs filières, une section d'étapes PAR filière ; (3) les caractéristiques produits, plannings, fréquences deviennent des TABLEAUX ; les consignes et points de contrôle des LISTES ; (4) le TITRE est un vrai titre humain, jamais un nom de fichier ni des underscores ; (5) écris >= et <= (jamais les symboles), pas de caractères spéciaux décoratifs ; (6) titres de sections actifs et courts ; (7) "etiquettes" : 2-3 mots-clés de couverture (ex. HACCP, Hygiène, Service) ; "icone" : la plus proche du sujet de la section ; "ton" : "critique" pour les sections de points de contrôle critiques ou dangers, "attention" pour les vigilances, "normal" sinon ; (8) "orientation" reprend celle du document source (une page large type organigramme ou planning -> "paysage", sinon "portrait"). ; (9) travaille PAGE PAR PAGE : chaque page, chaque bloc, chaque fiche produit du source doit se retrouver dans le JSON — une fiche produit (ingrédients, nutrition, références, EAN…) devient un TABLEAU à 2 colonnes Champ/Valeur, une par produit ; (10) une coche ou une puce du source = UN item distinct de "items", jamais deux consignes fusionnées, et les consignes ne vont JAMAIS dans "paragraphes" ; avant de répondre, relis le source page par page et vérifie que rien ne manque. Autant de sections que le document source en contient — aucune limite.`
 
   const doitDeduireCouleurs = !franchise?.couleur_primaire
   const aSources = images.length + pdfs.length + textes.length > 0
@@ -167,24 +179,56 @@ export async function genererDocumentBrandeAction(
 
   let structure: any
   try {
-    // API Responses : elle seule accepte les PDF en entrée directe.
-    const r = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        temperature: 0.15,
-        max_output_tokens: 16000,
-        text: { format: { type: 'json_object' } },
-        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "orientation": "portrait"|"paysage", "etiquettes": string[], "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "icone": "temperature"|"controle"|"alerte"|"cuisson"|"froid"|"temps"|"nettoyage"|"securite"|"stockage"|"produit"|"personnel"|"document"|"reception"|"service", "ton": "normal"|"attention"|"critique", "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null, "etapes": [{"numero": number, "titre": string, "details": string[], "ccp": string|null}]|null}]}. RÈGLES ABSOLUES : (1) tu REPRODUIS le document source INTÉGRALEMENT : même ordre, mêmes sections, chaque étape, chaque valeur, chaque consigne, chaque ligne de liste — tu ne résumes JAMAIS, tu ne condenses JAMAIS, tu ne fusionnes pas des sections ; un document de 15 pages donne un JSON long, c'est normal ; (2) un PROCESSUS séquentiel (réception -> stockage -> cuisson…) devient une section "etapes" : une étape par carte avec ses détails, et son point de contrôle critique dans "ccp" s'il y en a un ; s'il y a plusieurs filières, une section d'étapes PAR filière ; (3) les caractéristiques produits, plannings, fréquences deviennent des TABLEAUX ; les consignes et points de contrôle des LISTES ; (4) le TITRE est un vrai titre humain, jamais un nom de fichier ni des underscores ; (5) écris >= et <= (jamais les symboles), pas de caractères spéciaux décoratifs ; (6) titres de sections actifs et courts ; (7) "etiquettes" : 2-3 mots-clés de couverture (ex. HACCP, Hygiène, Service) ; "icone" : la plus proche du sujet de la section ; "ton" : "critique" pour les sections de points de contrôle critiques ou dangers, "attention" pour les vigilances, "normal" sinon ; (8) "orientation" reprend celle du document source (une page large type organigramme ou planning -> "paysage", sinon "portrait"). Autant de sections que le document source en contient — aucune limite.`,
-        input: [{ role: 'user', content: contenuUser }],
-      }),
-    })
-    if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 300)}`)
-    const j = await r.json()
-    const texteSortie = j.output_text
-      || (j.output || []).flatMap((o: any) => (o.content || [])).map((c: any) => c.text).filter(Boolean).join('')
-    structure = JSON.parse(texteSortie || '{}')
+    if (claudeKey) {
+      // Claude : lecture native des PDF, fidélité de reproduction supérieure.
+      const blocs: any[] = [{ type: 'text', text: (contenuUser[0] as any).text }]
+      for (const pdf of pdfs) blocs.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdf.b64 } })
+      for (const img of images) {
+        const m = /^data:(image\/[a-z]+);base64,(.+)$/.exec(img)
+        if (m) blocs.push({ type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } })
+      }
+      if (doitDeduireCouleurs && franchise?.logo_url) {
+        blocs.push({ type: 'image', source: { type: 'url', url: franchise.logo_url } })
+      }
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-5',
+          max_tokens: 16000,
+          temperature: 0.1,
+          system: PROMPT_STUDIO,
+          messages: [
+            { role: 'user', content: blocs },
+            // Préremplissage : force une sortie JSON pure, sans préambule.
+            { role: 'assistant', content: '{' },
+          ],
+        }),
+      })
+      if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 300)}`)
+      const j = await r.json()
+      const texteSortie = '{' + (j.content || []).map((c: any) => c.text).filter(Boolean).join('')
+      structure = JSON.parse(texteSortie)
+    } else {
+      // Secours : API Responses OpenAI (seule à accepter les PDF chez eux).
+      const r = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          temperature: 0.15,
+          max_output_tokens: 16000,
+          text: { format: { type: 'json_object' } },
+          instructions: PROMPT_STUDIO,
+          input: [{ role: 'user', content: contenuUser }],
+        }),
+      })
+      if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 300)}`)
+      const j = await r.json()
+      const texteSortie = j.output_text
+        || (j.output || []).flatMap((o: any) => (o.content || [])).map((c: any) => c.text).filter(Boolean).join('')
+      structure = JSON.parse(texteSortie || '{}')
+    }
   } catch (e: any) {
     console.error('[studio ia]', e?.message)
     return { success: false, error: 'La génération IA a échoué — réessayez' }
