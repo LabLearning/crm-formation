@@ -6,8 +6,9 @@ import { getSession } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import type { ActionResult } from '@/lib/types'
 
-export const TYPES_INCIDENT = ['comportement', 'absence', 'accident', 'materiel', 'securite', 'hygiene', 'organisation', 'autre'] as const
-export const GRAVITES = ['mineur', 'modere', 'majeur', 'critique'] as const
+// Un module 'use server' ne peut exporter QUE des fonctions async : exporter
+// une constante ici casse l'appel de l'action côté client (spinner infini).
+// Les listes de types/gravités vivent dans components/poei/PoeiIncidents.tsx.
 
 /**
  * Résout le formateur du compte connecté, et vérifie qu'il intervient bien sur
