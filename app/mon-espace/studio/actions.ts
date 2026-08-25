@@ -197,17 +197,17 @@ export async function genererDocumentBrandeAction(
           model: 'claude-opus-5',
           max_tokens: 16000,
           system: PROMPT_STUDIO,
-          messages: [
-            { role: 'user', content: blocs },
-            // Préremplissage : force une sortie JSON pure, sans préambule.
-            { role: 'assistant', content: '{' },
-          ],
+          messages: [{ role: 'user', content: blocs }],
         }),
       })
       if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 300)}`)
       const j = await r.json()
-      const texteSortie = '{' + (j.content || []).map((c: any) => c.text).filter(Boolean).join('')
-      structure = JSON.parse(texteSortie)
+      const brut = (j.content || []).map((c: any) => c.text).filter(Boolean).join('')
+      // Le modèle peut entourer le JSON de texte ou de clôtures markdown.
+      const debut = brut.indexOf('{')
+      const fin = brut.lastIndexOf('}')
+      if (debut === -1 || fin <= debut) throw new Error('Sortie sans JSON')
+      structure = JSON.parse(brut.slice(debut, fin + 1))
     } else {
       // Secours : API Responses OpenAI (seule à accepter les PDF chez eux).
       const r = await fetch('https://api.openai.com/v1/responses', {
