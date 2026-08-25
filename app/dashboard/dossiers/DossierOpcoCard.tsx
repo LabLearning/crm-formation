@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Send, CheckCircle2, XCircle, CreditCard, Wallet, Hash, Building2 } from 'lucide-react'
 import { Button, useToast } from '@/components/ui'
-import { updateDossierOpcoStatusAction, OPCO_WORKFLOW_LABELS, OPCO_WORKFLOW_COLORS, type OpcoWorkflowStatus } from './opco-actions'
+import { updateDossierOpcoStatusAction } from './opco-actions'
+import { OPCO_WORKFLOW_LABELS, OPCO_WORKFLOW_COLORS, type OpcoWorkflowStatus } from './opco-workflow'
 
 interface DossierOpcoCardProps {
   dossierId: string
