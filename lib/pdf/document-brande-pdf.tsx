@@ -211,9 +211,9 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               {(sec.etapes || []).length > 0 ? (
                 <View>
                   {(sec.etapes || []).map((e, j) => (
-                    <View key={j} wrap={false}>
+                    <View key={j} wrap={false} style={{ paddingTop: j > 0 ? 9 : 0 }}>
                     {j > 0 ? (
-                      <View style={{ alignItems: 'center', marginVertical: 1 }}>
+                      <View style={{ position: 'absolute', top: 1, left: 0, right: 0, alignItems: 'center' }}>
                         <Svg width={10} height={6} viewBox="0 0 10 6">
                           <Polygon points="0,0 10,0 5,6" fill="#C9C4B8" />
                         </Svg>
