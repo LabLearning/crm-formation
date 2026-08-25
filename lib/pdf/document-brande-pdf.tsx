@@ -153,7 +153,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
           {sections.map((sec, i) => (
             <View key={i} style={{ marginBottom: 16 }}>
               {sec.titre ? (
-                <View minPresenceAhead={70} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <View wrap={false} minPresenceAhead={85} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : NOIR, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                     <IconePdf nom={sec.icone} taille={13} couleur={sec.ton === 'critique' ? '#FFFFFF' : accentPop} />
                   </View>
@@ -167,31 +167,41 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
                 <Text key={j} style={{ fontSize: 9.5, lineHeight: 1.6, color: SURFACE_700, marginBottom: 5 }}>{p}</Text>
               ))}
 
-              {(sec.items || []).length > 0 ? (
-                <View style={{
-                  backgroundColor: sec.ton === 'critique' ? '#FEF2F2' : sec.ton === 'attention' ? '#FFFBEB' : CREME,
-                  borderRadius: 8, padding: 10, borderWidth: 0.75, borderColor: '#E4E0D6',
-                }}>
-                  {(sec.items || []).map((it, j) => (
-                    <View key={j} style={{ flexDirection: 'row', marginBottom: j === (sec.items || []).length - 1 ? 0 : 5 }}>
-                      <View style={{ width: 5.5, height: 5.5, borderRadius: 1.5, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : sec.ton === 'attention' ? '#D97706' : accent, marginTop: 3.5, marginRight: 7 }} />
-                      <Text style={{ flex: 1, fontSize: 9.5, lineHeight: 1.5, color: '#33373E' }}>{it}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
+              {(sec.items || []).length > 0 ? (() => {
+                const items = sec.items || []
+                const puceCouleur = sec.ton === 'critique' ? CCP_ROUGE : sec.ton === 'attention' ? '#D97706' : accent
+                const fond = sec.ton === 'critique' ? '#FEF2F2' : sec.ton === 'attention' ? '#FFFBEB' : CREME
+                // Beaucoup d'items courts (check-list) : deux colonnes équilibrées
+                const deuxColonnes = items.length >= 6 && items.every((it) => it.length <= 60)
+                const moitie = Math.ceil(items.length / 2)
+                const colonnes = deuxColonnes ? [items.slice(0, moitie), items.slice(moitie)] : [items]
+                return (
+                  <View minPresenceAhead={40} style={{ backgroundColor: fond, borderRadius: 8, padding: 10, borderWidth: 0.75, borderColor: '#E4E0D6', flexDirection: 'row' }}>
+                    {colonnes.map((col, c) => (
+                      <View key={c} style={{ flex: 1, paddingRight: c === 0 && deuxColonnes ? 10 : 0 }}>
+                        {col.map((it, j) => (
+                          <View key={j} style={{ flexDirection: 'row', marginBottom: j === col.length - 1 ? 0 : 5 }}>
+                            <View style={{ width: 5.5, height: 5.5, borderRadius: 1.5, backgroundColor: puceCouleur, marginTop: 3.5, marginRight: 7 }} />
+                            <Text style={{ flex: 1, fontSize: 9.5, lineHeight: 1.5, color: '#33373E' }}>{it}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                )
+              })() : null}
 
               {sec.colonnes && sec.lignes ? (
                 <View style={{ marginTop: 5, borderRadius: 8, overflow: 'hidden', borderWidth: 0.75, borderColor: '#E4E0D6' }}>
                   <View minPresenceAhead={50} style={{ flexDirection: 'row', backgroundColor: NOIR }}>
                     {sec.colonnes.map((c, j) => (
-                      <Text key={j} style={{ flex: 1, fontSize: 8.5, fontWeight: 700, color: accentPop, paddingVertical: 7, paddingHorizontal: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>{c}</Text>
+                      <Text key={j} style={{ flex: sec.colonnes!.length === 2 && j === 0 ? 1 : sec.colonnes!.length === 2 ? 2.4 : 1, fontSize: 8.5, fontWeight: 700, color: accentPop, paddingVertical: 7, paddingHorizontal: 9, textTransform: 'uppercase', letterSpacing: 0.5 }}>{c}</Text>
                     ))}
                   </View>
                   {sec.lignes.map((l, j) => (
-                    <View key={j} style={{ flexDirection: 'row', backgroundColor: j % 2 ? CREME : '#FFFFFF', borderTopWidth: 0.5, borderTopColor: '#E4E0D6' }}>
+                    <View key={j} wrap={false} style={{ flexDirection: 'row', backgroundColor: j % 2 ? CREME : '#FFFFFF', borderTopWidth: 0.5, borderTopColor: '#E4E0D6' }}>
                       {(sec.colonnes || []).map((_, k) => (
-                        <Text key={k} style={{ flex: 1, fontSize: 8.5, lineHeight: 1.45, color: '#33373E', paddingVertical: 6, paddingHorizontal: 8 }}>{l[k] || ''}</Text>
+                        <Text key={k} style={{ flex: (sec.colonnes || []).length === 2 && k === 0 ? 1 : (sec.colonnes || []).length === 2 ? 2.4 : 1, fontSize: 8.5, lineHeight: 1.45, color: '#33373E', paddingVertical: 6, paddingHorizontal: 9 }}>{l[k] || ''}</Text>
                       ))}
                     </View>
                   ))}
@@ -201,7 +211,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               {(sec.etapes || []).length > 0 ? (
                 <View>
                   {(sec.etapes || []).map((e, j) => (
-                    <React.Fragment key={j}>
+                    <View key={j} wrap={false}>
                     {j > 0 ? (
                       <View style={{ alignItems: 'center', marginVertical: 1 }}>
                         <Svg width={10} height={6} viewBox="0 0 10 6">
@@ -209,23 +219,23 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
                         </Svg>
                       </View>
                     ) : null}
-                    <View wrap={false} style={{ flexDirection: 'row', borderWidth: 0.75, borderColor: '#E4E0D6', borderRadius: 8, padding: 9, marginBottom: 4, backgroundColor: j % 2 ? CREME : '#FFFFFF' }}>
+                    <View style={{ flexDirection: 'row', borderWidth: 0.75, borderColor: '#E4E0D6', borderRadius: 8, padding: 9, marginBottom: 4, backgroundColor: j % 2 ? CREME : '#FFFFFF' }}>
                       <View style={{ width: 20, height: 20, borderRadius: 6, backgroundColor: NOIR, alignItems: 'center', justifyContent: 'center', marginRight: 8, marginTop: 1 }}>
                         <Text style={{ fontSize: 9, fontWeight: 900, color: accentPop }}>{e.numero ?? j + 1}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 10, fontWeight: 700, color: SURFACE_900 }}>{e.titre}</Text>
                         {(e.details || []).map((d, k) => (
-                          <Text key={k} style={{ fontSize: 8.8, lineHeight: 1.5, color: '#33373E', marginTop: 1.5 }}>{d}</Text>
+                          <Text key={k} style={{ fontSize: 8.8, lineHeight: 1.55, color: '#33373E', marginTop: 2 }}>{d}</Text>
                         ))}
                         {e.ccp ? (
                           <View style={{ alignSelf: 'flex-start', backgroundColor: CCP_ROUGE, borderRadius: 4, paddingVertical: 2.5, paddingHorizontal: 6, marginTop: 4 }}>
-                            <Text style={{ fontSize: 7.5, fontWeight: 700, color: '#FFFFFF' }}>CCP — {e.ccp}</Text>
+                            <Text style={{ fontSize: 7.5, fontWeight: 700, color: '#FFFFFF' }}>{`CCP — ${String(e.ccp).replace(/^CCP\s*(CRITIQUE)?\s*[:—–-]\s*/i, '')}`}</Text>
                           </View>
                         ) : null}
                       </View>
                     </View>
-                    </React.Fragment>
+                    </View>
                   ))}
                 </View>
               ) : null}
