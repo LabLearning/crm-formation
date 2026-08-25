@@ -302,6 +302,11 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
                   items={[
                     { label: 'Modifier les informations', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditCand(c) },
                     { label: 'Déclarer un abandon', icon: <XCircle className="h-4 w-4" />, onClick: () => setAbandonCand(c) },
+                    ...(c.statut === 'abandonne' && c.apprenant_id ? [{
+                      label: 'Attestation de sortie',
+                      icon: <FileDown className="h-4 w-4" />,
+                      onClick: () => window.open(`/api/pdf/attestation-sortie/${c.apprenant_id}?poei=${poeiId}&candidat=${c.id}`, '_blank'),
+                    }] : []),
                     { label: 'Retirer du projet', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleRemove(c.id), danger: true },
                   ]}
                 />
