@@ -186,24 +186,41 @@ export function PortalShell({ context, children }: PortalShellProps) {
             en dessous de xl pour que tous les onglets restent visibles */}
         <div className="border-t border-surface-100">
           <div className="max-w-6xl mx-auto px-6 overflow-x-auto">
-            <nav className="flex gap-1 -mb-px min-w-max">
-              {nav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={basePath + item.href}
-                  className={cn(
-                    'flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                    isActive(item.href)
-                      ? 'border-b-2 text-[#195144]'
-                      : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
-                  )}
-                  style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className="hidden xl:inline">{item.label}</span>
-                  <span className="xl:hidden">{item.short}</span>
-                </Link>
-              ))}
+            <nav className="flex items-center gap-1 -mb-px min-w-max">
+              {nav.map((item) => {
+                // L'onglet Studio est mis en avant : pastille dégradé vert + Sparkles
+                if (item.href === '/studio') {
+                  return (
+                    <Link key={item.href} href={basePath + item.href}
+                      className={cn(
+                        'flex items-center gap-1.5 mx-1 my-1.5 px-4 py-1.5 rounded-full text-sm font-semibold text-white whitespace-nowrap',
+                        'bg-gradient-to-r from-[#195144] to-[#2F9A72] shadow-sm hover:opacity-90 transition-opacity',
+                        isActive(item.href) && 'ring-2 ring-[#195144]/25',
+                      )}>
+                      <Sparkles className="h-4 w-4" />
+                      <span className="hidden xl:inline">{item.label}</span>
+                      <span className="xl:hidden">{item.short}</span>
+                    </Link>
+                  )
+                }
+                return (
+                  <Link
+                    key={item.href}
+                    href={basePath + item.href}
+                    className={cn(
+                      'flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                      isActive(item.href)
+                        ? 'border-b-2 text-[#195144]'
+                        : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
+                    )}
+                    style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span className="hidden xl:inline">{item.label}</span>
+                    <span className="xl:hidden">{item.short}</span>
+                  </Link>
+                )
+              })}
             </nav>
           </div>
         </div>
@@ -262,17 +279,24 @@ export function PortalShell({ context, children }: PortalShellProps) {
         <div className="grid" style={{ gridTemplateColumns: `repeat(${mobileCols}, minmax(0, 1fr))` }}>
           {primaryNav.map((item) => {
             const active = isActive(item.href)
+            const estStudio = item.href === '/studio'
             return (
               <Link
                 key={item.href}
                 href={basePath + item.href}
                 className="relative flex flex-col items-center justify-center gap-0.5 py-2.5 min-h-[56px] transition-all duration-200 active:scale-95"
               >
-                {active && (
+                {active && !estStudio && (
                   <span className="absolute top-0 left-3 right-3 h-[2px] rounded-full" style={{ backgroundColor: PORTAL_GREEN }} />
                 )}
-                <item.icon className="h-[22px] w-[22px] transition-colors" style={{ color: active ? PORTAL_GREEN : '#a8a29e' }} />
-                <span className="text-[10px] font-medium leading-none transition-colors" style={{ color: active ? PORTAL_GREEN : '#a8a29e' }}>
+                {estStudio ? (
+                  <span className="h-[26px] w-[26px] rounded-lg bg-gradient-to-br from-[#195144] to-[#2F9A72] flex items-center justify-center shadow-sm">
+                    <Sparkles className="h-[15px] w-[15px] text-white" />
+                  </span>
+                ) : (
+                  <item.icon className="h-[22px] w-[22px] transition-colors" style={{ color: active ? PORTAL_GREEN : '#a8a29e' }} />
+                )}
+                <span className="text-[10px] font-medium leading-none transition-colors" style={{ color: estStudio ? PORTAL_GREEN : active ? PORTAL_GREEN : '#a8a29e' }}>
                   {item.short}
                 </span>
               </Link>
