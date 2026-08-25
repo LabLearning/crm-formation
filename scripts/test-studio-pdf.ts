@@ -25,8 +25,13 @@ async function main() {
   const buf = await renderToBuffer(createElement(DocumentBrandePDF, {
     doc, franchiseNom: 'Chamas Tacos', logoUrl: null, couleur: '#EFC03E', couleur2: '#0B0C0E',
     formateurNom: 'Brahim Hachani', dateStr: '25 août 2026', labLogoUrl: null, paysage: true,
-  }) as any)
+  } as any) as any)
   writeFileSync('/tmp/test-studio.pdf', buf)
-  console.log('PDF écrit', buf.length)
+  const buf2 = await renderToBuffer(createElement(DocumentBrandePDF, {
+    doc, franchiseNom: 'Chicken Street', logoUrl: null, couleur: '#141414', couleur2: null,
+    formateurNom: 'Brahim Hachani', dateStr: '25 août 2026', labLogoUrl: null, paysage: false,
+  } as any) as any)
+  writeFileSync('/tmp/test-studio-sombre.pdf', buf2)
+  console.log('PDF écrits', buf.length, buf2.length)
 }
 main()

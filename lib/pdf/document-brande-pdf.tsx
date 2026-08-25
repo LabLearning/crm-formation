@@ -57,6 +57,15 @@ function luminance(hexCouleur: string): number {
   return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255
 }
 
+/** Mélange une couleur vers le blanc (t = part de blanc, 0-1). */
+function melange(hexCouleur: string, t: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hexCouleur)
+  if (!m) return hexCouleur
+  const n = parseInt(m[1], 16)
+  const c = (v: number) => Math.min(255, Math.round(v + (255 - v) * t))
+  return `#${((c((n >> 16) & 255) << 16) | (c((n >> 8) & 255) << 8) | c(n & 255)).toString(16).padStart(6, '0')}`
+}
+
 /** Assombrit (facteur < 1) ou éclaircit (facteur > 1) une couleur hex. */
 function fonce(hexCouleur: string, facteur = 0.72): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hexCouleur)
@@ -66,24 +75,6 @@ function fonce(hexCouleur: string, facteur = 0.72): string {
   const g = Math.min(255, Math.round(((n >> 8) & 255) * facteur))
   const b = Math.min(255, Math.round((n & 255) * facteur))
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
-}
-
-/** Bande hachurée signature : diagonales accent sur fond noir. */
-function Hachures({ couleur, hauteur, largeur }: { couleur: string; hauteur: number; largeur: number }) {
-  const pas = hauteur * 2.4
-  const bandes: React.ReactElement[] = []
-  for (let x = -hauteur; x < largeur + hauteur; x += pas) {
-    bandes.push(
-      <Polygon key={x} points={`${x},${hauteur} ${x + pas / 2},${hauteur} ${x + pas / 2 + hauteur},0 ${x + hauteur},0`} fill={couleur} />,
-    )
-  }
-  return (
-    <View style={{ height: hauteur, backgroundColor: NOIR }}>
-      <Svg width="100%" height={hauteur} viewBox={`0 0 ${largeur} ${hauteur}`} preserveAspectRatio="none">
-        {bandes}
-      </Svg>
-    </View>
-  )
 }
 
 export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur2, formateurNom, dateStr, labLogoUrl, paysage }: {
@@ -100,9 +91,10 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
   paysage?: boolean
 }) {
   const accent = couleur || '#195144'
-  // Sur fond noir, un accent trop sombre disparaît : on l'éclaircit d'office.
-  const accentPop = luminance(accent) < 0.22 ? fonce(accent, 1.9) : accent
-  const largeurPage = paysage ? 842 : 595
+  // Sur fond noir, un accent sombre disparaît : on le mélange au blanc
+  // jusqu'à garantir la lisibilité (Chicken Street, marques noires…).
+  let accentPop = accent
+  for (let garde = 0; luminance(accentPop) < 0.45 && garde < 6; garde++) accentPop = melange(accentPop, 0.3)
   /** Hauteur estimée d'une section (pt) — pour décider si elle reste entière. */
   const hauteurSection = (sec: SectionBrandee): number => {
     let h = sec.titre ? 34 : 0
@@ -128,7 +120,6 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
             marginTop négatif : la couverture absorbe la marge de page pour
             rester plein bord, les pages suivantes gardent leur marge haute. */}
         <View style={{ marginTop: -30 }}>
-        <Hachures couleur={accentPop} hauteur={9} largeur={largeurPage} />
         <View style={{ backgroundColor: NOIR, paddingHorizontal: 40, paddingTop: 24, paddingBottom: 26 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <Text style={{ fontSize: 7.5, color: accentPop, textTransform: 'uppercase', letterSpacing: 2.5, fontWeight: 700 }}>
@@ -163,7 +154,6 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
             ) : null}
           </View>
         </View>
-        <Hachures couleur={accentPop} hauteur={4} largeur={largeurPage} />
         </View>
 
         {/* ── Corps ── */}
