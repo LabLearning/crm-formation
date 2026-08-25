@@ -31,7 +31,7 @@ const formateurNav: NavItem[] = [
   { label: 'Déroulé opérationnel', short: 'Déroulé', href: '/deroule', icon: Route },
   { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
   { label: 'Émargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
-  { label: 'Studio documents', short: 'Studio', href: '/studio', icon: Sparkles },
+  { label: 'Studio', short: 'Studio', href: '/studio', icon: Sparkles },
   { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },
