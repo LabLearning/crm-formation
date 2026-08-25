@@ -43,7 +43,7 @@ export function StudioWidget() {
           )}
         >
           <span className="relative inline-flex">
-            <FileText className="h-4.5 w-4.5" />
+            <FileText className="h-[18px] w-[18px]" />
             <Sparkles className="h-2.5 w-2.5 absolute -top-1 -right-1.5 text-amber-300" />
           </span>
           Studio
