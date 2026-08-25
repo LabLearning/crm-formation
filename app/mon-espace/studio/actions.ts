@@ -344,3 +344,50 @@ export async function supprimerDocumentStudioAction(documentId: string): Promise
   revalidatePath('/mon-espace/studio')
   return { success: true }
 }
+
+/**
+ * Données du studio pour le widget flottant : sessions du formateur et
+ * historique des générations — chargées à l'ouverture du panneau.
+ */
+export async function getStudioDataAction(): Promise<{
+  success: boolean
+  error?: string
+  data?: { sessions: { id: string; libelle: string; franchise: string | null }[]; generes: any[] }
+}> {
+  const session = await getSession()
+  if (session.user.role !== 'formateur') return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+  const { data: formateurRow } = await supabase.from('formateurs')
+    .select('id').eq('user_id', session.user.id).maybeSingle()
+  if (!formateurRow) return { success: false, error: 'Fiche formateur introuvable' }
+
+  const [{ data: sessions }, { data: generes }] = await Promise.all([
+    supabase.from('sessions')
+      .select('id, reference, date_debut, status, client:client_id(raison_sociale, nom_commercial, franchise:franchise_id(nom)), formation:formation_id(intitule)')
+      .eq('formateur_id', formateurRow.id)
+      .order('date_debut', { ascending: false })
+      .limit(40),
+    supabase.from('documents')
+      .select('id, nom, created_at, session_id')
+      .eq('formateur_id', formateurRow.id)
+      .eq('origine', 'studio_formateur')
+      .order('created_at', { ascending: false })
+      .limit(20),
+  ])
+
+  return {
+    success: true,
+    data: {
+      sessions: (sessions || []).map((s: any) => ({
+        id: s.id,
+        libelle: [
+          s.formation?.intitule,
+          s.client?.franchise?.nom || s.client?.nom_commercial || s.client?.raison_sociale,
+          s.date_debut ? new Date(s.date_debut).toLocaleDateString('fr-FR') : null,
+        ].filter(Boolean).join(' — '),
+        franchise: s.client?.franchise?.nom || null,
+      })),
+      generes: (generes || []) as any[],
+    },
+  }
+}
