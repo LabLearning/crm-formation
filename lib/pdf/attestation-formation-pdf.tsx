@@ -8,9 +8,11 @@ interface AttestationFormationProps {
   formation: any
   org: any
   assiduite?: number
+  /** Heures réellement suivies quand le parcours est partiel (abandon, absence). */
+  heuresSuivies?: number | null
 }
 
-export function AttestationFormationPDF({ apprenant, session, formation, org, assiduite }: AttestationFormationProps) {
+export function AttestationFormationPDF({ apprenant, session, formation, org, assiduite, heuresSuivies }: AttestationFormationProps) {
   // L'attestation est datée de la fin de formation, pas du jour du
   // téléchargement — le document reste cohérent quel que soit le moment où
   // il est réédité.
@@ -45,7 +47,11 @@ export function AttestationFormationPDF({ apprenant, session, formation, org, as
           <PdfSectionTitle>Formation suivie</PdfSectionTitle>
           <View style={shared.row}><Text style={shared.label}>Intitulé :</Text><Text style={{ ...shared.value, fontFamily: 'Satoshi', fontWeight: 700 }}>{formation.intitule}</Text></View>
           {formation.reference && <View style={shared.row}><Text style={shared.label}>Référence :</Text><Text style={shared.value}>{formation.reference}</Text></View>}
-          <View style={shared.row}><Text style={shared.label}>Durée :</Text><Text style={shared.value}>{formation.duree_heures || 0} heures</Text></View>
+          {heuresSuivies != null ? (
+            <View style={shared.row}><Text style={shared.label}>Durée suivie :</Text><Text style={{ ...shared.value, fontFamily: 'Satoshi', fontWeight: 700 }}>{heuresSuivies.toLocaleString('fr-FR')} heures sur {formation.duree_heures || 0} prévues</Text></View>
+          ) : (
+            <View style={shared.row}><Text style={shared.label}>Durée :</Text><Text style={shared.value}>{formation.duree_heures || 0} heures</Text></View>
+          )}
           <View style={shared.row}><Text style={shared.label}>Dates :</Text><Text style={shared.value}>Du {new Date(session.date_debut).toLocaleDateString('fr-FR')} au {new Date(session.date_fin).toLocaleDateString('fr-FR')}</Text></View>
           {session.lieu && <View style={shared.row}><Text style={shared.label}>Lieu :</Text><Text style={shared.value}>{session.lieu}</Text></View>}
           {session.formateur && <View style={shared.row}><Text style={shared.label}>Formateur :</Text><Text style={shared.value}>{session.formateur.prenom} {session.formateur.nom}</Text></View>}
@@ -84,7 +90,9 @@ export function AttestationFormationPDF({ apprenant, session, formation, org, as
         <View style={shared.section}>
           <PdfSectionTitle>Résultats de l'évaluation des acquis</PdfSectionTitle>
           <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>
-            {assiduite != null
+            {heuresSuivies != null
+              ? `Parcours suivi partiellement (${heuresSuivies.toLocaleString('fr-FR')} heures sur ${formation.duree_heures || 0} prévues). Les acquis sont attestés à hauteur du parcours réellement effectué.${assiduite != null ? ` Assiduité constatée : ${assiduite}%.` : ''}`
+              : assiduite != null
               ? `Les objectifs pédagogiques de la formation ont été évalués. Acquis validés au regard des objectifs visés. Assiduité constatée : ${assiduite}%.`
               : 'Les objectifs pédagogiques de la formation ont été évalués. Acquis validés au regard des objectifs visés.'}
           </Text>

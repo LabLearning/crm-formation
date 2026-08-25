@@ -33,7 +33,32 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const present = (emargements || []).filter(e => e.est_present).length
   const assiduite = total > 0 ? Math.round((present / total) * 100) : undefined
 
-  const buffer = await renderToBuffer(createElement(AttestationFormationPDF, { apprenant, session, formation, org, assiduite }) as any)
+  // Heures RÉELLEMENT suivies : l'attestation dit la vérité du parcours.
+  // Priorité au relevé explicite (abandon POEI, heures de présence saisies),
+  // sinon prorata de l'assiduité sur la durée de la formation.
+  const dureeTheorique = Number(formation?.duree_heures) || null
+  let heuresSuivies: number | null = null
+  try {
+    const { data: candPoei } = await supabase.from('poei_candidats')
+      .select('heures_effectuees, statut, poei:poei_id(session_id)')
+      .eq('apprenant_id', params.id).eq('statut', 'abandonne')
+      .not('heures_effectuees', 'is', null)
+    const lie = (candPoei || []).find((c: any) => c.poei?.session_id === sessionId)
+    if (lie) heuresSuivies = Number((lie as any).heures_effectuees)
+  } catch { /* colonnes absentes avant migration 140 */ }
+  if (heuresSuivies == null) {
+    const { data: insc } = await supabase.from('inscriptions')
+      .select('heures_presence').eq('session_id', sessionId).eq('apprenant_id', params.id).maybeSingle()
+    if (insc?.heures_presence != null) heuresSuivies = Number(insc.heures_presence)
+  }
+  if (heuresSuivies == null && dureeTheorique && assiduite != null && assiduite < 100) {
+    heuresSuivies = Math.round(dureeTheorique * assiduite) / 100
+  }
+  // Une valeur égale (ou supérieure) à la durée prévue n'apporte rien : on
+  // n'affiche le distinguo que quand le parcours est réellement partiel.
+  if (heuresSuivies != null && dureeTheorique && heuresSuivies >= dureeTheorique) heuresSuivies = null
+
+  const buffer = await renderToBuffer(createElement(AttestationFormationPDF, { apprenant, session, formation, org, assiduite, heuresSuivies }) as any)
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
