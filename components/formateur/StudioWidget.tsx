@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, X, Loader2 } from 'lucide-react'
+import { Sparkles, FileText, X, Loader2 } from 'lucide-react'
 import { ToastProvider } from '@/components/ui/Toast'
 import { StudioClient } from './StudioClient'
 import { getStudioDataAction } from '@/app/mon-espace/studio/actions'
@@ -42,7 +42,10 @@ export function StudioWidget() {
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          <Sparkles className="h-4 w-4" />
+          <span className="relative inline-flex">
+            <FileText className="h-4.5 w-4.5" />
+            <Sparkles className="h-2.5 w-2.5 absolute -top-1 -right-1.5 text-amber-300" />
+          </span>
           Studio
         </button>
       )}
@@ -59,7 +62,10 @@ export function StudioWidget() {
           )}>
             <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-100 shrink-0">
               <div className="h-9 w-9 rounded-full bg-gradient-to-r from-[#195144] to-[#2F9A72] flex items-center justify-center shrink-0">
-                <Sparkles className="h-4 w-4 text-white" />
+                <span className="relative inline-flex text-white">
+                  <FileText className="h-4 w-4" />
+                  <Sparkles className="h-2.5 w-2.5 absolute -top-1 -right-1.5 text-amber-300" />
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-surface-900">Studio</div>
