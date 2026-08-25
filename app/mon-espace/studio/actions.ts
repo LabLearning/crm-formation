@@ -239,6 +239,19 @@ export async function genererDocumentBrandeAction(
 
   // Couleurs : mémorisées sur la franchise à la première déduction
   const hex = (v: any) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : null)
+  const lum = (h: string) => {
+    const n = parseInt(h.slice(1), 16)
+    return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255
+  }
+  // L'accent doit être la couleur VIVE : si l'IA met la sombre en primaire
+  // (logos noir + jaune type Chicken Street), on inverse.
+  {
+    const c1 = hex(structure.couleur_primaire), c2 = hex(structure.couleur_secondaire)
+    if (c1 && c2 && lum(c1) < 0.25 && lum(c2) > lum(c1) + 0.2) {
+      structure.couleur_primaire = c2
+      structure.couleur_secondaire = c1
+    }
+  }
   let couleur = franchise?.couleur_primaire || hex(structure.couleur_primaire) || '#195144'
   let couleur2 = franchise?.couleur_secondaire || hex(structure.couleur_secondaire) || null
   if (franchise && doitDeduireCouleurs && hex(structure.couleur_primaire)) {
