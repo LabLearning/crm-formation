@@ -138,7 +138,7 @@ export async function genererDocumentBrandeAction(
         model: 'gpt-4o',
         temperature: 0.3,
         text: { format: { type: 'json_object' } },
-        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "orientation": "portrait"|"paysage", "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null, "etapes": [{"numero": number, "titre": string, "details": string[], "ccp": string|null}]|null}]}. RÈGLES ABSOLUES : (1) reprends TOUT le contenu des sources, rien ne doit disparaître — chaque étape, chaque valeur, chaque consigne ; (2) un PROCESSUS séquentiel (réception -> stockage -> cuisson…) devient une section "etapes" : une étape par carte avec ses détails, et son point de contrôle critique dans "ccp" s'il y en a un ; s'il y a plusieurs filières, une section d'étapes PAR filière ; (3) les caractéristiques produits, plannings, fréquences deviennent des TABLEAUX ; les consignes et points de contrôle des LISTES ; (4) le TITRE est un vrai titre humain, jamais un nom de fichier ni des underscores ; (5) écris >= et <= (jamais les symboles), pas de caractères spéciaux décoratifs ; (6) titres de sections actifs et courts ; (7) "orientation" reprend celle du document source (une page large type organigramme ou planning -> "paysage", sinon "portrait"). 10 sections maximum.`,
+        instructions: `Tu es le studio documentaire d'un organisme de formation haut de gamme (restaurants et métiers de bouche). Tu produis des documents en FRANÇAIS impeccables. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "orientation": "portrait"|"paysage", "etiquettes": string[], "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "icone": "temperature"|"controle"|"alerte"|"cuisson"|"froid"|"temps"|"nettoyage"|"securite"|"stockage"|"produit"|"personnel"|"document"|"reception"|"service", "ton": "normal"|"attention"|"critique", "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null, "etapes": [{"numero": number, "titre": string, "details": string[], "ccp": string|null}]|null}]}. RÈGLES ABSOLUES : (1) reprends TOUT le contenu des sources, rien ne doit disparaître — chaque étape, chaque valeur, chaque consigne ; (2) un PROCESSUS séquentiel (réception -> stockage -> cuisson…) devient une section "etapes" : une étape par carte avec ses détails, et son point de contrôle critique dans "ccp" s'il y en a un ; s'il y a plusieurs filières, une section d'étapes PAR filière ; (3) les caractéristiques produits, plannings, fréquences deviennent des TABLEAUX ; les consignes et points de contrôle des LISTES ; (4) le TITRE est un vrai titre humain, jamais un nom de fichier ni des underscores ; (5) écris >= et <= (jamais les symboles), pas de caractères spéciaux décoratifs ; (6) titres de sections actifs et courts ; (7) "etiquettes" : 2-3 mots-clés de couverture (ex. HACCP, Hygiène, Service) ; "icone" : la plus proche du sujet de la section ; "ton" : "critique" pour les sections de points de contrôle critiques ou dangers, "attention" pour les vigilances, "normal" sinon ; (8) "orientation" reprend celle du document source (une page large type organigramme ou planning -> "paysage", sinon "portrait"). 10 sections maximum.`,
         input: [{ role: 'user', content: contenuUser }],
       }),
     })
@@ -219,4 +219,34 @@ export async function genererDocumentBrandeAction(
     console.error('[studio pdf]', e?.message)
     return { success: false, error: 'Mise en page du document impossible — réessayez' }
   }
+}
+
+/**
+ * Supprime un document généré par le formateur (fichier du bucket + ligne) —
+ * uniquement les siens, uniquement ceux issus du studio.
+ */
+export async function supprimerDocumentStudioAction(documentId: string): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession()
+  if (session.user.role !== 'formateur') return { success: false, error: 'Accès non autorisé' }
+  const supabase = await createServiceRoleClient()
+
+  const { data: formateurRow } = await supabase.from('formateurs')
+    .select('id').eq('user_id', session.user.id).maybeSingle()
+  if (!formateurRow) return { success: false, error: 'Fiche formateur introuvable' }
+
+  const { data: doc } = await supabase.from('documents')
+    .select('id, storage_path, formateur_id, origine')
+    .eq('id', documentId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!doc || doc.formateur_id !== formateurRow.id || doc.origine !== 'studio_formateur') {
+    return { success: false, error: 'Document introuvable ou non supprimable' }
+  }
+
+  if (doc.storage_path) {
+    await supabase.storage.from('documents').remove([doc.storage_path])
+  }
+  const { error } = await supabase.from('documents').delete().eq('id', doc.id)
+  if (error) return { success: false, error: 'Suppression impossible' }
+
+  revalidatePath('/mon-espace/studio')
+  return { success: true }
 }

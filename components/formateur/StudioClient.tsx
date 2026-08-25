@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, Upload, Loader2, FileText, Download, X } from 'lucide-react'
+import { Sparkles, Upload, Loader2, FileText, Download, X, Trash2 } from 'lucide-react'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { genererDocumentBrandeAction } from '@/app/mon-espace/studio/actions'
+import { genererDocumentBrandeAction, supprimerDocumentStudioAction } from '@/app/mon-espace/studio/actions'
 
 interface SessionRef { id: string; libelle: string; franchise: string | null }
 interface DocGenere { id: string; nom: string; created_at: string }
@@ -36,6 +36,13 @@ export function StudioClient({ sessions, generes }: {
     const nouveaux = Array.from(list).filter(ok)
     if (nouveaux.length !== list.length) toast('error', 'Formats acceptés : photos, PDF, Word (.docx), Excel')
     setFichiers((prev) => [...prev, ...nouveaux].slice(0, 5))
+  }
+
+  async function supprimer(id: string) {
+    if (!confirm('Supprimer ce document généré ?')) return
+    const r = await supprimerDocumentStudioAction(id)
+    if (r.success) { toast('success', 'Document supprimé'); if (dernierDoc === id) setDernierDoc(null); router.refresh() }
+    else toast('error', r.error || 'Erreur')
   }
 
   async function generer(e: React.FormEvent<HTMLFormElement>) {
@@ -139,13 +146,20 @@ export function StudioClient({ sessions, generes }: {
           </div>
           <div className="divide-y divide-surface-50">
             {generes.map((d) => (
-              <a key={d.id} href={`/api/documents/${d.id}/download`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
+              <div key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors">
                 <FileText className="h-4 w-4 text-brand-500 shrink-0" />
-                <span className="flex-1 text-sm text-surface-900 truncate">{d.nom}</span>
-                <span className="text-xs text-surface-400 shrink-0">{formatDate(d.created_at, { day: 'numeric', month: 'short' })}</span>
-                <Download className="h-4 w-4 text-surface-400 shrink-0" />
-              </a>
+                <a href={`/api/documents/${d.id}/download`} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 min-w-0 flex items-center gap-3">
+                  <span className="flex-1 text-sm text-surface-900 truncate">{d.nom}</span>
+                  <span className="text-xs text-surface-400 shrink-0">{formatDate(d.created_at, { day: 'numeric', month: 'short' })}</span>
+                  <Download className="h-4 w-4 text-surface-400 shrink-0" />
+                </a>
+                <button onClick={() => supprimer(d.id)}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                  aria-label="Supprimer">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

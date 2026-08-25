@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer'
 // Réutilise l'enregistrement de police éprouvé (Satoshi 400/500/700/900)
 import { SURFACE_200, SURFACE_400, SURFACE_500, SURFACE_700, SURFACE_900 } from './components'
+import { IconePdf } from './pdf-icones'
 
 /**
  * Document brandé du studio formateur — gabarit éditorial : bandeau de
@@ -19,6 +20,10 @@ export interface EtapeProcess {
 
 export interface SectionBrandee {
   titre?: string
+  /** Nom d'icône métier (temperature, controle, cuisson, froid, stockage…). */
+  icone?: string | null
+  /** Ton visuel : attention = encart ambre, critique = encart rouge. */
+  ton?: 'normal' | 'attention' | 'critique' | null
   type?: 'paragraphes' | 'liste' | 'tableau' | 'etapes'
   paragraphes?: string[]
   items?: string[]
@@ -30,6 +35,8 @@ export interface SectionBrandee {
 export interface DocumentBrande {
   titre: string
   sous_titre?: string
+  /** 2-3 étiquettes de couverture (ex. HACCP, Hygiène, Service). */
+  etiquettes?: string[]
   sections: SectionBrandee[]
 }
 
@@ -103,6 +110,15 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               {doc.sous_titre ? (
                 <Text style={{ fontSize: 10, color: encre, opacity: 0.85, marginTop: 6, lineHeight: 1.4 }}>{doc.sous_titre}</Text>
               ) : null}
+              {(doc.etiquettes || []).length > 0 ? (
+                <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                  {(doc.etiquettes || []).slice(0, 3).map((t, k) => (
+                    <View key={k} style={{ borderWidth: 1, borderColor: encre, opacity: 0.75, borderRadius: 10, paddingVertical: 2.5, paddingHorizontal: 8, marginRight: 5 }}>
+                      <Text style={{ fontSize: 7.5, fontWeight: 700, color: encre, textTransform: 'uppercase', letterSpacing: 1 }}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
             </View>
             {logoUrl ? (
               <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 10 }}>
@@ -122,11 +138,12 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
             <View key={i} wrap={false} style={{ marginBottom: 16 }}>
               {sec.titre ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: accent, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
-                    <Text style={{ fontSize: 10, fontWeight: 900, color: encre }}>{i + 1}</Text>
+                  <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : sombre, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                    <IconePdf nom={sec.icone} taille={13} couleur="#FFFFFF" />
                   </View>
-                  <Text style={{ fontSize: 12.5, fontWeight: 700, color: SURFACE_900 }}>{sec.titre}</Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: 700, color: SURFACE_900, flexShrink: 1 }}>{sec.titre}</Text>
                   <View style={{ flex: 1, height: 0.75, backgroundColor: SURFACE_200, marginLeft: 10 }} />
+                  <Text style={{ fontSize: 8, fontWeight: 900, color: SURFACE_400, marginLeft: 8 }}>{String(i + 1).padStart(2, '0')}</Text>
                 </View>
               ) : null}
 
@@ -135,10 +152,14 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               ))}
 
               {(sec.items || []).length > 0 ? (
-                <View style={{ backgroundColor: '#FAFAF9', borderRadius: 8, padding: 10, borderLeftWidth: 2.5, borderLeftColor: accent2 }}>
+                <View style={{
+                  backgroundColor: sec.ton === 'critique' ? '#FEF2F2' : sec.ton === 'attention' ? '#FFFBEB' : '#FAFAF9',
+                  borderRadius: 8, padding: 10, borderLeftWidth: 2.5,
+                  borderLeftColor: sec.ton === 'critique' ? CCP_ROUGE : sec.ton === 'attention' ? '#D97706' : accent2,
+                }}>
                   {(sec.items || []).map((it, j) => (
                     <View key={j} style={{ flexDirection: 'row', marginBottom: j === (sec.items || []).length - 1 ? 0 : 5 }}>
-                      <View style={{ width: 5.5, height: 5.5, borderRadius: 1.5, backgroundColor: accent, marginTop: 3.5, marginRight: 7 }} />
+                      <View style={{ width: 5.5, height: 5.5, borderRadius: 1.5, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : sec.ton === 'attention' ? '#D97706' : accent, marginTop: 3.5, marginRight: 7 }} />
                       <Text style={{ flex: 1, fontSize: 9.5, lineHeight: 1.5, color: SURFACE_700 }}>{it}</Text>
                     </View>
                   ))}
