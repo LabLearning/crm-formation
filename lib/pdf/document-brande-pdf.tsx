@@ -46,7 +46,7 @@ const CREME = '#FAF6EC'
 const CCP_ROUGE = '#B91C1C'
 
 const s = StyleSheet.create({
-  page: { paddingTop: 0, paddingBottom: 58, paddingHorizontal: 0, fontSize: 9.5, fontFamily: 'Satoshi', color: SURFACE_900 },
+  page: { paddingTop: 30, paddingBottom: 58, paddingHorizontal: 0, fontSize: 9.5, fontFamily: 'Satoshi', color: SURFACE_900 },
 })
 
 /** Luminance perçue 0-1 : décide de l'encre (blanc ou sombre) sur la couleur. */
@@ -103,6 +103,20 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
   // Sur fond noir, un accent trop sombre disparaît : on l'éclaircit d'office.
   const accentPop = luminance(accent) < 0.22 ? fonce(accent, 1.9) : accent
   const largeurPage = paysage ? 842 : 595
+  /** Hauteur estimée d'une section (pt) — pour décider si elle reste entière. */
+  const hauteurSection = (sec: SectionBrandee): number => {
+    let h = sec.titre ? 34 : 0
+    for (const par of sec.paragraphes || []) h += Math.ceil(par.length / 110) * 14 + 5
+    const items = sec.items || []
+    if (items.length) {
+      const deuxCol = items.length >= 6 && items.every((it) => it.length <= 60)
+      h += 22 + Math.ceil(items.length / (deuxCol ? 2 : 1)) * 17
+    }
+    if (sec.colonnes && sec.lignes) h += 26 + sec.lignes.length * 24
+    for (const e of sec.etapes || []) h += 34 + (e.details || []).length * 13 + (e.ccp ? 17 : 0) + 10
+    return h
+  }
+  const hauteurUtile = paysage ? 440 : 690
   const sections = (doc.sections || []).filter((sec) =>
     (sec.paragraphes || []).length || (sec.items || []).length ||
     (sec.colonnes && sec.lignes && sec.lignes.length) || (sec.etapes || []).length)
@@ -110,7 +124,10 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
   return (
     <Document>
       <Page size="A4" orientation={paysage ? 'landscape' : 'portrait'} style={s.page}>
-        {/* ── Couverture noire de marque : l'accent ponctue, jamais en aplat ── */}
+        {/* ── Couverture noire de marque : l'accent ponctue, jamais en aplat ──
+            marginTop négatif : la couverture absorbe la marge de page pour
+            rester plein bord, les pages suivantes gardent leur marge haute. */}
+        <View style={{ marginTop: -30 }}>
         <Hachures couleur={accentPop} hauteur={9} largeur={largeurPage} />
         <View style={{ backgroundColor: NOIR, paddingHorizontal: 40, paddingTop: 24, paddingBottom: 26 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -147,11 +164,12 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
           </View>
         </View>
         <Hachures couleur={accentPop} hauteur={4} largeur={largeurPage} />
+        </View>
 
         {/* ── Corps ── */}
         <View style={{ paddingHorizontal: 40, paddingTop: 22 }}>
           {sections.map((sec, i) => (
-            <View key={i} style={{ marginBottom: 16 }}>
+            <View key={i} wrap={hauteurSection(sec) > hauteurUtile} style={{ marginBottom: 16 }}>
               {sec.titre ? (
                 <View wrap={false} minPresenceAhead={85} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : NOIR, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
