@@ -33,6 +33,39 @@ function assainirStructure(x: any): any {
   return x
 }
 
+/** Orientation de la 1re page d'un PDF : lit MediaBox (+ /Rotate) dans les octets. */
+function pdfEstPaysage(buf: Buffer): boolean | null {
+  const tete = buf.toString('latin1', 0, Math.min(buf.length, 200000))
+  const mb = /\/MediaBox\s*\[\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(tete)
+  if (!mb) return null
+  let large = parseFloat(mb[3]) - parseFloat(mb[1]) > parseFloat(mb[4]) - parseFloat(mb[2])
+  const rot = /\/Rotate\s+(90|270)/.exec(tete)
+  if (rot) large = !large
+  return large
+}
+
+/** Orientation d'une image PNG/JPEG : lit les dimensions dans les en-têtes. */
+function imageEstPaysage(buf: Buffer, type: string): boolean | null {
+  try {
+    if (type === 'image/png' && buf.length > 24) {
+      return buf.readUInt32BE(16) > buf.readUInt32BE(20)
+    }
+    if (type === 'image/jpeg') {
+      let i = 2
+      while (i + 9 < buf.length) {
+        if (buf[i] !== 0xff) break
+        const marqueur = buf[i + 1]
+        const long = buf.readUInt16BE(i + 2)
+        if (marqueur >= 0xc0 && marqueur <= 0xcf && marqueur !== 0xc4 && marqueur !== 0xc8 && marqueur !== 0xcc) {
+          return buf.readUInt16BE(i + 7) > buf.readUInt16BE(i + 5)
+        }
+        i += 2 + long
+      }
+    }
+  } catch { /* en-tête illisible : on laisse l'IA décider */ }
+  return null
+}
+
 export async function genererDocumentBrandeAction(
   formData: FormData,
 ): Promise<{ success: boolean; error?: string; data?: { documentId: string } }> {
@@ -74,6 +107,8 @@ export async function genererDocumentBrandeAction(
   const images: string[] = []
   const pdfs: Array<{ nom: string; b64: string }> = []
   const textes: Array<{ nom: string; texte: string }> = []
+  // Orientation détectée dans les fichiers sources — prime sur l'avis de l'IA.
+  let sourcePaysage: boolean | null = null
   for (const f of fichiers.slice(0, 5)) {
     if (!f || typeof f.arrayBuffer !== 'function' || f.size === 0) continue
     if (f.size > 4 * 1024 * 1024) return { success: false, error: `« ${f.name} » dépasse 4 Mo` }
@@ -81,8 +116,10 @@ export async function genererDocumentBrandeAction(
     const nomBas = (f.name || '').toLowerCase()
     if (/^image\/(jpeg|png|webp)$/.test(f.type)) {
       images.push(`data:${f.type};base64,${buf.toString('base64')}`)
+      if (sourcePaysage === null) sourcePaysage = imageEstPaysage(buf, f.type)
     } else if (f.type === 'application/pdf' || nomBas.endsWith('.pdf')) {
       pdfs.push({ nom: f.name, b64: buf.toString('base64') })
+      if (sourcePaysage === null) sourcePaysage = pdfEstPaysage(buf)
     } else if (nomBas.endsWith('.docx')) {
       try {
         const mammoth = await import('mammoth')
@@ -189,7 +226,7 @@ export async function genererDocumentBrandeAction(
       formateurNom: `${context.formateur.prenom || ''} ${context.formateur.nom || ''}`.trim() || null,
       dateStr: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
       labLogoUrl,
-      paysage: structure.orientation === 'paysage',
+      paysage: sourcePaysage !== null ? sourcePaysage : structure.orientation === 'paysage',
     }) as any)
 
     const slug = String(structure.titre).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
