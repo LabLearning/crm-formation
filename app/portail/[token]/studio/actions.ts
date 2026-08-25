@@ -44,57 +44,82 @@ export async function genererDocumentBrandeAction(
   }
   const marqueNom = franchise?.nom || (sess as any).client?.nom_commercial || (sess as any).client?.raison_sociale || 'Établissement'
 
-  // Fichiers sources (photos/scans) → data URLs pour la vision
+  // Fichiers sources : photos (vision), PDF (natif API), Word/Excel (texte extrait)
   const fichiers = formData.getAll('fichiers') as File[]
   const images: string[] = []
-  for (const f of fichiers.slice(0, 4)) {
+  const pdfs: Array<{ nom: string; b64: string }> = []
+  const textes: Array<{ nom: string; texte: string }> = []
+  for (const f of fichiers.slice(0, 5)) {
     if (!f || typeof f.arrayBuffer !== 'function' || f.size === 0) continue
-    if (f.size > 4 * 1024 * 1024) return { success: false, error: `« ${f.name} » dépasse 4 Mo — compressez la photo` }
-    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return { success: false, error: `Format non géré : ${f.name} (photos JPG/PNG uniquement)` }
-    const b64 = Buffer.from(await f.arrayBuffer()).toString('base64')
-    images.push(`data:${f.type};base64,${b64}`)
+    if (f.size > 4 * 1024 * 1024) return { success: false, error: `« ${f.name} » dépasse 4 Mo` }
+    const buf = Buffer.from(await f.arrayBuffer())
+    const nomBas = (f.name || '').toLowerCase()
+    if (/^image\/(jpeg|png|webp)$/.test(f.type)) {
+      images.push(`data:${f.type};base64,${buf.toString('base64')}`)
+    } else if (f.type === 'application/pdf' || nomBas.endsWith('.pdf')) {
+      pdfs.push({ nom: f.name, b64: buf.toString('base64') })
+    } else if (nomBas.endsWith('.docx')) {
+      try {
+        const mammoth = await import('mammoth')
+        const r = await mammoth.extractRawText({ buffer: buf })
+        textes.push({ nom: f.name, texte: (r.value || '').slice(0, 20000) })
+      } catch { return { success: false, error: `Lecture impossible : ${f.name}` } }
+    } else if (nomBas.endsWith('.xlsx') || nomBas.endsWith('.xls') || nomBas.endsWith('.csv')) {
+      try {
+        const XLSX = await import('xlsx')
+        const wb = XLSX.read(buf, { type: 'buffer' })
+        const morceaux: string[] = []
+        for (const sheet of wb.SheetNames.slice(0, 5)) {
+          morceaux.push(`--- Feuille « ${sheet} » ---\n${XLSX.utils.sheet_to_csv(wb.Sheets[sheet])}`)
+        }
+        textes.push({ nom: f.name, texte: morceaux.join('\n\n').slice(0, 20000) })
+      } catch { return { success: false, error: `Lecture impossible : ${f.name}` } }
+    } else {
+      return { success: false, error: `Format non géré : ${f.name} (photos, PDF, Word, Excel)` }
+    }
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) return { success: false, error: 'Clé IA non configurée (OPENAI_API_KEY)' }
 
   const doitDeduireCouleurs = !franchise?.couleur_primaire
+  const aSources = images.length + pdfs.length + textes.length > 0
   const contenuUser: any[] = [{
-    type: 'text',
+    type: 'input_text',
     text: [
       `Marque du document : ${marqueNom}.`,
       titreDemande ? `Titre souhaité : ${titreDemande}` : null,
       consignes ? `Consignes du formateur : ${consignes}` : null,
-      images.length ? `Les images jointes sont les documents sources (notes, tableaux, affichages) : transcris et structure leur contenu fidèlement, sans rien inventer.` : 'Aucune image : construis le document à partir du titre et des consignes.',
+      aSources ? `Les fichiers joints sont les documents sources (notes, tableaux, affichages) : transcris et structure leur contenu fidèlement, sans rien inventer.` : 'Aucune source : construis le document à partir du titre et des consignes.',
+      ...textes.map((t) => `--- Contenu du fichier « ${t.nom} » ---\n${t.texte}`),
       doitDeduireCouleurs && franchise?.logo_url ? 'La dernière image est le LOGO de la marque : déduis-en couleur_primaire et couleur_secondaire (hex, contrastées sur blanc, jamais blanc/noir purs).' : null,
-    ].filter(Boolean).join('\n'),
+    ].filter(Boolean).join('\n\n'),
   }]
-  for (const img of images) contenuUser.push({ type: 'image_url', image_url: { url: img } })
+  for (const p of pdfs) contenuUser.push({ type: 'input_file', filename: p.nom, file_data: `data:application/pdf;base64,${p.b64}` })
+  for (const img of images) contenuUser.push({ type: 'input_image', image_url: img })
   if (doitDeduireCouleurs && franchise?.logo_url) {
-    contenuUser.push({ type: 'image_url', image_url: { url: franchise.logo_url } })
+    contenuUser.push({ type: 'input_image', image_url: franchise.logo_url })
   }
 
   let structure: any
   try {
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    // API Responses : elle seule accepte les PDF en entrée directe.
+    const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: 'gpt-4o',
         temperature: 0.3,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: `Tu prépares des documents de formation professionnels en FRANÇAIS pour des restaurants et métiers de bouche. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null}]}. Contenu clair, opérationnel, fidèle aux sources. Tableaux pour les plans/plannings, listes pour les consignes. 8 sections maximum.`,
-          },
-          { role: 'user', content: contenuUser },
-        ],
+        text: { format: { type: 'json_object' } },
+        instructions: `Tu prépares des documents de formation professionnels en FRANÇAIS pour des restaurants et métiers de bouche. Réponds UNIQUEMENT en JSON : {"titre": string, "sous_titre": string|null, "couleur_primaire": "#RRGGBB"|null, "couleur_secondaire": "#RRGGBB"|null, "sections": [{"titre": string, "paragraphes": string[]|null, "items": string[]|null, "colonnes": string[]|null, "lignes": string[][]|null}]}. Contenu clair, opérationnel, fidèle aux sources. Tableaux pour les plans/plannings, listes pour les consignes. 8 sections maximum.`,
+        input: [{ role: 'user', content: contenuUser }],
       }),
     })
-    if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 200)}`)
+    if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 300)}`)
     const j = await r.json()
-    structure = JSON.parse(j.choices?.[0]?.message?.content || '{}')
+    const texteSortie = j.output_text
+      || (j.output || []).flatMap((o: any) => (o.content || [])).map((c: any) => c.text).filter(Boolean).join('')
+    structure = JSON.parse(texteSortie || '{}')
   } catch (e: any) {
     console.error('[studio ia]', e?.message)
     return { success: false, error: 'La génération IA a échoué — réessayez' }

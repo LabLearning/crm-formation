@@ -24,6 +24,7 @@
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.469.0",
+    "mammoth": "^1.12.1",
     "next": "14.2.21",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
@@ -32,6 +33,7 @@
     "react-leaflet": "^4.2.1",
     "tailwind-merge": "^2.6.0",
     "unpdf": "^1.8.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {

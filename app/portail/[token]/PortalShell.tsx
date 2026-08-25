@@ -35,10 +35,11 @@ const apprenantNav: NavItem[] = [
 const formateurNav: NavItem[] = [
   { label: 'Accueil', short: 'Accueil', href: '', icon: LayoutDashboard },
   { label: 'Mes sessions', short: 'Sessions', href: '/sessions', icon: Calendar },
-  { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
   { label: 'Emargement', short: 'Émarg.', href: '/emargement', icon: CheckSquare },
-  { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
+  // Studio dans les 4 premiers : la barre mobile ne montre que 4 onglets + « Plus »
   { label: 'Studio documents', short: 'Studio', href: '/studio', icon: Sparkles },
+  { label: 'Apprenants', short: 'Apprenants', href: '/apprenants', icon: Users },
+  { label: 'Contenu pédagogique', short: 'Contenu', href: '/contenu', icon: BookOpen },
   { label: 'Messages', short: 'Messages', href: '/messages', icon: MessageCircle },
   { label: 'Questionnaires', short: 'QCM', href: '/qcm', icon: ListChecks },
   { label: 'Evaluations', short: 'Évals', href: '/evaluations', icon: Star },

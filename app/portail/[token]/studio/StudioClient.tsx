@@ -31,9 +31,12 @@ export function StudioClient({ token, sessions, generes }: {
 
   function ajouterFichiers(list: FileList | null) {
     if (!list) return
-    const nouveaux = Array.from(list).filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type))
-    if (nouveaux.length !== list.length) toast('error', 'Photos JPG/PNG uniquement')
-    setFichiers((prev) => [...prev, ...nouveaux].slice(0, 4))
+    const ok = (f: File) => /^image\/(jpeg|png|webp)$/.test(f.type)
+      || f.type === 'application/pdf'
+      || /\.(pdf|docx|xlsx|xls|csv)$/i.test(f.name)
+    const nouveaux = Array.from(list).filter(ok)
+    if (nouveaux.length !== list.length) toast('error', 'Formats acceptés : photos, PDF, Word (.docx), Excel')
+    setFichiers((prev) => [...prev, ...nouveaux].slice(0, 5))
   }
 
   async function generer(e: React.FormEvent<HTMLFormElement>) {
@@ -91,11 +94,11 @@ export function StudioClient({ token, sessions, generes }: {
 
         {/* Upload photos */}
         <div>
-          <span className="text-sm font-medium text-surface-800">Vos documents sources (photos, 4 max)</span>
+          <span className="text-sm font-medium text-surface-800">Vos documents sources (5 max — photos, PDF, Word, Excel)</span>
           <label className="mt-1.5 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-surface-200 hover:border-brand-300 transition-colors py-8 cursor-pointer">
             <Upload className="h-6 w-6 text-surface-400" />
-            <span className="text-sm text-surface-500">Prendre en photo ou choisir des images</span>
-            <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple
+            <span className="text-sm text-surface-500">Photo, PDF, Word ou Excel</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.xlsx,.xls,.csv" multiple
               className="hidden" onChange={(e) => { ajouterFichiers(e.target.files); e.target.value = '' }} />
           </label>
           {fichiers.length > 0 && (
