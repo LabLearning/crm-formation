@@ -182,16 +182,17 @@ export function PortalShell({ context, children }: PortalShellProps) {
             <Avatar firstName={info.firstName} lastName={info.lastName} size="sm" />
           </div>
         </div>
-        {/* Desktop tab nav */}
+        {/* Desktop tab nav — scrollable au-delà de la largeur, libellés courts
+            en dessous de xl pour que tous les onglets restent visibles */}
         <div className="border-t border-surface-100">
-          <div className="max-w-6xl mx-auto px-6">
-            <nav className="flex gap-1 -mb-px">
+          <div className="max-w-6xl mx-auto px-6 overflow-x-auto">
+            <nav className="flex gap-1 -mb-px min-w-max">
               {nav.map((item) => (
                 <Link
                   key={item.href}
                   href={basePath + item.href}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                    'flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                     isActive(item.href)
                       ? 'border-b-2 text-[#195144]'
                       : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
@@ -199,7 +200,8 @@ export function PortalShell({ context, children }: PortalShellProps) {
                   style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="hidden xl:inline">{item.label}</span>
+                  <span className="xl:hidden">{item.short}</span>
                 </Link>
               ))}
             </nav>
