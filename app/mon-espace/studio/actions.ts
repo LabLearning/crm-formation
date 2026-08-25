@@ -90,6 +90,8 @@ export async function genererDocumentBrandeAction(
   const contenuUser: any[] = [{
     type: 'input_text',
     text: [
+      // L'API exige le mot « JSON » dans le message d'entrée pour le mode json_object.
+      'Produis le document au format JSON demandé.',
       `Marque du document : ${marqueNom}.`,
       titreDemande ? `Titre souhaité : ${titreDemande}` : null,
       consignes ? `Consignes du formateur : ${consignes}` : null,
