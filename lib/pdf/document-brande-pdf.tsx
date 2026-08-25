@@ -151,9 +151,9 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
         {/* ── Corps ── */}
         <View style={{ paddingHorizontal: 40, paddingTop: 22 }}>
           {sections.map((sec, i) => (
-            <View key={i} wrap={false} style={{ marginBottom: 16 }}>
+            <View key={i} style={{ marginBottom: 16 }}>
               {sec.titre ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <View minPresenceAhead={70} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: sec.ton === 'critique' ? CCP_ROUGE : NOIR, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                     <IconePdf nom={sec.icone} taille={13} couleur={sec.ton === 'critique' ? '#FFFFFF' : accentPop} />
                   </View>
@@ -170,8 +170,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               {(sec.items || []).length > 0 ? (
                 <View style={{
                   backgroundColor: sec.ton === 'critique' ? '#FEF2F2' : sec.ton === 'attention' ? '#FFFBEB' : CREME,
-                  borderRadius: 8, padding: 10, borderLeftWidth: 2.5,
-                  borderLeftColor: sec.ton === 'critique' ? CCP_ROUGE : sec.ton === 'attention' ? '#D97706' : accent,
+                  borderRadius: 8, padding: 10, borderWidth: 0.75, borderColor: '#E4E0D6',
                 }}>
                   {(sec.items || []).map((it, j) => (
                     <View key={j} style={{ flexDirection: 'row', marginBottom: j === (sec.items || []).length - 1 ? 0 : 5 }}>
@@ -184,7 +183,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
 
               {sec.colonnes && sec.lignes ? (
                 <View style={{ marginTop: 5, borderRadius: 8, overflow: 'hidden', borderWidth: 0.75, borderColor: '#E4E0D6' }}>
-                  <View style={{ flexDirection: 'row', backgroundColor: NOIR }}>
+                  <View minPresenceAhead={50} style={{ flexDirection: 'row', backgroundColor: NOIR }}>
                     {sec.colonnes.map((c, j) => (
                       <Text key={j} style={{ flex: 1, fontSize: 8.5, fontWeight: 700, color: accentPop, paddingVertical: 7, paddingHorizontal: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>{c}</Text>
                     ))}
@@ -202,7 +201,15 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               {(sec.etapes || []).length > 0 ? (
                 <View>
                   {(sec.etapes || []).map((e, j) => (
-                    <View key={j} wrap={false} style={{ flexDirection: 'row', borderWidth: 0.75, borderColor: '#E4E0D6', borderRadius: 8, padding: 9, marginBottom: 6, backgroundColor: j % 2 ? CREME : '#FFFFFF' }}>
+                    <React.Fragment key={j}>
+                    {j > 0 ? (
+                      <View style={{ alignItems: 'center', marginVertical: 1 }}>
+                        <Svg width={10} height={6} viewBox="0 0 10 6">
+                          <Polygon points="0,0 10,0 5,6" fill="#C9C4B8" />
+                        </Svg>
+                      </View>
+                    ) : null}
+                    <View wrap={false} style={{ flexDirection: 'row', borderWidth: 0.75, borderColor: '#E4E0D6', borderRadius: 8, padding: 9, marginBottom: 4, backgroundColor: j % 2 ? CREME : '#FFFFFF' }}>
                       <View style={{ width: 20, height: 20, borderRadius: 6, backgroundColor: NOIR, alignItems: 'center', justifyContent: 'center', marginRight: 8, marginTop: 1 }}>
                         <Text style={{ fontSize: 9, fontWeight: 900, color: accentPop }}>{e.numero ?? j + 1}</Text>
                       </View>
@@ -218,6 +225,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
                         ) : null}
                       </View>
                     </View>
+                    </React.Fragment>
                   ))}
                 </View>
               ) : null}
@@ -235,7 +243,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
               )}
               <View style={{ width: 0.75, height: 12, backgroundColor: SURFACE_200 }} />
               <Text style={{ fontSize: 7, color: '#9A9EA5' }}>
-                Réalisé pour {franchiseNom}{formateurNom ? ` — ${formateurNom}` : ''}
+                {`Réalisé pour ${franchiseNom}${formateurNom ? ` — ${formateurNom}` : ''}`}
               </Text>
             </View>
             <Text style={{ fontSize: 7, color: SURFACE_500 }}
