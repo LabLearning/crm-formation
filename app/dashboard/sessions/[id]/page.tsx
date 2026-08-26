@@ -11,7 +11,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   // Session avec formation et formateur
   const { data: sessionData } = await supabase
     .from('sessions')
-    .select('*, formation:formation_id(intitule, reference, duree_heures, categorie, modalite, is_poei), formateur:formateurs(id, prenom, nom, email, telephone, user_id, tarif_journalier), client:client_id(id, raison_sociale, nom_commercial, sigle, email, opco_id)')
+    .select('*, formation:formation_id(intitule, reference, duree_heures, categorie, modalite, is_poei), formateur:formateurs(id, prenom, nom, email, telephone, user_id, tarif_journalier), client:client_id(id, raison_sociale, nom_commercial, sigle, email, opco_id, financeur_type)')
     .eq('id', params.id)
     .eq('organization_id', session.organization.id)
     .single()
@@ -315,6 +315,15 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   })
 
 
+  // Dossier AGEFICE lié à la session (financement dirigeant non salarié)
+  let dossierAgefice: any = null
+  try {
+    const { data: dAg } = await supabase.from('dossiers_agefice')
+      .select('*, client:client_id(raison_sociale, nom_commercial), apprenant:apprenant_id(prenom, nom), formation:formation_id(intitule)')
+      .eq('session_id', session.id).maybeSingle()
+    dossierAgefice = dAg || null
+  } catch { /* table absente avant migration 143 */ }
+
   return (
     <div className="animate-fade-in">
       <SessionDetailClient
@@ -345,6 +354,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         supports={supports as any[]}
         positionnement={positionnement as any[]}
         isFormateur={isFormateur}
+        dossierAgefice={dossierAgefice}
         userRole={session.user.role}
         isPoei={isPoei}
         recueilTemplates={recueilTemplates as any[]}

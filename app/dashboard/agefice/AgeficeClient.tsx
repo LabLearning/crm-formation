@@ -9,7 +9,8 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
-import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, creerDossierDepuisSessionAction } from './actions'
+import { creerDossierDepuisSessionAction } from './actions'
+import { DossierAgeficeForm } from '@/components/agefice/DossierAgeficeForm'
 
 interface Dossier {
   id: string
@@ -50,30 +51,6 @@ function nomClient(c: Dossier['client']): string {
   return c.nom_commercial || c.raison_sociale || `${c.prenom || ''} ${c.nom || ''}`.trim() || '—'
 }
 
-/** mailto prérempli vers le Point d'Accueil — l'envoi part de la boîte de l'admin. */
-function mailtoPointAccueil(d: Dossier, phase: 'pec' | 'remboursement'): string {
-  const dirigeant = d.apprenant ? `${d.apprenant.prenom || ''} ${d.apprenant.nom || ''}`.trim() : nomClient(d.client)
-  const objet = phase === 'pec'
-    ? `Demande de prise en charge AGEFICE — ${dirigeant} — ${d.formation?.intitule || 'formation'}`
-    : `Demande de remboursement AGEFICE — ${dirigeant}${d.numero_dossier ? ` — dossier ${d.numero_dossier}` : ''}`
-  const pieces = phase === 'pec'
-    ? ['l\'imprimé de demande signé', 'la convention / le devis', 'le programme détaillé', 'l\'attestation CFP URSSAF', 'la pièce d\'identité du dirigeant']
-    : ['l\'attestation d\'assiduité et de règlement', 'la facture acquittée', 'les feuilles d\'émargement']
-  const corps = [
-    'Bonjour,',
-    '',
-    phase === 'pec'
-      ? `Veuillez trouver ci-joint la demande de prise en charge AGEFICE pour ${dirigeant} (${nomClient(d.client)}) — formation « ${d.formation?.intitule || ''} »${d.date_debut_formation ? ` du ${frDate(d.date_debut_formation)}` : ''}${d.date_fin_formation && d.date_fin_formation !== d.date_debut_formation ? ` au ${frDate(d.date_fin_formation)}` : ''}.`
-      : `Veuillez trouver ci-joint la demande de remboursement AGEFICE pour ${dirigeant} (${nomClient(d.client)})${d.numero_dossier ? ` — dossier n° ${d.numero_dossier}` : ''}.`,
-    '',
-    `Pièces jointes : ${pieces.join(', ')}.`,
-    '',
-    'Bien cordialement,',
-    'Lab Learning — digital@lab-learning.fr',
-  ].join('\n')
-  return `mailto:${d.point_accueil_email || ''}?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(corps)}`
-}
-
 const STATUT_BADGE: Record<string, 'default' | 'info' | 'success' | 'warning' | 'danger'> = {
   a_constituer: 'default', depose: 'info', accorde: 'success', refuse: 'danger',
   en_formation: 'info', remboursement: 'warning', solde: 'success',
@@ -100,36 +77,11 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
     .filter((d) => d.date_accord && new Date(d.date_accord).getFullYear() === anneeEnCours)
     .reduce((s, d) => s + Number(d.montant_accorde || 0), 0)
 
-  async function majFiche(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!fiche) return
-    setSaving(true)
-    const r = await majDossierAgeficeAction(fiche.id, new FormData(e.currentTarget))
-    setSaving(false)
-    if (r.success) { toast('success', 'Dossier mis à jour'); setFiche(null); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-  }
-
-  async function cocher(d: Dossier, piece: string) {
-    const r = await cocherPieceAgeficeAction(d.id, piece, !d.pieces?.[piece])
-    if (r.success) {
-      setFiche((f) => f && f.id === d.id ? { ...f, pieces: { ...f.pieces, [piece]: !d.pieces?.[piece] } } : f)
-      router.refresh()
-    } else toast('error', r.error || 'Erreur')
-  }
-
   async function depuisSession(sessionId: string) {
     setSaving(true)
     const r = await creerDossierDepuisSessionAction(sessionId)
     setSaving(false)
     if (r.success) { toast('success', 'Dossier AGEFICE créé depuis la session'); setDepuisSessionOpen(false); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-  }
-
-  async function supprimer(id: string) {
-    if (!confirm('Supprimer ce dossier AGEFICE ?')) return
-    const r = await supprimerDossierAgeficeAction(id)
-    if (r.success) { toast('success', 'Dossier supprimé'); setFiche(null); router.refresh() }
     else toast('error', r.error || 'Erreur')
   }
 
@@ -187,7 +139,7 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
             <Clock className="h-3.5 w-3.5" /> Délais AGEFICE à surveiller
           </div>
           {alertes.map(({ d, a }) => (
-            <button key={d.id} onClick={() => setFiche(d)}
+            <button key={d.id} onClick={() => (d as any).session_id ? router.push(`/dashboard/sessions/${(d as any).session_id}?tab=facturation`) : setFiche(d)}
               className="w-full flex items-center gap-2 text-left text-sm rounded-lg px-3 py-2 hover:bg-surface-50 transition-colors">
               <AlertTriangle className={a!.niveau === 'urgent' ? 'h-4 w-4 text-red-500 shrink-0' : 'h-4 w-4 text-amber-500 shrink-0'} />
               <span className="font-medium text-surface-900 truncate">{nomClient(d.client)}</span>
@@ -210,7 +162,7 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
             const pieces = Object.keys(PIECES_AVANT).filter((k) => k !== 'lettre_projet' && k !== 'mandat' && k !== 'kbis_creation')
             const cochees = pieces.filter((k) => d.pieces?.[k]).length
             return (
-              <button key={d.id} onClick={() => setFiche(d)} className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-surface-50 transition-colors">
+              <button key={d.id} onClick={() => (d as any).session_id ? router.push(`/dashboard/sessions/${(d as any).session_id}?tab=facturation`) : setFiche(d)} className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-surface-50 transition-colors">
                 <div className="h-9 w-9 rounded-xl bg-surface-100 flex items-center justify-center shrink-0">
                   <Landmark className="h-4 w-4 text-surface-500" />
                 </div>
@@ -274,95 +226,7 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
 
       {/* ── Fiche dossier ── */}
       <Modal isOpen={!!fiche} onClose={() => setFiche(null)} title={fiche ? `Dossier AGEFICE — ${nomClient(fiche.client)}` : ''} size="lg">
-        {fiche && (
-          <div className="space-y-5">
-            <form onSubmit={majFiche} className="space-y-5">
-              {/* En-tête du dossier */}
-              <div className="grid grid-cols-2 gap-3">
-                <Select id="statut" name="statut" label="Statut" defaultValue={fiche.statut}
-                  options={Object.entries(AGEFICE_STATUTS).map(([v, l]) => ({ value: v, label: l }))} />
-                <Input id="numero_dossier" name="numero_dossier" label="N° de dossier AGEFICE" defaultValue={fiche.numero_dossier || ''} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input id="point_accueil" name="point_accueil" label="Point d'Accueil (région)" placeholder="ex. AGEFICE CCI 34" defaultValue={fiche.point_accueil || ''} />
-                <Input id="point_accueil_email" name="point_accueil_email" type="email" label="Email du Point d'Accueil" defaultValue={fiche.point_accueil_email || ''} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input id="date_debut_formation" name="date_debut_formation" type="date" label="Début formation" defaultValue={fiche.date_debut_formation || ''} />
-                <Input id="date_fin_formation" name="date_fin_formation" type="date" label="Fin formation" defaultValue={fiche.date_fin_formation || ''} />
-              </div>
-
-              {/* ── Phase 1 : demande de prise en charge ── */}
-              <div className="rounded-xl border border-surface-200 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 1 — Demande de prise en charge</div>
-                  <a href={mailtoPointAccueil(fiche, 'pec')}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
-                    <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
-                  </a>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <Input id="date_depot" name="date_depot" type="date" label="Déposée le" defaultValue={fiche.date_depot || ''} />
-                  <Input id="montant_demande" name="montant_demande" type="number" label="Demandé (€)" defaultValue={fiche.montant_demande?.toString() || ''} />
-                  <Input id="montant_accorde" name="montant_accorde" type="number" label="Accordé (€)" defaultValue={fiche.montant_accorde?.toString() || ''} />
-                </div>
-                <Input id="date_accord" name="date_accord" type="date" label="Accord reçu le" defaultValue={fiche.date_accord || ''} />
-              </div>
-
-              {/* ── Phase 2 : règlement client puis remboursement ── */}
-              <div className="rounded-xl border border-surface-200 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 2 — Règlement client & remboursement</div>
-                  <a href={mailtoPointAccueil(fiche, 'remboursement')}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
-                    <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
-                  </a>
-                </div>
-                <p className="text-[11px] text-surface-400 -mt-1">
-                  Paiement direct obligatoire du dirigeant vers l&apos;organisme (virement ou chèque) — toute avance de fonds est interdite par l&apos;AGEFICE.
-                  La référence saisie ici figure sur la facture acquittée.
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  <Select id="mode_reglement" name="mode_reglement" label="Mode de règlement" defaultValue={fiche.mode_reglement || ''}
-                    options={[{ value: '', label: '—' }, { value: 'virement', label: 'Virement' }, { value: 'cheque', label: 'Chèque' }]} />
-                  <Input id="reference_reglement" name="reference_reglement" label="N° de virement / chèque" defaultValue={fiche.reference_reglement || ''} />
-                  <Input id="date_reglement" name="date_reglement" type="date" label="Réglé le" defaultValue={fiche.date_reglement || ''} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input id="montant_rembourse" name="montant_rembourse" type="number" label="Remboursé (€)" defaultValue={fiche.montant_rembourse?.toString() || ''} />
-                  <Input id="date_remboursement" name="date_remboursement" type="date" label="Remboursement reçu le" defaultValue={fiche.date_remboursement || ''} />
-                </div>
-              </div>
-
-              <textarea id="notes" name="notes" rows={2} className="input-base resize-none" placeholder="Notes…" defaultValue={fiche.notes || ''} />
-              <div className="flex items-center justify-between pt-1">
-                <button type="button" onClick={() => supprimer(fiche.id)}
-                  className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"><Trash2 className="h-3.5 w-3.5" /> Supprimer</button>
-                <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>
-              </div>
-            </form>
-
-            {/* Checklists de pièces — liste officielle AGEFICE (janvier 2026) */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {[{ titre: 'Pièces — demande de prise en charge', dict: PIECES_AVANT }, { titre: 'Pièces — demande de remboursement', dict: PIECES_APRES }].map(({ titre, dict }) => (
-                <div key={titre} className="rounded-xl border border-surface-200 p-3">
-                  <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">{titre}</div>
-                  <div className="space-y-1.5">
-                    {Object.entries(dict).map(([k, label]) => (
-                      <button key={k} type="button" onClick={() => cocher(fiche, k)}
-                        className="w-full flex items-start gap-2 text-left text-xs text-surface-700 hover:bg-surface-50 rounded-lg px-2 py-1.5 transition-colors">
-                        {fiche.pieces?.[k]
-                          ? <CheckSquare className="h-4 w-4 text-emerald-600 shrink-0" />
-                          : <Square className="h-4 w-4 text-surface-300 shrink-0" />}
-                        <span className={fiche.pieces?.[k] ? 'line-through text-surface-400' : ''}>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {fiche && <DossierAgeficeForm dossier={fiche as any} onDone={() => setFiche(null)} />}
       </Modal>
     </div>
   )

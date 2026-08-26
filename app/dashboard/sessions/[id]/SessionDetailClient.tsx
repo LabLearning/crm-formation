@@ -29,6 +29,7 @@ import { SessionDocActions } from './SessionDocActions'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
+import { SessionAgefice } from './SessionAgefice'
 import { SaisieQuestionnaire } from '@/components/qcm/SaisieQuestionnaire'
 import { SaisieRapide } from '@/components/qcm/SaisieRapide'
 import { DetailReponse } from '@/components/qcm/DetailReponse'
@@ -49,6 +50,7 @@ const CONVENTION_STATUS: Record<string, { label: string; variant: 'default' | 'i
 
 interface Props {
   session: any
+  dossierAgefice?: any
   inscriptions: any[]
   emargements: any[]
   pointages: any[]
@@ -114,7 +116,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false, dossierAgefice = null }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -155,7 +157,15 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       router.refresh()
     } else toast('error', (r as any).error || 'Erreur')
   }
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>('session')
+  const estAgefice = !!dossierAgefice || (session as any).client?.financeur_type === 'agefice'
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>(() => {
+    // Arrivée ciblée (ex. ?tab=facturation depuis la vue AGEFICE)
+    if (typeof window !== 'undefined') {
+      const t = new URLSearchParams(window.location.search).get('tab')
+      if (t) return t as any
+    }
+    return 'session'
+  })
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [showMontantModal, setShowMontantModal] = useState(false)
   const [montantValue, setMontantValue] = useState('')
@@ -428,7 +438,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Documents', icon: FileText }] : []),
-          ...(!isFormateur ? [{ id: 'facturation' as const, label: 'Facturation', icon: ReceiptEuro }] : []),
+          ...(!isFormateur ? [{ id: 'facturation' as const, label: estAgefice ? 'AGEFICE' : 'Facturation', icon: ReceiptEuro }] : []),
           ...(!isFormateur ? [{ id: 'mails' as const, label: `Mails (${emailLogs.length})`, icon: Mails }] : []),
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -1415,7 +1425,10 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         />
       )}
 
-      {tab === 'facturation' && !isFormateur && (
+      {tab === 'facturation' && !isFormateur && estAgefice && (
+        <SessionAgefice sessionId={session.id} dossier={dossierAgefice} />
+      )}
+      {tab === 'facturation' && !isFormateur && !estAgefice && (
         <FacturationOpco
           sessionId={session.id}
           statutSession={session.status || null}
