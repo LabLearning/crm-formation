@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus, Landmark, AlertTriangle, Clock, Trash2, Save,
-  CheckSquare, Square, GraduationCap, Calendar,
+  CheckSquare, Square, GraduationCap, Calendar, Mail,
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
@@ -23,7 +23,11 @@ interface Dossier {
   montant_accorde: number | null
   montant_rembourse: number | null
   point_accueil: string | null
+  point_accueil_email: string | null
   numero_dossier: string | null
+  mode_reglement: string | null
+  reference_reglement: string | null
+  date_reglement: string | null
   date_debut_formation: string | null
   date_fin_formation: string | null
   date_depot: string | null
@@ -44,6 +48,30 @@ const frDate = (d: string | null | undefined) =>
 function nomClient(c: Dossier['client']): string {
   if (!c) return '—'
   return c.nom_commercial || c.raison_sociale || `${c.prenom || ''} ${c.nom || ''}`.trim() || '—'
+}
+
+/** mailto prérempli vers le Point d'Accueil — l'envoi part de la boîte de l'admin. */
+function mailtoPointAccueil(d: Dossier, phase: 'pec' | 'remboursement'): string {
+  const dirigeant = d.apprenant ? `${d.apprenant.prenom || ''} ${d.apprenant.nom || ''}`.trim() : nomClient(d.client)
+  const objet = phase === 'pec'
+    ? `Demande de prise en charge AGEFICE — ${dirigeant} — ${d.formation?.intitule || 'formation'}`
+    : `Demande de remboursement AGEFICE — ${dirigeant}${d.numero_dossier ? ` — dossier ${d.numero_dossier}` : ''}`
+  const pieces = phase === 'pec'
+    ? ['l\'imprimé de demande signé', 'la convention / le devis', 'le programme détaillé', 'l\'attestation CFP URSSAF', 'la pièce d\'identité du dirigeant']
+    : ['l\'attestation d\'assiduité et de règlement', 'la facture acquittée', 'les feuilles d\'émargement']
+  const corps = [
+    'Bonjour,',
+    '',
+    phase === 'pec'
+      ? `Veuillez trouver ci-joint la demande de prise en charge AGEFICE pour ${dirigeant} (${nomClient(d.client)}) — formation « ${d.formation?.intitule || ''} »${d.date_debut_formation ? ` du ${frDate(d.date_debut_formation)}` : ''}${d.date_fin_formation && d.date_fin_formation !== d.date_debut_formation ? ` au ${frDate(d.date_fin_formation)}` : ''}.`
+      : `Veuillez trouver ci-joint la demande de remboursement AGEFICE pour ${dirigeant} (${nomClient(d.client)})${d.numero_dossier ? ` — dossier n° ${d.numero_dossier}` : ''}.`,
+    '',
+    `Pièces jointes : ${pieces.join(', ')}.`,
+    '',
+    'Bien cordialement,',
+    'Lab Learning — digital@lab-learning.fr',
+  ].join('\n')
+  return `mailto:${d.point_accueil_email || ''}?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(corps)}`
 }
 
 const STATUT_BADGE: Record<string, 'default' | 'info' | 'success' | 'warning' | 'danger'> = {
@@ -248,26 +276,64 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
       <Modal isOpen={!!fiche} onClose={() => setFiche(null)} title={fiche ? `Dossier AGEFICE — ${nomClient(fiche.client)}` : ''} size="lg">
         {fiche && (
           <div className="space-y-5">
-            <form onSubmit={majFiche} className="space-y-4">
+            <form onSubmit={majFiche} className="space-y-5">
+              {/* En-tête du dossier */}
               <div className="grid grid-cols-2 gap-3">
                 <Select id="statut" name="statut" label="Statut" defaultValue={fiche.statut}
                   options={Object.entries(AGEFICE_STATUTS).map(([v, l]) => ({ value: v, label: l }))} />
                 <Input id="numero_dossier" name="numero_dossier" label="N° de dossier AGEFICE" defaultValue={fiche.numero_dossier || ''} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input id="point_accueil" name="point_accueil" label="Point d'Accueil" defaultValue={fiche.point_accueil || ''} />
-                <Input id="date_depot" name="date_depot" type="date" label="Date de dépôt" defaultValue={fiche.date_depot || ''} />
+                <Input id="point_accueil" name="point_accueil" label="Point d'Accueil (région)" placeholder="ex. AGEFICE CCI 34" defaultValue={fiche.point_accueil || ''} />
+                <Input id="point_accueil_email" name="point_accueil_email" type="email" label="Email du Point d'Accueil" defaultValue={fiche.point_accueil_email || ''} />
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Input id="montant_demande" name="montant_demande" type="number" label="Demandé (€)" defaultValue={fiche.montant_demande?.toString() || ''} />
-                <Input id="montant_accorde" name="montant_accorde" type="number" label="Accordé (€)" defaultValue={fiche.montant_accorde?.toString() || ''} />
-                <Input id="montant_rembourse" name="montant_rembourse" type="number" label="Remboursé (€)" defaultValue={fiche.montant_rembourse?.toString() || ''} />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Input id="date_accord" name="date_accord" type="date" label="Date d'accord" defaultValue={fiche.date_accord || ''} />
+              <div className="grid grid-cols-2 gap-3">
                 <Input id="date_debut_formation" name="date_debut_formation" type="date" label="Début formation" defaultValue={fiche.date_debut_formation || ''} />
                 <Input id="date_fin_formation" name="date_fin_formation" type="date" label="Fin formation" defaultValue={fiche.date_fin_formation || ''} />
               </div>
+
+              {/* ── Phase 1 : demande de prise en charge ── */}
+              <div className="rounded-xl border border-surface-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 1 — Demande de prise en charge</div>
+                  <a href={mailtoPointAccueil(fiche, 'pec')}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
+                    <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
+                  </a>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <Input id="date_depot" name="date_depot" type="date" label="Déposée le" defaultValue={fiche.date_depot || ''} />
+                  <Input id="montant_demande" name="montant_demande" type="number" label="Demandé (€)" defaultValue={fiche.montant_demande?.toString() || ''} />
+                  <Input id="montant_accorde" name="montant_accorde" type="number" label="Accordé (€)" defaultValue={fiche.montant_accorde?.toString() || ''} />
+                </div>
+                <Input id="date_accord" name="date_accord" type="date" label="Accord reçu le" defaultValue={fiche.date_accord || ''} />
+              </div>
+
+              {/* ── Phase 2 : règlement client puis remboursement ── */}
+              <div className="rounded-xl border border-surface-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 2 — Règlement client & remboursement</div>
+                  <a href={mailtoPointAccueil(fiche, 'remboursement')}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
+                    <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
+                  </a>
+                </div>
+                <p className="text-[11px] text-surface-400 -mt-1">
+                  Paiement direct obligatoire du dirigeant vers l&apos;organisme (virement ou chèque) — toute avance de fonds est interdite par l&apos;AGEFICE.
+                  La référence saisie ici figure sur la facture acquittée.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <Select id="mode_reglement" name="mode_reglement" label="Mode de règlement" defaultValue={fiche.mode_reglement || ''}
+                    options={[{ value: '', label: '—' }, { value: 'virement', label: 'Virement' }, { value: 'cheque', label: 'Chèque' }]} />
+                  <Input id="reference_reglement" name="reference_reglement" label="N° de virement / chèque" defaultValue={fiche.reference_reglement || ''} />
+                  <Input id="date_reglement" name="date_reglement" type="date" label="Réglé le" defaultValue={fiche.date_reglement || ''} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input id="montant_rembourse" name="montant_rembourse" type="number" label="Remboursé (€)" defaultValue={fiche.montant_rembourse?.toString() || ''} />
+                  <Input id="date_remboursement" name="date_remboursement" type="date" label="Remboursement reçu le" defaultValue={fiche.date_remboursement || ''} />
+                </div>
+              </div>
+
               <textarea id="notes" name="notes" rows={2} className="input-base resize-none" placeholder="Notes…" defaultValue={fiche.notes || ''} />
               <div className="flex items-center justify-between pt-1">
                 <button type="button" onClick={() => supprimer(fiche.id)}
@@ -276,9 +342,9 @@ export function AgeficeClient({ dossiers, clients, formations, sessionsExistante
               </div>
             </form>
 
-            {/* Checklists de pièces */}
+            {/* Checklists de pièces — liste officielle AGEFICE (janvier 2026) */}
             <div className="grid md:grid-cols-2 gap-4">
-              {[{ titre: 'Pièces AVANT la formation (dépôt)', dict: PIECES_AVANT }, { titre: 'Pièces APRÈS la formation (remboursement)', dict: PIECES_APRES }].map(({ titre, dict }) => (
+              {[{ titre: 'Pièces — demande de prise en charge', dict: PIECES_AVANT }, { titre: 'Pièces — demande de remboursement', dict: PIECES_APRES }].map(({ titre, dict }) => (
                 <div key={titre} className="rounded-xl border border-surface-200 p-3">
                   <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">{titre}</div>
                   <div className="space-y-1.5">

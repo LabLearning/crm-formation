@@ -26,7 +26,13 @@ CREATE TABLE IF NOT EXISTS dossiers_agefice (
   montant_accorde numeric,
   montant_rembourse numeric,
   point_accueil text,
+  point_accueil_email text,
   numero_dossier text,
+  -- Règlement du client vers l'OF (paiement direct obligatoire, jamais d'avance)
+  mode_reglement text,          -- virement | cheque
+  reference_reglement text,     -- n° de virement ou n° de chèque
+  date_reglement date,
+  facture_id uuid REFERENCES factures(id) ON DELETE SET NULL,
   date_debut_formation date,
   date_fin_formation date,
   date_depot date,

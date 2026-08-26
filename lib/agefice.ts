@@ -51,20 +51,21 @@ export const DEPOT_MAX_JOURS = 120
 export const REMBOURSEMENT_MAX_JOURS = 120
 
 export const PIECES_AVANT = {
-  formulaire: 'Formulaire AGEFICE signé et daté (dates précises de formation)',
-  programme: 'Programme détaillé sur papier à en-tête de l\'organisme',
-  piece_identite: 'Pièce d\'identité (photo + signature, moins de 10 ans)',
-  attestation_cfp: 'Attestation CFP URSSAF de l\'année (avec code de sécurité)',
-  convention_devis: 'Convention de formation ou devis détaillé',
-  lettre_projet: 'Lettre projet (si hors domaine d\'activité / reconversion)',
-  mandat: 'Mandat signé stagiaire + organisme (si accompagnement renforcé)',
-  kbis_creation: 'KBIS / SIRENE + affiliation URSSAF (créateurs d\'entreprise)',
+  formulaire: 'Imprimé de demande signé stagiaire + organisme (≥ 15 j avant le début)',
+  convention_devis: 'Convention ou devis en-tête (NDA, stagiaires, coût unitaire, ventilation des heures, signatures)',
+  programme: 'Programme détaillé (contenu, modalités pédagogiques, sanction, assiduité — mentions FOAD si distanciel)',
+  calendrier: 'Calendrier (présentiel / synchrone, si absent de la convention)',
+  attestation_cfp: 'Attestation CFP URSSAF (nom, FAF compétent, code de sécurité)',
+  piece_identite: 'Pièce d\'identité signée, délivrée il y a moins de 10 ans',
+  attestation_absence_lien: 'Attestation d\'absence de lien OF/formateur (sur demande AGEFICE)',
+  lettre_projet: 'Lettre de motivation (si formation hors domaine d\'activité)',
+  kbis_creation: 'K-Bis année en cours + attestation URSSAF FAF (nouveaux affiliés)',
 } as const
 
 export const PIECES_APRES = {
-  attestation_assiduite: 'Attestation d\'assiduité et de règlement',
-  facture_acquittee: 'Facture acquittée (tamponnée, signée, mention « acquittée »)',
-  emargements: 'Feuilles d\'émargement (présentiel) / logs de connexion (distanciel)',
+  attestation_assiduite: 'Attestation d\'assiduité ET de règlement (modèle AGEFICE : dates, durée effective, coût HT, mode et date de règlement, signatures + tampon)',
+  facture_acquittee: 'Facture acquittée : n°, stagiaire, HT/TVA/TTC, mention « acquittée » + tampon',
+  emargements: 'Émargements par demi-journée (présentiel) / relevés de connexion non modifiables (distanciel)',
   convention_finale: 'Convention de formation (si non transmise au dépôt)',
 } as const
 

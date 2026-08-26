@@ -63,8 +63,9 @@ export async function majDossierAgeficeAction(id: string, formData: FormData): P
   const supabase = await createServiceRoleClient()
 
   const patch: Record<string, any> = { updated_at: new Date().toISOString() }
-  const champsTexte = ['statut', 'categorie', 'modalite', 'point_accueil', 'numero_dossier', 'notes',
-    'date_debut_formation', 'date_fin_formation', 'date_depot', 'date_accord', 'date_remboursement', 'apprenant_id', 'formation_id']
+  const champsTexte = ['statut', 'categorie', 'modalite', 'point_accueil', 'point_accueil_email', 'numero_dossier', 'notes',
+    'date_debut_formation', 'date_fin_formation', 'date_depot', 'date_accord', 'date_remboursement', 'apprenant_id', 'formation_id',
+    'mode_reglement', 'reference_reglement', 'date_reglement']
   for (const c of champsTexte) if (formData.has(c)) patch[c] = texte(formData.get(c))
   const champsNombre = ['duree_heures', 'cout_pedagogique', 'montant_demande', 'montant_accorde', 'montant_rembourse']
   for (const c of champsNombre) if (formData.has(c)) patch[c] = nombre(formData.get(c))

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Document, Page, View, Text } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image } from '@react-pdf/renderer'
 import { PdfSectionTitle, shared, PdfDocHeader, PdfDocFooter } from './components'
 import type { Facture } from '@/lib/types/facture'
 
@@ -240,6 +240,34 @@ export function FacturePDF({ facture, org, agence, detail }: {
             ))}
           </View>
         )}
+
+        {/* Facture acquittée : mention exigée par les financeurs (AGEFICE
+            notamment) — mode et référence du règlement + tampon de l'organisme. */}
+        {(() => {
+          const regles = paiements.filter((p: any) => p.status !== 'refuse' && p.status !== 'annule')
+          const totalRegle = regles.reduce((t: number, p: any) => t + Number(p.montant || 0), 0)
+          const acquittee = facture.status === 'payee' || (totalRegle > 0 && totalRegle >= Number(facture.montant_ttc || 0))
+          if (!acquittee) return null
+          const dernier: any = regles[regles.length - 1] || {}
+          const detailReglement = [
+            dernier.date_paiement ? `le ${fmtDate(dernier.date_paiement)}` : null,
+            dernier.mode ? `par ${(PAIEMENT_LABELS as any)[dernier.mode] || dernier.mode}` : null,
+            dernier.reference ? `n° ${dernier.reference}` : null,
+          ].filter(Boolean).join(' ')
+          return (
+            <View style={{ marginBottom: 10, borderWidth: 1, borderColor: '#16a34a', borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View>
+                <Text style={{ fontSize: 11, fontFamily: 'Satoshi', fontWeight: 900, color: '#15803d', letterSpacing: 1 }}>FACTURE ACQUITTÉE</Text>
+                <Text style={{ fontSize: 8, color: '#166534', marginTop: 3 }}>
+                  {`Règlement reçu en totalité${detailReglement ? ` ${detailReglement}` : ''} — vaut reçu (art. 1353 du Code civil).`}
+                </Text>
+              </View>
+              {org?.tampon_signature_url ? (
+                <Image src={org.tampon_signature_url} style={{ width: 90, height: 45, objectFit: 'contain' }} />
+              ) : null}
+            </View>
+          )
+        })()}
 
         {/* Reste à régler — attendu par les financeurs. Quand un règlement a
             déjà été reçu, l'information figure déjà dans le bloc des totaux. */}
