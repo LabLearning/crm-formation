@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
-import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction } from './actions'
+import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, creerDossierDepuisSessionAction } from './actions'
 
 interface Dossier {
   id: string
@@ -51,16 +51,19 @@ const STATUT_BADGE: Record<string, 'default' | 'info' | 'success' | 'warning' | 
   en_formation: 'info', remboursement: 'warning', solde: 'success',
 }
 
-export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
+export function AgeficeClient({ dossiers, clients, formations, sessionsExistantes = [], tableAbsente }: {
   dossiers: Dossier[]
   clients: any[]
   formations: any[]
+  sessionsExistantes?: any[]
   tableAbsente: boolean
 }) {
   const { toast } = useToast()
   const router = useRouter()
   const [fiche, setFiche] = useState<Dossier | null>(null)
   const [saving, setSaving] = useState(false)
+  const [depuisSessionOpen, setDepuisSessionOpen] = useState(false)
+  const [rechercheSession, setRechercheSession] = useState('')
 
   const enCours = dossiers.filter((d) => !['solde', 'refuse'].includes(d.statut))
   const alertes = dossiers.map((d) => ({ d, a: alerteDelai(d) })).filter((x) => x.a)
@@ -87,6 +90,14 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
     } else toast('error', r.error || 'Erreur')
   }
 
+  async function depuisSession(sessionId: string) {
+    setSaving(true)
+    const r = await creerDossierDepuisSessionAction(sessionId)
+    setSaving(false)
+    if (r.success) { toast('success', 'Dossier AGEFICE créé depuis la session'); setDepuisSessionOpen(false); router.refresh() }
+    else toast('error', r.error || 'Erreur')
+  }
+
   async function supprimer(id: string) {
     if (!confirm('Supprimer ce dossier AGEFICE ?')) return
     const r = await supprimerDossierAgeficeAction(id)
@@ -103,10 +114,15 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
             Dirigeants non salariés — dépôt au Point d&apos;Accueil 15 j à 4 mois avant la formation
           </p>
         </div>
-        <Link href="/dashboard/dossiers/nouveau?financement=agefice"
-          className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
-          <Plus className="h-4 w-4" /> Nouveau dossier
-        </Link>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => setDepuisSessionOpen(true)} icon={<Calendar className="h-4 w-4" />}>
+            Depuis une session existante
+          </Button>
+          <Link href="/dashboard/dossiers/nouveau?financement=agefice"
+            className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
+            <Plus className="h-4 w-4" /> Nouveau dossier
+          </Link>
+        </div>
       </div>
 
       {tableAbsente && (
@@ -192,6 +208,41 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
           })}
         </div>
       )}
+
+      {/* ── Depuis une session existante ── */}
+      <Modal isOpen={depuisSessionOpen} onClose={() => setDepuisSessionOpen(false)} title="Dossier AGEFICE depuis une session" size="lg">
+        <div className="space-y-3">
+          <Input id="recherche_session" label="Rechercher" placeholder="Client, formation, référence…"
+            value={rechercheSession} onChange={(e: any) => setRechercheSession(e.target.value)} />
+          <div className="max-h-80 overflow-y-auto divide-y divide-surface-100 rounded-xl border border-surface-100">
+            {sessionsExistantes
+              .filter((se) => {
+                const dejaLie = dossiers.some((d: any) => (d as any).session_id === se.id)
+                if (dejaLie) return false
+                const q = rechercheSession.toLowerCase()
+                if (!q) return true
+                return [se.reference, se.formation?.intitule, se.client?.nom_commercial, se.client?.raison_sociale]
+                  .some((v) => (v || '').toLowerCase().includes(q))
+              })
+              .slice(0, 40)
+              .map((se) => (
+                <button key={se.id} disabled={saving} onClick={() => depuisSession(se.id)}
+                  className="w-full text-left px-4 py-2.5 hover:bg-surface-50 transition-colors flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-surface-900 truncate">
+                      {se.client?.nom_commercial || se.client?.raison_sociale || 'Sans client'} — {se.formation?.intitule || 'Formation'}
+                    </div>
+                    <div className="text-xs text-surface-500">{se.reference} · {frDate(se.date_debut)}</div>
+                  </div>
+                  <Plus className="h-4 w-4 text-surface-400 shrink-0" />
+                </button>
+              ))}
+          </div>
+          <p className="text-[11px] text-surface-400">
+            Le client passera automatiquement en financeur AGEFICE ; le dirigeant repris est le premier inscrit de la session.
+          </p>
+        </div>
+      </Modal>
 
       {/* ── Fiche dossier ── */}
       <Modal isOpen={!!fiche} onClose={() => setFiche(null)} title={fiche ? `Dossier AGEFICE — ${nomClient(fiche.client)}` : ''} size="lg">

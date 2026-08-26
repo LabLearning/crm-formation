@@ -14,7 +14,7 @@ export default async function AgeficePage() {
   const supabase = await createServiceRoleClient()
   const orgId = session.organization.id
 
-  const [dossiersR, clientsR, formationsR] = await Promise.all([
+  const [dossiersR, clientsR, formationsR, sessionsR] = await Promise.all([
     supabase.from('dossiers_agefice')
       .select('*, client:client_id(raison_sociale, nom_commercial, nom, prenom), apprenant:apprenant_id(prenom, nom), formation:formation_id(intitule, duree_heures)')
       .eq('organization_id', orgId)
@@ -27,6 +27,12 @@ export default async function AgeficePage() {
       .select('id, intitule, duree_heures, prix_inter')
       .eq('organization_id', orgId)
       .order('intitule'),
+    supabase.from('sessions')
+      .select('id, reference, date_debut, status, client:client_id(raison_sociale, nom_commercial), formation:formation_id(intitule)')
+      .eq('organization_id', orgId)
+      .neq('status', 'annulee')
+      .order('date_debut', { ascending: false })
+      .limit(200),
   ])
 
   const tableAbsente = !!dossiersR.error && /dossiers_agefice/.test(dossiersR.error.message)
@@ -37,6 +43,7 @@ export default async function AgeficePage() {
       dossiers={(dossiersR.data || []) as any[]}
       clients={(clientsR.data || []) as any[]}
       formations={(formationsR.data || []) as any[]}
+      sessionsExistantes={(sessionsR.data || []) as any[]}
       tableAbsente={tableAbsente}
     />
   )

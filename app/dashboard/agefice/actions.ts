@@ -100,3 +100,53 @@ export async function supprimerDossierAgeficeAction(id: string): Promise<{ succe
   revalidatePath('/dashboard/agefice')
   return { success: true }
 }
+
+/**
+ * Crée un dossier AGEFICE à partir d'une session EXISTANTE : reprend client,
+ * dirigeant (1er inscrit), formation, dates. Pour basculer un client déjà
+ * en base dans le circuit AGEFICE sans repasser par le wizard.
+ */
+export async function creerDossierDepuisSessionAction(sessionId: string): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const { data: sess } = await supabase.from('sessions')
+    .select('id, client_id, formation_id, date_debut, date_fin, formation:formation_id(duree_heures)')
+    .eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: existant } = await supabase.from('dossiers_agefice')
+    .select('id').eq('session_id', sessionId).maybeSingle()
+  if (existant) return { success: false, error: 'Un dossier AGEFICE existe déjà pour cette session' }
+
+  const { data: insc } = await supabase.from('inscriptions')
+    .select('apprenant_id').eq('session_id', sessionId).order('created_at').limit(1)
+
+  const dureeH = (sess as any).formation?.duree_heures || null
+  const { error } = await supabase.from('dossiers_agefice').insert({
+    organization_id: orgId,
+    client_id: sess.client_id,
+    apprenant_id: insc?.[0]?.apprenant_id || null,
+    formation_id: sess.formation_id,
+    session_id: sess.id,
+    statut: 'a_constituer',
+    duree_heures: dureeH,
+    date_debut_formation: sess.date_debut,
+    date_fin_formation: sess.date_fin,
+    montant_demande: estimationPriseEnCharge({
+      modalite: 'presentiel', duree_heures: dureeH, cout_pedagogique: null,
+      categorie: 'metier', cfp_faible: false,
+    }),
+  })
+  if (error) {
+    console.error('[agefice session]', error.message)
+    return { success: false, error: /dossiers_agefice/.test(error.message) ? 'Migration 143 à appliquer d\'abord' : 'Création impossible' }
+  }
+  if (sess.client_id) {
+    // Marque le client AGEFICE (échoue en silence tant que l'enum n'est pas migré)
+    await supabase.from('clients').update({ financeur_type: 'agefice' }).eq('id', sess.client_id)
+  }
+  revalidatePath('/dashboard/agefice')
+  return { success: true }
+}
