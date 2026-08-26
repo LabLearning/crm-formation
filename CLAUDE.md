@@ -20,13 +20,15 @@
 - email admin: `digital@lab-learning.fr`
 - org name: `Lab Learning`
 
-## Regles de design strictes
-- **ZERO emoji** — uniquement icones Lucide React SVG
-- Polices : Satoshi (headings) + General Sans (body) via Fontshare CDN
-- Palette : surface-900 (#1C1917) primaire, brand-500 (#6366F1) accent, surface-50 (#FAFAFA) bg
+## Regles de design strictes — Design System Lab Learning (aout 2026)
+- Source de verite : bundle « Lab Learning Design System » (tokens, composants, maquettes) — deja mappe dans tailwind.config.ts
+- **ZERO emoji** — icones Lucide (migration Hugeicons Stroke Rounded 1,5px prevue, voir bundle)
+- Polices : Montserrat (headings 600-800) + Manrope (UI/body) + JetBrains Mono (donnees) via Google Fonts
+- Palette : pine brand-500 (#205040) marque, accent mint (#5CD9A0 / accent-400), neutres slate froids (surface-*), semantiques info/warning/danger du DS
+- Ombres slate douces en couches (jamais de noir dur), focus ring 3px menthe, rayons 8-16px
+- Ton : sentence case, vouvoiement, copy orientee resultat
 - Classes CSS : `.card`, `.btn-primary`, `.input-base`, `.section-label`, `.stat-card`
 - Sidebar : titres colores par section, fond teinte subtil sur les sous-menus
-- Sections sidebar : Commercial (bleu), Outils (violet), Formations (emeraude), Administratif (ambre), Finances (rose), Qualite (teal), Systeme (slate)
 
 ## Regles de developpement
 1. TypeScript strict mais `ignoreBuildErrors: true` dans next.config.js
