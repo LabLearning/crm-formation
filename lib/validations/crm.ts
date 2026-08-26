@@ -48,7 +48,7 @@ export const createLeadSchema = z.object({
     'partenaire', 'ancien_client', 'autre',
   ]).optional().default('autre'),
   // Financement / OPCO
-  financeur_type: z.enum(['opco', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
+  financeur_type: z.enum(['opco', 'agefice', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
   opco_id: z.string().uuid().optional().or(z.literal('')),
   opco_compte_status: z.enum(['aucun', 'courrier_envoye', 'en_attente_validation', 'actif', 'inactif']).optional().or(z.literal('')),
   code_idcc: z.string().optional(),
@@ -109,7 +109,7 @@ export const createClientSchema = z.object({
   whatsapp_opt_in: boolChamp().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   site_web: z.string().url('URL invalide').optional().or(z.literal('')),
-  financeur_type: z.enum(['opco', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
+  financeur_type: z.enum(['opco', 'agefice', 'entreprise', 'france_travail', 'cpf', 'fonds_propres', 'region', 'autre']).optional().or(z.literal('')),
   numero_opco: z.string().optional(),
   opco_id: z.string().uuid().optional().or(z.literal('')),
   opco_compte_status: z.enum(['aucun', 'courrier_envoye', 'en_attente_validation', 'actif', 'inactif']).optional().or(z.literal('')),

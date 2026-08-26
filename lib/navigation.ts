@@ -71,6 +71,7 @@ export const navigation: NavSection[] = [
     title: 'Administratif',
     items: [
       { label: 'Dossiers', href: '/dashboard/dossiers', icon: 'FolderOpen', module: 'conventions' },
+      { label: 'Dossiers AGEFICE', href: '/dashboard/agefice', icon: 'Landmark', module: 'conventions' },
       { label: 'Conventions', href: '/dashboard/conventions', icon: 'FileSignature', module: 'conventions' },
       { label: 'Contrats formateurs', href: '/dashboard/contrats', icon: 'FilePen', module: 'conventions' },
       { label: 'POEI', href: '/dashboard/poei', icon: 'Briefcase', module: 'conventions', accent: 'sky' },

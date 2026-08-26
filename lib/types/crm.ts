@@ -37,7 +37,7 @@ export type LeadSource =
 export type ClientType = 'entreprise' | 'particulier'
 
 export type FinanceurType =
-  | 'opco' | 'entreprise' | 'france_travail' | 'cpf'
+  | 'opco' | 'agefice' | 'entreprise' | 'france_travail' | 'cpf'
   | 'fonds_propres' | 'region' | 'autre'
 
 export type InteractionType = 'appel' | 'email' | 'rdv' | 'note' | 'relance' | 'autre'
@@ -297,6 +297,7 @@ export const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
 
 export const FINANCEUR_LABELS: Record<FinanceurType, string> = {
   opco: 'OPCO',
+  agefice: 'AGEFICE (dirigeant indépendant)',
   entreprise: 'Entreprise',
   france_travail: 'France Travail',
   cpf: 'CPF',
