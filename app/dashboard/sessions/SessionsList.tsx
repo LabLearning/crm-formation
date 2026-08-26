@@ -86,6 +86,9 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
     router.replace(p === 'actives' ? pathname : `${pathname}?periode=${p}`)
   }
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [formateurFilter, setFormateurFilter] = useState<string>('all')
+  const [formationFilter, setFormationFilter] = useState<string>('all')
   const [view, setView] = useState<'liste' | 'kanban'>('liste')
   const [createOpen, setCreateOpen] = useState(false)
   const [editSession, setEditSession] = useState<Session | null>(null)
@@ -117,9 +120,12 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
         ((s as any).client?.raison_sociale || '').toLowerCase().includes(search.toLowerCase()) ||
         (s.formateur ? `${s.formateur.prenom} ${s.formateur.nom}` : '').toLowerCase().includes(search.toLowerCase())
       const matchStatus = statusFilter === 'all' || s.status === statusFilter
-      return matchSearch && matchStatus
+      const matchType = typeFilter === 'all' || (s as any).type_session === typeFilter
+      const matchFormateur = formateurFilter === 'all' || (s as any).formateur_id === formateurFilter
+      const matchFormation = formationFilter === 'all' || (s as any).formation_id === formationFilter
+      return matchSearch && matchStatus && matchType && matchFormateur && matchFormation
     })
-  }, [sessions, search, statusFilter])
+  }, [sessions, search, statusFilter, typeFilter, formateurFilter, formationFilter])
 
   // Liste : groupée par jour de début (les plus récentes/futures en premier — même ordre que le fetch)
   const grouped = useMemo(() => {
@@ -231,38 +237,68 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
         </div>
       </div>
 
-      {/* Filtres + switch de vue */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        {/* Période (chargement serveur : les sessions passées ne sont pas chargées par défaut) */}
-        <div className="flex gap-1 bg-surface-100 rounded-xl p-1 shrink-0 self-start">
-          {(['actives', 'passees', 'toutes'] as const).map((p) => (
-            <button key={p} onClick={() => handlePeriode(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${periode === p ? 'bg-white shadow-sm text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}>
-              {PERIODE_LABELS[p]}
-            </button>
-          ))}
+      {/* Filtres : période (chargement serveur) puis tris combinables */}
+      <div className="space-y-3 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex gap-1 bg-surface-100 rounded-xl p-1 shrink-0 self-start">
+            {(['actives', 'passees', 'toutes'] as const).map((p) => (
+              <button key={p} onClick={() => handlePeriode(p)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${periode === p ? 'bg-white shadow-sm text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}>
+                {PERIODE_LABELS[p]}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-surface-200/60 flex-1 max-w-md">
+            <Search className="h-4 w-4 text-surface-400 shrink-0" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher (formation, client, formateur, lieu...)" className="bg-transparent text-sm text-surface-700 placeholder:text-surface-400 focus:outline-none flex-1" />
+          </div>
+          {/* Switch Liste / Kanban */}
+          <div className="flex gap-1 bg-surface-100 rounded-xl p-1 shrink-0 self-start sm:ml-auto">
+            {([['liste', List, 'Liste'], ['kanban', LayoutGrid, 'Kanban']] as const).map(([v, Icon, label]) => (
+              <button key={v} onClick={() => setView(v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${view === v ? 'bg-white shadow-sm text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}>
+                <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-surface-200/60 flex-1 max-w-md">
-          <Search className="h-4 w-4 text-surface-400 shrink-0" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher (formation, client, formateur, lieu...)" className="bg-transparent text-sm text-surface-700 placeholder:text-surface-400 focus:outline-none flex-1" />
-        </div>
-        <div className="flex gap-1.5 overflow-x-auto">
-          {['all', 'planifiee', 'confirmee', 'en_cours', 'terminee', 'annulee'].map((s) => (
-            <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors whitespace-nowrap ${statusFilter === s ? 'bg-surface-900 text-white shadow-xs' : 'bg-white text-surface-500 border border-surface-200/80 hover:border-surface-300 hover:text-surface-700'}`}>
-              {s === 'all' ? 'Toutes' : SESSION_STATUS_LABELS[s as SessionStatus]}
-              <span className="ml-1 opacity-60">({statusCounts[s] || 0})</span>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Type INTER / INTRA */}
+          <div className="flex gap-1 bg-surface-100 rounded-xl p-1 shrink-0">
+            {([['all', 'Tous types'], ['inter', 'INTER'], ['intra', 'INTRA']] as const).map(([v, label]) => (
+              <button key={v} onClick={() => setTypeFilter(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${typeFilter === v ? 'bg-white shadow-sm text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <select value={formationFilter} onChange={(e) => setFormationFilter(e.target.value)}
+            className="text-xs font-medium rounded-xl border border-surface-200/80 bg-white px-3 py-2 text-surface-700 max-w-56 truncate">
+            <option value="all">Toutes les formations</option>
+            {formations.map((f) => <option key={f.id} value={f.id}>{f.intitule}</option>)}
+          </select>
+          <select value={formateurFilter} onChange={(e) => setFormateurFilter(e.target.value)}
+            className="text-xs font-medium rounded-xl border border-surface-200/80 bg-white px-3 py-2 text-surface-700">
+            <option value="all">Tous les formateurs</option>
+            {formateurs.map((f) => <option key={f.id} value={f.id}>{f.prenom} {f.nom}</option>)}
+          </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs font-medium rounded-xl border border-surface-200/80 bg-white px-3 py-2 text-surface-700">
+            <option value="all">Tous les statuts ({statusCounts.all || 0})</option>
+            {['planifiee', 'en_attente_signatures', 'validee', 'confirmee', 'en_cours', 'terminee', 'annulee']
+              .filter((st) => statusCounts[st])
+              .map((st) => (
+                <option key={st} value={st}>{SESSION_STATUS_LABELS[st as SessionStatus]} ({statusCounts[st]})</option>
+              ))}
+          </select>
+          {(typeFilter !== 'all' || formateurFilter !== 'all' || formationFilter !== 'all' || statusFilter !== 'all') && (
+            <button onClick={() => { setTypeFilter('all'); setFormateurFilter('all'); setFormationFilter('all'); setStatusFilter('all') }}
+              className="text-xs text-surface-400 hover:text-surface-600 underline underline-offset-2">
+              Réinitialiser
             </button>
-          ))}
-        </div>
-        {/* Switch Liste / Kanban */}
-        <div className="flex gap-1 bg-surface-100 rounded-xl p-1 shrink-0 self-start">
-          {([['liste', List, 'Liste'], ['kanban', LayoutGrid, 'Kanban']] as const).map(([v, Icon, label]) => (
-            <button key={v} onClick={() => setView(v)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${view === v ? 'bg-white shadow-sm text-surface-900' : 'text-surface-500 hover:text-surface-700'}`}>
-              <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
-            </button>
-          ))}
+          )}
+          <span className="text-xs text-surface-400 ml-auto">{filtered.length} session{filtered.length > 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -376,7 +412,7 @@ export function SessionsList({ sessions, formations, formateurs, clients = [], a
         <div className="card flex flex-col items-center justify-center text-center py-14 px-8">
           <Calendar className="h-6 w-6 text-surface-400" />
           <p className="text-sm text-surface-500">
-            {search || statusFilter !== 'all' ? 'Aucune session trouvée' : 'Aucune session planifiée. Créez votre première session !'}
+            {search || statusFilter !== 'all' || typeFilter !== 'all' || formateurFilter !== 'all' || formationFilter !== 'all' ? 'Aucune session trouvée' : 'Aucune session planifiée. Créez votre première session !'}
           </p>
         </div>
       )}
