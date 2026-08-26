@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Plus, Landmark, AlertTriangle, Clock, Euro, Trash2, Save,
-  CheckSquare, Square, GraduationCap, Building2, X,
+  Plus, Landmark, AlertTriangle, Clock, Trash2, Save,
+  CheckSquare, Square, GraduationCap, Calendar,
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
