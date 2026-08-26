@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Save, CheckSquare, Square, Mail } from 'lucide-react'
+import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2 } from 'lucide-react'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES } from '@/lib/agefice'
-import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction } from '@/app/dashboard/agefice/actions'
+import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, genererFactureAgeficeAction } from '@/app/dashboard/agefice/actions'
 
 /**
  * Formulaire du dossier AGEFICE en 2 phases (prise en charge → règlement
@@ -15,6 +15,7 @@ import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgef
 export interface DossierAgefice {
   id: string
   session_id?: string | null
+  facture_id?: string | null
   statut: string
   categorie: string
   modalite: string
@@ -77,7 +78,19 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
   const { toast } = useToast()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [facturation, setFacturation] = useState(false)
   const [pieces, setPieces] = useState<Record<string, boolean>>(dossier.pieces || {})
+
+  async function genererFacture() {
+    setFacturation(true)
+    const r = await genererFactureAgeficeAction(dossier.id)
+    setFacturation(false)
+    if (r.success && r.data) {
+      toast('success', `Facture ${r.data.numero || ''} prête`)
+      window.open(`/api/pdf/facture/${r.data.factureId}`, '_blank')
+      router.refresh()
+    } else toast('error', r.error || 'Erreur')
+  }
 
   async function majFiche(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -162,6 +175,22 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
           <div className="grid grid-cols-2 gap-3">
             <Input id="montant_rembourse" name="montant_rembourse" type="number" label="Remboursé (€)" defaultValue={dossier.montant_rembourse?.toString() || ''} />
             <Input id="date_remboursement" name="date_remboursement" type="date" label="Remboursement reçu le" defaultValue={dossier.date_remboursement || ''} />
+          </div>
+
+          {/* Documents de la demande de remboursement */}
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            <button type="button" onClick={genererFacture} disabled={facturation}
+              className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-50">
+              {facturation ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Receipt className="h-3.5 w-3.5" />}
+              {dossier.facture_id ? 'Voir la facture' : 'Générer la facture'}
+            </button>
+            <a href={`/api/pdf/attestation-agefice/${dossier.id}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300 transition-colors">
+              <FileDown className="h-3.5 w-3.5" /> Attestation d&apos;assiduité et de règlement
+            </a>
+            <span className="text-[11px] text-surface-400">
+              Enregistrez le paiement sur la facture pour qu&apos;elle ressorte « acquittée ».
+            </span>
           </div>
         </div>
 

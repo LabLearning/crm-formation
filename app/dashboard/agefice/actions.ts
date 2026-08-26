@@ -151,3 +151,70 @@ export async function creerDossierDepuisSessionAction(sessionId: string): Promis
   revalidatePath('/dashboard/agefice')
   return { success: true }
 }
+
+/**
+ * Facture AGEFICE : adressée au client (le dirigeant paie en direct, jamais
+ * de subrogation). Montant = coût pédagogique du dossier, TVA selon le régime
+ * de l'organisme. La facture est reliée au dossier (facture_id).
+ */
+export async function genererFactureAgeficeAction(dossierId: string): Promise<{ success: boolean; error?: string; data?: { factureId: string; numero?: string } }> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const { data: d } = await supabase.from('dossiers_agefice')
+    .select('*, formation:formation_id(intitule), apprenant:apprenant_id(prenom, nom), session:session_id(reference, prix_ht)')
+    .eq('id', dossierId).eq('organization_id', orgId).maybeSingle()
+  if (!d) return { success: false, error: 'Dossier introuvable' }
+  if (d.facture_id) {
+    const { data: f } = await supabase.from('factures').select('id, numero').eq('id', d.facture_id).maybeSingle()
+    if (f) return { success: true, data: { factureId: f.id, numero: (f as any).numero } }
+  }
+
+  const montantHt = Number(d.cout_pedagogique || (d as any).session?.prix_ht || d.montant_demande || 0)
+  if (!(montantHt > 0)) return { success: false, error: 'Renseignez le coût pédagogique du dossier avant de facturer' }
+
+  const intitule = (d as any).formation?.intitule || 'Formation'
+  const stagiaire = (d as any).apprenant ? `${(d as any).apprenant.prenom || ''} ${(d as any).apprenant.nom || ''}`.trim() : ''
+  const today = new Date().toISOString().slice(0, 10)
+  const echeance = new Date(); echeance.setDate(echeance.getDate() + 30)
+
+  const { data: facture, error } = await supabase.from('factures').insert({
+    organization_id: orgId,
+    type: 'facture',
+    client_id: d.client_id,
+    session_id: d.session_id,
+    objet: `Formation « ${intitule} »${stagiaire ? ` — ${stagiaire}` : ''}`,
+    status: 'brouillon',
+    date_emission: today,
+    date_echeance: echeance.toISOString().slice(0, 10),
+    taux_tva: 0,
+    subrogation: false,
+    conditions_paiement: 'Paiement direct par le bénéficiaire (virement ou chèque) — financement AGEFICE, sans subrogation.',
+    montant_ht: montantHt,
+    montant_tva: 0,
+    montant_ttc: montantHt,
+    montant_restant: montantHt,
+    notes_internes: `Facture AGEFICE du dossier ${d.numero_dossier || dossierId}.`,
+    created_by: session.user.id,
+  }).select('id, numero').single()
+  if (error || !facture) {
+    console.error('[facture agefice]', error?.message)
+    return { success: false, error: 'Création de la facture impossible' }
+  }
+
+  await supabase.from('facture_lignes').insert({
+    facture_id: facture.id,
+    designation: `Formation « ${intitule} »${stagiaire ? ` — stagiaire : ${stagiaire}` : ''}`,
+    quantite: 1,
+    unite: 'forfait',
+    prix_unitaire_ht: montantHt,
+    montant_ht: montantHt,
+    position: 0,
+  })
+  await supabase.from('dossiers_agefice').update({ facture_id: facture.id, updated_at: new Date().toISOString() }).eq('id', dossierId)
+
+  revalidatePath('/dashboard/agefice')
+  revalidatePath('/dashboard/factures')
+  return { success: true, data: { factureId: facture.id, numero: (facture as any).numero } }
+}
