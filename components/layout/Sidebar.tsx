@@ -142,13 +142,8 @@ export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }:
         })}
       </nav>
 
-      {/* Visite guidée + Collapse */}
+      {/* Collapse */}
       <div className="shrink-0 border-t border-surface-100 p-2.5 space-y-1">
-        <Link href="/onboarding" title={collapsed ? 'Visite guidée' : undefined}
-          className={cn('flex items-center gap-2.5 w-full rounded-xl px-2.5 py-2 text-brand-600 hover:bg-brand-50 transition-colors', collapsed && 'justify-center px-0')}>
-          <Compass className="h-4 w-4 shrink-0" />
-          {!collapsed && <span className="text-[13px] font-medium">Visite guidée</span>}
-        </Link>
         <button onClick={onToggle}
           className={cn('flex items-center gap-2.5 w-full rounded-xl px-2.5 py-2 text-surface-400 hover:bg-surface-100 hover:text-surface-600 transition-colors', collapsed && 'justify-center px-0')}>
           {collapsed ? <PanelLeft className="h-4 w-4" /> : <><PanelLeftClose className="h-4 w-4" /><span className="text-[13px]">Reduire</span></>}
