@@ -65,6 +65,10 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
   // Étape 3 — formation
   const [rechercheFormation, setRechercheFormation] = useState('')
   const [formationId, setFormationId] = useState<string | null>(null)
+  // Financement du dossier : OPCO (défaut) ou AGEFICE (dirigeant indépendant)
+  const [financement, setFinancement] = useState<'opco' | 'agefice'>(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('financement') === 'agefice' ? 'agefice' : 'opco',
+  )
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [formateurId, setFormateurId] = useState('')
@@ -128,6 +132,7 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
     fd.set('date_debut', dateDebut)
     fd.set('date_fin', dateFin || dateDebut)
     fd.set('formateur_id', formateurId)
+    fd.set('financement', financement)
     const r = await creerDossierCompletAction(fd)
     setEnvoi(false)
     if (r.success && r.data?.sessionId) {
@@ -334,6 +339,25 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
               ))}
             </div>
           </div>
+          {/* Financement : détermine le circuit administratif du dossier */}
+          <div>
+            <div className="text-xs text-surface-500 mb-1.5">Financement</div>
+            <div className="flex gap-2">
+              {([['opco', 'OPCO (salariés)'], ['agefice', 'AGEFICE (dirigeant indépendant)']] as const).map(([v, label]) => (
+                <button key={v} type="button" onClick={() => setFinancement(v)}
+                  className={cn('px-3.5 py-2 rounded-xl text-xs font-medium border transition-colors',
+                    financement === v ? 'bg-surface-900 text-white border-surface-900' : 'bg-white text-surface-600 border-surface-200 hover:border-surface-300')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {financement === 'agefice' && (
+              <p className="text-[11px] text-surface-400 mt-1.5">
+                Un dossier AGEFICE sera créé automatiquement — dépôt au Point d&apos;Accueil 15 j à 4 mois avant le début.
+              </p>
+            )}
+          </div>
+
           <div className="grid sm:grid-cols-3 gap-3">
             <label className="text-xs text-surface-500">Début *
               <input type="date" value={dateDebut} onChange={(e) => { setDateDebut(e.target.value); if (!dateFin) setDateFin(e.target.value) }} className="input-base mt-1" />
@@ -355,7 +379,7 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
               <strong className="text-surface-900">{formationChoisie?.intitule}</strong>
               {' — '}{modeClient === 'existant' ? (clientChoisi?.nom_commercial || clientChoisi?.raison_sociale) : nc.raison}
               {' · '}{apprenantsValides.length} apprenant{apprenantsValides.length > 1 ? 's' : ''}
-              {' · '}session intra en établissement{formateurId ? '' : ' · formateur à affecter'}
+              {' · '}session intra en établissement{formateurId ? '' : ' · formateur à affecter'}{financement === 'agefice' ? ' · financement AGEFICE' : ''}
             </div>
           )}
 

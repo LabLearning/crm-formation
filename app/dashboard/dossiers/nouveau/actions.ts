@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 import type { ActionResult } from '@/lib/types'
+import { estimationPriseEnCharge } from '@/lib/agefice'
 
 /**
  * Création d'un dossier complet en un geste : client (existant ou nouveau)
@@ -143,9 +144,37 @@ export async function creerDossierCompletAction(formData: FormData): Promise<Act
   )
   if (eIns) console.error('[dossier inscriptions]', eIns.message)
 
+  // ── 5. Financement AGEFICE : dossier de prise en charge créé et relié ──
+  let warning: string | undefined
+  if (String(formData.get('financement') || '') === 'agefice') {
+    await supabase.from('clients').update({ financeur_type: 'agefice' }).eq('id', clientId)
+    const { data: fo } = await supabase.from('formations')
+      .select('duree_heures, prix_inter').eq('id', formationId).maybeSingle()
+    const dureeH = fo?.duree_heures || null
+    const { error: eAg } = await supabase.from('dossiers_agefice').insert({
+      organization_id: orgId,
+      client_id: clientId,
+      apprenant_id: (crees || [])[0]?.id || null,
+      formation_id: formationId,
+      session_id: sess.id,
+      statut: 'a_constituer',
+      duree_heures: dureeH,
+      date_debut_formation: dateDebut,
+      date_fin_formation: dateFin,
+      montant_demande: estimationPriseEnCharge({
+        modalite: 'presentiel', duree_heures: dureeH, cout_pedagogique: null,
+        categorie: 'metier', cfp_faible: false,
+      }),
+    })
+    if (eAg) {
+      console.error('[dossier agefice]', eAg.message)
+      warning = 'Session créée, mais dossier AGEFICE non créé (migration 143 à appliquer ?)'
+    }
+  }
+
   await logAudit({
     action: 'create', entity_type: 'session', entity_id: sess.id,
     details: { via: 'dossier_complet', client_id: clientId, apprenants: (crees || []).length },
   })
-  return { success: true, data: { sessionId: sess.id } }
+  return { success: true, data: { sessionId: sess.id }, ...(warning ? { warning } : {}) } as any
 }

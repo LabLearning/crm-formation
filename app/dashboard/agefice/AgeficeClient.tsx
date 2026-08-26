@@ -1,20 +1,15 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus, Landmark, AlertTriangle, Clock, Euro, Trash2, Save,
   CheckSquare, Square, GraduationCap, Building2, X,
 } from 'lucide-react'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
-import {
-  AGEFICE_STATUTS, AGEFICE_CATEGORIES, AGEFICE_MODALITES,
-  PIECES_AVANT, PIECES_APRES, estimationPriseEnCharge, plafondDossier, alerteDelai,
-} from '@/lib/agefice'
-import {
-  creerDossierAgeficeAction, majDossierAgeficeAction,
-  cocherPieceAgeficeAction, supprimerDossierAgeficeAction,
-} from './actions'
+import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
+import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction } from './actions'
 
 interface Dossier {
   id: string
@@ -64,21 +59,8 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
 }) {
   const { toast } = useToast()
   const router = useRouter()
-  const [createOpen, setCreateOpen] = useState(false)
   const [fiche, setFiche] = useState<Dossier | null>(null)
   const [saving, setSaving] = useState(false)
-
-  // Estimation en direct dans le formulaire de création
-  const [categorie, setCategorie] = useState('metier')
-  const [modalite, setModalite] = useState('presentiel')
-  const [heures, setHeures] = useState('')
-  const [cout, setCout] = useState('')
-  const [cfpFaible, setCfpFaible] = useState(false)
-
-  const estimation = useMemo(() => estimationPriseEnCharge({
-    modalite, duree_heures: parseFloat(heures) || 0,
-    cout_pedagogique: parseFloat(cout) || 0, categorie, cfp_faible: cfpFaible,
-  }), [modalite, heures, cout, categorie, cfpFaible])
 
   const enCours = dossiers.filter((d) => !['solde', 'refuse'].includes(d.statut))
   const alertes = dossiers.map((d) => ({ d, a: alerteDelai(d) })).filter((x) => x.a)
@@ -86,15 +68,6 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
   const accordeAnnee = dossiers
     .filter((d) => d.date_accord && new Date(d.date_accord).getFullYear() === anneeEnCours)
     .reduce((s, d) => s + Number(d.montant_accorde || 0), 0)
-
-  async function creer(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSaving(true)
-    const r = await creerDossierAgeficeAction(new FormData(e.currentTarget))
-    setSaving(false)
-    if (r.success) { toast('success', 'Dossier AGEFICE créé'); setCreateOpen(false); router.refresh() }
-    else toast('error', r.error || 'Erreur')
-  }
 
   async function majFiche(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -130,7 +103,10 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
             Dirigeants non salariés — dépôt au Point d&apos;Accueil 15 j à 4 mois avant la formation
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} icon={<Plus className="h-4 w-4" />}>Nouveau dossier</Button>
+        <Link href="/dashboard/dossiers/nouveau?financement=agefice"
+          className="btn-primary inline-flex items-center gap-1.5 !py-2 !px-4 text-sm">
+          <Plus className="h-4 w-4" /> Nouveau dossier
+        </Link>
       </div>
 
       {tableAbsente && (
@@ -216,53 +192,6 @@ export function AgeficeClient({ dossiers, clients, formations, tableAbsente }: {
           })}
         </div>
       )}
-
-      {/* ── Création ── */}
-      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau dossier AGEFICE" size="lg">
-        <form onSubmit={creer} className="space-y-4">
-          <Select id="client_id" name="client_id" label="Client (dirigeant non salarié) *"
-            options={clients.map((c) => ({ value: c.id, label: (c.nom_commercial || c.raison_sociale || `${c.prenom || ''} ${c.nom || ''}`).trim() + (c.financeur_type === 'agefice' ? ' — AGEFICE' : '') }))} />
-          <Select id="formation_id" name="formation_id" label="Formation"
-            options={[{ value: '', label: '—' }, ...formations.map((f) => ({ value: f.id, label: f.intitule }))]} />
-          <div className="grid grid-cols-2 gap-3">
-            <Select id="categorie" name="categorie" label="Catégorie" value={categorie} onChange={(e: any) => setCategorie(e.target.value)}
-              options={Object.entries(AGEFICE_CATEGORIES).map(([v, l]) => ({ value: v, label: l }))} />
-            <Select id="modalite" name="modalite" label="Modalité" value={modalite} onChange={(e: any) => setModalite(e.target.value)}
-              options={Object.entries(AGEFICE_MODALITES).map(([v, m]) => ({ value: v, label: `${m.label} — ${m.taux} €/h` }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input id="duree_heures" name="duree_heures" type="number" label="Durée (heures)" value={heures} onChange={(e: any) => setHeures(e.target.value)} placeholder="14" />
-            <Input id="cout_pedagogique" name="cout_pedagogique" type="number" label="Coût pédagogique (€ HT)" value={cout} onChange={(e: any) => setCout(e.target.value)} placeholder="1180" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input id="date_debut_formation" name="date_debut_formation" type="date" label="Début de formation" />
-            <Input id="date_fin_formation" name="date_fin_formation" type="date" label="Fin de formation" />
-          </div>
-          <Input id="point_accueil" name="point_accueil" label="Point d'Accueil AGEFICE" placeholder="ex. CCI Hérault, CPME 34…" />
-          <label className="flex items-center gap-2 text-sm text-surface-700">
-            <input type="checkbox" name="cfp_faible" checked={cfpFaible} onChange={(e) => setCfpFaible(e.target.checked)} className="rounded border-surface-300" />
-            CFP versée inférieure à 7 € (enveloppe réduite à 600 €/an)
-          </label>
-
-          <div className="rounded-xl bg-surface-50 border border-surface-200 p-4 flex items-center justify-between">
-            <div>
-              <div className="text-xs text-surface-500">Prise en charge estimée</div>
-              <div className="text-[11px] text-surface-400 mt-0.5">
-                Plafond {plafondDossier(categorie, cfpFaible).toLocaleString('fr-FR')} €/an · min(heures × taux, coût, plafond)
-              </div>
-            </div>
-            <div className="text-xl font-bold text-surface-900 flex items-center gap-1">
-              <Euro className="h-4 w-4 text-surface-400" />{estimation.toLocaleString('fr-FR')} €
-            </div>
-          </div>
-
-          <textarea id="notes" name="notes" rows={2} className="input-base resize-none" placeholder="Notes…" />
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>Annuler</Button>
-            <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>Créer le dossier</Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* ── Fiche dossier ── */}
       <Modal isOpen={!!fiche} onClose={() => setFiche(null)} title={fiche ? `Dossier AGEFICE — ${nomClient(fiche.client)}` : ''} size="lg">
