@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui'
 import { formatDateTime } from '@/lib/utils'
 import { OnboardingGuide } from './OnboardingGuide'
-import { SessionProcessRow } from './SessionProcessRow'
+import { SessionsTable } from './SessionsTable'
 
 const ROLE_REDIRECTS: Record<string, string> = {
   directeur_commercial: '/dashboard/dirco-home',
@@ -82,26 +82,26 @@ export default async function DashboardPage() {
   for (const i of (inscRows.data || []) as any[]) inscritsBySession.set(i.session_id, (inscritsBySession.get(i.session_id) || 0) + 1)
 
   /** Session + état d'avancement, pour la barre de process du tableau de bord */
-  const toProcess = (s: any) => ({
-    id: s.id,
-    reference: s.reference,
-    intitule: s.formation?.intitule || s.intitule || s.reference || 'Session',
-    clientNom: s.client?.raison_sociale || null,
-    formateurNom: s.formateur ? `${s.formateur.prenom || ''} ${s.formateur.nom || ''}`.trim() : null,
-    lieu: s.lieu || null,
-    dateDebut: s.date_debut,
-    status: s.status,
-    // Un parcours POEI n'attend aucun formateur : ils sont affectés par intervention
-    estParcoursPoei: parcoursPoei.has(s.id),
-    formateurCale: parcoursPoei.has(s.id)
-      || (!!s.formateur && (s.mission_status === 'accepted' || s.mission_status === 'not_required')),
-    contratSigne: contratSigneBySession.has(s.id),
-    conventionSignee: ['signee_client', 'signee_of', 'signee_complete'].includes(convBySession.get(s.id) || ''),
-    participants: inscritsBySession.get(s.id) || 0,
-    convocationsEnvoyees: !!s.convocations_sent_at,
-  })
   const sessionsEnCours = allSessions.filter(s => s.status === 'en_cours' || (s.date_debut <= today && s.date_fin >= today))
   const sessionsAVenir = allSessions.filter(s => s.date_debut > today)
+
+  // Terminées récemment (30 derniers jours) — avec leurs inscrits
+  const ilYA30j = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+  const { data: terminees } = await supabase
+    .from('sessions')
+    .select('id, reference, status, date_debut, date_fin, intitule, formation:formation_id(intitule), formateur:formateurs(prenom, nom), client:client_id(raison_sociale)')
+    .eq('organization_id', organization.id)
+    .eq('status', 'terminee')
+    .gte('date_fin', ilYA30j)
+    .lt('date_fin', today)
+    .order('date_fin', { ascending: false })
+    .limit(6)
+  const termineesIds = (terminees || []).map((s: any) => s.id)
+  if (termineesIds.length) {
+    const { data: insTerm } = await supabase.from('inscriptions').select('session_id').in('session_id', termineesIds)
+    for (const i of (insTerm || []) as any[]) inscritsBySession.set(i.session_id, (inscritsBySession.get(i.session_id) || 0) + 1)
+  }
+  const enTableau = (s: any) => ({ ...s, _inscrits: inscritsBySession.get(s.id) || 0 })
   const onboardingFlags = {
     org: !!((orgRow.data as any)?.siret && (orgRow.data as any)?.representant_legal_nom && (orgRow.data as any)?.logo_url),
     formations: (fCnt.count || 0) > 0,
@@ -160,46 +160,26 @@ export default async function DashboardPage() {
       {/* Guide de démarrage (masquable) */}
       <OnboardingGuide flags={onboardingFlags} firstName={user.first_name} />
 
-      {/* ── Agenda des sessions ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sessions en cours */}
-        <div className="card overflow-hidden">
-          <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between" style={{ backgroundColor: 'rgba(25,82,69,0.04)' }}>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-success-500 animate-pulse" />
-              <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">En cours</span>
-            </div>
-            <span className="text-xs text-surface-400">{sessionsEnCours.length}</span>
-          </div>
-          {sessionsEnCours.length > 0 ? (
-            <div className="divide-y divide-surface-100">
-              {sessionsEnCours.map((s: any) => (
-                <SessionProcessRow key={s.id} session={toProcess(s)} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-xs text-surface-400">Aucune session en cours</div>
-          )}
-        </div>
-
-        {/* Sessions à venir */}
-        <div className="lg:col-span-2 card overflow-hidden">
-          <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">Sessions à venir</span>
-            <Link href="/dashboard/sessions" className="text-xs text-brand-500 font-medium flex items-center gap-1 hover:text-brand-600">
-              Toutes les sessions <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          {sessionsAVenir.length > 0 ? (
-            <div className="divide-y divide-surface-100">
-              {sessionsAVenir.slice(0, 6).map((s: any) => (
-                <SessionProcessRow key={s.id} session={toProcess(s)} showDate />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-xs text-surface-400">Aucune session programmée</div>
-          )}
-        </div>
+      {/* ── Agenda des sessions : tableaux en cours / à venir / terminées ── */}
+      <div className="space-y-6">
+        <SessionsTable
+          titre="Sessions en cours"
+          badge={<div className="h-2 w-2 rounded-full bg-success-500 animate-pulse" />}
+          sessions={sessionsEnCours.map(enTableau)}
+          vide="Aucune session en cours"
+        />
+        <SessionsTable
+          titre="Sessions à venir"
+          sessions={sessionsAVenir.slice(0, 8).map(enTableau)}
+          vide="Aucune session programmée"
+          lienTous="/dashboard/sessions"
+        />
+        <SessionsTable
+          titre="Terminées récemment"
+          sessions={(terminees || []).map(enTableau)}
+          vide="Aucune session terminée sur les 30 derniers jours"
+          lienTous="/dashboard/sessions?periode=passees"
+        />
       </div>
 
       {data ? (
