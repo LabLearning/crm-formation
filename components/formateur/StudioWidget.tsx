@@ -38,7 +38,7 @@ export function StudioWidget() {
           className={cn(
             'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
             'flex items-center gap-2 rounded-full pl-4 pr-5 py-3 text-sm font-semibold text-white',
-            'bg-gradient-to-r from-[#195144] to-[#2F9A72] shadow-lg shadow-[#195144]/30',
+            'bg-gradient-to-r from-[#205040] to-[#38C588] shadow-lg shadow-[#205040]/30',
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
@@ -58,7 +58,7 @@ export function StudioWidget() {
             'md:inset-auto md:right-6 md:bottom-6 md:top-16 md:w-[480px] md:rounded-2xl md:border md:border-surface-200',
           )}>
             <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-100 shrink-0">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-r from-[#195144] to-[#2F9A72] flex items-center justify-center shrink-0">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-r from-[#205040] to-[#38C588] flex items-center justify-center shrink-0">
                 <FilePenLine className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">

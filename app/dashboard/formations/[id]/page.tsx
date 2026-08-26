@@ -73,7 +73,7 @@ export default async function FormationDetailPage({ params }: { params: { id: st
             <Calendar className="h-4 w-4" /> Créer une session
           </Link>
           <a href={`/api/pdf/programme/${params.id}`} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors" style={{ backgroundColor: '#195245' }}>
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors" style={{ backgroundColor: '#205040' }}>
             <Download className="h-4 w-4" /> Programme PDF
           </a>
         </div>

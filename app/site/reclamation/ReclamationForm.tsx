@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { deposerReclamationPubliqueAction } from './actions'
 
-const CHAMP = 'w-full rounded-xl border border-[#195144]/15 bg-white px-4 py-3 text-sm text-[#14110F] placeholder-[#A8A29E] focus:border-[#195144] focus:outline-none focus:ring-2 focus:ring-[#195144]/10'
+const CHAMP = 'w-full rounded-xl border border-[#205040]/15 bg-white px-4 py-3 text-sm text-[#14110F] placeholder-[#A8A29E] focus:border-[#205040] focus:outline-none focus:ring-2 focus:ring-[#205040]/10'
 
 export function ReclamationForm() {
   const [envoi, setEnvoi] = useState(false)
@@ -27,7 +27,7 @@ export function ReclamationForm() {
 
   if (depose) {
     return (
-      <div className="rounded-3xl border border-[#195144]/10 bg-[#F4FAF7] p-8 text-center">
+      <div className="rounded-3xl border border-[#205040]/10 bg-[#F4FAF7] p-8 text-center">
         <div className="font-heading text-xl font-bold text-[#14110F]">Réclamation bien reçue</div>
         <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
           {numero ? <>Votre réclamation est enregistrée sous la référence <strong>{numero}</strong>. </> : null}
@@ -83,7 +83,7 @@ export function ReclamationForm() {
       )}
 
       <button type="submit" disabled={envoi}
-        className="w-full rounded-full bg-[#195144] px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#123f34] disabled:opacity-60">
+        className="w-full rounded-full bg-[#205040] px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#123f34] disabled:opacity-60">
         {envoi ? 'Envoi en cours…' : 'Déposer ma réclamation'}
       </button>
       <p className="text-xs text-[#A8A29E] leading-relaxed">

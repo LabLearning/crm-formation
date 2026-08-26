@@ -31,7 +31,7 @@ const PHARES = [
       "Notre cœur d'activité : bonnes pratiques d'hygiène, méthode HACCP, plan de maîtrise sanitaire, nettoyage-désinfection, traçabilité et étiquetage — sur votre lieu de travail, avec vos équipes, adapté à votre production.",
     points: ['Formation en établissement, sans fermer', 'Attestation d’hygiène conforme à l’arrêté du 12/02/2024', 'Déclinée par secteur d’activité'],
     secteurs: true,
-    accent: '#195144',
+    accent: '#205040',
   },
   {
     Icon: FirstAid,
@@ -86,7 +86,7 @@ export default async function SiteFormations() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
           <Kicker className="mb-5">Nos formations</Kicker>
           <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
-            Ce qu&apos;on fait <span className="text-[#195144]">le mieux</span>
+            Ce qu&apos;on fait <span className="text-[#205040]">le mieux</span>
           </h1>
           <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
             Hygiène alimentaire, prévention des risques, montée en compétences des équipes :
@@ -131,7 +131,7 @@ export default async function SiteFormations() {
                     <div className="mt-5 flex flex-wrap gap-2">
                       {SECTEURS.map((s) => (
                         <Link key={s.slug} href={`/site/branches/${s.slug}`}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-[#E7E5E4] bg-[#FAFAF9] px-4 py-2 text-sm font-medium text-[#44403C] hover:border-[#195144]/40 hover:text-[#195144] transition-colors">
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#E7E5E4] bg-[#FAFAF9] px-4 py-2 text-sm font-medium text-[#44403C] hover:border-[#205040]/40 hover:text-[#205040] transition-colors">
                           {s.label}
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
@@ -165,14 +165,14 @@ export default async function SiteFormations() {
             const d = bySlug.get(b.slug)
             return (
               <Reveal key={b.slug} delay={(i % 2) * 90}>
-                <Link href={`/site/branches/${b.slug}`} className="group block rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-lg ll-lift">
+                <Link href={`/site/branches/${b.slug}`} className="group block rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#205040]/25 hover:shadow-lg ll-lift">
                   <MetierVisual nom={b.label} label={b.label} height="h-52 md:h-60" />
                   <div className="p-5 md:p-6 flex items-center justify-between gap-4">
                     <div>
                       <div className="text-sm text-[#57534E]">{b.tagline}</div>
                       {d && <div className="text-xs text-[#A8A29E] mt-1">{d.total} formation{d.total > 1 ? 's' : ''} pour ce métier</div>}
                     </div>
-                    <span className="shrink-0 h-10 w-10 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                    <span className="shrink-0 h-10 w-10 rounded-full bg-[#205040]/8 flex items-center justify-center text-[#205040] group-hover:bg-[#205040] group-hover:text-white transition-colors">
                       <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
@@ -183,7 +183,7 @@ export default async function SiteFormations() {
         </div>
 
         <p className="mt-8 text-center text-sm text-[#78716C]">
-          Vous ne trouvez pas votre secteur ? <Link href="/site/contact" className="font-semibold text-[#195144] hover:underline">Parlons-en</Link> — on construit du sur-mesure.
+          Vous ne trouvez pas votre secteur ? <Link href="/site/contact" className="font-semibold text-[#205040] hover:underline">Parlons-en</Link> — on construit du sur-mesure.
         </p>
       </section>
     </>

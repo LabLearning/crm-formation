@@ -23,7 +23,7 @@ export function AccountNotLinked({ roleName, userName }: AccountNotLinkedProps) 
       <a
         href="mailto:digital@lab-learning.fr"
         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-colors"
-        style={{ backgroundColor: '#195144' }}
+        style={{ backgroundColor: '#205040' }}
       >
         <Mail className="h-4 w-4" />
         Contacter l'administrateur

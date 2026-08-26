@@ -53,5 +53,5 @@ export function metierStyle(nom: string): MetierStyle {
     return { Icon: ChefHat, from: '#134E4A', to: '#0F766E', tint: '#F0FDFA', ink: '#0F766E', img: IMG('cuisine') }
 
   // ── Repli : formation générique ──
-  return { Icon: Formation, from: '#195144', to: '#0F766E', tint: '#F0FDFA', ink: '#195144', img: IMG('formation') }
+  return { Icon: Formation, from: '#205040', to: '#0F766E', tint: '#F0FDFA', ink: '#205040', img: IMG('formation') }
 }

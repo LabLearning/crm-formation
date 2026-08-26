@@ -22,8 +22,8 @@ export function ContactForm() {
 
   if (sent) {
     return (
-      <div className="rounded-2xl border border-[#195144]/20 bg-[#195144]/5 p-8 text-center">
-        <div className="h-12 w-12 rounded-full bg-[#195144] mx-auto flex items-center justify-center mb-3">
+      <div className="rounded-2xl border border-[#205040]/20 bg-[#205040]/5 p-8 text-center">
+        <div className="h-12 w-12 rounded-full bg-[#205040] mx-auto flex items-center justify-center mb-3">
           <CheckCircle2 className="h-6 w-6 text-white" />
         </div>
         <div className="font-heading font-semibold text-lg text-[#14110F]">Message envoyé</div>
@@ -32,7 +32,7 @@ export function ContactForm() {
     )
   }
 
-  const input = 'w-full rounded-xl border border-[#195144]/15 bg-white px-4 py-2.5 text-sm text-[#14110F] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#195144]/50 focus:ring-2 focus:ring-[#195144]/10'
+  const input = 'w-full rounded-xl border border-[#205040]/15 bg-white px-4 py-2.5 text-sm text-[#14110F] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#205040]/50 focus:ring-2 focus:ring-[#205040]/10'
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -50,7 +50,7 @@ export function ContactForm() {
       {error && <div className="text-sm text-danger-600 bg-danger-50 border border-danger-200 rounded-xl px-4 py-2.5">{error}</div>}
 
       <button type="submit" disabled={pending}
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] disabled:opacity-60 transition-colors">
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#205040] text-white text-sm font-semibold hover:bg-[#123f34] disabled:opacity-60 transition-colors">
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Envoyer le message
       </button>
     </form>

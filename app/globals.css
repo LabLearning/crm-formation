@@ -4,12 +4,12 @@
 
 @layer base {
   :root {
-    --font-heading: 'Satoshi', system-ui, sans-serif;
-    --font-body: 'General Sans', system-ui, sans-serif;
+    --font-heading: 'Montserrat', system-ui, sans-serif;
+    --font-body: 'Manrope', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-    --ll-green: #195245;
-    --ll-green-light: #6BC291;
-    --ll-green-dark: #0f3a30;
+    --ll-green: #205040;
+    --ll-green-light: #5CD9A0;
+    --ll-green-dark: #183C31;
   }
 
   html {
@@ -35,7 +35,7 @@
   ::-webkit-scrollbar-thumb { @apply bg-surface-300/60 rounded-full hover:bg-surface-400/60; }
 
   /* Selection */
-  ::selection { background-color: rgba(107,194,145,0.2); color: #195245; }
+  ::selection { background-color: rgba(92,217,160,0.25); color: #205040; }
 }
 
 @layer components {
@@ -44,7 +44,7 @@
     @apply w-full rounded-xl border border-surface-200 bg-white px-3.5 py-2.5
            text-sm text-surface-800 placeholder:text-surface-400
            transition-all duration-200 ease-out
-           focus:outline-none focus:ring-2 focus:ring-[#195245]/10 focus:border-[#6BC291]
+           focus:outline-none focus:ring-[3px] focus:ring-accent-400/35 focus:border-brand-400
            hover:border-surface-300
            disabled:bg-surface-100 disabled:text-surface-500 disabled:cursor-not-allowed;
     /* Ensure minimum touch target height on mobile */
@@ -231,7 +231,7 @@
 .ll-fluid-h2 { font-size: clamp(1.9rem, 3.8vw, 3rem); }
 
 /* Kicker / eyebrow : label soigné précédé d'un trait, deux tons */
-.ll-kicker { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--font-heading); font-weight: 700; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: #195144; }
+.ll-kicker { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--font-heading); font-weight: 700; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: #205040; }
 .ll-kicker::before { content: ''; width: 2rem; height: 1px; flex: none; background: linear-gradient(90deg, currentColor, transparent); }
 .ll-kicker--light { color: #8ec9b8; }
 .ll-kicker--center::before, .ll-kicker--center::after { content: ''; width: 1.75rem; height: 1px; flex: none; background: linear-gradient(90deg, transparent, currentColor); }
@@ -259,7 +259,7 @@
 
 /* Curseur custom discret (desktop, pointeur fin uniquement) */
 .ll-cursor { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; border-radius: 9999px; transform: translate3d(-50%, -50%, 0); will-change: transform; }
-.ll-cursor-dot { width: 7px; height: 7px; background: #195144; }
+.ll-cursor-dot { width: 7px; height: 7px; background: #205040; }
 .ll-cursor-ring { width: 36px; height: 36px; border: 1px solid rgba(25,81,68,.3); transition: width .22s ease, height .22s ease, border-color .22s ease, background-color .22s ease; }
 .ll-cursor-ring.is-active { width: 54px; height: 54px; border-color: rgba(25,81,68,.5); background: rgba(25,81,68,.06); }
 @media (hover: none), (pointer: coarse) { .ll-cursor { display: none !important; } }
@@ -277,7 +277,7 @@
 .ll-legal p { margin: .55rem 0; }
 .ll-legal ul { list-style: disc; padding-left: 1.25rem; margin: .55rem 0; }
 .ll-legal li { margin: .25rem 0; }
-.ll-legal a { color: #195144; text-decoration: underline; }
+.ll-legal a { color: #205040; text-decoration: underline; }
 .ll-legal strong { color: #14110F; font-weight: 600; }
 
 /* ── Carte des sessions (Leaflet) ────────────────────────── */
@@ -306,7 +306,7 @@
 .ll-pop-wrap .leaflet-popup-content { margin: 12px 14px; }
 .ll-pop-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; margin-bottom: 6px; }
 .ll-pop-title { display: block; font-weight: 600; color: #1c1917; text-decoration: none; font-size: 13.5px; line-height: 1.35; }
-.ll-pop-title:hover { color: #195144; text-decoration: underline; }
+.ll-pop-title:hover { color: #205040; text-decoration: underline; }
 .ll-pop-line { font-size: 12px; color: #57534e; margin-top: 3px; }
 .ll-pop-approx { font-size: 10.5px; color: #a8a29e; margin-top: 5px; font-style: italic; }
 @media (prefers-reduced-motion: reduce) { .ll-pin-pulse::after { animation: none; } }

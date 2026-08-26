@@ -92,7 +92,7 @@ const SCHEMA_ORGANISATION = {
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-[#14110F] antialiased selection:bg-[#195144] selection:text-white">
+    <div className="min-h-screen bg-white text-[#14110F] antialiased selection:bg-[#205040] selection:text-white">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

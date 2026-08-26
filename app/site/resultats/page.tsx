@@ -41,7 +41,7 @@ export default async function SiteResultats() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-12">
           <Kicker className="mb-5"><ShieldCheck className="h-4 w-4" /> Nos résultats</Kicker>
           <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
-            Des résultats <span className="text-[#195144]">transparents</span>.
+            Des résultats <span className="text-[#205040]">transparents</span>.
           </h1>
           <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
             Organisme de formation certifié Qualiopi, nous publions nos indicateurs de résultats
@@ -52,7 +52,7 @@ export default async function SiteResultats() {
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
         {stats.length === 0 ? (
-          <div className="rounded-2xl border border-[#195144]/10 bg-white p-10 text-center text-[#78716C]">
+          <div className="rounded-2xl border border-[#205040]/10 bg-white p-10 text-center text-[#78716C]">
             Nos indicateurs de résultats seront publiés ici prochainement.
           </div>
         ) : (
@@ -61,7 +61,7 @@ export default async function SiteResultats() {
               {stats.map((s, i) => (
                 <Reveal key={s.key} delay={(i % 4) * 80}>
                   <div className="rounded-3xl bg-white ring-1 ring-black/5 p-7 text-center">
-                    <div className="ll-display text-5xl text-[#195144]">{Number(s.value)}%</div>
+                    <div className="ll-display text-5xl text-[#205040]">{Number(s.value)}%</div>
                     <div className="mt-3 text-sm text-[#57534E]">{s.label}</div>
                   </div>
                 </Reveal>
@@ -101,15 +101,15 @@ export default async function SiteResultats() {
                   {(parFormation || []).map((f: any) => (
                     <tr key={f.id} className="hover:bg-[#FAFAF9] transition-colors">
                       <td className="px-5 py-3.5">
-                        <Link href={`/site/formations/${f.id}`} className="text-[#14110F] hover:text-[#195144] transition-colors">
+                        <Link href={`/site/formations/${f.id}`} className="text-[#14110F] hover:text-[#205040] transition-colors">
                           {titreFormation(f.intitule)}
                         </Link>
                         {f.duree_heures ? <span className="block text-xs text-[#A8A29E] mt-0.5">{f.duree_heures} heures</span> : null}
                       </td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F]">{sessionsParTitre.get(normTitre(f.intitule)) || '—'}</td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F] font-semibold">{f.nombre_apprenants_total}</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '—'}</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums text-[#195144] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '—'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '—'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -118,12 +118,12 @@ export default async function SiteResultats() {
           </div>
         )}
 
-        <div className="mt-14 rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-12 md:flex items-center justify-between gap-8">
+        <div className="mt-14 rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-12 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-3xl text-balance text-white">Envie de former vos équipes ?</h2>
             <p className="mt-3 text-white/70 max-w-xl">Parlons de votre projet — on monte le parcours et le financement avec vous.</p>
           </div>
-          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
+          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
             Nous contacter <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

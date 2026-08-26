@@ -59,7 +59,7 @@ export function SiteNav() {
               className={`group relative inline-flex items-center gap-1 py-1.5 text-sm font-medium transition-colors ${formationsActive ? 'text-[#14110F]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
               Formations
               <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${dropdown ? 'rotate-180' : ''}`} />
-              <span className={`absolute left-0 -bottom-0.5 h-[2px] rounded-full bg-[#195144] transition-all duration-300 ease-out ${formationsActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+              <span className={`absolute left-0 -bottom-0.5 h-[2px] rounded-full bg-[#205040] transition-all duration-300 ease-out ${formationsActive ? 'w-full' : 'w-0 group-hover:w-full'}`} />
             </Link>
             {dropdown && (
               <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3">
@@ -86,14 +86,14 @@ export function SiteNav() {
                   </div>
                   <div className="mt-2 pt-2 border-t border-[#F0EEE9] grid grid-cols-2 gap-1.5">
                     <Link href="/site/formations" onClick={() => setDropdown(false)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#195144] hover:bg-[#195144]/5 transition-colors">
-                      <span className="h-8 w-8 rounded-lg bg-[#195144]/8 flex items-center justify-center shrink-0"><GraduationCap className="h-4 w-4" /></span>
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#205040] hover:bg-[#205040]/5 transition-colors">
+                      <span className="h-8 w-8 rounded-lg bg-[#205040]/8 flex items-center justify-center shrink-0"><GraduationCap className="h-4 w-4" /></span>
                       Toutes nos formations
                       <ArrowRight className="h-4 w-4 ml-auto" />
                     </Link>
                     <Link href="/site/financements" onClick={() => setDropdown(false)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#195144] hover:bg-[#195144]/5 transition-colors">
-                      <span className="h-8 w-8 rounded-lg bg-[#195144]/8 flex items-center justify-center shrink-0"><Banknote className="h-4 w-4" /></span>
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-semibold text-[#205040] hover:bg-[#205040]/5 transition-colors">
+                      <span className="h-8 w-8 rounded-lg bg-[#205040]/8 flex items-center justify-center shrink-0"><Banknote className="h-4 w-4" /></span>
                       Faire financer
                       <ArrowRight className="h-4 w-4 ml-auto" />
                     </Link>
@@ -109,7 +109,7 @@ export function SiteNav() {
               <Link key={l.href} href={l.href}
                 className={`group relative py-1.5 text-sm font-medium transition-colors ${active ? 'text-[#14110F]' : 'text-[#57534E] hover:text-[#14110F]'}`}>
                 {l.label}
-                <span className={`absolute left-0 -bottom-0.5 h-[2px] rounded-full bg-[#195144] transition-all duration-300 ease-out ${active ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                <span className={`absolute left-0 -bottom-0.5 h-[2px] rounded-full bg-[#205040] transition-all duration-300 ease-out ${active ? 'w-full' : 'w-0 group-hover:w-full'}`} />
               </Link>
             )
           })}
@@ -117,7 +117,7 @@ export function SiteNav() {
 
         <div className="flex items-center gap-2 shrink-0">
           <Link href="/site/contact"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#195144] text-white text-sm font-semibold pl-4 pr-3 py-2 hover:bg-[#123f34] ll-lift">
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#205040] text-white text-sm font-semibold pl-4 pr-3 py-2 hover:bg-[#123f34] ll-lift">
             Demander un devis
             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20"><ArrowRight className="h-3 w-3" /></span>
           </Link>
@@ -134,7 +134,7 @@ export function SiteNav() {
           <nav className="max-w-6xl mx-auto px-4 py-2 flex flex-col">
             <Link href="/site/formations" onClick={() => setOpen(false)}
               className={`flex items-center justify-between px-3 py-3 rounded-2xl text-sm font-semibold transition-colors ${
-                formationsActive ? 'bg-[#195144]/8 text-[#195144]' : 'text-[#14110F] hover:bg-black/[0.03]'
+                formationsActive ? 'bg-[#205040]/8 text-[#205040]' : 'text-[#14110F] hover:bg-black/[0.03]'
               }`}>
               Toutes nos formations
               <ArrowRight className="h-4 w-4" />
@@ -142,7 +142,7 @@ export function SiteNav() {
             {BRANCHES.map((b) => (
               <Link key={b.slug} href={`/site/branches/${b.slug}`} onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 pl-4 pr-3 py-2 rounded-2xl text-sm transition-colors ${
-                  pathname.startsWith(`/site/branches/${b.slug}`) ? 'bg-[#195144]/8 text-[#195144] font-medium' : 'text-[#57534E] hover:bg-black/[0.03]'
+                  pathname.startsWith(`/site/branches/${b.slug}`) ? 'bg-[#205040]/8 text-[#205040] font-medium' : 'text-[#57534E] hover:bg-black/[0.03]'
                 }`}>
                 <span className="relative h-9 w-9 shrink-0 rounded-lg overflow-hidden ring-1 ring-black/5">
                   <img loading="lazy" src={`/site/metiers/${b.img}.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -156,14 +156,14 @@ export function SiteNav() {
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
                 className={`flex items-center justify-between px-3 py-3 rounded-2xl text-sm font-medium transition-colors ${
-                  isActive(l.href) ? 'bg-[#195144]/8 text-[#195144]' : 'text-[#44403C] hover:bg-black/[0.03]'
+                  isActive(l.href) ? 'bg-[#205040]/8 text-[#205040]' : 'text-[#44403C] hover:bg-black/[0.03]'
                 }`}>
                 {l.label}
                 <ArrowRight className={`h-4 w-4 ${isActive(l.href) ? 'opacity-100' : 'opacity-30'}`} />
               </Link>
             ))}
             <Link href="/site/contact" onClick={() => setOpen(false)}
-              className="mt-1 mb-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34]">
+              className="mt-1 mb-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#205040] text-white text-sm font-semibold hover:bg-[#123f34]">
               Demander un devis <ArrowRight className="h-4 w-4" />
             </Link>
           </nav>

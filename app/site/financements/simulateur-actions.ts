@@ -65,7 +65,7 @@ export async function demanderEtudeFinancementAction(formData: FormData): Promis
         to: 'digital@lab-learning.fr',
         subject: `Simulateur financement — ${entreprise || nom}`,
         html: `<div style="font-family:sans-serif;line-height:1.6">
-          <h2 style="color:#195144">Nouvelle demande d'étude de financement</h2>
+          <h2 style="color:#205040">Nouvelle demande d'étude de financement</h2>
           <p><strong>${esc(nom)}</strong>${entreprise ? ` — ${esc(entreprise)}` : ''}<br/>
           ${email ? `${esc(email)}<br/>` : ''}${telephone ? `${esc(telephone)}<br/>` : ''}
           ${siret ? `SIRET : ${esc(siret)}<br/>` : ''}</p>

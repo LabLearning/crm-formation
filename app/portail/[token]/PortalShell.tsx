@@ -109,7 +109,7 @@ function getDisplayInfo(ctx: PortalContext) {
 }
 
 // Portal brand color
-const PORTAL_GREEN = '#195144'
+const PORTAL_GREEN = '#205040'
 
 export function PortalShell({ context, children }: PortalShellProps) {
   const pathname = usePathname()
@@ -192,8 +192,8 @@ export function PortalShell({ context, children }: PortalShellProps) {
                     <Link key={item.href} href={basePath + item.href}
                       className={cn(
                         'flex items-center gap-1.5 mx-1 my-1.5 px-4 py-1.5 rounded-full text-sm font-semibold text-white whitespace-nowrap',
-                        'bg-gradient-to-r from-[#195144] to-[#2F9A72] shadow-sm hover:opacity-90 transition-opacity',
-                        isActive(item.href) && 'ring-2 ring-[#195144]/25',
+                        'bg-gradient-to-r from-[#205040] to-[#38C588] shadow-sm hover:opacity-90 transition-opacity',
+                        isActive(item.href) && 'ring-2 ring-[#205040]/25',
                       )}>
                       <Sparkles className="h-4 w-4" />
                       <span className="hidden xl:inline">{item.label}</span>
@@ -208,7 +208,7 @@ export function PortalShell({ context, children }: PortalShellProps) {
                     className={cn(
                       'flex items-center gap-2 px-3.5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                       isActive(item.href)
-                        ? 'border-b-2 text-[#195144]'
+                        ? 'border-b-2 text-[#205040]'
                         : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
                     )}
                     style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
@@ -254,7 +254,7 @@ export function PortalShell({ context, children }: PortalShellProps) {
                     onClick={() => setSheetOpen(false)}
                     className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border transition-colors active:scale-95"
                     style={active
-                      ? { borderColor: PORTAL_GREEN, backgroundColor: '#1951440d' }
+                      ? { borderColor: PORTAL_GREEN, backgroundColor: '#2050400d' }
                       : { borderColor: '#e7e5e4' }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: active ? PORTAL_GREEN : '#78716c' }} />
@@ -288,7 +288,7 @@ export function PortalShell({ context, children }: PortalShellProps) {
                   <span className="absolute top-0 left-3 right-3 h-[2px] rounded-full" style={{ backgroundColor: PORTAL_GREEN }} />
                 )}
                 {estStudio ? (
-                  <span className="h-[26px] w-[26px] rounded-lg bg-gradient-to-br from-[#195144] to-[#2F9A72] flex items-center justify-center shadow-sm">
+                  <span className="h-[26px] w-[26px] rounded-lg bg-gradient-to-br from-[#205040] to-[#38C588] flex items-center justify-center shadow-sm">
                     <Sparkles className="h-[15px] w-[15px] text-white" />
                   </span>
                 ) : (

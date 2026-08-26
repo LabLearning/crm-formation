@@ -22,7 +22,7 @@ export function SiteFooter() {
               <strong className="text-[#14110F]">ACTIONS DE FORMATION</strong>
             </p>
             <a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer"
-              className="mt-1.5 inline-block text-[10px] font-semibold text-[#195144] underline underline-offset-2 hover:text-[#123f34]">
+              className="mt-1.5 inline-block text-[10px] font-semibold text-[#205040] underline underline-offset-2 hover:text-[#123f34]">
               Consulter notre certificat (PDF)
             </a>
           </div>

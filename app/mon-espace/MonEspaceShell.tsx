@@ -46,7 +46,7 @@ const apporteurNav: NavItem[] = [
   { label: 'Mes clients', short: 'Clients', href: '/clients', icon: Building2 },
 ]
 
-const PORTAL_GREEN = '#195245'
+const PORTAL_GREEN = '#205040'
 
 function getDisplayInfo(user: User) {
   const roleLabels: Record<string, string> = {
@@ -177,7 +177,7 @@ export function MonEspaceShell({ user, orgName, children, impersonatedBy }: { us
                   <Link key={item.href} href={basePath + item.href}
                     className={cn('flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                       isActive(item.href)
-                        ? 'border-b-2 text-[#195245]'
+                        ? 'border-b-2 text-[#205040]'
                         : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
                     )}
                     style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
@@ -219,7 +219,7 @@ export function MonEspaceShell({ user, orgName, children, impersonatedBy }: { us
                 return (
                   <Link key={item.href} href={basePath + item.href} onClick={() => setMobileMenu(false)}
                     className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border transition-colors active:scale-95"
-                    style={active ? { borderColor: PORTAL_GREEN, backgroundColor: '#1951440d' } : { borderColor: '#e7e5e4' }}
+                    style={active ? { borderColor: PORTAL_GREEN, backgroundColor: '#2050400d' } : { borderColor: '#e7e5e4' }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: active ? PORTAL_GREEN : '#78716c' }} />
                     <span className="text-[11px] font-medium text-center leading-tight px-1" style={{ color: active ? PORTAL_GREEN : '#57534e' }}>

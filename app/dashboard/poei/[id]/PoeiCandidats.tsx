@@ -521,7 +521,7 @@ export function PoeiCandidats({ poeiId, candidats, apprenants, emailStatus = {},
             <div>
               <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-1.5">Aperçu</div>
               <div className="rounded-xl border border-surface-200 overflow-hidden">
-                <div className="bg-[#195144] text-white px-4 py-3 text-sm font-bold">Lab Learning</div>
+                <div className="bg-[#205040] text-white px-4 py-3 text-sm font-bold">Lab Learning</div>
                 <div className="p-4 space-y-3 bg-white">
                   <div className="text-sm font-bold text-surface-900">Attestation d&apos;entrée en formation</div>
                   <p className="text-sm text-surface-600">

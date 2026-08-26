@@ -29,7 +29,7 @@ export function StoryChapter(p: ChapterProps) {
       {/* Texte */}
       <div className={p.flip ? 'lg:order-2' : ''}>
         <div className="flex items-center gap-4 mb-5">
-          <span className="ll-index text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-[#195144] to-[#195144]/25">{num}</span>
+          <span className="ll-index text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-[#205040] to-[#205040]/25">{num}</span>
           <span className="ll-kicker">{p.eyebrow}</span>
         </div>
         <h3 className="ll-display text-[28px] md:text-[38px] leading-[1.05] text-[#14110F] text-balance">{p.title}</h3>
@@ -37,16 +37,16 @@ export function StoryChapter(p: ChapterProps) {
         <ul className="mt-6 space-y-2.5">
           {p.bullets.map((b, i) => (
             <li key={i} className="flex items-start gap-2.5 text-[#44403C]">
-              <CheckCircle2 className="h-5 w-5 text-[#195144] shrink-0 mt-0.5" /><span>{b}</span>
+              <CheckCircle2 className="h-5 w-5 text-[#205040] shrink-0 mt-0.5" /><span>{b}</span>
             </li>
           ))}
         </ul>
         {p.href && (
           p.href.startsWith('http')
-            ? <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+            ? <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] hover:gap-2.5 transition-all">
                 {p.cta || 'En savoir plus'} <ArrowRight className="h-4 w-4" />
               </a>
-            : <Link href={p.href} className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] hover:gap-2.5 transition-all">
+            : <Link href={p.href} className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] hover:gap-2.5 transition-all">
                 {p.cta || 'En savoir plus'} <ArrowRight className="h-4 w-4" />
               </Link>
         )}

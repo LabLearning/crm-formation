@@ -252,7 +252,7 @@ export async function genererDocumentBrandeAction(
       structure.couleur_secondaire = c1
     }
   }
-  let couleur = franchise?.couleur_primaire || hex(structure.couleur_primaire) || '#195144'
+  let couleur = franchise?.couleur_primaire || hex(structure.couleur_primaire) || '#205040'
   let couleur2 = franchise?.couleur_secondaire || hex(structure.couleur_secondaire) || null
   if (franchise && doitDeduireCouleurs && hex(structure.couleur_primaire)) {
     try {

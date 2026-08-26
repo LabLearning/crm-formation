@@ -116,11 +116,11 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaCourse) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumb) }} />
-      <section className="relative overflow-hidden border-b border-[#195144]/10">
-        <div className="absolute inset-0 -z-10 bg-[#195144]" />
+      <section className="relative overflow-hidden border-b border-[#205040]/10">
+        <div className="absolute inset-0 -z-10 bg-[#205040]" />
         {/* La photo en fond opacité, comme avant — le hero reste sobre */}
         <img src={photoFormation(f.id) || metierStyle(f.intitule || f.categorie || '').img} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25" />
-        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #195144 0%, rgba(25,81,68,0.92) 45%, rgba(18,63,52,0.75) 100%)' }} />
+        <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(115deg, #205040 0%, rgba(25,81,68,0.92) 45%, rgba(18,63,52,0.75) 100%)' }} />
         <div className="absolute inset-0 -z-10 opacity-[0.15]" style={{ background: 'radial-gradient(60% 80% at 80% 0%, #6366F1 0%, transparent 60%)' }} />
         <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-12 md:pb-16 text-white">
           <Link href="/site/formations" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors">
@@ -143,12 +143,12 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           {f.objectifs.length > 0 && (
             <section className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
               <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
-                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><Target className="h-5 w-5 text-[#195144]" /></span>
+                <span className="h-10 w-10 rounded-xl bg-[#205040]/8 flex items-center justify-center shrink-0"><Target className="h-5 w-5 text-[#205040]" /></span>
                 Objectifs pédagogiques
               </h2>
               <ul className="space-y-2.5">
                 {f.objectifs.map((o, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[#57534E]"><CheckCircle2 className="h-5 w-5 text-[#195144] shrink-0 mt-0.5" /><span>{o}</span></li>
+                  <li key={i} className="flex items-start gap-2.5 text-[#57534E]"><CheckCircle2 className="h-5 w-5 text-[#205040] shrink-0 mt-0.5" /><span>{o}</span></li>
                 ))}
               </ul>
             </section>
@@ -156,12 +156,12 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           {f.competences_visees.length > 0 && (
             <section className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
               <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
-                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><ListChecks className="h-5 w-5 text-[#195144]" /></span>
+                <span className="h-10 w-10 rounded-xl bg-[#205040]/8 flex items-center justify-center shrink-0"><ListChecks className="h-5 w-5 text-[#205040]" /></span>
                 Compétences visées
               </h2>
               <div className="flex flex-wrap gap-2">
                 {f.competences_visees.map((c, i) => (
-                  <span key={i} className="rounded-full border border-[#195144]/15 bg-[#195144]/5 px-3.5 py-1.5 text-sm text-[#195144]">{c}</span>
+                  <span key={i} className="rounded-full border border-[#205040]/15 bg-[#205040]/5 px-3.5 py-1.5 text-sm text-[#205040]">{c}</span>
                 ))}
               </div>
             </section>
@@ -169,7 +169,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
           {sections.map((s) => (
             <section key={s.title} className="rounded-3xl bg-white ring-1 ring-black/5 p-6 md:p-8">
               <h2 className="flex items-center gap-3 font-heading font-bold text-xl text-[#14110F] tracking-heading mb-5">
-                <span className="h-10 w-10 rounded-xl bg-[#195144]/8 flex items-center justify-center shrink-0"><s.Icon className="h-5 w-5 text-[#195144]" /></span>
+                <span className="h-10 w-10 rounded-xl bg-[#205040]/8 flex items-center justify-center shrink-0"><s.Icon className="h-5 w-5 text-[#205040]" /></span>
                 {s.title}
               </h2>
               {s.content}
@@ -178,7 +178,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
         </div>
 
         <aside className="lg:col-span-1">
-          <div className="lg:sticky lg:top-24 rounded-3xl border border-[#195144]/10 bg-white p-6">
+          <div className="lg:sticky lg:top-24 rounded-3xl border border-[#205040]/10 bg-white p-6">
             <div className="font-heading font-bold text-[#14110F]">Intéressé par cette formation ?</div>
             <p className="mt-1.5 text-sm text-[#57534E]">Nous montons le programme et le financement avec vous.</p>
             <div className="mt-4 space-y-2 text-sm">
@@ -207,7 +207,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
               <div className="flex items-center justify-between gap-3"><span className="text-[#78716C] shrink-0">Dates</span><span className="font-medium text-[#14110F] text-right">Planifiées avec votre établissement</span></div>
               {f.delai_acces ? <div className="flex items-start justify-between gap-3"><span className="text-[#78716C] shrink-0">Délai d’accès</span><span className="font-medium text-[#14110F] text-right">{f.delai_acces}</span></div> : null}
             </div>
-            <Link href="/site/contact" className="mt-5 flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full bg-[#195144] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
+            <Link href="/site/contact" className="mt-5 flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full bg-[#205040] text-white text-sm font-semibold hover:bg-[#123f34] transition-colors">
               Demander cette formation <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -215,8 +215,8 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
       </div>
       {(sessionsRealisees > 0 || f.nombre_apprenants_total || f.taux_satisfaction != null || f.taux_reussite != null) && (
         <div className="max-w-6xl mx-auto px-5 md:px-8 pb-4">
-          <div className="rounded-2xl bg-[#195144]/5 border border-[#195144]/15 p-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-3">Indicateurs de résultats</div>
+          <div className="rounded-2xl bg-[#205040]/5 border border-[#205040]/15 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#205040] mb-3">Indicateurs de résultats</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {sessionsRealisees > 0 ? (
                 <div><div className="ll-display text-2xl text-[#14110F]">{sessionsRealisees}</div><div className="text-xs text-[#57534E] mt-0.5">sessions réalisées</div></div>
@@ -234,7 +234,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
             <p className="mt-3 text-[10px] text-[#A8A29E]">
               Indicateurs calculés sur les sessions réalisées, mis à jour en continu (questionnaires de satisfaction
               et évaluations des acquis). Un taux n&apos;est publié qu&apos;à partir de cinq réponses.{' '}
-              <Link href="/site/resultats" className="underline underline-offset-2 hover:text-[#195144]">Tous nos résultats</Link>
+              <Link href="/site/resultats" className="underline underline-offset-2 hover:text-[#205040]">Tous nos résultats</Link>
             </p>
           </div>
         </div>
@@ -251,13 +251,13 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
 
       {/* Maillage interne : trois formations liées, photo + durée + note */}
       {liees.length >= 2 && (
-        <section className="border-t border-[#195144]/10 bg-[#FAFAFA]">
+        <section className="border-t border-[#205040]/10 bg-[#FAFAFA]">
           <div className="max-w-6xl mx-auto px-5 md:px-8 py-14">
             <h2 className="ll-display text-2xl md:text-3xl text-[#14110F] mb-8">À découvrir aussi</h2>
             <div className="grid gap-5 md:grid-cols-3">
               {liees.map((l: any) => (
                 <Link key={l.id} href={`/site/formations/${l.id}`}
-                  className="group flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#195144]/25 hover:shadow-lg hover:shadow-black/5 ll-lift">
+                  className="group flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 hover:ring-[#205040]/25 hover:shadow-lg hover:shadow-black/5 ll-lift">
                   {photoFormation(l.id) && (
                     <div className="relative h-36 overflow-hidden">
                       <img loading="lazy" src={photoFormation(l.id)!} alt=""
@@ -271,7 +271,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
                         {[l.duree_heures ? `${l.duree_heures} h` : null, l.taux_satisfaction != null ? `${(l.taux_satisfaction / 20).toFixed(1)}/5` : null].filter(Boolean).join(' · ')}
                       </div>
                     </div>
-                    <span className="shrink-0 h-9 w-9 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] group-hover:bg-[#195144] group-hover:text-white transition-colors">
+                    <span className="shrink-0 h-9 w-9 rounded-full bg-[#205040]/8 flex items-center justify-center text-[#205040] group-hover:bg-[#205040] group-hover:text-white transition-colors">
                       <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>

@@ -93,7 +93,7 @@ const CATA: Record<string, Formation[]> = {
     { id:'pa-12',nm:'Secourisme',h:7,cat:'reglementaire',fc:'pt-hyg',grp:'conformite',pri:2 },
   ],
 }
-const CAT_COLORS: Record<string,string> = { metier:'#195144', hygiene:'#047857', reglementaire:'#92400e', performance:'#9a3412', management:'#5b21b6', transverse:'#6b7280' }
+const CAT_COLORS: Record<string,string> = { metier:'#205040', hygiene:'#047857', reglementaire:'#92400e', performance:'#9a3412', management:'#5b21b6', transverse:'#6b7280' }
 const CAT_LABELS: Record<string,string> = { metier:'Métier', hygiene:'Hygiène', reglementaire:'Réglementaire', performance:'Performance', management:'Management', transverse:'Transverse' }
 const ACT_ICON_MAP: Record<string, React.ReactNode> = {
   boucherie: <Beef className="h-7 w-7 text-surface-600" />,

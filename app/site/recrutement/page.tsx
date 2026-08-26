@@ -137,7 +137,7 @@ export default function RecrutementPage() {
           return (
             <article key={p.titre} className="rounded-2xl border border-[#E7E5E4] bg-white p-6 md:p-8">
               <div className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-[#195144]/10 text-[#195144] flex items-center justify-center shrink-0">
+                <span className="h-11 w-11 rounded-xl bg-[#205040]/10 text-[#205040] flex items-center justify-center shrink-0">
                   <Icone className="h-5 w-5" />
                 </span>
                 <div>
@@ -147,22 +147,22 @@ export default function RecrutementPage() {
               </div>
               <div className="mt-5 grid md:grid-cols-2 gap-6">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Vos missions</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#205040] mb-2">Vos missions</div>
                   <ul className="space-y-1.5">
                     {p.missions.map((m) => (
                       <li key={m} className="flex gap-2 text-sm text-[#57534E]">
-                        <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#205040] shrink-0 mt-0.5" />
                         <span>{m}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#195144] mb-2">Profil recherché</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#205040] mb-2">Profil recherché</div>
                   <ul className="space-y-1.5">
                     {p.profil.map((m) => (
                       <li key={m} className="flex gap-2 text-sm text-[#57534E]">
-                        <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#205040] shrink-0 mt-0.5" />
                         <span>{m}</span>
                       </li>
                     ))}
@@ -172,7 +172,7 @@ export default function RecrutementPage() {
               <div className="mt-4 flex items-center justify-between gap-4 flex-wrap">
                 <p className="text-xs text-[#78716C]">{p.zones}</p>
                 <a href={p.pdf} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] underline underline-offset-4 decoration-[#195144]/30 hover:decoration-[#195144]">
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] underline underline-offset-4 decoration-[#205040]/30 hover:decoration-[#205040]">
                   Télécharger la fiche de poste (PDF)
                 </a>
               </div>
@@ -182,7 +182,7 @@ export default function RecrutementPage() {
       </section>
 
       <section className="max-w-4xl mx-auto px-5 md:px-8 pb-20">
-        <div className="rounded-2xl bg-[#195144] text-white p-6 md:p-8">
+        <div className="rounded-2xl bg-[#205040] text-white p-6 md:p-8">
           <h2 className="ll-display text-xl">Candidater</h2>
           <p className="mt-2 text-sm text-white/80 leading-relaxed max-w-2xl">
             Envoyez votre CV, vos diplômes ou certifications, et deux références d&apos;intervention à{' '}
@@ -194,7 +194,7 @@ export default function RecrutementPage() {
             compétences : analyse du dossier, entretien, puis évaluation continue sur les premières sessions.
           </p>
           <a href="mailto:sales@lab-learning.fr?subject=Candidature formateur"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-white text-[#195144] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F5F4] transition-colors">
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-white text-[#205040] px-5 py-2.5 text-sm font-semibold hover:bg-[#F5F5F4] transition-colors">
             <Mail className="h-4 w-4" /> Envoyer ma candidature
           </a>
         </div>

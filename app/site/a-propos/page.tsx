@@ -28,7 +28,7 @@ export default async function SiteAPropos() {
         <div className="absolute inset-0 -z-10 ll-grid-faint" />
         <Kicker className="mb-5">Qui sommes-nous</Kicker>
         <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
-          Former les métiers de bouche à <span className="text-[#195144]">l’excellence du geste</span>.
+          Former les métiers de bouche à <span className="text-[#205040]">l’excellence du geste</span>.
         </h1>
         <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
           Lab Learning est un organisme de formation professionnelle certifié Qualiopi, spécialiste
@@ -51,7 +51,7 @@ export default async function SiteAPropos() {
       </section>
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-14">
-        <div className="rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 md:divide-x md:divide-white/10">
+        <div className="rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 md:divide-x md:divide-white/10">
           {chiffres.map((c, i) => (
             <div key={c.l} className={i > 0 ? 'md:pl-8' : ''}>
               <div className="ll-display text-4xl md:text-[54px] leading-none"><CountUp value={c.v} /></div>
@@ -66,8 +66,8 @@ export default async function SiteAPropos() {
         <h2 className="ll-display ll-fluid-h2 text-[#14110F] mb-10">Ce qui nous guide</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {VALEURS.map((v) => (
-            <div key={v.t} className="group rounded-2xl border border-[#195144]/10 bg-white p-6 hover:shadow-lg hover:shadow-black/5 hover:border-[#195144]/25 ll-lift">
-              <span className="h-11 w-11 rounded-xl bg-[#195144]/8 flex items-center justify-center mb-4"><v.Icon className="h-5 w-5 text-[#195144]" /></span>
+            <div key={v.t} className="group rounded-2xl border border-[#205040]/10 bg-white p-6 hover:shadow-lg hover:shadow-black/5 hover:border-[#205040]/25 ll-lift">
+              <span className="h-11 w-11 rounded-xl bg-[#205040]/8 flex items-center justify-center mb-4"><v.Icon className="h-5 w-5 text-[#205040]" /></span>
               <div className="font-heading font-semibold text-lg text-[#14110F]">{v.t}</div>
               <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{v.d}</p>
             </div>
@@ -77,16 +77,16 @@ export default async function SiteAPropos() {
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="rounded-3xl border border-[#195144]/10 bg-white p-8">
-            <ShieldCheck className="h-7 w-7 text-[#195144]" />
+          <div className="rounded-3xl border border-[#205040]/10 bg-white p-8">
+            <ShieldCheck className="h-7 w-7 text-[#205040]" />
             <div className="mt-3 font-heading font-bold text-xl text-[#14110F] tracking-heading">Certifiés Qualiopi</div>
             <p className="mt-2 text-[#57534E] leading-relaxed">
               La certification Qualiopi atteste de la qualité de nos processus, de l’analyse du besoin
               à l’évaluation des acquis. C’est aussi la condition d’accès aux financements publics et mutualisés.
             </p>
           </div>
-          <div className="rounded-3xl border border-[#195144]/10 bg-white p-8">
-            <MapPin className="h-7 w-7 text-[#195144]" />
+          <div className="rounded-3xl border border-[#205040]/10 bg-white p-8">
+            <MapPin className="h-7 w-7 text-[#205040]" />
             <div className="mt-3 font-heading font-bold text-xl text-[#14110F] tracking-heading">Sur tout le territoire</div>
             <p className="mt-2 text-[#57534E] leading-relaxed">
               Nous intervenons en présentiel dans vos établissements comme à distance, et accompagnons

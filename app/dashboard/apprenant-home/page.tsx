@@ -90,7 +90,7 @@ export default async function ApprenantHomePage() {
 
       {/* Prochaine session */}
       {prochaine && (
-        <div className="card p-5 border-l-4" style={{ borderLeftColor: '#195144' }}>
+        <div className="card p-5 border-l-4" style={{ borderLeftColor: '#205040' }}>
           <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">Prochaine session</div>
           <div className="text-base font-heading font-semibold text-surface-900">
             {(prochaine as any).session?.formation?.intitule || 'Formation'}

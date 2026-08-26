@@ -9,20 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Design system Lab Learning — pine (marque) + mint (accent) + slate froid
         brand: {
-          50: '#ecfdf3', 100: '#d1fae2', 200: '#a7f3c9', 300: '#6BC291',
-          400: '#4eba7a', 500: '#195245', 600: '#134439', 700: '#0f3a30',
-          800: '#0b2e25', 900: '#07231b', 950: '#041610',
+          50: '#EEF6F2', 100: '#D6EBE1', 200: '#AED8C4', 300: '#7FC0A4',
+          400: '#4FA382', 500: '#205040', 600: '#183C31', 700: '#14342B',
+          800: '#102A22', 900: '#0C211B', 950: '#081812',
         },
         surface: {
-          0: '#FFFFFF', 50: '#FAFAFA', 100: '#F5F5F4', 200: '#E7E5E4',
-          300: '#D6D3D1', 400: '#A8A29E', 500: '#78716C', 600: '#57534E',
-          700: '#44403C', 800: '#292524', 900: '#1C1917', 950: '#0C0A09',
+          0: '#FFFFFF', 50: '#F6F8FA', 100: '#EEF1F4', 200: '#E1E6EB',
+          300: '#CBD3DB', 400: '#9AA6B2', 500: '#6B7885', 600: '#4E5A67',
+          700: '#37414D', 800: '#232C36', 900: '#0F1720', 950: '#0A1017',
         },
-        success: { 50: '#F0FDF4', 100: '#DCFCE7', 500: '#22C55E', 600: '#16A34A', 700: '#15803D' },
-        warning: { 50: '#FFFBEB', 100: '#FEF3C7', 500: '#F59E0B', 600: '#D97706', 700: '#B45309' },
-        danger: { 50: '#FEF2F2', 100: '#FEE2E2', 500: '#EF4444', 600: '#DC2626', 700: '#B91C1C' },
-        accent: { 50: '#FFF7ED', 500: '#F97316', 600: '#EA580C' },
+        success: { 50: '#EEF6F2', 100: '#D6EBE1', 500: '#2E8362', 600: '#206A4E', 700: '#205040' },
+        warning: { 50: '#FDF7EC', 100: '#FBF0DA', 500: '#E8A33D', 600: '#C9821C', 700: '#A66A15' },
+        danger: { 50: '#FDF1F1', 100: '#FBE4E5', 500: '#E5484D', 600: '#C8353A', 700: '#A82A2E' },
+        accent: { 50: '#E4FBF0', 100: '#E4FBF0', 200: '#BCF2D9', 300: '#8DEAC0', 400: '#5CD9A0', 500: '#38C588', 600: '#22A972' },
+        info: { 50: '#EFF5FE', 100: '#E4EEFE', 500: '#2F6FED', 600: '#205AD1' },
       },
       fontFamily: {
         sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
@@ -42,17 +44,19 @@ const config: Config = {
       },
       letterSpacing: { 'display': '-0.035em', 'heading': '-0.025em', 'tight': '-0.015em' },
       boxShadow: {
-        'xs': '0 1px 2px 0 rgb(0 0 0 / 0.03)',
-        'soft': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03)',
-        'card': '0 2px 8px -2px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04)',
-        'elevated': '0 8px 24px -8px rgb(0 0 0 / 0.08), 0 2px 8px -4px rgb(0 0 0 / 0.04)',
-        'modal': '0 24px 80px -16px rgb(0 0 0 / 0.15), 0 8px 24px -8px rgb(0 0 0 / 0.06)',
-        'glow': '0 0 0 1px rgb(25 82 69 / 0.08), 0 4px 16px -4px rgb(107 194 145 / 0.12)',
+        // Ombres slate douces en couches (design system — jamais de noir dur)
+        'xs': '0 1px 2px 0 rgb(15 23 32 / 0.04)',
+        'soft': '0 1px 3px 0 rgb(15 23 32 / 0.05), 0 1px 2px -1px rgb(15 23 32 / 0.04)',
+        'card': '0 1px 2px rgb(15 23 32 / 0.04), 0 4px 12px -2px rgb(15 23 32 / 0.06)',
+        'elevated': '0 2px 4px rgb(15 23 32 / 0.04), 0 12px 32px -8px rgb(15 23 32 / 0.10)',
+        'modal': '0 24px 80px -16px rgb(15 23 32 / 0.18), 0 8px 24px -8px rgb(15 23 32 / 0.08)',
+        'glow': '0 0 0 1px rgb(32 80 64 / 0.08), 0 4px 16px -4px rgb(92 217 160 / 0.16)',
+        'focus': '0 0 0 3px rgb(92 217 160 / 0.35)',
       },
       borderRadius: { 'xl': '0.75rem', '2xl': '1rem', '3xl': '1.25rem', '4xl': '1.5rem' },
       backgroundImage: {
         'noise': "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E\")",
-        'grid-pattern': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40V0h40' fill='none' stroke='%23e7e5e4' stroke-width='0.5'/%3E%3C/svg%3E\")",
+        'grid-pattern': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40V0h40' fill='none' stroke='%23E1E6EB' stroke-width='0.5'/%3E%3C/svg%3E\")",
         'gradient-shine': 'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%)',
       },
       animation: {

@@ -215,7 +215,7 @@ export function SettingsForm({ organization, canEdit }: SettingsFormProps) {
 
         {logoUrl ? (
           <div className="flex items-start gap-4 p-4 rounded-xl bg-surface-50 border border-surface-200">
-            <div className="bg-[#195144] p-3 rounded-lg shrink-0">
+            <div className="bg-[#205040] p-3 rounded-lg shrink-0">
               <img src={logoUrl} alt="Logo" className="h-12 w-auto max-w-40 object-contain" />
             </div>
             <div className="flex-1">

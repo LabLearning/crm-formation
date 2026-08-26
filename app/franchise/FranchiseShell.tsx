@@ -23,7 +23,7 @@ const nav: NavItem[] = [
   { label: 'Prévision', short: 'Prévision', href: '/prevision', icon: TrendingUp },
 ]
 
-const PORTAL_GREEN = '#195245'
+const PORTAL_GREEN = '#205040'
 
 export function FranchiseShell({
   user, franchiseName, franchiseLogo, orgName, children, isImpersonating,
@@ -159,7 +159,7 @@ export function FranchiseShell({
                 {nav.map((item) => (
                   <Link key={item.href} href={basePath + item.href}
                     className={cn('flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                      isActive(item.href) ? 'text-[#195245]' : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300')}
+                      isActive(item.href) ? 'text-[#205040]' : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300')}
                     style={isActive(item.href) ? { borderBottomColor: PORTAL_GREEN } : undefined}
                   >
                     <item.icon className="h-4 w-4" />

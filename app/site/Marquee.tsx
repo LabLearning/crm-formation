@@ -17,13 +17,13 @@ export function Marquee({ items }: { items: MarqueeItem[] }) {
           <div
             key={`${f.nom}-${i}`}
             aria-hidden={i >= items.length}
-            className="shrink-0 w-60 h-28 rounded-2xl border border-[#195144]/10 bg-white flex flex-col items-center justify-center gap-1.5 px-5"
+            className="shrink-0 w-60 h-28 rounded-2xl border border-[#205040]/10 bg-white flex flex-col items-center justify-center gap-1.5 px-5"
           >
             {f.logo_url ? (
               <img loading="lazy" src={f.logo_url} alt={f.nom} className="h-14 w-auto max-w-[170px] object-contain" />
             ) : (
               <span className="inline-flex items-center gap-2 font-heading font-semibold text-[#44403C] text-sm text-center">
-                <Store className="h-4 w-4 text-[#195144]/60" /> {f.nom}
+                <Store className="h-4 w-4 text-[#205040]/60" /> {f.nom}
               </span>
             )}
           </div>

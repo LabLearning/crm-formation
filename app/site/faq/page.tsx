@@ -70,10 +70,10 @@ export default function SiteFaq() {
         <div className="absolute inset-0 -z-10 ll-grid-faint" />
         <div className="max-w-3xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-10">
           <Kicker className="mb-5">FAQ</Kicker>
-          <h1 className="ll-display ll-fluid-h1 text-[#14110F] text-balance">Les questions qu&apos;on nous pose <span className="text-[#195144]">tout le temps</span></h1>
+          <h1 className="ll-display ll-fluid-h1 text-[#14110F] text-balance">Les questions qu&apos;on nous pose <span className="text-[#205040]">tout le temps</span></h1>
           <p className="mt-5 text-lg text-[#57534E] leading-relaxed">
             Financement, délais, déroulement : tout ce qu&apos;il faut savoir avant de lancer une formation.
-            Il manque la vôtre ? <Link href="/site/contact" className="font-semibold text-[#195144] hover:underline">Posez-la nous directement</Link>.
+            Il manque la vôtre ? <Link href="/site/contact" className="font-semibold text-[#205040] hover:underline">Posez-la nous directement</Link>.
           </p>
         </div>
       </section>
@@ -81,10 +81,10 @@ export default function SiteFaq() {
       <section className="max-w-3xl mx-auto px-5 md:px-8 pb-16 space-y-3">
         {FAQ.map((f, i) => (
           <Reveal key={i} delay={(i % 3) * 60}>
-            <details className="group rounded-2xl bg-white ring-1 ring-black/5 open:ring-[#195144]/20 transition-shadow open:shadow-lg open:shadow-black/5">
+            <details className="group rounded-2xl bg-white ring-1 ring-black/5 open:ring-[#205040]/20 transition-shadow open:shadow-lg open:shadow-black/5">
               <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 md:px-6 py-4.5 py-5">
                 <span className="font-heading font-semibold text-[#14110F]">{f.q}</span>
-                <span className="shrink-0 h-8 w-8 rounded-full bg-[#195144]/8 flex items-center justify-center text-[#195144] transition-transform group-open:rotate-90">
+                <span className="shrink-0 h-8 w-8 rounded-full bg-[#205040]/8 flex items-center justify-center text-[#205040] transition-transform group-open:rotate-90">
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </summary>
@@ -97,7 +97,7 @@ export default function SiteFaq() {
       <section className="max-w-3xl mx-auto px-5 md:px-8 pb-20 text-center">
         <p className="text-[#57534E]">
           Une question sur votre situation précise ?{' '}
-          <Link href="/site/contact" className="inline-flex items-center gap-1.5 font-semibold text-[#195144] hover:gap-2.5 transition-all">
+          <Link href="/site/contact" className="inline-flex items-center gap-1.5 font-semibold text-[#205040] hover:gap-2.5 transition-all">
             Contactez-nous <ArrowRight className="h-4 w-4" />
           </Link>
         </p>

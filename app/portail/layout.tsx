@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#195144',
+  themeColor: '#205040',
 }
 
 export default function PortalRootLayout({ children }: { children: React.ReactNode }) {

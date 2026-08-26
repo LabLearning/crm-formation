@@ -19,7 +19,7 @@ export default function ReglementInterieur() {
         <a
           href="/api/pdf/reglement-interieur"
           target="_blank" rel="noreferrer"
-          style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 999, background: '#195144', color: '#fff', fontWeight: 600, textDecoration: 'none' }}
+          style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 999, background: '#205040', color: '#fff', fontWeight: 600, textDecoration: 'none' }}
         >
           Télécharger le règlement intérieur (PDF)
         </a>

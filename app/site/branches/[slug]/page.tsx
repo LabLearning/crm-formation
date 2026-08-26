@@ -32,7 +32,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
   return (
     <>
       {/* Hero métier */}
-      <section className="relative overflow-hidden border-b border-[#195144]/10">
+      <section className="relative overflow-hidden border-b border-[#205040]/10">
         <img src={`/site/metiers/${b.img}.webp`} alt="" aria-hidden="true" className="absolute inset-0 -z-10 h-full w-full object-cover" />
         <div className="absolute inset-0 -z-10" style={{ background: `linear-gradient(120deg, ${b.from}E6 0%, ${b.to}B3 55%, rgba(0,0,0,0.55) 100%)` }} />
         <div className="max-w-5xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-14 md:pb-20 text-white">
@@ -53,20 +53,20 @@ export default async function SiteBranche({ params }: { params: { slug: string }
       {/* Formations groupées par thème */}
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 md:py-16 space-y-14">
         {groups.length === 0 && (
-          <div className="rounded-2xl border border-[#195144]/10 bg-white p-10 text-center text-[#78716C]">
-            Le catalogue de ce métier arrive très bientôt. <Link href="/site/contact" className="font-semibold text-[#195144]">Contactez-nous</Link>.
+          <div className="rounded-2xl border border-[#205040]/10 bg-white p-10 text-center text-[#78716C]">
+            Le catalogue de ce métier arrive très bientôt. <Link href="/site/contact" className="font-semibold text-[#205040]">Contactez-nous</Link>.
           </div>
         )}
         {groups.map((g) => (
           <section key={g.key}>
-            <div className="flex items-baseline justify-between gap-4 border-b border-[#195144]/10 pb-3 mb-6">
+            <div className="flex items-baseline justify-between gap-4 border-b border-[#205040]/10 pb-3 mb-6">
               <h2 className="ll-display text-2xl md:text-3xl text-[#14110F]">{g.label}</h2>
               <span className="text-sm text-[#A8A29E] shrink-0 tabular-nums">{g.formations.length}</span>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {g.formations.map((f, i) => (
                 <Reveal key={f.id} delay={(i % 3) * 70}>
-                  <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#195144]/10 bg-white overflow-hidden hover:border-[#195144]/30 hover:shadow-sm ll-lift">
+                  <Link href={`/site/formations/${f.id}`} className="group h-full flex flex-col rounded-2xl border border-[#205040]/10 bg-white overflow-hidden hover:border-[#205040]/30 hover:shadow-sm ll-lift">
                     <div className="relative h-32 overflow-hidden">
                       {/* La photo suit le THÈME de la formation, pas le groupe :
                           hygiène, sécurité, management... chacune la sienne. */}
@@ -81,27 +81,27 @@ export default async function SiteBranche({ params }: { params: { slug: string }
                       })()}
                     </div>
                     <div className="flex flex-col flex-1 p-5">
-                      <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#195144] transition-colors">{titreFormation(f.intitule)}</div>
+                      <div className="font-heading font-semibold text-[#14110F] leading-snug group-hover:text-[#205040] transition-colors">{titreFormation(f.intitule)}</div>
                       <div className="flex items-center gap-3 mt-2 text-xs text-[#78716C]">
                         {f.duree_heures ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duree_heures} h</span> : null}
                         {f.modalite ? <span className="inline-flex items-center gap-1"><Monitor className="h-3.5 w-3.5" />{MODALITE[f.modalite] || f.modalite}</span> : null}
                         {/* Le prix dès la carte : calé sur la prise en charge OPCO. */}
                         {f.tarif_inter_ht ? (
-                          <span className="font-semibold text-[#195144]">{Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT/pers.</span>
+                          <span className="font-semibold text-[#205040]">{Number(f.tarif_inter_ht).toLocaleString('fr-FR')} € HT/pers.</span>
                         ) : f.tarif_intra_ht ? (
-                          <span className="font-semibold text-[#195144]">{Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT/groupe</span>
+                          <span className="font-semibold text-[#205040]">{Number(f.tarif_intra_ht).toLocaleString('fr-FR')} € HT/groupe</span>
                         ) : null}
                       </div>
                       {f.objectifs.length > 0 && (
                         <ul className="mt-4 space-y-1.5 flex-1">
                           {f.objectifs.slice(0, 3).map((o, j) => (
                             <li key={j} className="flex items-start gap-2 text-sm text-[#57534E]">
-                              <CheckCircle2 className="h-4 w-4 text-[#195144] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
+                              <CheckCircle2 className="h-4 w-4 text-[#205040] shrink-0 mt-0.5" /><span className="line-clamp-2">{o}</span>
                             </li>
                           ))}
                         </ul>
                       )}
-                      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#195144] group-hover:gap-2.5 transition-all">
+                      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] group-hover:gap-2.5 transition-all">
                         Voir le programme <ArrowRight className="h-3.5 w-3.5" />
                       </span>
                     </div>
@@ -118,7 +118,7 @@ export default async function SiteBranche({ params }: { params: { slug: string }
         <div className="mb-5"><span className="ll-kicker">Autres métiers</span></div>
         <div className="grid gap-3 sm:grid-cols-3">
           {autres.map((x) => (
-            <Link key={x.slug} href={`/site/branches/${x.slug}`} className="group rounded-2xl overflow-hidden ring-1 ring-black/5 hover:ring-[#195144]/25 ll-lift">
+            <Link key={x.slug} href={`/site/branches/${x.slug}`} className="group rounded-2xl overflow-hidden ring-1 ring-black/5 hover:ring-[#205040]/25 ll-lift">
               <MetierVisual nom={x.label} label={x.label} height="h-28" />
             </Link>
           ))}
@@ -127,12 +127,12 @@ export default async function SiteBranche({ params }: { params: { slug: string }
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
-        <div className="rounded-[28px] bg-[#195144] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
+        <div className="rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-4xl text-balance text-white">Un besoin précis pour votre équipe ?</h2>
             <p className="mt-3 text-white/70 max-w-xl">On construit le parcours et on monte le financement (POEI, OPCO) avec vous.</p>
           </div>
-          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#195144] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
+          <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
             Demander un devis <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
