@@ -7,6 +7,7 @@ import {
   CheckCircle2, FileText, ListChecks, Euro, Download,
 } from 'lucide-react'
 import { Badge, BackLink } from '@/components/ui'
+import { ModifierFormationButton } from './ModifierFormationButton'
 import { formatDate } from '@/lib/utils'
 import type { BadgeVariant } from '@/lib/types'
 
@@ -66,6 +67,7 @@ export default async function FormationDetailPage({ params }: { params: { id: st
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <ModifierFormationButton formation={formation as any} />
           <Link href={`/dashboard/sessions?formation=${params.id}`}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-surface-900 text-white hover:bg-surface-800 transition-colors">
             <Calendar className="h-4 w-4" /> Créer une session
