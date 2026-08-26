@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, Send, Loader2 } from 'lucide-react'
+import { MessageCircle, Send, Loader2 } from '@/components/ui/icons'
 import { cn, formatDate } from '@/lib/utils'
 import { useToast, Avatar } from '@/components/ui'
 import { repondreApprenantAction } from '../contact/actions'

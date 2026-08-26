@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import {
   Mails, Send, User, Building2, Search, Plus, Trash2,
   Copy, Eye, Edit3, Check, X, Save, Clock,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 

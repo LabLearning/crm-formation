@@ -5,7 +5,7 @@ import {
   Euro, TrendingUp, Users, Target, Building2, MapPin,
   ChevronRight, UserPlus, Clock, Calculator, ClipboardList,
   Send, Mails, CalendarDays, Wallet,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import Link from 'next/link'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'

@@ -1,4 +1,4 @@
-import { ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from '@/components/ui/icons'
 
 export default function PortalExpiredPage() {
   return (

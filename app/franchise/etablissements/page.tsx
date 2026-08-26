@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { Building2, MapPin, GraduationCap, ChevronRight } from 'lucide-react'
+import { Building2, MapPin, GraduationCap, ChevronRight } from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

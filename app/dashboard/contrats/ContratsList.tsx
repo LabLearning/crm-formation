@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Search, FileSignature, Download, Send, Clock, CheckCircle2, Building2,
   AlertTriangle, Archive, Mail, ExternalLink,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { useToast, RowMenu } from '@/components/ui'
 import { resendContratSignatureAction, resendSignedContratAction } from './actions'
 import { cn, formatDate } from '@/lib/utils'

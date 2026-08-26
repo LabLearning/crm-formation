@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Bell, Check, ExternalLink, Trash2, Search, Filter, MailOpen } from 'lucide-react'
+import { Bell, Check, ExternalLink, Trash2, Search, Filter, MailOpen } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 import { cn, formatDateTime } from '@/lib/utils'
 

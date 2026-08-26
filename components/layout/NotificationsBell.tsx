@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Bell, Check, ExternalLink, X } from 'lucide-react'
+import { Bell, Check, ExternalLink, X } from '@/components/ui/icons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { cn, formatDateTime } from '@/lib/utils'

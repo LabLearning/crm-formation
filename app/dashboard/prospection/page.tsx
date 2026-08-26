@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   Send, Eye, Copy, RotateCcw, Flame, Clock, Snowflake,
   User, Building2, Mail, Phone, Check, Pencil, Plus,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 
 // ── Templates de prospection (repris du CRM commercial) ──

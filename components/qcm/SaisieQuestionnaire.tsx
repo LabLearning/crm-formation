@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save } from '@/components/ui/icons'
 import { Modal, Button, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { chargerQuestionnaireAction, saisirQuestionnaireAction } from '@/app/dashboard/sessions/[id]/qcm-saisie-actions'

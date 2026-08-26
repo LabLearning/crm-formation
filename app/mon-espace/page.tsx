@@ -9,7 +9,7 @@ import Link from 'next/link'
 import {
   Calendar, Users, ClipboardCheck, Clock, ChevronRight, GraduationCap, FileText,
   Euro, TrendingUp, Target, UserPlus, Building2, MapPin, Wallet, ListChecks,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { cn, formatDate, companyLabel } from '@/lib/utils'
 

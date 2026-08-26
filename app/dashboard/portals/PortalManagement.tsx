@@ -5,7 +5,7 @@ import {
   Plus, Link as LinkIcon, Trash2, Copy, CheckCircle2,
   Users, Presentation, ExternalLink, Globe, Mail, Building2,
   Handshake, GraduationCap,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Select, useToast } from '@/components/ui'
 import { generatePortalTokenAction, revokePortalTokenAction, resendPortalEmailAction } from './actions'
 import { formatDate } from '@/lib/utils'

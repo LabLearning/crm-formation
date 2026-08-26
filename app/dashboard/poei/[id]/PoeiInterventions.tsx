@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   UserCog, Plus, Pencil, Trash2, Save, Clock, CheckCircle2, XCircle,
   AlertCircle, Calendar, Download,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, Input, useToast, RowMenu, SearchSelect } from '@/components/ui'
 import { addPoeiInterventionAction, updatePoeiInterventionAction, removePoeiInterventionAction } from '../actions'
 import { cn, formatDate } from '@/lib/utils'

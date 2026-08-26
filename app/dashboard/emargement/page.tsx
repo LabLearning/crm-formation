@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle } from '@/components/ui/icons'
 import { creneauLabel, formatFullDate } from '@/app/portail/[token]/emargement/helpers'
 
 export default async function DashboardEmargementPage() {

@@ -3,7 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ReceiptEuro, Download, CheckCircle2, Clock, XCircle, Search } from 'lucide-react'
+import { ReceiptEuro, Download, CheckCircle2, Clock, XCircle, Search } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { updateFactureFormateurStatusAction } from '@/app/dashboard/formateurs/actions'

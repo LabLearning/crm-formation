@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Calendar, AlertCircle } from 'lucide-react'
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Calendar, AlertCircle } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { toggleTacheAction } from './taches-actions'
 

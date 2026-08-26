@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
-import { Calendar, MapPin, Video, Users, Clock, BookOpen, ClipboardList, CheckCircle2 } from 'lucide-react'
+import { Calendar, MapPin, Video, Users, Clock, BookOpen, ClipboardList, CheckCircle2 } from '@/components/ui/icons'
 import type { SessionStatus } from '@/lib/types/formation'
 
 /**

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ClipboardCheck, Calendar } from 'lucide-react'
+import { ClipboardCheck, Calendar } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { PoeiEvaluations } from '@/app/dashboard/poei/[id]/PoeiEvaluations'
 import { formatDate } from '@/lib/utils'

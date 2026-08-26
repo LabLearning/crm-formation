@@ -7,7 +7,7 @@ import {
   Presentation, Star, Award, Clock, Calendar, Euro,
   CheckCircle2, XCircle, ShieldCheck, AlertTriangle, MapPin, KeyRound,
   ArrowUp, ArrowDown, ChevronsUpDown,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu } from '@/components/ui'
 import {
   createFormateurAction, updateFormateurAction, deleteFormateurAction,

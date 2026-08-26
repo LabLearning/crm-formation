@@ -7,7 +7,7 @@ import {
   Calculator, ClipboardList, Send, Mails, CalendarDays,
   Target, ChevronRight, Star, X, Euro, Wallet,
   TrendingUp, Users, MapPin, Briefcase,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { cn, companyLabel } from '@/lib/utils'
 

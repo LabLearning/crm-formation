@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Badge } from '@/components/ui'
-import { CalendarDays, MapPin, Users, ChevronRight, CheckCircle2, CheckSquare } from 'lucide-react'
+import { CalendarDays, MapPin, Users, ChevronRight, CheckCircle2, CheckSquare } from '@/components/ui/icons'
 import { formatShortDate, todayISO } from '@/app/portail/[token]/emargement/helpers'
 import { sessionsFormateur } from '@/lib/formateur-sessions'
 

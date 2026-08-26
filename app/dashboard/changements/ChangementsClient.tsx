@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { UserCog, UserPlus, UserMinus, Repeat, Check, X, Loader2, Calendar, GraduationCap } from 'lucide-react'
+import { UserCog, UserPlus, UserMinus, Repeat, Check, X, Loader2, Calendar, GraduationCap } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { validateChangeAction, refuseChangeAction } from './actions'
 

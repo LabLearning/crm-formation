@@ -7,7 +7,7 @@ import {
   Banknote, Building2, Plus, CheckCircle2, AlertCircle, Clock,
   XCircle, Trash2, Edit3, ExternalLink, Search, Filter, Wallet,
   TrendingUp, Loader2, X, ChevronRight,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import {
   marquerAvanceRecueAction,

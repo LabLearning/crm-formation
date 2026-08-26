@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Lock, ArrowRight, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react'
+import { Lock, ArrowRight, CheckCircle2, AlertTriangle, Loader2 } from '@/components/ui/icons'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function ResetPasswordPage() {

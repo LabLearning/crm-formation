@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileText, PenLine, AlertCircle } from 'lucide-react'
+import { FileText, PenLine, AlertCircle } from '@/components/ui/icons'
 import { SignaturePad } from '../emargement/SignaturePad'
 import { signDocumentAction } from './actions'
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types/document'

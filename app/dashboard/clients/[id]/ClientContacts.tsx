@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, UserPlus, User, Mail, Phone, Pencil, Trash2, Save } from 'lucide-react'
+import { Users, UserPlus, User, Mail, Phone, Pencil, Trash2, Save } from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import { createContactAction, updateContactAction, deleteContactAction } from '@/app/dashboard/contacts/actions'
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Component, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, LogOut, Settings, User as UserIcon, Menu, ChevronDown, Bell } from 'lucide-react'
+import { Search, LogOut, Settings, User as UserIcon, Menu, ChevronDown, Bell } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'

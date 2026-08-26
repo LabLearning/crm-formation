@@ -6,7 +6,7 @@ import { commissionTypeLabel } from '@/lib/commission'
 import {
   Building2, GraduationCap, Users, UserCheck, Banknote,
   ClipboardCheck, Star, ArrowRight, Percent,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

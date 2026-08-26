@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Loader2, Paperclip, Trash2 } from 'lucide-react'
+import { Upload, Loader2, Paperclip, Trash2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
 import { uploadFormateurDocAction, deleteFormateurDocAction } from './documents-actions'

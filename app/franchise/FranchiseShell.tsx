@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
-import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, TrendingUp, LogOut, ChevronDown, UserCog, X } from 'lucide-react'
+import { LayoutDashboard, Building2, ClipboardCheck, Banknote, AlertTriangle, TrendingUp, LogOut, ChevronDown, UserCog, X } from '@/components/ui/icons'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
 import { NotificationsBell } from '@/components/layout/NotificationsBell'

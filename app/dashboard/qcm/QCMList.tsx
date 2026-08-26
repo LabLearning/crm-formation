@@ -5,7 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, Copy, Eye,
   ListChecks, CheckCircle2, Circle, X, Send, Save,
   GraduationCap, ChevronDown, ChevronRight, Sparkles, Loader2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import {
   createQCMAction, updateQCMStatusAction, deleteQCMAction, duplicateQCMAction,

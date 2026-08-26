@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Mail, Loader2, Check, ShieldOff, KeyRound, Eye } from 'lucide-react'
+import { UserPlus, Mail, Loader2, Check, ShieldOff, KeyRound, Eye } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { inviteFranchiseUserAction, revokeFranchiseUserAction } from '../actions'
 import { startImpersonationAction } from '@/app/dashboard/users/actions'

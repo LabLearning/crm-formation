@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { SignatureModal } from './SignatureModal'

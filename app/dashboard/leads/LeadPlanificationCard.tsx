@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarCheck, CalendarClock, Presentation, ArrowRight, FileSignature } from 'lucide-react'
+import { CalendarCheck, CalendarClock, Presentation, ArrowRight, FileSignature } from '@/components/ui/icons'
 import { Button, Badge, Select, useToast } from '@/components/ui'
 import { confirmLeadDateAction, proposeLeadDateAction, generateConventionFromLeadAction } from './actions'
 import { formatDate } from '@/lib/utils'

@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { Badge, Avatar } from '@/components/ui'
 import { INSCRIPTION_STATUS_LABELS, INSCRIPTION_STATUS_COLORS } from '@/lib/types/formation'
-import { Accessibility, Mail, Building2 } from 'lucide-react'
+import { Accessibility, Mail, Building2 } from '@/components/ui/icons'
 import type { InscriptionStatus } from '@/lib/types/formation'
 import { DeclareChangeButton } from '@/app/portail/[token]/apprenants/DeclareChangeButton'
 import { AddApprenantButton } from '@/app/portail/[token]/apprenants/AddApprenantButton'

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Compass, Check, ChevronDown, ChevronUp, X, ArrowRight,
   Settings, GraduationCap, Building2, UserPlus, Calendar, FileText, Receipt, Users,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 
 export interface OnboardingFlags {
   org: boolean

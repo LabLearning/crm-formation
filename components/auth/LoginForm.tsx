@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, Loader2 } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 import { loginSchema } from '@/lib/validations/auth'
 import { Input } from '@/components/ui'

@@ -6,7 +6,7 @@ import {
   Plus, Search, Trash2, ArrowRight,
   Building2, Euro, Calendar, FolderOpen, CheckCircle2,
   Circle, AlertTriangle, Clock, ChevronRight,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import { createDossierAction, updateDossierStatusAction, toggleChecklistItemAction, deleteDossierAction } from './actions'
 import { DossierOpcoCard } from './DossierOpcoCard'

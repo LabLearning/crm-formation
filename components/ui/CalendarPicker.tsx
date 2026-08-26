@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from '@/components/ui/icons'
 
 interface CalendarPickerProps {
   /** Dates sélectionnées au format YYYY-MM-DD */

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import {
   ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Minus, ExternalLink,
   Calendar, User, Building2, ListChecks,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui'

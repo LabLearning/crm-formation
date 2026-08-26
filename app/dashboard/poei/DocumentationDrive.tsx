@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   FolderPlus, FilePlus, Folder, FileText, Download, Trash2, Pencil,
   Home, ChevronRight, Loader2, Upload, Paperclip, Save, Building2, FolderOpen,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, Input, SearchSelect, useToast, RowMenu } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { DocHoverPreview } from './DocHoverPreview'

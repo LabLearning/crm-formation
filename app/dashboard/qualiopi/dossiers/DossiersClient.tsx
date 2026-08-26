@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { FolderCheck, Search, ShieldAlert, ChevronRight } from 'lucide-react'
+import { FolderCheck, Search, ShieldAlert, ChevronRight } from '@/components/ui/icons'
 import { cn, formatDate } from '@/lib/utils'
 import { PIECES } from '@/lib/pieces-session'
 import type { DossierSession } from '@/lib/dossiers-completude'

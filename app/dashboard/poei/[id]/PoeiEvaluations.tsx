@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine, Send, Loader2, Building2, Eye } from 'lucide-react'
+import { ClipboardCheck, CheckCircle2, Clock, Download, Minus, Plus, PenLine, Send, Loader2, Building2, Eye } from '@/components/ui/icons'
 import { Badge, Button, Modal, useToast } from '@/components/ui'
 import { sendSignatureEmployeurAction } from '../certificat-signature-actions'
 import { GrilleEvaluation } from '@/components/poei/GrilleEvaluation'

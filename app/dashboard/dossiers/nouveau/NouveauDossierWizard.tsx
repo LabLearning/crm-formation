@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Users, GraduationCap, CheckCircle2, ArrowRight, ArrowLeft, Plus, Trash2, Loader2, Search } from 'lucide-react'
+import { Building2, Users, GraduationCap, CheckCircle2, ArrowRight, ArrowLeft, Plus, Trash2, Loader2, Search } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { creerDossierCompletAction } from './actions'

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Zap, CheckCircle2 } from 'lucide-react'
+import { Save, Zap, CheckCircle2 } from '@/components/ui/icons'
 import { Modal, Button, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { saisieRapideAction } from '@/app/dashboard/sessions/[id]/qcm-rapide-actions'

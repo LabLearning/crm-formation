@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Building2, MapPin, UserX, AlertTriangle, Layers } from 'lucide-react'
+import { Building2, MapPin, UserX, AlertTriangle, Layers } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export interface SessionProcess {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GraduationCap, Plus, Trash2, Loader2, CalendarCheck, CalendarClock, Presentation, ArrowRight, FileSignature, Users, MapPin, Clock, CalendarRange } from 'lucide-react'
+import { GraduationCap, Plus, Trash2, Loader2, CalendarCheck, CalendarClock, Presentation, ArrowRight, FileSignature, Users, MapPin, Clock, CalendarRange } from '@/components/ui/icons'
 import { Button, Badge, Select, useToast } from '@/components/ui'
 import {
   getLeadFormationsAction, addLeadFormationAction, deleteLeadFormationAction,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, ChevronDown, X, Check } from 'lucide-react'
+import { Search, ChevronDown, X, Check } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export interface SearchSelectPreview {

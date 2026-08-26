@@ -9,7 +9,7 @@ import {
   HeartPulse, FileWarning, ArrowRight, ArrowLeft, Phone, Mail,
   Calendar, MessageSquare, Eye, UserPlus, Link2, CircleDot,
   Save, History, Trash2, Database, FileDown, Loader2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { saveAuditAction, deleteAuditAction, creerLeadDepuisAuditAction } from './actions'

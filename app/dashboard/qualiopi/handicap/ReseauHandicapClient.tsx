@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Accessibility, GraduationCap, Loader2, Pencil, Plus, Save, Trash2 } from 'lucide-react'
+import { Accessibility, GraduationCap, Loader2, Pencil, Plus, Save, Trash2 } from '@/components/ui/icons'
 import { BackLink, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { enregistrerContactHandicapAction, supprimerContactHandicapAction } from './actions'

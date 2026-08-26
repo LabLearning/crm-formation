@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   FolderOpen, Upload, Download, Trash2, Loader2, FileText, Paperclip, Save,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import { createDocumentAction, deleteDocumentAction } from '@/app/dashboard/documents/actions'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_ENTREPRISE } from '@/lib/types/document'

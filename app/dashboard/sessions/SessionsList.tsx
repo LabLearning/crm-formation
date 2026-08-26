@@ -7,7 +7,7 @@ import {
   Plus, Search, Pencil, Trash2, Users, QrCode,
   Calendar, MapPin, Video, Clock, User as UserIcon, Building2,
   List, LayoutGrid, FolderPlus,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast, RowMenu, PoeiBadge } from '@/components/ui'
 import { SessionForm } from './SessionForm'
 import { deleteSessionAction, updateSessionStatusAction } from './actions'

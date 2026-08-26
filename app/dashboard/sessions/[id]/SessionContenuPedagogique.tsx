@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Upload, Download, Trash2, Loader2, FileText, Paperclip, Save, Eye,
   BookOpen, Wrench, ListChecks, CheckCircle2, Clock, FileDown,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import {
   DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_SUPPORT,

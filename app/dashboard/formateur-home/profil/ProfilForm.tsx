@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Save, Camera, FileText, Plus, X, Loader2 } from 'lucide-react'
+import { Save, Camera, FileText, Plus, X, Loader2 } from '@/components/ui/icons'
 import { updateProfilFormateurAction } from './actions'
 import { cn } from '@/lib/utils'
 

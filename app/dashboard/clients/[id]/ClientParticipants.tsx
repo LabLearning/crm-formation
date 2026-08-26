@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Plus, Pencil, Trash2, Mail, Phone } from 'lucide-react'
+import { Users, Plus, Pencil, Trash2, Mail, Phone } from '@/components/ui/icons'
 import { Modal, useToast, RowMenu } from '@/components/ui'
 import { deleteApprenantAction } from '@/app/dashboard/apprenants/actions'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'

@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { ReceiptText } from 'lucide-react'
+import { ReceiptText } from '@/components/ui/icons'
 import { FacturesFormateursList } from './FacturesFormateursList'
 
 export const dynamic = 'force-dynamic'

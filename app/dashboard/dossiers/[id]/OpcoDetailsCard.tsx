@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Hash, FileText, Upload, Check, X, ExternalLink, Trash2 } from 'lucide-react'
+import { Hash, FileText, Upload, Check, X, ExternalLink, Trash2 } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { updateOpcoNumeroAction } from '../opco-actions'
 

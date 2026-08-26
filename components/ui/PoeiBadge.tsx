@@ -1,4 +1,4 @@
-import { GraduationCap, Layers } from 'lucide-react'
+import { GraduationCap, Layers } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 /**

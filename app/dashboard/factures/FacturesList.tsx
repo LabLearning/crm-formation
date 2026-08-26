@@ -5,7 +5,7 @@ import {
   Plus, Search, Send, Trash2, Eye,
   Receipt, Building2, Euro, Calendar, AlertTriangle,
   CreditCard, ArrowRight, FileX, Clock, Download, Banknote, Loader2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import {
   createFactureAction, updateFactureStatusAction, deleteFactureAction,

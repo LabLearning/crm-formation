@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { StickyNote, Save } from 'lucide-react'
+import { StickyNote, Save } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { updateClientNotesAction } from '../actions'
 

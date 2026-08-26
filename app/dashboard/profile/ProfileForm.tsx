@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, User as UserIcon } from 'lucide-react'
+import { Save, User as UserIcon } from '@/components/ui/icons'
 import { Button, Input, useToast } from '@/components/ui'
 import { updateProfileAction } from './actions'
 import { AvatarPicker } from './AvatarPicker'

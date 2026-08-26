@@ -1,4 +1,4 @@
-import { FileText, Download, BookOpen, Wrench, ListChecks, CheckCircle2, Clock } from 'lucide-react'
+import { FileText, Download, BookOpen, Wrench, ListChecks, CheckCircle2, Clock } from '@/components/ui/icons'
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types/document'
 import type { SessionSupport, PositionnementRow } from '@/lib/session-contenu'
 import { cn, formatDate } from '@/lib/utils'

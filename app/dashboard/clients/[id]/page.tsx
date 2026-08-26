@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Mail, Phone, Globe, MapPin, Building2, User, FileText,
   Receipt, FolderOpen, Users, Hash, Banknote, Calendar,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge, BackLink } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'

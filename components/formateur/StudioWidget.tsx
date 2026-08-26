@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FilePenLine, X, Loader2 } from 'lucide-react'
+import { FilePenLine, X, Loader2 } from '@/components/ui/icons'
 import { ToastProvider } from '@/components/ui/Toast'
 import { StudioClient } from './StudioClient'
 import { getStudioDataAction } from '@/app/mon-espace/studio/actions'

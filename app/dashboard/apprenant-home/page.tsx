@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { AccountNotLinked } from '@/components/dashboard/AccountNotLinked'
-import { GraduationCap, FileText, ListChecks, Calendar, Clock, ChevronRight, MapPin } from 'lucide-react'
+import { GraduationCap, FileText, ListChecks, Calendar, Clock, ChevronRight, MapPin } from '@/components/ui/icons'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 

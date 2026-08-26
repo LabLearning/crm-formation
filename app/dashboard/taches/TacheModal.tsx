@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { X, Loader2, Trash2, Link as LinkIcon, MessageSquare, Send, Mic } from 'lucide-react'
+import { X, Loader2, Trash2, Link as LinkIcon, MessageSquare, Send, Mic } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { createTacheAction, updateTacheAction, deleteTacheAction, addCommentAction, addTacheMemoAction } from './actions'
 import { TacheMemos, type PendingMemo } from './TacheMemos'

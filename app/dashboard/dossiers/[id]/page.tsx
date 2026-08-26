@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Building2, GraduationCap, Calendar, Users, FileText, Euro, Clock,
   CheckCircle2, AlertCircle, MapPin, User as UserIcon, FilePenLine, Download,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge, BackLink } from '@/components/ui'
 import { DossierOpcoCard } from '../DossierOpcoCard'
 import { OpcoDetailsCard } from './OpcoDetailsCard'

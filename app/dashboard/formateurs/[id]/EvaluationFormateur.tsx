@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ClipboardCheck, Download, Save, Loader2 } from 'lucide-react'
+import { ClipboardCheck, Download, Save, Loader2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { COMPETENCES_FORMATEUR } from '@/lib/evaluation-formateur'

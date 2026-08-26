@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Pen, CheckCircle2, RotateCcw, FileText, Calendar, MapPin } from 'lucide-react'
+import { Pen, CheckCircle2, RotateCcw, FileText, Calendar, MapPin } from '@/components/ui/icons'
 import { signContratFormateurPublicAction } from '@/app/dashboard/sessions/confirm-actions'
 
 interface ContratInfo {

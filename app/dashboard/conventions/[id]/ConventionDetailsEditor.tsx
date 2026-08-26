@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, Save } from 'lucide-react'
+import { Calendar, Save } from '@/components/ui/icons'
 import { Select, Input, Button, useToast } from '@/components/ui'
 import { FINANCEUR_LABELS } from '@/lib/types/crm'
 import { updateConventionDetailsAction } from '../actions'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Send, Loader2, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, Send, Loader2, CheckCircle2 } from '@/components/ui/icons'
 import { formatDate } from '@/lib/utils'
 import { useToast, Badge } from '@/components/ui'
 import { deposerReclamationAction } from './actions'

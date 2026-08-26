@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, Download, Eye, FileSignature, Loader2, Send } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileSignature, Loader2, Send } from '@/components/ui/icons'
 import { Button, Modal, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { envoyerMandatAction } from '../mandat-actions'

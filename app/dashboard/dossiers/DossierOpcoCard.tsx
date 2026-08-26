@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, CheckCircle2, XCircle, CreditCard, Wallet, Hash, Building2 } from 'lucide-react'
+import { Send, CheckCircle2, XCircle, CreditCard, Wallet, Hash, Building2 } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { updateDossierOpcoStatusAction } from './opco-actions'
 import { OPCO_WORKFLOW_LABELS, OPCO_WORKFLOW_COLORS, type OpcoWorkflowStatus } from './opco-workflow'

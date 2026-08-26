@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2 } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 interface SearchPreview { title?: string; lines: { label: string; value: string }[] }

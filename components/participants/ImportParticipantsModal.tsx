@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, AlertTriangle, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { Sparkles, AlertTriangle, Loader2, CheckCircle2, ArrowLeft } from '@/components/ui/icons'
 import { Button, Modal, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { ExtractedParticipant } from '@/lib/ai'

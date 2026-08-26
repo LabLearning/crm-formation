@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   FileSignature, Send, Download, Eye, Loader2, Check, Copy, Clock,
   CheckCircle2, AlertCircle, Mail, FileText, XCircle,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, useToast } from '@/components/ui'
 import { sendConventionForSignatureAction, sendContratToFormateurAction } from './actions'
 import { cn } from '@/lib/utils'

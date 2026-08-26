@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Calendar, AlertCircle, Clock, Euro } from 'lucide-react'
+import { CheckCircle2, XCircle, Calendar, AlertCircle, Clock, Euro } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { acceptPoeiInterventionAction, refusePoeiInterventionAction } from '@/app/dashboard/poei/actions'
 

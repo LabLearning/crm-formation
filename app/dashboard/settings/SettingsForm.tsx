@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Save, Building2, ShieldCheck, UserCircle, Landmark, Stamp, Upload, ExternalLink, X, BookOpen, FileText } from 'lucide-react'
+import { Save, Building2, ShieldCheck, UserCircle, Landmark, Stamp, Upload, ExternalLink, X, BookOpen, FileText } from '@/components/ui/icons'
 import { Button, Input, useToast } from '@/components/ui'
 import { updateOrganizationAction } from './actions'
 import type { Organization } from '@/lib/types'

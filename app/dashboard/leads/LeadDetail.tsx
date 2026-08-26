@@ -6,7 +6,7 @@ import {
   Building2, Mail, Phone, Euro, Calendar, Tag,
   MessageSquare, ArrowRight, Send, Calculator,
   ClipboardList, Mails, Zap, GraduationCap,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Select, useToast } from '@/components/ui'
 import { addInteractionAction } from './actions'
 import {

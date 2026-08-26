@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Store, Building2, Banknote, TrendingUp, ChevronRight, Plus, X, Loader2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { commissionTypeLabel } from '@/lib/commission'
 import { createFranchiseAction } from './actions'
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save } from 'lucide-react'
+import { Save } from '@/components/ui/icons'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { updatePoeiAction } from '../actions'
 import { companyLabel } from '@/lib/utils'

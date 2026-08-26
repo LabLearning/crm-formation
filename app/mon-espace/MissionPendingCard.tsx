@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Calendar, MapPin, AlertCircle, Clock } from 'lucide-react'
+import { CheckCircle2, XCircle, Calendar, MapPin, AlertCircle, Clock } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { acceptMissionAction, refuseMissionAction } from '@/app/dashboard/sessions/actions'
 

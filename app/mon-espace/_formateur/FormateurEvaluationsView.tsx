@@ -1,5 +1,5 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { Star } from 'lucide-react'
+import { Star } from '@/components/ui/icons'
 
 /**
  * Évaluations reçues par le formateur (retours des apprenants sur ses

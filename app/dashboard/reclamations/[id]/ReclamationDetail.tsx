@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, ArrowRight, CheckCircle2, Loader2, Save } from 'lucide-react'
+import { AlertTriangle, ArrowRight, CheckCircle2, Loader2, Save } from '@/components/ui/icons'
 import { Badge, BackLink, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { updateReclamationFieldsAction, updateReclamationStatusAction } from '../actions'

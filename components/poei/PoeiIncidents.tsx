@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Plus, CheckCircle2, Clock, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, Plus, CheckCircle2, Clock, ShieldAlert } from '@/components/ui/icons'
 import { Button, Modal, Input, Select, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { declarerIncidentPoeiAction, changerStatutIncidentPoeiAction } from '@/app/dashboard/poei/incident-actions'

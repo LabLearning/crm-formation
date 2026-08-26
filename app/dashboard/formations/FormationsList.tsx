@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Search, Pencil, Trash2, Eye, EyeOff,
   GraduationCap, Award, Tag, ArrowUp, ArrowDown, ChevronsUpDown,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast, RowMenu } from '@/components/ui'
 import { FormationForm } from './FormationForm'
 import { deleteFormationAction, toggleFormationAction } from './actions'

@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ReceiptEuro, Download, CheckCircle2, Clock, XCircle, BadgeEuro } from 'lucide-react'
+import { ReceiptEuro, Download, CheckCircle2, Clock, XCircle, BadgeEuro } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { updateFactureFormateurStatusAction } from '../actions'

@@ -5,7 +5,7 @@ import {
   FolderOpen, Plus, Search, LayoutGrid, Table2, Columns3, BarChart3,
   AlertTriangle, CheckCircle2, Clock, User, Phone, Mail, FileText,
   Edit3, Trash2, X, Save, ChevronDown, Filter,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 

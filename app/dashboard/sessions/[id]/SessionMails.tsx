@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Mail, GraduationCap, Users, UserCheck, CheckCircle2, Clock, XCircle,
   Send, Loader2, Eye, ChevronRight,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate, cn } from '@/lib/utils'
 import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction, sendContratToFormateurAction } from './actions'

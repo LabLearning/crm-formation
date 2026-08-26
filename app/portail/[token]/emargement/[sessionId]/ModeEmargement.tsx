@@ -4,7 +4,7 @@ import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   PenLine, Printer, Upload, CheckCircle2, Loader2, FileCheck2, RefreshCw,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { setSessionEmargementModeAction, saveScanSessionAction } from '../actions'
 import { cn } from '@/lib/utils'
 

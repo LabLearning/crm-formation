@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Euro, FileText, GraduationCap, ClipboardCheck, Award, ReceiptEuro,
   Download, Loader2, Check,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { PoeiSection } from './PoeiSection'

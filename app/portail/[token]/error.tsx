@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, RotateCcw } from 'lucide-react'
+import { AlertTriangle, RotateCcw } from '@/components/ui/icons'
 
 export default function PortalError({
   error,

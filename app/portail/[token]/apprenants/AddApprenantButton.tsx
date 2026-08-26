@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, X, Loader2 } from 'lucide-react'
+import { UserPlus, X, Loader2 } from '@/components/ui/icons'
 import { addApprenantBySessionFormateurAction } from './actions'
 
 const CONTRAT_OPTIONS = [

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2 } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 interface AIGenerateButtonProps {

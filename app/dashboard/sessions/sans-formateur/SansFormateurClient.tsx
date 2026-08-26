@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { UserPlus, CheckCircle2, Loader2, Search } from 'lucide-react'
+import { UserPlus, CheckCircle2, Loader2, Search } from '@/components/ui/icons'
 import { useToast, BackLink } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { assignerFormateurAction } from './actions'

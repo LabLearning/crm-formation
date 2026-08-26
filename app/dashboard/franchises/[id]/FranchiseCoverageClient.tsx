@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Network, Pencil, Check, Loader2, Building2, TrendingUp, Banknote, X } from 'lucide-react'
+import { Network, Pencil, Check, Loader2, Building2, TrendingUp, Banknote, X } from '@/components/ui/icons'
 import { ProgressRing } from '@/components/ui'
 import { updateFranchiseAction } from '../actions'
 

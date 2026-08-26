@@ -15,7 +15,7 @@ import {
   Calendar,
   X,
   AlertCircle,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { moveTacheAction, assignTacheToMeAction } from './actions'
 import TacheModal from './TacheModal'

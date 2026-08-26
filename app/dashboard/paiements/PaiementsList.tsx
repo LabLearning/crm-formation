@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, CreditCard, Euro, Calendar, Building2 } from 'lucide-react'
+import { Search, CreditCard, Euro, Calendar, Building2 } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { PAIEMENT_MODE_LABELS, PAIEMENT_STATUS_LABELS, PAIEMENT_STATUS_COLORS } from '@/lib/types/facture'
 import { formatDate, companyLabel } from '@/lib/utils'

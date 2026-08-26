@@ -7,7 +7,7 @@ import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck, Calendar,
   ListChecks, Star, Users, CheckSquare, Receipt, UserPlus, Building2,
   LogOut, ChevronDown, Menu, X, BookOpen, MoreHorizontal, ReceiptEuro, Route,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Avatar } from '@/components/ui'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2 } from 'lucide-react'
+import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2 } from '@/components/ui/icons'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES } from '@/lib/agefice'
 import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, genererFactureAgeficeAction } from '@/app/dashboard/agefice/actions'

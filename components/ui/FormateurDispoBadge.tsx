@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CheckCircle2, AlertTriangle, Loader2, Calendar, Building2 } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, Loader2, Calendar, Building2 } from '@/components/ui/icons'
 
 interface DispoConflict {
   source: 'session' | 'google'

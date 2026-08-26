@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Mail, Phone, Building2, Calendar, MapPin, GraduationCap,
   CheckCircle2, Star, Accessibility, Cake, FileText, ListChecks,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Avatar, Badge, BackLink } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { ApprenantEditButton } from './ApprenantEditButton'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Send, Check, Loader2 } from 'lucide-react'
+import { Send, Check, Loader2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { sendDocumentToApprenantAction } from '../actions'
 

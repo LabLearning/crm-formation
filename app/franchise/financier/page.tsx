@@ -2,7 +2,7 @@ import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getFranchiseStats } from '@/lib/franchise-data'
 import { commissionTypeLabel, commissionStatusLabel } from '@/lib/commission'
-import { Banknote, Percent, Info } from 'lucide-react'
+import { Banknote, Percent, Info } from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

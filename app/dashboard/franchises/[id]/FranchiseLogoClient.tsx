@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ImagePlus, Loader2, Trash2, Store } from 'lucide-react'
+import { ImagePlus, Loader2, Trash2, Store } from '@/components/ui/icons'
 
 export default function FranchiseLogoClient({ franchiseId, logoUrl }: { franchiseId: string; logoUrl: string | null }) {
   const router = useRouter()

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, PhoneCall, Save, Star } from 'lucide-react'
+import { Loader2, PhoneCall, Save, Star } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { enregistrerRetourClientAction } from './retour-client-actions'

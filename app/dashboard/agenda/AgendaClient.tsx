@@ -7,7 +7,7 @@ import {
   Calendar as CalIcon, Clock, MapPin, Phone, Mail,
   FileText, Bell, Clipboard, GraduationCap, CheckSquare,
   AlertCircle, User,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { PoeiBadge } from '@/components/ui'
 

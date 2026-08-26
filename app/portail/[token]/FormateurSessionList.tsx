@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, MapPin, ChevronRight } from 'lucide-react'
+import { CalendarDays, MapPin, ChevronRight } from '@/components/ui/icons'
 import { formatShortDate, todayISO } from './emargement/helpers'
 
 interface SessionRow {

@@ -1,6 +1,6 @@
 import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { ClipboardCheck, Star, FileText, Building2 } from 'lucide-react'
+import { ClipboardCheck, Star, FileText, Building2 } from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

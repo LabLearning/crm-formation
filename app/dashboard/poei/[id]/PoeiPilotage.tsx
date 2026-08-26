@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckCircle2, AlertCircle, MinusCircle, FileText, ExternalLink, LayoutGrid } from 'lucide-react'
+import { CheckCircle2, AlertCircle, MinusCircle, FileText, ExternalLink, LayoutGrid } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { PoeiSection, PoeiVide } from './PoeiSection'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, CheckCircle2, XCircle, Clock, ShieldCheck, AlertCircle, FileText } from 'lucide-react'
+import { Send, CheckCircle2, XCircle, Clock, ShieldCheck, AlertCircle, FileText } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { submitLeadForValidationAction, approveLeadAction, rejectLeadAction } from './actions'
 import { formatDateTime } from '@/lib/utils'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { CheckCircle2, Eraser, PenTool, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Eraser, PenTool, ShieldCheck } from '@/components/ui/icons'
 import { Button } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { signCertificatAction } from './actions'

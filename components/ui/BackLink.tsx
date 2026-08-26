@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from '@/components/ui/icons'
 
 /**
  * Retour à la page PRÉCÉDENTE (et non vers une liste figée) : depuis une fiche

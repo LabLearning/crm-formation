@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Award, GraduationCap, UserCircle, CheckCircle2, UserPlus, Store } from 'lucide-react'
+import { Save, Award, GraduationCap, UserCircle, CheckCircle2, UserPlus, Store } from '@/components/ui/icons'
 import { Button, Input, Select, CompanySearchInput, OpcoSelector } from '@/components/ui'
 import { createClientAction, updateClientAction } from './actions'
 import { createContactAction } from '../contacts/actions'

@@ -5,7 +5,7 @@ import {
   GraduationCap, Star, ShieldCheck, MessageSquareWarning,
   Clock, FileText, Receipt, UserPlus, Building2,
   CheckCircle2, BarChart3, Target,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDateTime } from '@/lib/utils'
 import type { DashboardData } from './data'

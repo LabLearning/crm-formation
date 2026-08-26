@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader2, Building2, Check } from 'lucide-react'
+import { Search, Loader2, Building2, Check } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { searchCompanies, type SireneCompany } from '@/lib/sirene'
 

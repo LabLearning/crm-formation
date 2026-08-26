@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MapPin, Calendar, Users, GraduationCap, List, Map as MapIcon, Search, AlertTriangle } from 'lucide-react'
+import { MapPin, Calendar, Users, GraduationCap, List, Map as MapIcon, Search, AlertTriangle } from '@/components/ui/icons'
 import { Badge, Input } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { localiserSession, temporalite, TEMPO_META, couleurFranchise, type Temporalite } from '@/lib/geo-france'

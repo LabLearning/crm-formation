@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LifeBuoy, Star, MapPin, Phone, Mail, ArrowLeft, ShieldCheck, Presentation } from 'lucide-react'
+import { LifeBuoy, Star, MapPin, Phone, Mail, ArrowLeft, ShieldCheck, Presentation } from '@/components/ui/icons'
 import { Badge, useToast, BackLink } from '@/components/ui'
 import { toggleFormateurSecoursAction } from '../actions'
 import type { VivierFormateur } from './page'

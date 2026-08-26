@@ -1,4 +1,4 @@
-import { FileSignature, Download, PenLine, Clock } from 'lucide-react'
+import { FileSignature, Download, PenLine, Clock } from '@/components/ui/icons'
 import { formatDate } from '@/lib/utils'
 
 export interface ContratLigne {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ReceiptEuro, FileText, Clock, Download } from 'lucide-react'
+import { ReceiptEuro, FileText, Clock, Download } from '@/components/ui/icons'
 import { PoeiSection } from './PoeiSection'
 import { Button, useToast, Modal, Input } from '@/components/ui'
 import { generateFacturesPerCandidatPoeiAction, setCandidatNumeroEngagementAction } from '../actions'

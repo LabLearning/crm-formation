@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, Pencil, Trash2,
   Mail, Phone, Building2, Star, PenTool, GraduationCap, Save,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu } from '@/components/ui'
 import { createContactAction, updateContactAction, deleteContactAction } from './actions'
 import { companyLabel } from '@/lib/utils'

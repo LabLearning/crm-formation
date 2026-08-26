@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Lock, User, ArrowRight, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Lock, User, ArrowRight, Loader2, CheckCircle2, AlertTriangle } from '@/components/ui/icons'
 import { setupAccountAction } from './actions'
 
 function SetupForm() {

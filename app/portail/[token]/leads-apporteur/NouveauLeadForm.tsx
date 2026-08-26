@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Send, CheckCircle2, User, Building2, GraduationCap, Store } from 'lucide-react'
+import { Send, CheckCircle2, User, Building2, GraduationCap, Store } from '@/components/ui/icons'
 import { submitLeadFromPortalAction } from './actions'
 
 interface Props {

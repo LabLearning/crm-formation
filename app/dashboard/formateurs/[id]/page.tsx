@@ -5,12 +5,12 @@ import Link from 'next/link'
 import {
   ArrowLeft, Mail, Phone, Euro, Presentation, Award, Star, Calendar,
   MapPin, Building2, ShieldCheck, FileText,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Avatar, Badge, BackLink } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_FORMATEUR } from '@/lib/types/document'
-import { Download } from 'lucide-react'
+import { Download } from '@/components/ui/icons'
 import { FormateurFacturesAdmin } from './FormateurFacturesAdmin'
 import { EvaluationFormateur } from './EvaluationFormateur'
 import { FormateurDocUpload, FormateurDocDelete } from '@/app/mon-espace/_formateur/FormateurDocUpload'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil } from 'lucide-react'
+import { Pencil } from '@/components/ui/icons'
 import { Button, Modal, useToast } from '@/components/ui'
 import { ApprenantForm } from '../ApprenantForm'
 

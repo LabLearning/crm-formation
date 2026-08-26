@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase, FileText, Upload, Loader2 } from 'lucide-react'
+import { UserPlus, Search, Save, Pencil, Trash2, CheckCircle2, Users, Briefcase, FileText, Upload, Loader2 } from '@/components/ui/icons'
 import { Button, Badge, Input, Select, SearchSelectField, Modal, useToast, RowMenu } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import {

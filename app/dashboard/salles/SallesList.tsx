@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Building2, Search, MapPin, Users, Phone, Mail, Accessibility, Monitor } from 'lucide-react'
+import { Building2, Search, MapPin, Users, Phone, Mail, Accessibility, Monitor } from '@/components/ui/icons'
 
 interface Salle {
   id: string

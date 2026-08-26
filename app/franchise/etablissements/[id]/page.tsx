@@ -6,7 +6,7 @@ import { commissionStatusLabel } from '@/lib/commission'
 import {
   ArrowLeft, Building2, MapPin, GraduationCap, Banknote, Users, FileText,
   Calendar, Hash, BadgeCheck,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

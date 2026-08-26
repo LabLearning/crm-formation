@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { GraduationCap, Download, Database, AlertTriangle } from 'lucide-react'
+import { GraduationCap, Download, Database, AlertTriangle } from '@/components/ui/icons'
 import { Button, Badge, Input, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { importEvaluationsAcquisAction } from './actions'

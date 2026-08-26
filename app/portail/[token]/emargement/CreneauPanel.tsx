@@ -16,7 +16,7 @@ import {
   MonitorSmartphone,
   FileText,
   RefreshCw,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import {
   signApprenantPresenceAction,
   markAbsentAction,

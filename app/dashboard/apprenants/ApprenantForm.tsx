@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Accessibility } from 'lucide-react'
+import { Save, Accessibility } from '@/components/ui/icons'
 import { Button, Input, Select, SearchSelectField, useToast } from '@/components/ui'
 import { createApprenantAction, updateApprenantAction } from './actions'
 import type { Apprenant } from '@/lib/types/formation'

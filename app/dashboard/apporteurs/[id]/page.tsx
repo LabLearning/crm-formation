@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Building2, Mail, Phone, MapPin, Handshake, Users, GraduationCap,
   Banknote, ReceiptEuro, TrendingUp, CheckCircle2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge, Avatar } from '@/components/ui'
 import { BackLink } from '@/components/ui/BackLink'
 import { formatDate } from '@/lib/utils'

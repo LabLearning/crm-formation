@@ -6,7 +6,7 @@ import {
   UserPlus, Phone, Mail, Building2,
   ArrowRight, Trash2, Eye, Edit3, Euro, List, LayoutGrid, Columns3,
   Search, Upload, Download, Filter, X, Star,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast, RowMenu } from '@/components/ui'
 import { LeadForm } from './LeadForm'
 import { LeadDetail } from './LeadDetail'

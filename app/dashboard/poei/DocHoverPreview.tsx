@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Eye, Loader2, FileQuestion } from 'lucide-react'
+import { Eye, Loader2, FileQuestion } from '@/components/ui/icons'
 
 /**
  * Aperçu rapide d'un document au survol du bouton « œil ».

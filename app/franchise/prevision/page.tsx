@@ -2,7 +2,7 @@ import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getFranchiseStats } from '@/lib/franchise-data'
 import { ProgressRing } from '@/components/ui'
-import { Building2, Banknote, Target, TrendingUp } from 'lucide-react'
+import { Building2, Banknote, Target, TrendingUp } from '@/components/ui/icons'
 
 export const dynamic = 'force-dynamic'
 

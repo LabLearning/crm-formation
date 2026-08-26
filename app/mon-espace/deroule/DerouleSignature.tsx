@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, PenLine, Route, Wrench } from 'lucide-react'
+import { CheckCircle2, PenLine, Route, Wrench } from '@/components/ui/icons'
 import { useToast, Button } from '@/components/ui'
 import { SignaturePad } from '@/app/portail/[token]/emargement/SignaturePad'
 import { ETAPES, TRACABILITE, PHILOSOPHIE, POSTURE, DPO_TITRE, DPO_VERSION } from '@/lib/dpo'

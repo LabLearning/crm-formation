@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Camera, Upload, Trash2, CircleUserRound, Check, Loader2 } from 'lucide-react'
+import { Camera, Upload, Trash2, CircleUserRound, Check, Loader2 } from '@/components/ui/icons'
 import { Avatar, Badge, useToast } from '@/components/ui'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/types'
 import { formatDate } from '@/lib/utils'

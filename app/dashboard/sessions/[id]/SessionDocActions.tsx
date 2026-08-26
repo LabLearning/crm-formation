@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileSignature, Send, Loader2, Copy, Check, ClipboardCheck } from 'lucide-react'
+import { FileSignature, Send, Loader2, Copy, Check, ClipboardCheck } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { sendConventionForSignatureAction, sendContratToFormateurAction } from './actions'
 

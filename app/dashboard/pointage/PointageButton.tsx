@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
-import { Camera, Clock, LogIn, LogOut, Loader2, CheckCircle2, Image } from 'lucide-react'
+import { Camera, Clock, LogIn, LogOut, Loader2, CheckCircle2, Image } from '@/components/ui/icons'
 import { pointerArriveeAction, pointerDepartAction } from './actions'
 import { cn } from '@/lib/utils'
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil } from 'lucide-react'
+import { Pencil } from '@/components/ui/icons'
 import { Modal, ToastProvider, useToast } from '@/components/ui'
 import { FormationForm } from '../FormationForm'
 import type { Formation } from '@/lib/types/formation'

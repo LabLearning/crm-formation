@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { UserX, ChevronDown, ChevronRight, Check, Loader2, ClipboardList, FileText } from 'lucide-react'
+import { UserX, ChevronDown, ChevronRight, Check, Loader2, ClipboardList, FileText } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { justifierAbsencesAction, modifierAbsencesAction, lienQuestionnaireAbandonAction } from './actions'

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Landmark, AlertTriangle, Clock, Trash2, Save,
   CheckSquare, Square, GraduationCap, Calendar, Mail,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, Modal, useToast, RowMenu } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES, alerteDelai } from '@/lib/agefice'
 import { creerDossierDepuisSessionAction } from './actions'

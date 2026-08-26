@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, MapPin, Building2, User, Users } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, Building2, User, Users } from '@/components/ui/icons'
 import { formatShortDate } from './emargement/helpers'
 import { companyLabel } from '@/lib/utils'
 

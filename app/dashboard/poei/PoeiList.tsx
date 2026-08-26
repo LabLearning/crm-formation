@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   Plus, Search, Briefcase, Building2, GraduationCap, Trash2,
   ChevronRight, CheckCircle2, Clock, Users, CalendarClock, FolderTree,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast } from '@/components/ui'
 import { createPoeiAction, updatePoeiStatutAction, deletePoeiAction } from './actions'
 import { POEI_STATUS_LABELS, POEI_STATUS_COLORS } from '@/lib/types/poei'

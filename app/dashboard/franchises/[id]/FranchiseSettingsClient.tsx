@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings2, Trash2, X, Loader2, Save } from 'lucide-react'
+import { Settings2, Trash2, X, Loader2, Save } from '@/components/ui/icons'
 import { updateFranchiseAction, deleteFranchiseAction } from '../actions'
 
 interface Franchise {

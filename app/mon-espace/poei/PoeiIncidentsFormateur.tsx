@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { PoeiIncidents } from '@/components/poei/PoeiIncidents'
 import type { IncidentPoei } from '@/components/poei/PoeiIncidents'

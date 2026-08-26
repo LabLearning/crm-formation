@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   ClipboardCheck, Plus, Search, Star, Building2, Store, FileText, Trash2,
   X, Loader2, KeyRound, Copy, Check, ShieldAlert, Webhook, ChevronDown, ChevronUp,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import {
   createAuditAction, deleteAuditAction, createApiKeyAction, revokeApiKeyAction,

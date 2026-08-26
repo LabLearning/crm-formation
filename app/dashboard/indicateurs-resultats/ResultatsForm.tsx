@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart3, Save, ExternalLink, AlertTriangle, Sparkles, Globe, Download } from 'lucide-react'
+import { BarChart3, Save, ExternalLink, AlertTriangle, Sparkles, Globe, Download } from '@/components/ui/icons'
 import { Button, Input, Badge, useToast } from '@/components/ui'
 import { saveResultatsAction } from './actions'
 

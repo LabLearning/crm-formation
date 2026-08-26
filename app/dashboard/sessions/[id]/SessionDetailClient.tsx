@@ -11,7 +11,7 @@ import {
   Star, ListChecks, FileSignature, Award, Euro, BookOpen, ClipboardList, FolderCheck, Mails, Route,
   QrCode, ChevronRight, CheckCircle, MinusCircle, Trash2, Pencil, Sparkles, ReceiptEuro, Printer,
   TrendingUp,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge, PoeiBadge, useToast, RowMenu, Modal, BackLink } from '@/components/ui'
 import { SessionRetourClient } from './SessionRetourClient'
 import { DerouleOperationnel } from '@/components/deroule/DerouleOperationnel'

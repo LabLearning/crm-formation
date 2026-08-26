@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { Star, Building2, GraduationCap, Landmark, PhoneCall } from 'lucide-react'
+import { Star, Building2, GraduationCap, Landmark, PhoneCall } from '@/components/ui/icons'
 import { formatDate } from '@/lib/utils'
 import { BackLink } from '@/components/ui/BackLink'
 

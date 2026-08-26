@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Camera, CheckCircle2, ClipboardList, Loader2, Printer, Save } from 'lucide-react'
+import { Camera, CheckCircle2, ClipboardList, Loader2, Printer, Save } from '@/components/ui/icons'
 import { lireFichesAction } from './lecture-actions'
 import { enregistrerGrillePortailAction } from './actions'
 

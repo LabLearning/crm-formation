@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle2, XCircle, Quote } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, Quote } from '@/components/ui/icons'
 import { Modal, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { detailReponseAction } from '@/app/dashboard/sessions/[id]/qcm-saisie-actions'

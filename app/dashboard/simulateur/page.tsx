@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Calculator, Building2, Users, AlertTriangle, FileText, RotateCcw, Check, X, UtensilsCrossed, Beef, Croissant, Cake, Coffee } from 'lucide-react'
+import { Calculator, Building2, Users, AlertTriangle, FileText, RotateCcw, Check, X, UtensilsCrossed, Beef, Croissant, Cake, Coffee } from '@/components/ui/icons'
 import { Button, Badge, Modal } from '@/components/ui'
 import { cn } from '@/lib/utils'
 

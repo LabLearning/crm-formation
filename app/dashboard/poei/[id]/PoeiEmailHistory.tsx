@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, CheckCircle2, XCircle, ChevronDown, ChevronRight, Paperclip } from 'lucide-react'
+import { Mail, CheckCircle2, XCircle, ChevronDown, ChevronRight, Paperclip } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 interface EmailLog {

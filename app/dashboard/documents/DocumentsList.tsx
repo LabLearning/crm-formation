@@ -4,7 +4,7 @@ import { useState, useMemo, useRef } from 'react'
 import {
   Plus, Search, Trash2, PenTool, FileText,
   FolderOpen, Send, Upload, Loader2, Paperclip, Mail,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import { createDocumentAction, requestSignatureAction, deleteDocumentAction, sendDocumentByEmailAction } from './actions'
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types/document'

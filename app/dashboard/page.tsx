@@ -10,7 +10,7 @@ import {
   UserPlus, ShieldCheck, Star, MessageSquareWarning,
   ArrowRight, CheckCircle2, BarChart3, Zap, ArrowUpRight,
   MapPin, ChevronRight,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDateTime } from '@/lib/utils'
 import { OnboardingGuide } from './OnboardingGuide'

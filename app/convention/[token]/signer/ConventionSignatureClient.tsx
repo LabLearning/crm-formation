@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Pen, CheckCircle2, RotateCcw, FileText } from 'lucide-react'
+import { Pen, CheckCircle2, RotateCcw, FileText } from '@/components/ui/icons'
 import { signConventionPublicAction } from '@/app/dashboard/conventions/signature-actions'
 
 interface ConventionInfo {

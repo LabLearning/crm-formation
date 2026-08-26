@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, AlertCircle, Award, GraduationCap, Store } from 'lucide-react'
+import { Save, AlertCircle, Award, GraduationCap, Store } from '@/components/ui/icons'
 import { Button, Input, Select, CompanySearchInput, OpcoSelector, SearchSelect } from '@/components/ui'
 import { createLeadAction, updateLeadAction } from './actions'
 import { LEAD_SOURCE_LABELS, CLIENT_TYPE_LABELS, FINANCEUR_LABELS } from '@/lib/types/crm'

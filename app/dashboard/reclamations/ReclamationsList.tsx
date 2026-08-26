@@ -7,7 +7,7 @@ import {
   Plus, Search, Trash2, ArrowRight, Save,
   MessageSquareWarning, AlertTriangle, Clock, CheckCircle2,
   Lightbulb, Eye,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import {
   createReclamationAction, updateReclamationStatusAction,

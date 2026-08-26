@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, Upload, Loader2, FileText, Download, X, Trash2 } from 'lucide-react'
+import { Sparkles, Upload, Loader2, FileText, Download, X, Trash2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { genererDocumentBrandeAction, supprimerDocumentStudioAction } from '@/app/mon-espace/studio/actions'

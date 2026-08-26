@@ -1,6 +1,6 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { formatDateTime } from '@/lib/utils'
-import { FilePlus2, Send, PenLine, XCircle, RefreshCw, Building2, CheckCircle2, History } from 'lucide-react'
+import { FilePlus2, Send, PenLine, XCircle, RefreshCw, Building2, CheckCircle2, History } from '@/components/ui/icons'
 
 const ACTION_META: Record<string, { label: (d: any) => string; Icon: any; cls: string }> = {
   create: { label: () => 'Convention créée', Icon: FilePlus2, cls: 'bg-surface-100 text-surface-600' },

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Save, Building2, Users, X, Plus, CalendarDays, Clock, Search } from 'lucide-react'
+import { Save, Building2, Users, X, Plus, CalendarDays, Clock, Search } from '@/components/ui/icons'
 import { Button, Input, Select, FormateurDispoBadge, CalendarPicker, SearchSelect } from '@/components/ui'
 import { createSessionAction, updateSessionAction, getApprenantsForClientAction } from './actions'
 import { SESSION_STATUS_LABELS } from '@/lib/types/formation'

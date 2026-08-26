@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   ShieldCheck, RefreshCw, Database, Link2, Search, Building2, AlertTriangle,
   ClipboardCheck, FileWarning, EyeOff, Check, ExternalLink, CalendarDays,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { synchroniserAction, rattacherEtablissementAction, ignorerEtablissementAction } from './actions'

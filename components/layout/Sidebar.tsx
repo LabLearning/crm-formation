@@ -11,7 +11,7 @@ import {
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers,
   ChevronDown, PanelLeftClose, PanelLeft, MapPin, Clock, CheckSquare,
   Briefcase, UserCog, Banknote, Store, AlertTriangle, Compass, ReceiptText, ReceiptEuro, LifeBuoy, FolderCheck,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/lib/permissions'
 import type { Permission, CRMModule } from '@/lib/types'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, CheckCircle2, AlertCircle, Copy, ExternalLink, PenTool } from 'lucide-react'
+import { Send, CheckCircle2, AlertCircle, Copy, ExternalLink, PenTool } from '@/components/ui/icons'
 import { Button, useToast } from '@/components/ui'
 import { generateSignatureLinkAction } from '../signature-actions'
 import { formatDate, formatDateTime } from '@/lib/utils'

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserCog, X, Loader2, Check, UserPlus, UserMinus, Repeat } from 'lucide-react'
+import { UserCog, X, Loader2, Check, UserPlus, UserMinus, Repeat } from '@/components/ui/icons'
 import { declareParticipantChangeAction } from './actions'
 
 interface Participant { apprenant_id: string; nom: string }

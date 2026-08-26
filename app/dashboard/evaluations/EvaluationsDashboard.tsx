@@ -5,7 +5,7 @@ import {
   Search, ClipboardCheck, Star, TrendingUp,
   Users, BarChart3, ThumbsUp, ThumbsDown, Minus,
   GraduationCap, CheckCircle2, XCircle,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { QCM_TYPE_LABELS, QCM_TYPE_COLORS, QCM_TYPE_QUALIOPI } from '@/lib/types/evaluation'
 import { formatDate } from '@/lib/utils'

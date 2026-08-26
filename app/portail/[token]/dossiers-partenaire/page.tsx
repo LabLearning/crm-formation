@@ -1,7 +1,7 @@
 import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FolderOpen, CheckCircle2, Clock, AlertTriangle, TrendingUp } from 'lucide-react'
+import { FolderOpen, CheckCircle2, Clock, AlertTriangle, TrendingUp } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 

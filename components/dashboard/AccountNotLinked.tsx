@@ -1,4 +1,4 @@
-import { AlertTriangle, Mail } from 'lucide-react'
+import { AlertTriangle, Mail } from '@/components/ui/icons'
 
 interface AccountNotLinkedProps {
   roleName: string

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { Mic, Square, Trash2, Loader2, Play } from 'lucide-react'
+import { Mic, Square, Trash2, Loader2, Play } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { addTacheMemoAction, deleteTacheMemoAction } from './actions'
 

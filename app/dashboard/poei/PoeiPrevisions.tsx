@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Plus, Building2, CalendarClock, Rocket, Pencil, Trash2, ExternalLink, Save,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Modal, Input, Select, useToast, RowMenu } from '@/components/ui'
 import {
   createPoeiPrevisionAction, updatePoeiPrevisionAction,

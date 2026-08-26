@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine } from 'lucide-react'
+import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine } from '@/components/ui/icons'
 import { Button, Modal, Input, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { PoeiSection } from './PoeiSection'

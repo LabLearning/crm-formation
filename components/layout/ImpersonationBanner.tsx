@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserCog, X } from 'lucide-react'
+import { UserCog, X } from '@/components/ui/icons'
 import { stopImpersonationAction } from '@/app/dashboard/users/actions'
 import { ROLE_LABELS } from '@/lib/types'
 

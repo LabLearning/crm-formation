@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react'
+import { Mail, ArrowLeft, CheckCircle2, Loader2 } from '@/components/ui/icons'
 import { requestPasswordResetAction } from '../(auth)/actions'
 
 export default function ForgotPasswordPage() {

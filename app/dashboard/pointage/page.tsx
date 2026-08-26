@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { Clock, Camera, LogIn, LogOut, User, Calendar, MapPin } from 'lucide-react'
+import { Clock, Camera, LogIn, LogOut, User, Calendar, MapPin } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 

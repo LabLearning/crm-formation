@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui'
 import { QCM_TYPE_LABELS, QCM_TYPE_COLORS, QCM_TYPE_QUALIOPI } from '@/lib/types/evaluation'
 import { formatDate } from '@/lib/utils'
-import { ListChecks, Clock, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react'
+import { ListChecks, Clock, CheckCircle2, ChevronRight, ArrowLeft } from '@/components/ui/icons'
 import type { QCMType } from '@/lib/types/evaluation'
 import QcmPlayer from './QcmPlayer'
 

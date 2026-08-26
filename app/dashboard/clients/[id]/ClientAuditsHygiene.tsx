@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ShieldCheck, FileWarning, AlertTriangle, ExternalLink } from 'lucide-react'
+import { ShieldCheck, FileWarning, AlertTriangle, ExternalLink } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 

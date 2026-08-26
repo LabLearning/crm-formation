@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Plus, Search, Building2, User, Pencil, Trash2, Mail, Phone, MapPin, FolderPlus } from 'lucide-react'
+import { Plus, Search, Building2, User, Pencil, Trash2, Mail, Phone, MapPin, FolderPlus } from '@/components/ui/icons'
 import { Button, Badge, Modal, useToast, RowMenu, PaginationBar } from '@/components/ui'
 import { ClientForm } from './ClientForm'
 import { deleteClientAction } from './actions'

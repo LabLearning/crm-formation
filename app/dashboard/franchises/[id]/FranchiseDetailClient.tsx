@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   Settings2, Check, Loader2, RefreshCw, BadgeCheck, Wallet, Clock, X, ExternalLink, Banknote,
   ChevronRight, Building2,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { commissionTypeLabel } from '@/lib/commission'
 import {

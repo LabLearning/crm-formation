@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertTriangle, Plus, Search, Building2, Store, Trash2, X, Loader2, Check, ChevronDown, ChevronUp,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { INCIDENT_TYPES, GRAVITE_META, STATUT_META } from '@/lib/incidents'
 import { createIncidentAction, updateIncidentStatutAction, deleteIncidentAction } from './actions'

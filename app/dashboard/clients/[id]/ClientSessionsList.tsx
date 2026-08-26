@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Calendar, User, Trash2, ExternalLink, Loader2 } from 'lucide-react'
+import { Calendar, User, Trash2, ExternalLink, Loader2 } from '@/components/ui/icons'
 import { Badge, RowMenu, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '@/lib/types/formation'

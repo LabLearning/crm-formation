@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Check, RotateCcw, X } from 'lucide-react'
+import { Check, RotateCcw, X } from '@/components/ui/icons'
 
 interface SignaturePadProps {
   apprenantName: string

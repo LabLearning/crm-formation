@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
-import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin } from '@/components/ui/icons'
 import { toggleDisponibiliteAction } from './actions'
 import { cn } from '@/lib/utils'
 

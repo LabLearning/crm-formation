@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, ShieldAlert, ShieldOff, Mail, UserCog, Clock, RefreshCw, X, Send, KeyRound } from 'lucide-react'
+import { UserPlus, ShieldAlert, ShieldOff, Mail, UserCog, Clock, RefreshCw, X, Send, KeyRound } from '@/components/ui/icons'
 import { Button, Input, Select, Badge, Avatar, Modal, useToast, RowMenu } from '@/components/ui'
 import { inviteUserAction, updateUserRoleAction, toggleUserStatusAction, startImpersonationAction, resendInvitationAction, cancelInvitationAction, sendTestInvitationAction, resendAccessAction } from './actions'
 import { ROLE_LABELS, ROLE_COLORS, STATUS_LABELS, STATUS_COLORS } from '@/lib/types'

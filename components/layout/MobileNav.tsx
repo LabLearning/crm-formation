@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { X } from 'lucide-react'
+import { X } from '@/components/ui/icons'
 import {
   LayoutDashboard, UserPlus, Building2, Users, Handshake, FileText,
   GraduationCap, Calendar, UserCheck, Presentation, FileSignature,
@@ -10,7 +10,7 @@ import {
   ShieldCheck, MessageSquareWarning, BarChart3, Shield, Settings, Globe,
   Calculator, ClipboardList, Send, CalendarDays, Mails, PieChart, Layers, MapPin, Clock,
   Briefcase, Compass, LifeBuoy,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { hasAnyPermission } from '@/lib/permissions'
 import type { Permission, CRMModule } from '@/lib/types'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, UserPlus, Trash2, Loader2, Mail, Phone, Pencil, ClipboardPaste } from 'lucide-react'
+import { Users, UserPlus, Trash2, Loader2, Mail, Phone, Pencil, ClipboardPaste } from '@/components/ui/icons'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { ImportParticipantsModal } from '@/components/participants/ImportParticipantsModal'
 import { getLeadParticipantsAction, addLeadParticipantAction, updateLeadParticipantAction, deleteLeadParticipantAction, bulkCreateLeadParticipantsAction } from './actions'

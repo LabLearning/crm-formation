@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, Send, Loader2, GraduationCap } from 'lucide-react'
+import { MessageCircle, Send, Loader2, GraduationCap } from '@/components/ui/icons'
 import { cn, formatDate } from '@/lib/utils'
 import { useToast } from '@/components/ui'
 import { envoyerMessageFormateurAction } from './actions'

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Mail, Phone, Building2, MapPin, IdCard, Briefcase, Accessibility, Cake } from 'lucide-react'
+import { Mail, Phone, Building2, MapPin, IdCard, Briefcase, Accessibility, Cake } from '@/components/ui/icons'
 
 /**
  * Aperçu rapide d'un apprenant au survol : les informations administratives

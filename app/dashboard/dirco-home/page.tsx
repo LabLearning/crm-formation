@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import {
   Euro, TrendingUp, Users, Target, UserPlus, ChevronRight,
   Building2, Clock, CheckCircle2, BarChart3, Briefcase,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import Link from 'next/link'
 import { Badge } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'

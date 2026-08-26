@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Search, Send, Check, Trash2,
   FileSignature, Building2, Euro, Clock, PenTool, Download, Link2, Copy,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMenu } from '@/components/ui'
 import { createConventionAction, updateConventionStatusAction, deleteConventionAction } from './actions'
 import { annulerConventionSigneeAction } from './signature-actions'

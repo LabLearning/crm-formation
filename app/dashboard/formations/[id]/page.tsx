@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Clock, Users, GraduationCap, MapPin, Calendar, Tag,
   CheckCircle2, FileText, ListChecks, Euro, Download,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge, BackLink } from '@/components/ui'
 import { ModifierFormationButton } from './ModifierFormationButton'
 import { formatDate } from '@/lib/utils'

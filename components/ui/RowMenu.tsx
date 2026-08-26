@@ -2,7 +2,7 @@
 
 import { useState, useRef, useLayoutEffect, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export interface RowMenuItem {

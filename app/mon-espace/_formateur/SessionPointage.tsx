@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Camera, Clock, LogIn, LogOut, Loader2, CheckCircle2, Image as ImageIcon } from 'lucide-react'
+import { Camera, Clock, LogIn, LogOut, Loader2, CheckCircle2, Image as ImageIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { pointerArriveeSessionAction, pointerDepartSessionAction } from './pointage-actions'
 

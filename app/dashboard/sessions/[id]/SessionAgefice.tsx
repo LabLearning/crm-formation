@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Landmark, Plus, Loader2 } from 'lucide-react'
+import { Landmark, Plus, Loader2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { DossierAgeficeForm, type DossierAgefice } from '@/components/agefice/DossierAgeficeForm'
 import { creerDossierDepuisSessionAction } from '@/app/dashboard/agefice/actions'

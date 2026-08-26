@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Check, RotateCcw, X, Loader2 } from 'lucide-react'
+import { Check, RotateCcw, X, Loader2 } from '@/components/ui/icons'
 
 interface SignaturePadProps {
   title: string

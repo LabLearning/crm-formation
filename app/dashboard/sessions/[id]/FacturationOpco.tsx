@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ReceiptEuro, Upload, Download, Trash2, Loader2, FileCheck2, AlertCircle,
   CheckCircle2, ExternalLink, RefreshCw,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Input, Select, Modal, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import {

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, X, Loader2, Unlink } from 'lucide-react'
+import { Plus, Search, X, Loader2, Unlink } from '@/components/ui/icons'
 import { linkClientToFranchiseAction } from '../actions'
 
 interface Client { id: string; raison_sociale: string; ville: string | null; franchise_id: string | null }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Building, CheckCircle2, AlertCircle, Loader2, Zap } from 'lucide-react'
+import { Building, CheckCircle2, AlertCircle, Loader2, Zap } from '@/components/ui/icons'
 
 interface Opco {
   id: string

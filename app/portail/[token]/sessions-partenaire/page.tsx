@@ -1,7 +1,7 @@
 import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Calendar, MapPin, Clock, Users, GraduationCap } from 'lucide-react'
+import { Calendar, MapPin, Clock, Users, GraduationCap } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 

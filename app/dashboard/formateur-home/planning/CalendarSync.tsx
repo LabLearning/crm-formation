@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Copy, CheckCircle2, ExternalLink } from 'lucide-react'
+import { Calendar, Copy, CheckCircle2, ExternalLink } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 interface CalendarSyncProps {

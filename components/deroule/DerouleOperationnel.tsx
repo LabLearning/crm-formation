@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, Circle, MinusCircle, ChevronDown, AlertTriangle, Wrench } from 'lucide-react'
+import { CheckCircle2, Circle, MinusCircle, ChevronDown, AlertTriangle, Wrench } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { ETAPES, SOCLE, TRACABILITE, POSTURE, DPO_TITRE, DPO_VERSION, etatDeroule } from '@/lib/dpo'

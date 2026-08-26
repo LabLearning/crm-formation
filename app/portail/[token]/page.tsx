@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import {
   GraduationCap, Calendar, FileText, ClipboardCheck,
   Clock, CheckCircle2, Star, Users, Presentation,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import Link from 'next/link'
 import { Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'

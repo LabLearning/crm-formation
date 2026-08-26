@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from '@/components/ui/icons'
 import { SessionHeaderFormateur } from '@/app/portail/[token]/SessionHeaderFormateur'
 import { PositionnementList } from '@/app/portail/[token]/ContenuPedagogique'
 import { QcmFormateur } from '@/app/portail/[token]/qcm/QcmFormateur'

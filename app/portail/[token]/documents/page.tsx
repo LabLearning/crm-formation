@@ -1,7 +1,7 @@
 import { getPortalContext } from '@/lib/portal-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FileText, Download } from 'lucide-react'
+import { FileText, Download } from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPES_SUPPORT } from '@/lib/types/document'
 import { formatDate } from '@/lib/utils'

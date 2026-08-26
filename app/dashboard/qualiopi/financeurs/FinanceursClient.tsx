@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Banknote, CheckCircle2, Copy, Eye, Loader2, Send, Star } from 'lucide-react'
+import { Banknote, CheckCircle2, Copy, Eye, Loader2, Send, Star } from '@/components/ui/icons'
 import { Button, Modal, BackLink, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { envoyerQuestionnaireFinanceurAction } from './actions'

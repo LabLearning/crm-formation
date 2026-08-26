@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronUp, CheckCircle2 } from '@/components/ui/icons'
 import { CreneauPanel, CreneauStatus, type EmargementRow, type FeuilleRow } from '../CreneauPanel'
 import { creneauLabel, formatFullDate } from '../helpers'
 

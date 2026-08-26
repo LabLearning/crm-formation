@@ -5,7 +5,7 @@ import { PointageButton } from '@/app/dashboard/pointage/PointageButton'
 import {
   Calendar, Users, ClipboardCheck, Clock, ChevronRight, CheckCircle2,
   ListChecks, FileText, MapPin, LogIn, LogOut, UserCheck,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'

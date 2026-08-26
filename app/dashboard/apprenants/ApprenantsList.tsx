@@ -7,7 +7,7 @@ import {
   Plus, Search, Pencil, Trash2, Save,
   UserCheck, Building2, Mail, Phone, Accessibility,
   GraduationCap, Calendar, AlertTriangle, ClipboardPaste, FolderPlus,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, Modal, Avatar, useToast, RowMenu, PaginationBar } from '@/components/ui'
 import {
   createApprenantAction, updateApprenantAction,

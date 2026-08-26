@@ -1,4 +1,4 @@
-import { ClipboardCheck, QrCode, CheckCircle2, Clock } from 'lucide-react'
+import { ClipboardCheck, QrCode, CheckCircle2, Clock } from '@/components/ui/icons'
 import { SendQcmButton } from '@/app/mon-espace/_formateur/SendQcmButton'
 
 interface QcmSession {

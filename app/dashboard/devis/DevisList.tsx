@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, Pencil, Trash2, Send, Check,
   X, FileText, ArrowRight, Euro, Calendar, Building2, Eye, Download,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, SearchSelectField, useToast, RowMenu } from '@/components/ui'
 import {
   createDevisAction, updateDevisStatusAction, deleteDevisAction,

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, CheckCircle2, ClipboardCheck, Sparkles, Loader2 } from 'lucide-react'
+import { Save, CheckCircle2, ClipboardCheck, Sparkles, Loader2 } from '@/components/ui/icons'
 import { Button, Badge, useToast } from '@/components/ui'
 import { GRILLE_SECTIONS, NIVEAUX, APPRECIATIONS, AVIS_FINAL, grilleProgress, type NiveauAcquis } from '@/lib/poei-grille'
 import { saveGrilleAction, detaillerBilanAction } from '@/app/dashboard/poei/grille-actions'

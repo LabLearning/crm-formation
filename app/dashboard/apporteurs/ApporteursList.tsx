@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   Plus, Pencil, Trash2, Euro, Percent,
   CheckCircle2, XCircle, Save, Handshake, Download,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Input, Select, Modal, useToast, CompanySearchInput, RowMenu } from '@/components/ui'
 import { createApporteurAction, updateApporteurAction, deleteApporteurAction, toggleApporteurAction } from './actions'
 import type { ApporteurAffaires } from '@/lib/types/crm'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, ReceiptEuro, Mails, FileStack, ShieldAlert } from 'lucide-react'
+import { LayoutGrid, Settings, Users, CalendarRange, ClipboardCheck, ReceiptEuro, Mails, FileStack, ShieldAlert } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 type Onglet = 'pilotage' | 'documents' | 'incidents' | 'dossier' | 'candidats' | 'interventions' | 'evaluations' | 'facturation' | 'mails'

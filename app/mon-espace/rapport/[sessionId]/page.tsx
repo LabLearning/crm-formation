@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, ClipboardList } from 'lucide-react'
+import { ArrowLeft, ClipboardList } from '@/components/ui/icons'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { resolveFormateur } from '../../_formateur/guard'
 import { formatDate } from '@/lib/utils'

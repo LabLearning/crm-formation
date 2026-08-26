@@ -7,7 +7,7 @@ import {
   LayoutDashboard, GraduationCap, FileText, ClipboardCheck,
   Calendar, ListChecks, Star, Users, CheckSquare,
   Receipt, FileSignature, Building2, BookOpen, MoreHorizontal, X, ReceiptEuro, MessageCircle, ShieldAlert, Sparkles,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui'
 import type { PortalContext } from '@/lib/portal-auth'

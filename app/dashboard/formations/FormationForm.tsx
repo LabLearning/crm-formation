@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { Save, ChevronDown, ChevronRight, Sparkles, Loader2, List, FileUp } from 'lucide-react'
+import { Save, ChevronDown, ChevronRight, Sparkles, Loader2, List, FileUp } from '@/components/ui/icons'
 import { Button, Input, Select } from '@/components/ui'
 import { createFormationAction, updateFormationAction } from './actions'
 import { MODALITE_LABELS } from '@/lib/types/formation'

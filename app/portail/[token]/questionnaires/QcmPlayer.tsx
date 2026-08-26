@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, ClipboardCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, ClipboardCheck } from '@/components/ui/icons'
 import { submitQcmAction } from './actions'
 
 interface QcmChoix {

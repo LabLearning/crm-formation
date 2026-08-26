@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2 } from '@/components/ui/icons'
 import { useToast } from '@/components/ui'
 import { sendQcmToApprenantsAction } from './qcm-send-actions'
 

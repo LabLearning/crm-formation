@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { Badge } from '@/components/ui'
 import { QCM_TYPE_LABELS, QCM_TYPE_COLORS } from '@/lib/types/evaluation'
 import { formatDate } from '@/lib/utils'
-import { CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock } from '@/components/ui/icons'
 import { FormateurEvaluationsView } from '@/app/mon-espace/_formateur/FormateurEvaluationsView'
 
 // Donnees temps reel : jamais de cache statique (acces par token, sans cookies)

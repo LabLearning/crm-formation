@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, UserPlus, Plus, Check, Building2, Loader2, Users } from 'lucide-react'
+import { Search, UserPlus, Plus, Check, Building2, Loader2, Users } from '@/components/ui/icons'
 import { Button, Modal, useToast } from '@/components/ui'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { inscrireApprenantAction } from '@/app/dashboard/apprenants/actions'

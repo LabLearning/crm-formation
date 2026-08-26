@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText, Eye, Check } from 'lucide-react'
+import { ReceiptEuro, Plus, Paperclip, Loader2, Download, Trash2, CheckCircle2, Clock, XCircle, Calendar, Building2, FileText, Eye, Check } from '@/components/ui/icons'
 import { Modal, Button, Input, useToast } from '@/components/ui'
 import { formatDate, companyLabel } from '@/lib/utils'
 import { submitFactureFormateurAction, deleteFactureFormateurAction, updateFactureModeleAction } from './facturation-actions'

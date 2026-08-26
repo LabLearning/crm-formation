@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Building2, GraduationCap, Calendar, Users, FileText, Euro, Clock,
   CheckCircle2, AlertCircle, MapPin, FilePenLine, Download, ExternalLink, Send,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Badge } from '@/components/ui'
 import { CONVENTION_STATUS_LABELS, CONVENTION_STATUS_COLORS, CONVENTION_TYPE_LABELS } from '@/lib/types/dossier'
 import { formatDate, formatDateTime, companyLabel } from '@/lib/utils'

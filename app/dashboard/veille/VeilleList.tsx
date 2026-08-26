@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Pencil } from 'lucide-react'
+import { Compass, Plus, Trash2, ExternalLink, Scale, Briefcase, Lightbulb, Accessibility, Save, Pencil } from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { createVeilleAction, deleteVeilleAction, updateVeilleAction } from './actions'

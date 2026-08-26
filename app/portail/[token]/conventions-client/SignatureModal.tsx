@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileSignature, CheckCircle2, X } from 'lucide-react'
+import { FileSignature, CheckCircle2, X } from '@/components/ui/icons'
 import { signConventionAction } from './actions'
 import { SignaturePad } from '../emargement/SignaturePad'
 import { formatDate } from '@/lib/utils'

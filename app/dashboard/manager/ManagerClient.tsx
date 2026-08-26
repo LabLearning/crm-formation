@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import {
   Users, Euro, Target, AlertTriangle, CheckCircle2, GraduationCap,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export interface ManagerStats {

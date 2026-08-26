@@ -1,6 +1,6 @@
 import { getFranchiseSession } from '@/lib/franchise-auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { AlertTriangle, Building2 } from 'lucide-react'
+import { AlertTriangle, Building2 } from '@/components/ui/icons'
 import { INCIDENT_TYPES, GRAVITE_META, STATUT_META } from '@/lib/incidents'
 
 export const dynamic = 'force-dynamic'

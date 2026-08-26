@@ -6,7 +6,7 @@ import {
   ShieldCheck, ChevronDown, ChevronRight, Plus, Trash2,
   FileText, Link as LinkIcon, Save, AlertTriangle, CheckCircle2,
   XCircle, HelpCircle, Minus, Download, Upload, Loader2, ExternalLink, Database,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { Button, Badge, Modal, Input, Select, useToast } from '@/components/ui'
 import { initQualiopiAction, updateIndicateurAction, addPreuveAction, removePreuveAction } from './actions'
 import {
