@@ -2,6 +2,9 @@
 -- Circuit spécifique : dépôt via un Point d'Accueil entre 15 jours et 4 mois
 -- avant la formation, remboursement sous 4 mois après la fin.
 
+-- Nouveau financeur sur les clients (enum existant)
+ALTER TYPE financeur_type ADD VALUE IF NOT EXISTS 'agefice';
+
 CREATE TABLE IF NOT EXISTS dossiers_agefice (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
