@@ -162,7 +162,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
           <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginBottom: 2 }}>Attestation de règlement</Text>
           <Text style={{ fontSize: 7, color: SURFACE_500, marginBottom: 4 }}>Si la facture acquittée n&apos;est pas transmise :</Text>
           <Text style={{ fontSize: 8.5, color: SURFACE_700, lineHeight: 1.65 }}>
-            {`J'atteste également que le bénéficiaire de cette action a bien réglé la totalité du coût pédagogique H.T. pour un montant de ${montant ? montant.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '____________'} € (${montant ? montantEnLettres(montant) : '____________________'}), payés par ${modeTexte}${props.dateReglement ? ` en date du ${frDate(props.dateReglement)}` : ''}.`}
+            {`J'atteste également que le bénéficiaire de cette action a bien réglé la totalité du coût pédagogique H.T. pour un montant de ${montant ? montant.toLocaleString('fr-FR', { minimumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, ' ') : '____________'} € (${montant ? montantEnLettres(montant) : '____________________'}), payés par ${modeTexte}${props.dateReglement ? ` en date du ${frDate(props.dateReglement)}` : ''}.`}
           </Text>
         </View>
 

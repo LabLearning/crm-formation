@@ -328,7 +328,9 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, avec ces clés
       return { success: false, formation: null, error: err.error?.message || `Erreur API Claude (${res.status})` }
     }
     const data = await res.json()
-    const text = data.content?.[0]?.text || ''
+    // Claude 5 : le premier bloc peut être une réflexion (thinking) — on ne
+    // garde que les blocs de texte.
+    const text = (data.content || []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('') || ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return { success: false, formation: null, error: 'Réponse IA invalide' }
     const formation = JSON.parse(jsonMatch[0]) as ExtractedFormation
