@@ -320,7 +320,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   try {
     const { data: dAg } = await supabase.from('dossiers_agefice')
       .select('*, client:client_id(raison_sociale, nom_commercial), apprenant:apprenant_id(prenom, nom), formation:formation_id(intitule)')
-      .eq('session_id', session.id).maybeSingle()
+      .eq('session_id', sessionData.id).maybeSingle()
     dossierAgefice = dAg || null
   } catch { /* table absente avant migration 143 */ }
 
