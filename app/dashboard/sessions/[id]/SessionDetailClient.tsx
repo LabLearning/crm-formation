@@ -25,7 +25,7 @@ import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAc
 import { SessionParticipants } from './SessionParticipants'
 import { SignaturePad } from './SignaturePad'
 import { SendDocButton } from './SendDocButton'
-import { SessionDocActions } from './SessionDocActions'
+import { SessionDocsTab } from './SessionDocsTab'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
@@ -159,7 +159,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     } else toast('error', (r as any).error || 'Erreur')
   }
   const estAgefice = !!dossierAgefice || (session as any).client?.financeur_type === 'agefice'
-  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>(() => {
+  const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'docs' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>(() => {
     // Arrivée ciblée (ex. ?tab=facturation depuis la vue AGEFICE)
     if (typeof window !== 'undefined') {
       const t = new URLSearchParams(window.location.search).get('tab')
@@ -439,6 +439,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Contractualisation', icon: FileSignature }] : []),
+          ...(!isFormateur ? [{ id: 'docs' as const, label: 'Documents', icon: FileText }] : []),
           ...(!isFormateur ? [{ id: 'facturation' as const, label: estAgefice ? 'AGEFICE' : 'Facturation', icon: ReceiptEuro }] : []),
           ...(!isFormateur ? [{ id: 'mails' as const, label: `Mails (${emailLogs.length})`, icon: Mails }] : []),
         ].map(t => (
@@ -1446,10 +1447,19 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         />
       )}
 
+      {tab === 'docs' && !isFormateur && (
+        <SessionDocsTab
+          sessionId={session.id}
+          formationId={session.formation_id || null}
+          estHygiene={estFormationHygiene((session as any).formation || { intitule: session.intitule })}
+          factureId={factureOpco?.id || null}
+          participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom }))}
+        />
+      )}
+
       {tab === 'conventions' && !isFormateur && (
         <div className="space-y-4">
-          <SessionDocActions sessionId={session.id} hasClient={!!session.client_id} hasFormateur={!!(formateur?.id || session.formateur_id)} />
-          {/* Documents de la session : aperçu, envoi, état de signature */}
+          {/* Contractualisation : aperçu, envoi, état de signature */}
           {!isFormateur && (
             <SessionDocuments
               sessionId={session.id}
