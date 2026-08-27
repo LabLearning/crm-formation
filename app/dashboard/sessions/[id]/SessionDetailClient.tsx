@@ -339,6 +339,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   // Stats émargement globales
   const totalEmargements = emargements.length
   const totalPresents = emargements.filter(e => e.est_present).length
+  // Créneaux échus (présence renseignée) : base honnête du % d'assiduité
+  const totalEchus = emargements.filter(e => e.est_present !== null && e.est_present !== undefined).length
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -750,9 +752,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             </div>
             <div className="rounded-2xl p-4 bg-amber-50 text-center">
               <div className="text-2xl font-heading font-bold text-amber-600">
-                {totalEmargements > 0 ? Math.round((totalPresents / totalEmargements) * 100) : 0}%
+                {totalEchus > 0 ? Math.round((totalPresents / totalEchus) * 100) : 0}%
               </div>
-              <div className="text-xs text-surface-600">Assiduité</div>
+              <div className="text-xs text-surface-600">Assiduité{totalEmargements > totalEchus ? ` (${totalEmargements - totalEchus} à venir)` : ''}</div>
             </div>
           </div>
 
@@ -931,8 +933,11 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                 const a = ins.apprenant
                 const appEmargements = emargements.filter((e: any) => e.apprenant_id === a?.id)
                 const appPresent = appEmargements.filter((e: any) => e.est_present).length
-                const appTotal = appEmargements.length
-                const assiduity = appTotal > 0 ? Math.round((appPresent / appTotal) * 100) : null
+                // Assiduité sur les seuls créneaux ÉCHUS (est_present renseigné) :
+                // inclure les créneaux à venir faussait le % en cours de session.
+                const appEchus = appEmargements.filter((e: any) => e.est_present !== null && e.est_present !== undefined).length
+                const appAVenir = appEmargements.length - appEchus
+                const assiduity = appEchus > 0 ? Math.round((appPresent / appEchus) * 100) : null
 
                 const evalBadges = evaluationsAppr.filter((e) => e.apprenant_id === a?.id && e.note != null)
                 const base = `?session=${session.id}`
@@ -968,7 +973,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     {assiduity !== null && (
                       <div className="text-right shrink-0">
                         <div className={cn('text-sm font-bold leading-none', assiduity >= 80 ? 'text-emerald-600' : assiduity >= 50 ? 'text-amber-600' : 'text-red-600')}>{assiduity}%</div>
-                        <div className="text-[10px] text-surface-400 mt-0.5">assiduité</div>
+                        <div className="text-[10px] text-surface-400 mt-0.5">{appPresent}/{appEchus} créneau{appEchus > 1 ? 'x' : ''}{appAVenir > 0 ? ` · ${appAVenir} à venir` : ''}</div>
                       </div>
                     )}
                     {/* Un seul menu d'actions (modifier, documents, envoi, retrait) */}
