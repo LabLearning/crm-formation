@@ -83,8 +83,11 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
     : props.modalite === 'distanciel_asynchrone' ? 'distanciel_asynchrone'
     : (props.nbParticipants || 1) > 1 ? 'presentiel_collectif' : 'presentiel_individuel'
 
-  const representant = props.representant || org.representant_legal || ''
-  const qualite = props.qualiteRepresentant || org.representant_qualite || 'Dirigeant'
+  // Représentant légal prérempli depuis la fiche organisation
+  const representant = props.representant
+    || [org.representant_legal_civilite === 'Mr' ? 'M.' : org.representant_legal_civilite, org.representant_legal_prenom, org.representant_legal_nom].filter(Boolean).join(' ')
+    || ''
+  const qualite = props.qualiteRepresentant || org.representant_legal_fonction || 'Dirigeant'
   const montant = Number(props.montantHt || 0)
   const modeTexte = props.modeReglement === 'cheque'
     ? `chèque${props.referenceReglement ? ` n° ${props.referenceReglement}` : ''}`
@@ -103,7 +106,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
 
         <View style={shared.section}>
           <Text style={{ fontSize: 9.5, color: SURFACE_700, lineHeight: 1.7 }}>
-            {`Je soussigné(e) ${representant || '____________________'}, agissant en qualité de ${qualite} de ${org.name}, enregistré sous le numéro de déclaration d'activité ${org.numero_da || '____________'} auprès de la DREETS de ${org.region_dreets || org.city || org.ville || '____________'}, atteste que :`}
+            {`Je soussigné(e) ${representant || '____________________'}, agissant en qualité de ${qualite} de ${org.legal_name || org.name}, enregistré sous le numéro de déclaration d'activité ${org.numero_da || '____________'} auprès de la DREETS de ${org.region_dreets || 'Occitanie'}, atteste que :`}
           </Text>
         </View>
 

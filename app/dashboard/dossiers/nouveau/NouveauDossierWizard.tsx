@@ -7,6 +7,20 @@ import { useToast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { creerDossierCompletAction } from './actions'
 
+// Collage « 12/05/1985 » dans un champ date natif (refusé par le navigateur sinon)
+function collerDateNative(e: React.ClipboardEvent<HTMLInputElement>) {
+  const t = e.clipboardData.getData('text').trim()
+  const m = t.match(/^(\d{1,2})[\/\-. ](\d{1,2})[\/\-. ](\d{2,4})$/)
+  const iso = m ? `${m[3].length === 2 ? (Number(m[3]) > 30 ? '19' : '20') + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : (/^\d{4}-\d{2}-\d{2}$/.test(t) ? t : null)
+  if (!iso) return
+  e.preventDefault()
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+  setter?.call(e.currentTarget, iso)
+  e.currentTarget.dispatchEvent(new Event('input', { bubbles: true }))
+  e.currentTarget.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+
 interface ClientRef { id: string; raison_sociale: string | null; nom_commercial: string | null; siret: string | null; ville: string | null }
 interface FormationRef { id: string; intitule: string; duree_heures: number | null; duree_jours: number | null }
 interface FormateurRef { id: string; prenom: string | null; nom: string | null }
@@ -274,7 +288,7 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
                   </div>
                   <div className="grid sm:grid-cols-3 gap-2.5">
                     <label className="text-xs text-surface-500">Date de naissance
-                      <input type="date" value={a.date_naissance} onChange={(e) => majApprenant(i, { date_naissance: e.target.value })} className="input-base !py-2 mt-1" />
+                      <input type="date" onPaste={collerDateNative} value={a.date_naissance} onChange={(e) => majApprenant(i, { date_naissance: e.target.value })} className="input-base !py-2 mt-1" />
                     </label>
                     <label className="text-xs text-surface-500">Lieu de naissance
                       <input value={a.lieu_naissance} onChange={(e) => majApprenant(i, { lieu_naissance: e.target.value })} className="input-base !py-2 mt-1" />
@@ -360,10 +374,10 @@ export function NouveauDossierWizard({ clients, formations, formateurs }: {
 
           <div className="grid sm:grid-cols-3 gap-3">
             <label className="text-xs text-surface-500">Début *
-              <input type="date" value={dateDebut} onChange={(e) => { setDateDebut(e.target.value); if (!dateFin) setDateFin(e.target.value) }} className="input-base mt-1" />
+              <input type="date" onPaste={collerDateNative} value={dateDebut} onChange={(e) => { setDateDebut(e.target.value); if (!dateFin) setDateFin(e.target.value) }} className="input-base mt-1" />
             </label>
             <label className="text-xs text-surface-500">Fin
-              <input type="date" value={dateFin} min={dateDebut} onChange={(e) => setDateFin(e.target.value)} className="input-base mt-1" />
+              <input type="date" onPaste={collerDateNative} value={dateFin} min={dateDebut} onChange={(e) => setDateFin(e.target.value)} className="input-base mt-1" />
             </label>
             <label className="text-xs text-surface-500">Formateur (optionnel)
               <select value={formateurId} onChange={(e) => setFormateurId(e.target.value)} className="input-base mt-1">
