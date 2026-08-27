@@ -39,10 +39,13 @@ function SessionChip({ s, date, color }: { s: Session; date: string; color?: str
   return (
     <div className="relative group/chip">
       <Link href={sessionHref(s)} title={sessionTooltip(s, date)}
-        className={cn('block px-1.5 py-0.5 rounded text-[9px] mb-0.5 border font-medium truncate hover:brightness-95', s.isPrevisionnel ? PREV_COLOR : (color || colorFor(s.id)))}>
-        {s.isPrevisionnel && <span className="px-1 rounded bg-surface-400 text-white text-[8px] font-bold mr-0.5">PRÉV.</span>}
-        {s.isPoei && <span className="px-1 rounded bg-sky-500 text-white text-[8px] font-bold mr-0.5">POEI</span>}
-        {c && <span className="font-mono opacity-80">{c.debut}</span>} {s.titre}
+        className={cn('block px-1.5 py-1 rounded-md text-[11px] mb-1 border hover:brightness-95', s.isPrevisionnel ? PREV_COLOR : (color || colorFor(s.id)))}>
+        <span className="flex items-center gap-1 text-[9px] leading-none opacity-75">
+          {c && <span className="font-mono">{c.debut}</span>}
+          {s.isPrevisionnel && <span className="px-1 rounded bg-surface-400 text-white text-[8px] font-bold">PRÉV.</span>}
+          {s.isPoei && <span className="px-1 rounded bg-sky-500 text-white text-[8px] font-bold">POEI</span>}
+        </span>
+        <span className="block font-semibold leading-snug line-clamp-2 mt-0.5">{s.titre}</span>
       </Link>
       <SessionTooltipCard s={s} date={date} className="left-0 top-full mt-1" />
     </div>
@@ -56,12 +59,12 @@ function SessionBlock({ p, date }: { p: Positioned; date: string }) {
     <div className="absolute group/chip px-0.5" style={{ top: p.top, height: p.height, left: `${p.leftPct}%`, width: `${p.widthPct}%` }}>
       <Link href={sessionHref(s)} title={sessionTooltip(s, date)}
         className={cn('flex flex-col h-full rounded-md border px-1.5 py-1 overflow-hidden hover:brightness-95 transition', s.isPrevisionnel ? 'border-dashed' : '', p.color)}>
-        <span className="text-[9px] font-mono leading-none opacity-80 flex items-center gap-1">
+        <span className="text-[10px] font-mono leading-none opacity-80 flex items-center gap-1">
           {p.debut}–{p.fin}
           {s.isPrevisionnel && <span className="px-1 rounded bg-surface-400 text-white text-[8px] font-bold leading-tight">PRÉV.</span>}
           {s.isPoei && <span className="px-1 rounded bg-sky-500 text-white text-[8px] font-bold leading-tight">POEI</span>}
         </span>
-        <span className="text-[10px] font-medium leading-tight mt-0.5 line-clamp-3">{s.titre}</span>
+        <span className="text-[11.5px] font-semibold leading-snug mt-0.5 line-clamp-3">{s.titre}</span>
       </Link>
       <SessionTooltipCard s={s} date={date} className="left-full top-0 ml-1" />
     </div>
@@ -569,7 +572,7 @@ function FormationsView({
               const sess = getSessionsForDate(d)
               return (
                 <div key={i} className={cn(
-                  'border-b border-r border-surface-100 p-1.5 min-h-[90px] transition-colors',
+                  'border-b border-r border-surface-100 p-1.5 min-h-[108px] transition-colors',
                   !isCurrentMonth && 'bg-surface-50/50',
                   isToday && 'bg-brand-50/20',
                 )}>
@@ -719,7 +722,7 @@ function TachesView({
               const dayTaches = getTachesForDate(d)
               return (
                 <div key={i} className={cn(
-                  'border-b border-r border-surface-100 p-1.5 min-h-[110px] transition-colors',
+                  'border-b border-r border-surface-100 p-1.5 min-h-[128px] transition-colors',
                   !isCurrentMonth && 'bg-surface-50/50',
                   isToday && 'bg-brand-50/20',
                 )}>
