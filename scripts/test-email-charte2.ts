@@ -35,7 +35,7 @@ async function main() {
     orgLogoUrl: (orgRaw as any).logo_url,
     qualiopiCertified: true,
     recipientName: 'Brahim',
-    subject: 'Test 5 — email + PDF avec logo (rendu production)',
+    subject: 'Test 6 — email + PDF avec logo (rendu production)',
     docTitle: 'Facture générée comme en production',
     intro: 'Cette fois le PDF est rendu avec la vraie fiche organisation : logo en en-tête, cartouche FACTURE ACQUITTÉE, tampon.',
     ctaLabel: 'Ouvrir le CRM',

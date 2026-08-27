@@ -255,15 +255,17 @@ export function FacturePDF({ facture, org, agence, detail }: {
             dernier.reference ? `n° ${dernier.reference}` : null,
           ].filter(Boolean).join(' ')
           return (
-            <View style={{ marginBottom: 10, borderWidth: 1, borderColor: '#16a34a', borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View>
-                <Text style={{ fontSize: 11, fontFamily: 'Satoshi', fontWeight: 900, color: '#15803d', letterSpacing: 1 }}>FACTURE ACQUITTÉE</Text>
-                <Text style={{ fontSize: 8, color: '#166534', marginTop: 3 }}>
+            <View style={{ marginBottom: 10, backgroundColor: '#F1F8F4', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <View style={{ alignSelf: 'flex-start', backgroundColor: '#205040', borderRadius: 999, paddingVertical: 2.5, paddingHorizontal: 9 }}>
+                  <Text style={{ fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#FFFFFF', letterSpacing: 1 }}>FACTURE ACQUITTÉE</Text>
+                </View>
+                <Text style={{ fontSize: 7.5, color: '#3D6B52', marginTop: 3.5, lineHeight: 1.4 }}>
                   {`Règlement reçu en totalité${detailReglement ? ` ${detailReglement}` : ''} — vaut reçu (art. 1353 du Code civil).`}
                 </Text>
               </View>
               {org?.tampon_signature_url ? (
-                <Image src={org.tampon_signature_url} style={{ width: 90, height: 45, objectFit: 'contain' }} />
+                <Image src={org.tampon_signature_url} style={{ width: 118, height: 59, objectFit: 'contain' }} />
               ) : null}
             </View>
           )
