@@ -113,6 +113,14 @@ export default async function SiteHome() {
                   </div>
                 </Link>
               ))}
+              {/* Badge flottant Qualiopi — logo officiel + mention obligatoire */}
+              <div className="hidden sm:block absolute -right-3 -top-5 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3 max-w-[220px]">
+                <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-14 w-auto" />
+                <p className="mt-1.5 text-[8px] leading-snug text-[#78716C]">
+                  La certification qualité a été délivrée au titre de la catégorie d&apos;actions suivante : ACTIONS DE FORMATION
+                </p>
+              </div>
+
               {/* Badge flottant preuve */}
               <div className="hidden sm:flex absolute -left-6 bottom-2 items-center gap-3 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3">
                 <span className="h-9 w-9 rounded-xl bg-[#205040]/10 flex items-center justify-center"><GraduationCap className="h-5 w-5 text-[#205040]" /></span>
