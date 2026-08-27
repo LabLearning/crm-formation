@@ -298,8 +298,16 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     startTransition(async () => { await updateSessionStatusAction(session.id, 'confirmee', montant) })
   }
 
-  function handleTogglePresence(emargementId: string, current: boolean) {
-    startTransition(async () => { await togglePresenceAction(emargementId, !current) })
+  function handleTogglePresence(emargementId: string, valeur: boolean | null, motif?: string | null) {
+    startTransition(async () => {
+      await togglePresenceAction(emargementId, valeur, motif ?? null)
+      router.refresh()
+    })
+  }
+  function handleMarquerAbsent(emargementId: string) {
+    // Motif optionnel — champ prévu par la feuille d'émargement
+    const motif = window.prompt('Motif d\'absence (optionnel) :') || null
+    handleTogglePresence(emargementId, false, motif)
   }
 
   function handleCreateEmargement() {
@@ -846,22 +854,32 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                             </div>
                           </div>
 
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            {!em.est_present && canEmarge && (
+                          {/* Bascule 3 états : Présent · Absent (motif) · À venir */}
+                          {canEmarge ? (
+                            <div className="flex items-center gap-1 shrink-0">
                               <button
-                                onClick={() => handleTogglePresence(em.id, em.est_present)}
+                                onClick={() => handleTogglePresence(em.id, em.est_present === true ? null : true)}
                                 disabled={isPending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-100 text-surface-600 text-xs font-medium hover:bg-surface-200 transition-colors"
+                                className={cn('flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                                  em.est_present === true ? 'bg-emerald-600 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200')}
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" /> Présent
                               </button>
-                            )}
-
-                          </div>
-                          <span className={cn('text-xs font-semibold shrink-0 hidden sm:block', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
-                            {em.est_present ? 'Présent' : em.est_present === false ? (em.motif_absence ? `Absent · ${em.motif_absence}` : 'Absent') : 'À venir'}
-                          </span>
+                              <button
+                                onClick={() => em.est_present === false ? handleTogglePresence(em.id, null) : handleMarquerAbsent(em.id)}
+                                disabled={isPending}
+                                title={em.motif_absence || undefined}
+                                className={cn('flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                                  em.est_present === false ? 'bg-red-600 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200')}
+                              >
+                                <XCircle className="h-3.5 w-3.5" /> Absent
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={cn('text-xs font-semibold shrink-0', em.est_present ? 'text-emerald-600' : 'text-surface-400')}>
+                              {em.est_present ? 'Présent' : em.est_present === false ? (em.motif_absence ? `Absent · ${em.motif_absence}` : 'Absent') : 'À venir'}
+                            </span>
+                          )}
                         </div>
                       )
                     })}

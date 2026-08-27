@@ -76,18 +76,32 @@ export async function updateSessionStatusAction(sessionId: string, newStatus: st
   return { success: true }
 }
 
-export async function togglePresenceAction(emargementId: string, estPresent: boolean): Promise<ActionResult> {
+export async function togglePresenceAction(
+  emargementId: string,
+  estPresent: boolean | null,
+  motifAbsence?: string | null,
+): Promise<ActionResult> {
   const session = await getSession()
   const supabase = await createServiceRoleClient()
 
+  // Scope organisation + récupère la session pour revalider la BONNE page
+  const { data: em } = await supabase.from('emargements')
+    .select('id, session_id, session:session_id(organization_id)')
+    .eq('id', emargementId).maybeSingle()
+  if (!em || (em as any).session?.organization_id !== session.organization.id) {
+    return { success: false, error: 'Émargement introuvable' }
+  }
+
   const { error } = await supabase
     .from('emargements')
-    .update({ est_present: estPresent })
+    .update({
+      est_present: estPresent,
+      motif_absence: estPresent === false ? (motifAbsence ?? null) : null,
+    })
     .eq('id', emargementId)
-
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/dashboard/sessions')
+  revalidatePath(`/dashboard/sessions/${em.session_id}`)
   return { success: true }
 }
 
@@ -133,7 +147,7 @@ export async function signEmargementAction(emargementId: string, signatureBase64
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/dashboard/sessions')
+  revalidatePath(`/dashboard/sessions/${(emargement as any)?.session_id || ''}`)
   return { success: true }
 }
 
