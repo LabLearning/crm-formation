@@ -318,11 +318,84 @@ export function SessionDocuments(props: Props) {
     <div className="card overflow-hidden">
       <div className="px-4 py-3 border-b border-surface-100 flex items-center gap-2">
         <FileSignature className="h-4 w-4 text-brand-500" />
-        <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Documents de la session</span>
+        <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Contractualisation</span>
       </div>
 
+      {/* Session inter : une ligne par partie (entreprise → convention, particulier → contrat) */}
+      {props.typeSession === 'inter' && (props.participants || []).length > 0 && (() => {
+        const clients = new Map((props.clientsApprenants || []).map((c) => [c.id, c]))
+        const convs = props.conventionsSession || []
+        // Regroupe : entreprises (clé client_id) / particuliers & non rattachés (individuel)
+        const groupes = new Map<string, typeof props.participants>()
+        const individuels: NonNullable<typeof props.participants> = []
+        for (const a of props.participants || []) {
+          const cli = a.client_id ? clients.get(a.client_id) : null
+          if (cli && cli.type === 'entreprise') {
+            if (!groupes.has(cli.id)) groupes.set(cli.id, [])
+            groupes.get(cli.id)!.push(a)
+          } else individuels.push(a)
+        }
+        const convEntreprise = (cid: string) => convs.find((c) => c.client_id === cid && (c.participants_snapshot?.length ?? 0) >= 1 && !individuels.some((i) => c.participants_snapshot?.length === 1 && c.participants_snapshot[0]?.apprenant_id === i.id))
+        const convParticulier = (aid: string) => convs.find((c) => c.participants_snapshot?.length === 1 && c.participants_snapshot[0]?.apprenant_id === aid)
+        return (
+          <div className="px-4 py-4 border-b border-surface-100">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-heading font-semibold text-surface-900">Contractualisation</h3>
+              <span className="text-xs text-surface-400">{groupes.size + individuels.length} partie{groupes.size + individuels.length > 1 ? 's' : ''}</span>
+            </div>
+            <p className="text-xs text-surface-500 mb-3">
+              Session inter : une convention par entreprise (couvrant ses stagiaires), un contrat
+              individuel par particulier (art. L.6353-3 — rétractation 10 j incluse).
+            </p>
+            <div className="divide-y divide-surface-100">
+              {[...groupes.entries()].map(([cid, apps]) => {
+                const cli = clients.get(cid)
+                const c = convEntreprise(cid)
+                return (
+                  <div key={cid} className="flex items-center gap-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-surface-900">{cli?.nom_commercial || cli?.raison_sociale}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Convention</span>
+                      <div className="text-xs text-surface-400 truncate">{(apps || []).map((a) => `${a.prenom || ''} ${a.nom || ''}`.trim()).join(', ')}</div>
+                    </div>
+                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
+                    {!c?.signature_client_date && (
+                      <button disabled={envoiContrat === cid} onClick={() => envoyerConventionEntreprise(cid)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">
+                        {envoiContrat === cid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        {c ? 'Renvoyer' : 'Envoyer la convention'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+              {individuels.map((a) => {
+                const c = convParticulier(a.id)
+                return (
+                  <div key={a.id} className="flex items-center gap-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-surface-900">{a.prenom} {a.nom}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Contrat particulier</span>
+                      <span className="text-xs text-surface-400 ml-2">{a.email || 'sans email'}</span>
+                    </div>
+                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
+                    {!c?.signature_client_date && (
+                      <button disabled={!a.email || envoiContrat === a.id} onClick={() => envoyerContratParticulier(a.id)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">
+                        {envoiContrat === a.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        {c ? 'Renvoyer' : 'Envoyer le contrat'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
       <div className="divide-y divide-surface-100">
-        <DocRow
+        {props.typeSession !== 'inter' && <DocRow
           icon={<FileSignature className="h-4 w-4 text-brand-600" />}
           titre="Convention de formation"
           sousTitre={clientNom ? `Client : ${clientNom}${convention?.numero ? ` · ${convention.numero}` : ''}` : 'Aucun client rattaché'}
@@ -335,7 +408,7 @@ export function SessionDocuments(props: Props) {
           disabled={!hasClient} disabledReason="Aucun client entreprise rattaché à la session"
           busyKey="conv"
           envois={envoisConvention}
-        />
+        />}
         <DocRow
           icon={<FileText className="h-4 w-4 text-blue-600" />}
           titre="Contrat de prestation formateur"
@@ -481,79 +554,7 @@ export function SessionDocuments(props: Props) {
         </div>
       </Modal>
 
-      {/* ── Contractualisation (session inter) : conventions par entreprise,
-          contrats individuels pour les particuliers ── */}
-      {props.typeSession === 'inter' && (props.participants || []).length > 0 && (() => {
-        const clients = new Map((props.clientsApprenants || []).map((c) => [c.id, c]))
-        const convs = props.conventionsSession || []
-        // Regroupe : entreprises (clé client_id) / particuliers & non rattachés (individuel)
-        const groupes = new Map<string, typeof props.participants>()
-        const individuels: NonNullable<typeof props.participants> = []
-        for (const a of props.participants || []) {
-          const cli = a.client_id ? clients.get(a.client_id) : null
-          if (cli && cli.type === 'entreprise') {
-            if (!groupes.has(cli.id)) groupes.set(cli.id, [])
-            groupes.get(cli.id)!.push(a)
-          } else individuels.push(a)
-        }
-        const convEntreprise = (cid: string) => convs.find((c) => c.client_id === cid && (c.participants_snapshot?.length ?? 0) >= 1 && !individuels.some((i) => c.participants_snapshot?.length === 1 && c.participants_snapshot[0]?.apprenant_id === i.id))
-        const convParticulier = (aid: string) => convs.find((c) => c.participants_snapshot?.length === 1 && c.participants_snapshot[0]?.apprenant_id === aid)
-        return (
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-heading font-semibold text-surface-900">Contractualisation</h3>
-              <span className="text-xs text-surface-400">{groupes.size + individuels.length} partie{groupes.size + individuels.length > 1 ? 's' : ''}</span>
-            </div>
-            <p className="text-xs text-surface-500 mb-3">
-              Session inter : une convention par entreprise (couvrant ses stagiaires), un contrat
-              individuel par particulier (art. L.6353-3 — rétractation 10 j incluse).
-            </p>
-            <div className="divide-y divide-surface-100">
-              {[...groupes.entries()].map(([cid, apps]) => {
-                const cli = clients.get(cid)
-                const c = convEntreprise(cid)
-                return (
-                  <div key={cid} className="flex items-center gap-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-surface-900">{cli?.nom_commercial || cli?.raison_sociale}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Convention</span>
-                      <div className="text-xs text-surface-400 truncate">{(apps || []).map((a) => `${a.prenom || ''} ${a.nom || ''}`.trim()).join(', ')}</div>
-                    </div>
-                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
-                    {!c?.signature_client_date && (
-                      <button disabled={envoiContrat === cid} onClick={() => envoyerConventionEntreprise(cid)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">
-                        {envoiContrat === cid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                        {c ? 'Renvoyer' : 'Envoyer la convention'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-              {individuels.map((a) => {
-                const c = convParticulier(a.id)
-                return (
-                  <div key={a.id} className="flex items-center gap-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-surface-900">{a.prenom} {a.nom}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Contrat particulier</span>
-                      <span className="text-xs text-surface-400 ml-2">{a.email || 'sans email'}</span>
-                    </div>
-                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
-                    {!c?.signature_client_date && (
-                      <button disabled={!a.email || envoiContrat === a.id} onClick={() => envoyerContratParticulier(a.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">
-                        {envoiContrat === a.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                        {c ? 'Renvoyer' : 'Envoyer le contrat'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })()}
+
     </div>
   )
 }

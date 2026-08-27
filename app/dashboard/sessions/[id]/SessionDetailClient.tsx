@@ -438,7 +438,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
           { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
           { id: 'rapport' as const, label: 'Rapport', icon: FileText },
-          ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Documents', icon: FileText }] : []),
+          ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Contractualisation', icon: FileSignature }] : []),
           ...(!isFormateur ? [{ id: 'facturation' as const, label: estAgefice ? 'AGEFICE' : 'Facturation', icon: ReceiptEuro }] : []),
           ...(!isFormateur ? [{ id: 'mails' as const, label: `Mails (${emailLogs.length})`, icon: Mails }] : []),
         ].map(t => (
