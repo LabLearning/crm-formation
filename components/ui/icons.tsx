@@ -202,6 +202,8 @@ export type LucideIcon = React.ComponentType<{
   size?: number | string
   strokeWidth?: number | string
   color?: string
+  fill?: string
+  [prop: string]: any
 }>
 
 /** Enveloppe : icône Hugeicons avec l'API d'une icône Lucide (className, size). */
