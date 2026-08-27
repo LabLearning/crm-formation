@@ -64,7 +64,7 @@ function SessionBlock({ p, date }: { p: Positioned; date: string }) {
           {s.isPrevisionnel && <span className="px-1 rounded bg-surface-400 text-white text-[8px] font-bold leading-tight">PRÉV.</span>}
           {s.isPoei && <span className="px-1 rounded bg-sky-500 text-white text-[8px] font-bold leading-tight">POEI</span>}
         </span>
-        <span className="text-[11.5px] font-semibold leading-snug mt-0.5 line-clamp-3">{s.titre}</span>
+        <span className="text-xs font-bold leading-snug mt-0.5 line-clamp-3">{s.titre}</span>
       </Link>
       <SessionTooltipCard s={s} date={date} className="left-full top-0 ml-1" />
     </div>
