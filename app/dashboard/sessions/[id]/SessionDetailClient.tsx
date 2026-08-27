@@ -20,6 +20,7 @@ import { etatDeroule } from '@/lib/dpo'
 import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
 import { estFormationHygiene } from '@/lib/formation-hygiene'
+import { dernierEnvoiDoc } from '@/lib/emails-session'
 import { cn, formatDate, companyLabel } from '@/lib/utils'
 import { updateSessionStatusAction, togglePresenceAction, updateCoutFormateurAction, updateSessionPrixAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
@@ -951,6 +952,26 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         {a?.telephone && <span className="flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{a.telephone}</span>}
                         {a?.entreprise && <span className="flex items-center gap-1"><Building2 className="h-3 w-3 shrink-0" />{a.entreprise}</span>}
                       </div>
+                      {/* Ce que ce stagiaire a déjà reçu — l'info manquait partout */}
+                      {a?.email && (() => {
+                        const docs: [string, string][] = [['convocation', 'Convocation'], ['attestation', 'Attestation'], ['certificat', 'Certificat']]
+                        if (estFormationHygiene((session as any).formation || { intitule: session.intitule })) docs.push(['hygiene', 'Hygiène'])
+                        return (
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            {docs.map(([type, label]) => {
+                              const envoi = dernierEnvoiDoc(emailLogs as any[], type as any, a.email)
+                              return (
+                                <span key={type}
+                                  title={envoi ? `Envoyé le ${new Date((envoi.sent_at || envoi.created_at)!).toLocaleDateString('fr-FR')}` : 'Jamais envoyé'}
+                                  className={cn('text-[10px] font-medium rounded-full px-1.5 py-0.5 border',
+                                    envoi ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-surface-50 text-surface-400 border-surface-200')}>
+                                  {label}{envoi ? ' ✓'.replace(' ✓', '') : ''}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        )
+                      })()}
                     </div>
                     {assiduity !== null && (
                       <div className="text-right shrink-0">
@@ -1482,8 +1503,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           sessionId={session.id}
           formationId={session.formation_id || null}
           estHygiene={estFormationHygiene((session as any).formation || { intitule: session.intitule })}
-          factureId={factureOpco?.id || null}
-          participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom }))}
+          facture={factureOpco || null}
+          participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email }))}
+          envois={emailLogs as any[]}
         />
       )}
 

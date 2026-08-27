@@ -1,6 +1,7 @@
 'use client'
 
 import { FileText, Download, Users, Mail as MailIcon, GraduationCap, ClipboardCheck, Receipt, Award } from '@/components/ui/icons'
+import { dernierEnvoiDoc, destinatairesDoc, type EnvoiEmail } from '@/lib/emails-session'
 
 /**
  * Onglet Documents : les livrables de la session — convocation, émargement,
@@ -12,8 +13,9 @@ interface Props {
   sessionId: string
   formationId?: string | null
   estHygiene?: boolean
-  factureId?: string | null
-  participants: { id: string; prenom: string | null; nom: string | null }[]
+  facture?: { id: string; numero?: string | null; status?: string | null; montant_ttc?: number | null } | null
+  participants: { id: string; prenom: string | null; nom: string | null; email?: string | null }[]
+  envois?: EnvoiEmail[]
 }
 
 function BoutonDoc({ href, icon: Icon, titre, sous, teinte = 'brand' }: {
@@ -39,7 +41,12 @@ function BoutonDoc({ href, icon: Icon, titre, sous, teinte = 'brand' }: {
   )
 }
 
-export function SessionDocsTab({ sessionId, formationId, estHygiene, factureId, participants }: Props) {
+export function SessionDocsTab({ sessionId, formationId, estHygiene, facture, participants, envois = [] }: Props) {
+  const nbConvoques = destinatairesDoc(envois, 'convocation')
+  const etatEnvoi = (type: any, email?: string | null) => {
+    const e = dernierEnvoiDoc(envois, type, email)
+    return e ? `envoyé le ${new Date((e.sent_at || e.created_at)!).toLocaleDateString('fr-FR')}` : null
+  }
   return (
     <div className="space-y-4">
       {/* ── Documents de la session ── */}
@@ -50,7 +57,7 @@ export function SessionDocsTab({ sessionId, formationId, estHygiene, factureId, 
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <BoutonDoc href={`/api/pdf/convocation-session/${sessionId}`} icon={MailIcon}
-            titre="Convocation" sous="Tous les participants, dates et horaires" />
+            titre="Convocation" sous={nbConvoques > 0 ? `Envoyée à ${nbConvoques} participant${nbConvoques > 1 ? 's' : ''}` : 'Jamais envoyée — dates et horaires'} />
           <BoutonDoc href={`/api/pdf/emargement/${sessionId}`} icon={ClipboardCheck} teinte="blue"
             titre="Feuille d'émargement" sous="Par demi-journée, à faire signer" />
           {formationId && (
@@ -59,9 +66,10 @@ export function SessionDocsTab({ sessionId, formationId, estHygiene, factureId, 
           )}
           <BoutonDoc href={`/api/pdf/certificats-session?session=${sessionId}`} icon={Award} teinte="amber"
             titre="Certificats de réalisation" sous="Tous les apprenants en un document" />
-          {factureId && (
-            <BoutonDoc href={`/api/pdf/facture/${factureId}`} icon={Receipt}
-              titre="Facture" sous="Facture de la session" />
+          {facture?.id && (
+            <BoutonDoc href={`/api/pdf/facture/${facture.id}`} icon={Receipt}
+              titre={`Facture ${facture.numero || ''}`}
+              sous={`${facture.status === 'payee' ? 'Acquittée' : facture.status === 'emise' || facture.status === 'envoyee' ? 'Émise' : 'Brouillon'}${facture.montant_ttc ? ` · ${Number(facture.montant_ttc).toLocaleString('fr-FR')} € TTC` : ''}`} />
           )}
         </div>
       </div>
@@ -78,7 +86,16 @@ export function SessionDocsTab({ sessionId, formationId, estHygiene, factureId, 
           <div className="divide-y divide-surface-100">
             {participants.map((a) => (
               <div key={a.id} className="flex items-center gap-3 px-4 py-2.5 flex-wrap">
-                <span className="text-sm font-medium text-surface-900 flex-1 min-w-[140px]">{a.prenom} {a.nom}</span>
+                <span className="flex-1 min-w-[140px]">
+                  <span className="block text-sm font-medium text-surface-900">{a.prenom} {a.nom}</span>
+                  {(() => {
+                    const att = etatEnvoi('attestation', a.email)
+                    const cert = etatEnvoi('certificat', a.email)
+                    const hyg = estHygiene ? etatEnvoi('hygiene', a.email) : null
+                    const morceaux = [att && `attestation ${att}`, cert && `certificat ${cert}`, hyg && `hygiène ${hyg}`].filter(Boolean)
+                    return morceaux.length ? <span className="block text-[10px] text-emerald-600">{morceaux.join(' · ')}</span> : <span className="block text-[10px] text-surface-400">rien d'envoyé</span>
+                  })()}
+                </span>
                 <a href={`/api/pdf/attestation/${a.id}?session=${sessionId}`} target="_blank" rel="noopener noreferrer"
                   className="text-xs font-medium rounded-lg border border-surface-200 px-2.5 py-1.5 text-surface-600 hover:border-surface-300 transition-colors">
                   Attestation de fin
