@@ -657,6 +657,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           nbInscrits={inscriptions.length}
           hygiene={estFormationHygiene(session.formation)}
           onGoTab={(t) => setTab(t as any)}
+          envoisDocs={(docEmailLogs as any[]).map((l: any) => ({ subject: l.subject, sent_at: l.sent_at || l.created_at, to_email: l.to_email }))}
         />
       )}
 

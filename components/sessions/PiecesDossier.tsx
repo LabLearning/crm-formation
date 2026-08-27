@@ -48,6 +48,7 @@ interface Annexe {
 export function PiecesDossier({
   sessionId, etats, tableManquante, formationId, nbSupports = 0,
   rapportFait = false, nbInscrits = 0, hygiene = false, onGoTab,
+envoisDocs = [],
 }: {
   sessionId: string
   etats: (EtatPiece & { fichier?: string | null; dateDepot?: string | null })[]
@@ -59,6 +60,8 @@ export function PiecesDossier({
   /** La formation relève de l'hygiène alimentaire réglementaire. */
   hygiene?: boolean
   onGoTab?: (onglet: string) => void
+  /** Envois réels (email_logs documents) : la vérité sur « envoyé ou pas » */
+  envoisDocs?: { subject: string | null; sent_at: string | null; to_email?: string | null }[]
 }) {
   const router = useRouter()
   const { toast } = useToast()
@@ -117,6 +120,20 @@ export function PiecesDossier({
     else toast('error', r.error || 'Erreur')
   }
 
+  // Un document est « fait » quand il a réellement été ENVOYÉ — pas quand le
+  // PDF est simplement générable (l'ancien état mentait sur le dossier).
+  const dernierEnvoi = (motif: string): string | null => {
+    const hit = envoisDocs.find((e) => (e.subject || '').toLowerCase().includes(motif))
+    return hit?.sent_at || null
+  }
+  const nbEnvois = (motif: string): number =>
+    envoisDocs.filter((e) => (e.subject || '').toLowerCase().includes(motif)).length
+  const envConvocation = dernierEnvoi('convocation')
+  const envAttestation = dernierEnvoi('attestation de fin') || dernierEnvoi('attestation —') || dernierEnvoi('attestation de formation')
+  const envCertificat = dernierEnvoi('certificat')
+  const envHygiene = dernierEnvoi('hygiène') || dernierEnvoi('hygiene')
+  const fmtEnvoi = (d: string | null, n = 0) => d ? `Envoyé${n > 1 ? `s (${n})` : ''} le ${new Date(d).toLocaleDateString('fr-FR')}` : 'Jamais envoyé'
+
   const pieceEnCours = PIECES.find((p) => p.cle === depot)
   const piece = (cle: string) => PIECES.find((p) => p.cle === cle)!
 
@@ -136,8 +153,8 @@ export function PiecesDossier({
         'contrat',
         {
           cle: 'convocation', label: 'Convocation des stagiaires',
-          aide: 'Dates, lieu, horaires — à envoyer avant le démarrage.',
-          faite: true,
+          aide: `Dates, lieu, horaires — ${fmtEnvoi(envConvocation, nbEnvois('convocation'))}.`,
+          faite: !!envConvocation,
           href: `/api/pdf/convocation-session/${sessionId}`,
         },
         'positionnement',
@@ -148,8 +165,8 @@ export function PiecesDossier({
       lignes: [
         {
           cle: 'feuille_vierge', label: 'Feuille d’émargement vierge',
-          aide: 'À imprimer pour la salle si l’émargement se fait sur papier.',
-          faite: true,
+          aide: 'PDF disponible — à imprimer si l’émargement se fait sur papier.',
+          faite: true, // simple imprimable : pas un jalon d'envoi
           href: `/api/pdf/emargement/${sessionId}`,
         },
         'emargement',
@@ -168,14 +185,14 @@ export function PiecesDossier({
         'satisfaction',
         {
           cle: 'attestations', label: 'Attestations de fin de formation',
-          aide: 'Une par stagiaire, depuis la liste des apprenants.',
-          faite: nbInscrits > 0,
+          aide: `Une par stagiaire — ${fmtEnvoi(envAttestation, nbEnvois('attestation'))}.`,
+          faite: !!envAttestation,
           onglet: 'apprenants',
         },
         {
           cle: 'certificats', label: 'Certificats de réalisation',
-          aide: 'Un par stagiaire, exigé par le financeur — PDF unique pour toute la session.',
-          faite: nbInscrits > 0,
+          aide: `Exigés par le financeur — ${fmtEnvoi(envCertificat, nbEnvois('certificat'))}.`,
+          faite: !!envCertificat,
           href: `/api/pdf/certificats-session?session=${sessionId}`,
           envoi: { docType: 'certificat', label: 'Certificat de réalisation' },
         },
@@ -184,8 +201,8 @@ export function PiecesDossier({
         // contrôle sanitaire.
         ...(hygiene ? [{
           cle: 'attestation_hygiene', label: "Attestations d'hygiène alimentaire",
-          aide: "Arrêté du 12 février 2024 — une par stagiaire, à remettre à l'établissement.",
-          faite: nbInscrits > 0,
+          aide: `Arrêté du 12 février 2024 — ${fmtEnvoi(envHygiene, nbEnvois('hygi'))}.`,
+          faite: !!envHygiene,
           href: `/api/pdf/attestation-hygiene?session=${sessionId}`,
           envoi: { docType: 'hygiene', label: "Attestation d'hygiène" },
         } as Annexe] : []),
