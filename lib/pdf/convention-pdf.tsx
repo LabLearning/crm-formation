@@ -282,10 +282,10 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
   const dateFait = convention.signature_of_date || convention.signature_client_date || convention.date_emission || convention.created_at || new Date().toISOString()
 
   return (
-    <Document title={`Convention ${convention.numero || ''}`} author={ofName}>
+    <Document title={`${((convention as any).type === 'particulier' || (convention as any).client?.type === 'particulier') ? 'Contrat' : 'Convention'} ${convention.numero || ''}`} author={ofName}>
       <Page size="A4" style={shared.page}>
         <PdfDocHeader
-          docTitle="Convention de formation"
+          docTitle={((convention as any).type === 'particulier' || (convention as any).client?.type === 'particulier') ? 'Contrat de formation professionnelle' : 'Convention de formation'}
           numero={convention.numero}
           date={`Émise le ${fmtDate(convention.date_emission)}`}
           statut={TYPE_LABELS[convention.type] || convention.type}
@@ -295,7 +295,9 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
         {/* Intro légale */}
         <View style={{ ...shared.infoBox, marginBottom: 18 }}>
           <Text style={{ ...shared.infoBoxText, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>
-            Convention de formation professionnelle (articles L. 6353-1 et D. 6353-1 du Code du travail)
+            {((convention as any).type === 'particulier' || (convention as any).client?.type === 'particulier')
+              ? 'Contrat de formation professionnelle (articles L. 6353-3 à L. 6353-7 du Code du travail)'
+              : 'Convention de formation professionnelle (articles L. 6353-1 et D. 6353-1 du Code du travail)'}
           </Text>
           <Text style={shared.infoBoxText}>{introText}</Text>
         </View>
@@ -475,6 +477,23 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
             {`À défaut de règlement amiable (le cas échéant via un conciliateur désigné par les parties), le tribunal de ${ville} sera seul compétent.`}
           </Text>
         </View>
+
+        {/* Particulier : clauses obligatoires L.6353-5 et L.6353-6 */}
+        {((convention as any).type === 'particulier' || (convention as any).client?.type === 'particulier') && (
+          <View style={{ ...shared.infoBox, marginBottom: 14 }}>
+            <Text style={{ ...shared.infoBoxText, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>
+              Rétractation et modalités de paiement (personne physique)
+            </Text>
+            <Text style={shared.infoBoxText}>
+              À compter de la signature du présent contrat, le stagiaire dispose d'un délai de rétractation de
+              dix (10) jours (art. L. 6353-5), exercé par lettre recommandée avec accusé de réception. Aucune
+              somme ne peut être exigée avant l'expiration de ce délai ; à son issue, un premier versement ne
+              pouvant excéder 30 % du prix peut être demandé, le solde étant échelonné au fur et à mesure du
+              déroulement de l'action (art. L. 6353-6). En cas de cessation anticipée pour un motif légitime,
+              seules les prestations effectivement dispensées sont dues (art. L. 6353-7).
+            </Text>
+          </View>
+        )}
 
         {/* Signatures (cartes partagées) */}
         <PdfSignatureCards

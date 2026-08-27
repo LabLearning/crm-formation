@@ -127,7 +127,7 @@ export function ConventionSignatureClient({ convention, token }: { convention: C
             <FileText className="h-5 w-5 text-brand-600" />
           </div>
           <div>
-            <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Convention de formation</div>
+            <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">{(convention as any).client?.type === 'particulier' ? 'Contrat de formation' : 'Convention de formation'}</div>
             <h1 className="text-xl font-heading font-bold text-surface-900">{convention.numero || 'Convention'}</h1>
           </div>
         </div>
