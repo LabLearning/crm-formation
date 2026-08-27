@@ -223,13 +223,13 @@ export function emailShell(opts: {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f5;padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#F6F8FA;font-family:Manrope,'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#F6F8FA;padding:40px 16px;">
 <tr><td align="center">
 <table role="presentation" width="560" cellspacing="0" cellpadding="0" style="max-width:560px;width:100%;">
 
   <!-- Header -->
-  <tr><td style="background-color:#195144;border-radius:12px 12px 0 0;padding:24px 32px;">
+  <tr><td style="background-color:#205040;border-radius:12px 12px 0 0;padding:24px 32px;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
       <td>
         ${brandMark}
@@ -247,7 +247,7 @@ export function emailShell(opts: {
     <span style="color:#71717a;font-size:12px;font-weight:600;">${opts.orgName}</span>
     <span style="color:#a1a1aa;font-size:11px;">${footerSuffix}</span>
     ${orgEmail ? `<div style="margin-top:6px;color:#a1a1aa;font-size:11px;">
-      <a href="mailto:${orgEmail}" style="color:#195144;text-decoration:none;">${orgEmail}</a>
+      <a href="mailto:${orgEmail}" style="color:#205040;text-decoration:none;">${orgEmail}</a>
     </div>` : ''}
   </td></tr>
 
@@ -261,7 +261,7 @@ export function emailShell(opts: {
 export function ctaButton(href: string, label: string, color?: string): string {
   return `<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:28px 0;">
   <tr><td align="center">
-    <a href="${href}" target="_blank" style="display:inline-block;padding:14px 48px;background-color:${color || '#195144'};color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:-0.2px;">
+    <a href="${href}" target="_blank" style="display:inline-block;padding:14px 48px;background-color:${color || '#205040'};color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:-0.2px;">
       ${label}
     </a>
   </td></tr></table>`
@@ -285,7 +285,7 @@ function buildInvitationHtml(params: {
     <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">Vous êtes invité(e)</h1>
     <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
       <strong style="color:#18181b;">${params.invitedByName}</strong> vous invite à rejoindre
-      <strong style="color:#195144;">${params.orgName}</strong>.
+      <strong style="color:#205040;">${params.orgName}</strong>.
     </p>
 
     <!-- Role -->
@@ -293,7 +293,7 @@ function buildInvitationHtml(params: {
       <tr><td style="background-color:#f4f4f5;border-radius:10px;padding:20px;">
         <table role="presentation" cellspacing="0" cellpadding="0"><tr>
           <td style="vertical-align:top;padding-right:14px;">
-            <div style="width:44px;height:44px;background-color:#195144;border-radius:10px;text-align:center;padding:10px;box-sizing:border-box;">
+            <div style="width:44px;height:44px;background-color:#205040;border-radius:10px;text-align:center;padding:10px;box-sizing:border-box;">
               <img src="${roleIconUrl}" alt="" width="24" height="24" style="display:block;width:24px;height:24px;border:0;outline:none;text-decoration:none;">
             </div>
           </td>
@@ -314,7 +314,7 @@ function buildInvitationHtml(params: {
       ].map(([n, text]) => `
       <tr><td style="padding:5px 0;">
         <table role="presentation" cellspacing="0" cellpadding="0"><tr>
-          <td style="width:28px;height:28px;background-color:#195144;border-radius:50%;text-align:center;line-height:28px;">
+          <td style="width:28px;height:28px;background-color:#205040;border-radius:50%;text-align:center;line-height:28px;">
             <span style="color:#fff;font-size:12px;font-weight:800;">${n}</span>
           </td>
           <td style="padding-left:12px;color:#3f3f46;font-size:14px;">${text}</td>
@@ -433,7 +433,7 @@ export async function sendBrandedEmail(params: {
  */
 export function blocDocumentsAccueil(org?: { livret_accueil_url?: string | null } | null): string {
   const ri = 'https://crm.lab-learning.fr/api/pdf/reglement-interieur'
-  const style = 'color:#195144;font-weight:600;'
+  const style = 'color:#205040;font-weight:600;'
   const liens: string[] = []
   if (org?.livret_accueil_url) liens.push(`<a href="${org.livret_accueil_url}" style="${style}">le livret d'accueil</a>`)
   liens.push(`<a href="${ri}" style="${style}">le règlement intérieur</a>`)
@@ -476,9 +476,9 @@ export function buildDocumentEmailHtml(params: {
       <tr><td style="background-color:#eef7f3;border:1px solid #cfe3db;border-radius:8px;padding:12px 16px;">
         <table role="presentation" cellspacing="0" cellpadding="0"><tr>
           <td style="vertical-align:middle;padding-right:10px;">
-            <div style="width:28px;height:28px;background-color:#195144;border-radius:6px;text-align:center;line-height:28px;color:#fff;font-size:10px;font-weight:800;">${fileExt}</div>
+            <div style="width:28px;height:28px;background-color:#205040;border-radius:6px;text-align:center;line-height:28px;color:#fff;font-size:10px;font-weight:800;">${fileExt}</div>
           </td>
-          <td><span style="color:#195144;font-size:13px;font-weight:600;">${params.pdfFilename}</span><br><span style="color:#71717a;font-size:11px;">Document joint à cet email</span></td>
+          <td><span style="color:#205040;font-size:13px;font-weight:600;">${params.pdfFilename}</span><br><span style="color:#71717a;font-size:11px;">Document joint à cet email</span></td>
         </tr></table>
       </td></tr>
     </table>` : ''}
@@ -709,7 +709,7 @@ function buildPortalAccessHtml(params: {
       Bonjour ${params.firstName},
     </h1>
     <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
-      <strong style="color:#195144;">${params.orgName}</strong> vous ouvre l'accès à votre espace personnel.
+      <strong style="color:#205040;">${params.orgName}</strong> vous ouvre l'accès à votre espace personnel.
       ${config.subtitle}.
     </p>
 
@@ -720,7 +720,7 @@ function buildPortalAccessHtml(params: {
         ${config.accesses.map(a => `
         <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:8px;"><tr>
           <td style="width:22px;vertical-align:top;padding-top:1px;">
-            <div style="width:18px;height:18px;background-color:#195144;border-radius:50%;text-align:center;line-height:18px;">
+            <div style="width:18px;height:18px;background-color:#205040;border-radius:50%;text-align:center;line-height:18px;">
               <span style="color:#fff;font-size:10px;">&#10003;</span>
             </div>
           </td>
@@ -893,8 +893,8 @@ export async function sendNewLeadFromApporteurEmail(params: {
   const body = `
     <h1 style="margin:0 0 6px;color:#18181b;font-size:22px;font-weight:700;">Nouveau lead soumis</h1>
     <p style="margin:0 0 24px;color:#71717a;font-size:15px;line-height:1.6;">
-      Soumis par <strong style="color:#195144;">${apporteurName}</strong>
-      (<a href="mailto:${apporteurEmail}" style="color:#195144;text-decoration:none;">${apporteurEmail}</a>)
+      Soumis par <strong style="color:#205040;">${apporteurName}</strong>
+      (<a href="mailto:${apporteurEmail}" style="color:#205040;text-decoration:none;">${apporteurEmail}</a>)
     </p>
 
     <!-- Lead details -->
