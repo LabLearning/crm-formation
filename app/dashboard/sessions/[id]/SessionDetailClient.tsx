@@ -51,6 +51,7 @@ const CONVENTION_STATUS: Record<string, { label: string; variant: 'default' | 'i
 interface Props {
   session: any
   dossierAgefice?: any
+  clientsApprenants?: any[]
   inscriptions: any[]
   emargements: any[]
   pointages: any[]
@@ -116,7 +117,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false, dossierAgefice = null }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false, dossierAgefice = null, clientsApprenants = [] }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -1463,10 +1464,13 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}
               convention={conventions[0] || null}
               typeSession={(session as any).type_session || null}
-              participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email }))}
-              contratsParticuliers={(conventions as any[])
-                .filter((c: any) => Array.isArray(c.participants_snapshot) && c.participants_snapshot.length === 1)
-                .map((c: any) => ({ apprenant_id: c.participants_snapshot[0]?.apprenant_id, numero: c.numero, sent_at: c.sent_at || null, signature_client_date: c.signature_client_date || null }))}
+              participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email, client_id: a.client_id || null }))}
+              clientsApprenants={clientsApprenants}
+              conventionsSession={(conventions as any[]).map((c: any) => ({
+                id: c.id, numero: c.numero, client_id: c.client_id || null, sent_at: c.sent_at || null,
+                signature_client_date: c.signature_client_date || null,
+                participants_snapshot: Array.isArray(c.participants_snapshot) ? c.participants_snapshot : null,
+              }))}
               contrat={contratFormateur || null}
               docEmailLogs={docEmailLogs}
             />

@@ -1201,3 +1201,120 @@ export async function envoyerContratParticulierAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true, data: { url } }
 }
+
+/**
+ * Convention ENTREPRISE sur session INTER : chaque entreprise qui envoie des
+ * stagiaires signe SA convention, couvrant ses seuls apprenants, au tarif
+ * inter × nb. (Pas de gate recueil ici : sur une session catalogue inter,
+ * l'analyse du besoin passe par le positionnement individuel des stagiaires.)
+ */
+export async function envoyerConventionEntrepriseInterAction(
+  sessionId: string,
+  clientId: string,
+): Promise<ActionResult & { data?: { url: string } }> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const { data: sess } = await supabase.from('sessions')
+    .select('*, formation:formation_id(intitule, duree_heures, tarif_inter_ht)')
+    .eq('id', sessionId).eq('organization_id', orgId).single()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: client } = await supabase.from('clients')
+    .select('id, type, raison_sociale, nom_commercial, email')
+    .eq('id', clientId).eq('organization_id', orgId).single()
+  if (!client) return { success: false, error: 'Entreprise introuvable' }
+
+  // Les apprenants de CETTE entreprise inscrits à la session
+  const { data: insc } = await supabase.from('inscriptions')
+    .select('apprenant:apprenants(id, prenom, nom, client_id)')
+    .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+  const siens = (insc || []).map((i: any) => i.apprenant).filter((a: any) => a?.client_id === clientId)
+  if (!siens.length) return { success: false, error: 'Aucun inscrit rattaché à cette entreprise' }
+
+  // Convention existante de cette entreprise sur cette session ?
+  const { data: existantes } = await supabase.from('conventions')
+    .select('id, numero, signature_token, signature_client_date')
+    .eq('session_id', sessionId).eq('client_id', clientId)
+    .order('created_at', { ascending: false })
+  let conv = (existantes || [])[0] || null
+  if (conv?.signature_client_date) return { success: false, error: `Convention ${conv.numero} déjà signée` }
+
+  const { createHash, randomBytes } = await import('crypto')
+  if (!conv) {
+    const { count } = await supabase.from('conventions').select('*', { count: 'exact', head: true }).eq('organization_id', orgId)
+    const numero = `CV-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(3, '0')}`
+    const token = createHash('sha256').update(randomBytes(32)).digest('hex')
+    const expire = new Date(); expire.setDate(expire.getDate() + 30)
+    const tarifUnitaire = (sess as any).formation?.tarif_inter_ht != null ? Number((sess as any).formation.tarif_inter_ht) : null
+    const montant = tarifUnitaire != null ? tarifUnitaire * siens.length : null
+    const { data: cree, error: eConv } = await supabase.from('conventions').insert({
+      organization_id: orgId, numero, type: 'inter_entreprise', session_id: sessionId,
+      client_id: clientId, formation_id: sess.formation_id, status: 'envoyee',
+      objet: `Convention de formation — ${(sess as any).formation?.intitule || 'Formation'}`,
+      nombre_stagiaires: siens.length, duree_heures: (sess as any).formation?.duree_heures || null,
+      lieu: sess.lieu || null,
+      dates_formation: `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin).toLocaleDateString('fr-FR')}`,
+      montant_ht: montant, taux_tva: 0, montant_ttc: montant,
+      participants_snapshot: siens.map((a: any) => ({ apprenant_id: a.id, nom: a.nom, prenom: a.prenom })),
+      signature_token: token, signature_token_expires_at: expire.toISOString(),
+      sent_at: new Date().toISOString(), date_emission: new Date().toISOString().slice(0, 10),
+      created_by: session.user.id,
+    }).select('id, numero, signature_token').single()
+    if (eConv || !cree) return { success: false, error: 'Création de la convention impossible' }
+    conv = cree as any
+  }
+
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/convention/${conv!.signature_token}/signer`
+
+  // Destinataire : email client, sinon premier contact
+  let toEmail: string | null = client.email || null
+  let toName = client.nom_commercial || client.raison_sociale || 'Madame, Monsieur'
+  if (!toEmail) {
+    const { data: contact } = await supabase.from('contacts')
+      .select('prenom, nom, email').eq('client_id', clientId).not('email', 'is', null).limit(1).maybeSingle()
+    if (contact?.email) { toEmail = contact.email; toName = [contact.prenom, contact.nom].filter(Boolean).join(' ') || toName }
+  }
+  if (!toEmail) return { success: false, error: 'Aucun email sur la fiche entreprise ni ses contacts' }
+
+  try {
+    const { loadConventionForPdf } = await import('@/lib/pdf/convention-data')
+    const loaded = await loadConventionForPdf(supabase, conv!.id)
+    const { renderToBuffer } = await import('@react-pdf/renderer')
+    const { createElement } = await import('react')
+    const { ConventionPDF } = await import('@/lib/pdf/convention-pdf')
+    const pdf = await renderToBuffer(createElement(ConventionPDF, { convention: loaded!.convention, org: loaded!.org }) as any)
+    const { sendDocumentEmail } = await import('@/lib/email')
+    const { resolveEmailLogoUrl } = await import('@/lib/pdf/org-logo')
+    const emailLogo = await resolveEmailLogoUrl(supabase, loaded!.org)
+    await sendDocumentEmail({
+      to: toEmail,
+      orgName: (loaded!.org as any)?.name || 'Lab Learning',
+      orgEmail: (loaded!.org as any)?.email_contact || (loaded!.org as any)?.email,
+      orgLogoUrl: emailLogo || undefined,
+      qualiopiCertified: (loaded!.org as any)?.is_qualiopi !== false,
+      recipientName: toName,
+      subject: `Convention de formation ${conv!.numero} — signature requise`,
+      docTitle: 'Convention de formation à signer',
+      intro: `Veuillez trouver ci-joint la convention de formation couvrant ${siens.length > 1 ? `vos ${siens.length} stagiaires` : 'votre stagiaire'} pour la formation « ${(sess as any).formation?.intitule || ''} ». Vous pouvez la signer en ligne via le bouton ci-dessous.`,
+      metadata: [
+        ['Référence', conv!.numero || ''],
+        ['Formation', (sess as any).formation?.intitule || '—'],
+        ['Stagiaires', siens.map((a: any) => `${a.prenom || ''} ${a.nom || ''}`.trim()).join(', ')],
+        ['Dates', `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin).toLocaleDateString('fr-FR')}`],
+      ],
+      ctaLabel: 'Signer la convention en ligne',
+      ctaUrl: url,
+      pdfBuffer: Buffer.from(pdf), pdfFilename: `convention-${conv!.numero}.pdf`,
+      organizationId: orgId, entityType: 'convention', entityId: conv!.id, triggeredBy: session.user.id,
+    })
+  } catch (e: any) {
+    console.error('[convention inter]', e?.message)
+    return { success: false, error: 'Convention créée mais envoi email impossible — réessayez' }
+  }
+
+  await logAudit({ action: 'send_convention_inter', entity_type: 'convention', entity_id: conv!.id, details: { sessionId, clientId } })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { url } }
+}

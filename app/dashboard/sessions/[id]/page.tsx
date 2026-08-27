@@ -107,7 +107,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     // Conventions liées à la session
     supabase
       .from('conventions')
-      .select('id, numero, type, status, montant_ttc, sent_at, signature_token, signature_client_date, signature_client_nom, signature_of_date, participants_snapshot')
+      .select('id, numero, type, status, montant_ttc, sent_at, signature_token, signature_client_date, signature_client_nom, signature_of_date, participants_snapshot, client_id')
       .eq('session_id', params.id)
       .order('created_at', { ascending: false }),
     // Évaluations (notes) des apprenants pour cette session
@@ -315,6 +315,12 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   })
 
 
+  // Fiches clients des apprenants inscrits (contractualisation inter par partie)
+  const idsClientsApprenants = [...new Set((allInscriptions as any[]).map((i: any) => i.apprenant?.client_id).filter(Boolean))]
+  const { data: clientsApprenants } = idsClientsApprenants.length
+    ? await supabase.from('clients').select('id, type, raison_sociale, nom_commercial').in('id', idsClientsApprenants)
+    : { data: [] as any[] }
+
   // Dossier AGEFICE lié à la session (financement dirigeant non salarié)
   let dossierAgefice: any = null
   try {
@@ -355,6 +361,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         positionnement={positionnement as any[]}
         isFormateur={isFormateur}
         dossierAgefice={dossierAgefice}
+        clientsApprenants={(clientsApprenants || []) as any[]}
         userRole={session.user.role}
         isPoei={isPoei}
         recueilTemplates={recueilTemplates as any[]}
