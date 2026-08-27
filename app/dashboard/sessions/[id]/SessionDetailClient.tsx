@@ -21,10 +21,8 @@ import { ApprenantForm } from '@/app/dashboard/apprenants/ApprenantForm'
 import { sendDocumentToApprenantAction } from '../actions'
 import { estFormationHygiene } from '@/lib/formation-hygiene'
 import { cn, formatDate, companyLabel } from '@/lib/utils'
-import { updateSessionStatusAction, togglePresenceAction, createEmargementJourAction, signEmargementAction, updateCoutFormateurAction, updateSessionPrixAction, attachQcmToSessionAction, desinscrireApprenantAction } from './actions'
+import { updateSessionStatusAction, togglePresenceAction, updateCoutFormateurAction, updateSessionPrixAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
-import { SignaturePad } from './SignaturePad'
-import { SendDocButton } from './SendDocButton'
 import { SessionDocsTab } from './SessionDocsTab'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
@@ -171,9 +169,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
   const [showMontantModal, setShowMontantModal] = useState(false)
   const [montantValue, setMontantValue] = useState('')
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({})
-  const [createDate, setCreateDate] = useState('')
-  const [createCreneau, setCreateCreneau] = useState('journee')
-  const [signingEmargement, setSigningEmargement] = useState<{ id: string; name: string } | null>(null)
   const [editSessionOpen, setEditSessionOpen] = useState(false)
   // Rémunération formateur éditable depuis la fiche
   const [editCout, setEditCout] = useState(false)
@@ -320,21 +315,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     handleTogglePresence(emargementId, false, motif)
   }
 
-  function handleCreateEmargement() {
-    if (!createDate) return
-    startTransition(async () => {
-      await createEmargementJourAction(session.id, createDate, createCreneau)
-      setCreateDate('')
-    })
-  }
 
-  function handleSign(signatureBase64: string) {
-    if (!signingEmargement) return
-    startTransition(async () => {
-      await signEmargementAction(signingEmargement.id, signatureBase64)
-      setSigningEmargement(null)
-    })
-  }
 
   // Stats émargement globales
   const totalEmargements = emargements.length
@@ -1390,6 +1371,11 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                         <Printer className="h-3.5 w-3.5" />
                         Imprimer les exemplaires vierges
                       </a>
+                      <button onClick={() => setRapide(true)}
+                        className="btn-secondary !py-1 !px-2.5 text-xs inline-flex items-center gap-1.5 ml-2">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Saisie rapide des réponses
+                      </button>
                     </div>
                     {isExpanded && (
                       <div className="border-t border-surface-100 divide-y divide-surface-100">
@@ -1551,14 +1537,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       />
 
       {/* Modal signature */}
-      {signingEmargement && (
-        <SignaturePad
-          apprenantName={signingEmargement.name}
-          onSign={handleSign}
-          onCancel={() => setSigningEmargement(null)}
-          isPending={isPending}
-        />
-      )}
       {/* Modifier la session */}
       {editSessionOpen && !isFormateur && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/40 backdrop-blur-sm p-4"
