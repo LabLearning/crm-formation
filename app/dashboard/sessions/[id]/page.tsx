@@ -260,10 +260,11 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   const [{ data: opcos }, { data: factureSession }, { data: accordPec }] = await Promise.all([
     supabase.from('opco').select('id, code, nom').eq('is_active', true).order('nom'),
     supabase.from('factures')
-      .select('id, numero, status, montant_ttc')
+      .select('id, numero, status, montant_ttc, financeur_type')
       .eq('organization_id', session.organization.id)
       .eq('session_id', params.id)
-      .eq('financeur_type', 'opco')
+      // Tous financeurs : la facture AGEFICE ou directe doit apparaître
+      // dans Documents comme la facture OPCO.
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),

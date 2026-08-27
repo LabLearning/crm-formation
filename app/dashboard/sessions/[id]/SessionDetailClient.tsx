@@ -1031,7 +1031,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                   <div>
                     <div className="text-sm font-semibold text-surface-900">Rapport de session</div>
                     <div className="text-xs text-surface-500">
-                      {rapport.status === 'soumis' ? 'Soumis le ' + formatDate(rapport.submitted_at, { day: 'numeric', month: 'long' }) : 'Brouillon en cours'}
+                      {rapport.status === 'valide'
+                        ? `Validé${rapport.submitted_at ? ` — soumis le ${formatDate(rapport.submitted_at, { day: 'numeric', month: 'long' })}` : ''}`
+                        : rapport.status === 'soumis' ? 'Soumis le ' + formatDate(rapport.submitted_at, { day: 'numeric', month: 'long' }) : 'Brouillon en cours'}
                     </div>
                   </div>
                 </div>
