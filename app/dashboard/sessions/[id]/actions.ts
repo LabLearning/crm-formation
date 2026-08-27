@@ -1078,3 +1078,126 @@ export async function marquerJourneePresentAction(
   revalidatePath(`/dashboard/sessions/${sessionId}`)
   return { success: true, data: { marques: (data || []).length } }
 }
+
+/**
+ * Contrat de formation PARTICULIER (session inter) : une personne physique ne
+ * signe pas une convention mais un contrat individuel (art. L.6353-3 s.).
+ * Crée (ou réutilise) le contrat du participant, génère le lien de signature
+ * et envoie l'email avec le PDF — un contrat par inscrit.
+ */
+export async function envoyerContratParticulierAction(
+  sessionId: string,
+  apprenantId: string,
+): Promise<ActionResult & { data?: { url: string } }> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const orgId = session.organization.id
+
+  const { data: sess } = await supabase.from('sessions')
+    .select('*, formation:formation_id(intitule, duree_heures, tarif_inter_ht)')
+    .eq('id', sessionId).eq('organization_id', orgId).single()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: app } = await supabase.from('apprenants')
+    .select('id, civilite, prenom, nom, email, client_id')
+    .eq('id', apprenantId).eq('organization_id', orgId).single()
+  if (!app) return { success: false, error: 'Participant introuvable' }
+  if (!app.email) return { success: false, error: 'Le participant n\'a pas d\'email' }
+
+  // Fiche client particulière : réutilisée, sinon créée depuis l'apprenant
+  let clientId = app.client_id as string | null
+  if (clientId) {
+    const { data: cli } = await supabase.from('clients').select('id, type').eq('id', clientId).maybeSingle()
+    if (cli && cli.type !== 'particulier') {
+      return { success: false, error: `La fiche client liée est de type entreprise — passez-la en « Particulier » (fiche client) ou déliez l'apprenant, puis réessayez` }
+    }
+    if (!cli) clientId = null
+  }
+  if (!clientId) {
+    const { data: cree, error: eCli } = await supabase.from('clients').insert({
+      organization_id: orgId, type: 'particulier',
+      civilite: app.civilite || null, nom: app.nom, prenom: app.prenom,
+      raison_sociale: `${app.nom || ''} ${app.prenom || ''}`.trim(),
+      email: app.email, financeur_type: 'fonds_propres',
+    }).select('id').single()
+    if (eCli || !cree) return { success: false, error: 'Création de la fiche particulier impossible' }
+    clientId = cree.id
+    await supabase.from('apprenants').update({ client_id: clientId }).eq('id', apprenantId)
+  }
+
+  // Contrat existant pour CE participant sur CETTE session ?
+  const { data: existants } = await supabase.from('conventions')
+    .select('id, numero, signature_token, signature_client_date, participants_snapshot')
+    .eq('session_id', sessionId).eq('client_id', clientId)
+  let conv = (existants || []).find((c: any) =>
+    Array.isArray(c.participants_snapshot) && c.participants_snapshot.length === 1 &&
+    c.participants_snapshot[0]?.apprenant_id === apprenantId) || null
+  if (conv?.signature_client_date) return { success: false, error: `Contrat ${conv.numero} déjà signé` }
+
+  const { createHash, randomBytes } = await import('crypto')
+  if (!conv) {
+    const { count } = await supabase.from('conventions').select('*', { count: 'exact', head: true }).eq('organization_id', orgId)
+    const numero = `CT-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(3, '0')}`
+    const token = createHash('sha256').update(randomBytes(32)).digest('hex')
+    const expire = new Date(); expire.setDate(expire.getDate() + 30)
+    const tarif = (sess as any).formation?.tarif_inter_ht != null ? Number((sess as any).formation.tarif_inter_ht) : null
+    const { data: cree, error: eConv } = await supabase.from('conventions').insert({
+      organization_id: orgId, numero, type: 'inter_entreprise', session_id: sessionId,
+      client_id: clientId, formation_id: sess.formation_id, status: 'envoyee',
+      objet: `Contrat de formation professionnelle — ${(sess as any).formation?.intitule || 'Formation'}`,
+      nombre_stagiaires: 1, duree_heures: (sess as any).formation?.duree_heures || null,
+      lieu: sess.lieu || null,
+      dates_formation: `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin).toLocaleDateString('fr-FR')}`,
+      montant_ht: tarif, taux_tva: 0, montant_ttc: tarif,
+      participants_snapshot: [{ apprenant_id: apprenantId, nom: app.nom, prenom: app.prenom }],
+      signature_token: token, signature_token_expires_at: expire.toISOString(),
+      sent_at: new Date().toISOString(), date_emission: new Date().toISOString().slice(0, 10),
+      created_by: session.user.id,
+    }).select('id, numero, signature_token').single()
+    if (eConv || !cree) return { success: false, error: 'Création du contrat impossible' }
+    conv = cree as any
+  }
+
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'}/convention/${conv!.signature_token}/signer`
+
+  // PDF (variante particulier via client.type) + email
+  try {
+    const { loadConventionForPdf } = await import('@/lib/pdf/convention-data')
+    const loaded = await loadConventionForPdf(supabase, conv!.id)
+    const { renderToBuffer } = await import('@react-pdf/renderer')
+    const { createElement } = await import('react')
+    const { ConventionPDF } = await import('@/lib/pdf/convention-pdf')
+    const pdf = await renderToBuffer(createElement(ConventionPDF, { convention: loaded!.convention, org: loaded!.org }) as any)
+
+    const { sendDocumentEmail } = await import('@/lib/email')
+    const { resolveEmailLogoUrl } = await import('@/lib/pdf/org-logo')
+    const emailLogo = await resolveEmailLogoUrl(supabase, loaded!.org)
+    await sendDocumentEmail({
+      to: app.email,
+      orgName: (loaded!.org as any)?.name || 'Lab Learning',
+      orgEmail: (loaded!.org as any)?.email_contact || (loaded!.org as any)?.email,
+      orgLogoUrl: emailLogo || undefined,
+      qualiopiCertified: (loaded!.org as any)?.is_qualiopi !== false,
+      recipientName: `${app.civilite || ''} ${app.prenom || ''} ${app.nom || ''}`.trim(),
+      subject: `Contrat de formation ${conv!.numero} — signature requise`,
+      docTitle: 'Votre contrat de formation à signer',
+      intro: `Vous trouverez ci-joint votre contrat de formation professionnelle pour la formation « ${(sess as any).formation?.intitule || ''} ». Vous pouvez le signer en ligne via le bouton ci-dessous. Conformément au Code du travail, vous disposez d'un délai de rétractation de 10 jours à compter de la signature.`,
+      metadata: [
+        ['Référence', conv!.numero || ''],
+        ['Formation', (sess as any).formation?.intitule || '—'],
+        ['Dates', `Du ${new Date(sess.date_debut).toLocaleDateString('fr-FR')} au ${new Date(sess.date_fin).toLocaleDateString('fr-FR')}`],
+      ],
+      ctaLabel: 'Signer le contrat en ligne',
+      ctaUrl: url,
+      pdfBuffer: Buffer.from(pdf), pdfFilename: `contrat-formation-${conv!.numero}.pdf`,
+      organizationId: orgId, entityType: 'convention', entityId: conv!.id, triggeredBy: session.user.id,
+    })
+  } catch (e: any) {
+    console.error('[contrat particulier]', e?.message)
+    return { success: false, error: 'Contrat créé mais envoi email impossible — réessayez' }
+  }
+
+  await logAudit({ action: 'send_contrat_particulier', entity_type: 'convention', entity_id: conv!.id, details: { sessionId, apprenantId } })
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { url } }
+}

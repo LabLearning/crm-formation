@@ -1462,6 +1462,11 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
               formationNom={(session as any).formation?.intitule || session.intitule || null}
               dates={`du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}`}
               convention={conventions[0] || null}
+              typeSession={(session as any).type_session || null}
+              participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email }))}
+              contratsParticuliers={(conventions as any[])
+                .filter((c: any) => Array.isArray(c.participants_snapshot) && c.participants_snapshot.length === 1)
+                .map((c: any) => ({ apprenant_id: c.participants_snapshot[0]?.apprenant_id, numero: c.numero, sent_at: c.sent_at || null, signature_client_date: c.signature_client_date || null }))}
               contrat={contratFormateur || null}
               docEmailLogs={docEmailLogs}
             />

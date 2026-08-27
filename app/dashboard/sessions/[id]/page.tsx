@@ -107,7 +107,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     // Conventions liées à la session
     supabase
       .from('conventions')
-      .select('id, numero, type, status, montant_ttc, sent_at, signature_token, signature_client_date, signature_client_nom, signature_of_date')
+      .select('id, numero, type, status, montant_ttc, sent_at, signature_token, signature_client_date, signature_client_nom, signature_of_date, participants_snapshot')
       .eq('session_id', params.id)
       .order('created_at', { ascending: false }),
     // Évaluations (notes) des apprenants pour cette session
