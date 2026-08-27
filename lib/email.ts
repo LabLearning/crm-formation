@@ -17,10 +17,10 @@ function wrapInLayout(content: string, orgName: string): string {
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;padding:40px 20px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#F6F8FA;padding:40px 20px;">
 <tr><td align="center">
 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
-  <tr><td style="background:linear-gradient(135deg,#1E40AF,#3B82F6);padding:24px 32px;">
+  <tr><td style="background-color:#205040;padding:24px 32px;">
     <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">${orgName}</h1>
   </td></tr>
   <tr><td style="padding:32px;color:#334155;font-size:15px;line-height:1.6;">
