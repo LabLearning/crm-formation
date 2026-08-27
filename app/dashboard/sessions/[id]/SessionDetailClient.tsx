@@ -162,7 +162,8 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
     // Arrivée ciblée (ex. ?tab=facturation depuis la vue AGEFICE)
     if (typeof window !== 'undefined') {
       const t = new URLSearchParams(window.location.search).get('tab')
-      if (t) return t as any
+      const ALIAS: Record<string, string> = { pointages: 'session', evaluations: 'qcm', contenu: 'docs', deroule: 'dossier' }
+      if (t) return (ALIAS[t] || t) as any
     }
     return 'session'
   })
@@ -430,16 +431,12 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       <div className="flex gap-1 bg-surface-100 rounded-lg p-0.5 overflow-x-auto">
         {[
           { id: 'session' as const, label: 'Session', icon: Calendar },
-          ...(!isFormateur ? [{ id: 'dossier' as const, label: 'Dossier', icon: FolderCheck }] : []),
+          ...(!isFormateur ? [{ id: 'dossier' as const, label: derouleIncomplet ? `Conformité (${derouleIncomplet} à faire)` : 'Conformité', icon: FolderCheck }] : []),
           { id: 'apprenants' as const, label: `Apprenants (${inscriptions.length})`, icon: Users },
-          ...(!isFormateur ? [{ id: 'contenu' as const, label: 'Contenu pédagogique', icon: BookOpen }] : []),
           ...(!isFormateur ? [{ id: 'recueil' as const, label: 'Recueil du besoin', icon: ClipboardList }] : []),
-          { id: 'deroule' as const, label: derouleIncomplet ? `Déroulé (${derouleIncomplet})` : 'Déroulé', icon: Route },
           { id: 'presences' as const, label: 'Émargement', icon: UserCheck },
-          { id: 'pointages' as const, label: `Pointages (${pointages.length})`, icon: Clock },
-          { id: 'evaluations' as const, label: `Évaluations (${qcmSatisfaction.length + evaluations.length})`, icon: Star },
-          { id: 'qcm' as const, label: `QCM (${qcmPedago.length})`, icon: ListChecks },
-          { id: 'rapport' as const, label: 'Rapport', icon: FileText },
+          { id: 'qcm' as const, label: `Questionnaires (${qcmPedago.length + qcmSatisfaction.length})`, icon: ListChecks },
+          { id: 'rapport' as const, label: 'Bilan', icon: FileText },
           ...(!isFormateur ? [{ id: 'conventions' as const, label: 'Contractualisation', icon: FileSignature }] : []),
           ...(!isFormateur ? [{ id: 'docs' as const, label: 'Documents', icon: FileText }] : []),
           ...(!isFormateur ? [{ id: 'facturation' as const, label: estAgefice ? 'AGEFICE' : 'Facturation', icon: ReceiptEuro }] : []),
@@ -590,6 +587,14 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
             <div className="px-4 py-3 border-b border-surface-100">
               <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">
                 Planning — {sessionDays.length} jour{sessionDays.length > 1 ? 's' : ''}
+                {(() => {
+                  const totalH = pointages.reduce((t: number, p: any) => {
+                    if (!p.heure_arrivee || !p.heure_depart) return t
+                    const h = (new Date(p.heure_depart).getTime() - new Date(p.heure_arrivee).getTime()) / 3600000
+                    return h > 0 ? t + h : t
+                  }, 0)
+                  return totalH > 0 ? <span className="text-surface-400 font-normal"> · {Math.floor(totalH)}h{String(Math.round((totalH % 1) * 60)).padStart(2, '0')} pointées{(session as any).formation?.duree_heures ? ` / ${(session as any).formation.duree_heures}h` : ''}</span> : null
+                })()}
               </span>
             </div>
             <div className="divide-y divide-surface-100">
@@ -648,6 +653,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           ONGLET CONTENU PÉDAGOGIQUE
           ═══════════════════════════════════════════════ */}
       {tab === 'dossier' && !isFormateur && (
+        <div className="space-y-4">
         <PiecesDossier
           sessionId={session.id}
           etats={etatsPieces}
@@ -660,9 +666,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           onGoTab={(t) => setTab(t as any)}
           envoisDocs={(docEmailLogs as any[]).map((l: any) => ({ subject: l.subject, sent_at: l.sent_at || l.created_at, to_email: l.to_email }))}
         />
-      )}
-
-      {tab === 'deroule' && (
+        {/* Parcours qualité (ex-onglet Déroulé) : socle + étapes hygiène */}
         <DerouleOperationnel
           sessionId={session.id}
           validations={derouleValidations}
@@ -671,7 +675,9 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           socle={socleEtat}
           estHygiene={estHygiene}
         />
+        </div>
       )}
+
 
       {tab === 'recueil' && !isFormateur && (
         <div className="card p-6">
@@ -684,17 +690,6 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         </div>
       )}
 
-      {tab === 'contenu' && !isFormateur && (
-        <SessionContenuPedagogique
-          sessionId={session.id}
-          formationId={session.formation_id || null}
-          deroule={session.deroule_pedagogique || null}
-          materiel={session.materiel_necessaire || null}
-          supports={supports as any[]}
-          positionnement={positionnement as any[]}
-          apprenants={inscriptions.map((i: any) => i.apprenant).filter(Boolean)}
-        />
-      )}
 
       {/* ═══════════════════════════════════════════════
           ONGLET PRÉSENCES — Émargement par jour
@@ -1095,67 +1090,11 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       {/* ═══════════════════════════════════════════════
           ONGLET POINTAGES (formateur)
           ═══════════════════════════════════════════════ */}
-      {tab === 'pointages' && (
-        <div className="space-y-3">
-          {pointages.length === 0 ? (
-            <div className="card p-8 text-center">
-              <Clock className="h-8 w-8 text-surface-300 mx-auto mb-2" />
-              <div className="text-sm text-surface-500">Aucun pointage enregistré pour cette session</div>
-              {isFormateur && <div className="text-xs text-surface-400 mt-1">Le formateur peut pointer son arrivée/départ chaque jour depuis son espace.</div>}
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="divide-y divide-surface-100">
-                {pointages.map((p: any) => (
-                  <div key={p.id} className="px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
-                    <Calendar className="h-4 w-4 text-surface-400 shrink-0" />
-                    <div className="font-medium text-surface-900 w-32">
-                      {new Date(p.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </div>
-                    {p.heure_arrivee && (
-                      <div className="flex items-center gap-1.5 text-xs text-surface-700">
-                        <LogIn className="h-3 w-3 text-emerald-600" /> {formatHeure(p.heure_arrivee)}
-                      </div>
-                    )}
-                    {p.heure_depart && (
-                      <div className="flex items-center gap-1.5 text-xs text-surface-700">
-                        <LogOut className="h-3 w-3 text-red-500" /> {formatHeure(p.heure_depart)}
-                      </div>
-                    )}
-                    {p.heure_arrivee && p.heure_depart && (
-                      <span className="text-xs font-semibold text-surface-500">
-                        {(() => { const h = (new Date(p.heure_depart).getTime() - new Date(p.heure_arrivee).getTime()) / 3600000; return h > 0 ? `${Math.floor(h)}h${String(Math.round((h % 1) * 60)).padStart(2, '0')}` : '' })()}
-                      </span>
-                    )}
-                    {p.heure_arrivee && !p.heure_depart && (
-                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">départ non pointé</span>
-                    )}
-                    {(p.photo_arrivee_url || p.photo_depart_url) && (
-                      <div className="ml-auto flex gap-2">
-                        {p.photo_arrivee_url && (
-                          <a href={p.photo_arrivee_url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
-                            <Camera className="h-3 w-3" /> arrivée
-                          </a>
-                        )}
-                        {p.photo_depart_url && (
-                          <a href={p.photo_depart_url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
-                            <Camera className="h-3 w-3" /> départ
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
+      
       {/* ═══════════════════════════════════════════════
           ONGLET ÉVALUATIONS
           ═══════════════════════════════════════════════ */}
-      {tab === 'evaluations' && (
+      {tab === 'qcm' && (
         <div className="space-y-3">
           {qcmSatisfaction.length > 0 && (
             <div className="card overflow-hidden">
@@ -1500,6 +1439,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       )}
 
       {tab === 'docs' && !isFormateur && (
+        <div className="space-y-4">
         <SessionDocsTab
           sessionId={session.id}
           formationId={session.formation_id || null}
@@ -1508,6 +1448,17 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email }))}
           envois={emailLogs as any[]}
         />
+        {/* Supports pédagogiques téléversés — ex-onglet Contenu */}
+        <SessionContenuPedagogique
+          sessionId={session.id}
+          formationId={session.formation_id || null}
+          deroule={session.deroule_pedagogique || null}
+          materiel={session.materiel_necessaire || null}
+          supports={supports as any[]}
+          positionnement={positionnement as any[]}
+          apprenants={inscriptions.map((i: any) => i.apprenant).filter(Boolean)}
+        />
+        </div>
       )}
 
       {tab === 'conventions' && !isFormateur && (
