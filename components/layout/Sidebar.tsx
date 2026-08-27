@@ -31,8 +31,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const SEC_DEFAULT = {
   titleColor: 'text-brand-500',
   itemsBg: '',
-  activeBg: 'bg-brand-500',
-  activeText: 'text-white',
+  activeBg: 'bg-brand-50',
+  activeText: 'text-brand-700',
   hoverBg: 'hover:bg-brand-50',
 }
 const SEC: Record<string, typeof SEC_DEFAULT> = {}
@@ -126,11 +126,11 @@ export function Sidebar({ permissions, orgName, userRole, collapsed, onToggle }:
                             'flex items-center gap-2.5 rounded-lg transition-all duration-150',
                             collapsed ? 'justify-center px-0 py-2.5 mx-1' : 'px-2.5 py-[7px]',
                             active
-                              ? sky ? 'bg-sky-500 text-white shadow-sm' : cn(c.activeBg, c.activeText, 'shadow-sm')
+                              ? sky ? 'bg-sky-50 text-sky-700' : cn(c.activeBg, c.activeText)
                               : cn('text-surface-600', sky ? 'hover:bg-sky-50' : c.hoverBg)
                           )}>
-                          {Icon && <Icon className={cn('shrink-0', collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4', active ? 'text-white' : sky ? 'text-sky-500' : 'text-surface-400')} />}
-                          {!collapsed && <span className={cn('text-[13px] font-medium truncate', active ? 'text-white' : sky ? 'text-sky-600' : 'text-surface-600')}>{item.label}</span>}
+                          {Icon && <Icon className={cn('shrink-0', collapsed ? 'h-[18px] w-[18px]' : 'h-4 w-4', active ? 'text-brand-600' : sky ? 'text-sky-500' : 'text-surface-400')} />}
+                          {!collapsed && <span className={cn('text-[13px] font-semibold truncate', active ? 'text-brand-700' : sky ? 'text-sky-600' : 'text-surface-600')}>{item.label}</span>}
                         </Link>
                       )
                     })}

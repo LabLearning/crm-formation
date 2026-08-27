@@ -2,7 +2,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen flex">
       {/* Left panel — Lab Learning */}
-      <div className="hidden lg:flex lg:w-[520px] xl:w-[600px] relative overflow-hidden flex-col justify-between p-14" style={{ backgroundColor: '#205040' }}>
+      <div className="hidden lg:flex lg:w-[520px] xl:w-[600px] relative overflow-hidden flex-col justify-between p-14" style={{ backgroundColor: '#183C31' }}>
         {/* Background texture */}
         <div className="absolute inset-0 bg-noise opacity-40" />
 
@@ -46,7 +46,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {/* Secteurs */}
           <div className="flex flex-wrap gap-2">
             {['Restauration', 'Boucherie', 'Boulangerie', 'Pâtisserie', 'Hôtellerie'].map(s => (
-              <span key={s} className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(107,194,145,0.15)', color: '#5CD9A0' }}>
+              <span key={s} className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(92,217,160,0.12)', border: '1px solid rgba(92,217,160,0.28)', color: '#8DEAC0' }}>
                 {s}
               </span>
             ))}
