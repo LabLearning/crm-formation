@@ -145,6 +145,15 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
               <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
             </a>
           </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <a href={`/api/pdf/demande-agefice/${dossier.id}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300 transition-colors">
+              <FileDown className="h-3.5 w-3.5" /> Imprimé officiel prérempli
+            </a>
+            <span className="text-[11px] text-surface-400">
+              Formulaire AGEFICE 2025/2026 rempli avec le dossier — reste : diplôme, ancienneté, signature du dirigeant.
+            </span>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <Input id="date_depot" name="date_depot" type="date" label="Déposée le" defaultValue={dossier.date_depot || ''} />
             <Input id="montant_demande" name="montant_demande" type="number" label="Demandé (€)" defaultValue={dossier.montant_demande?.toString() || ''} />
