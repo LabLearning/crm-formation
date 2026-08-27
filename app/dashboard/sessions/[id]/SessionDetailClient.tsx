@@ -1111,13 +1111,21 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
                     </div>
                     {p.heure_arrivee && (
                       <div className="flex items-center gap-1.5 text-xs text-surface-700">
-                        <LogIn className="h-3 w-3 text-emerald-600" /> {p.heure_arrivee}
+                        <LogIn className="h-3 w-3 text-emerald-600" /> {formatHeure(p.heure_arrivee)}
                       </div>
                     )}
                     {p.heure_depart && (
                       <div className="flex items-center gap-1.5 text-xs text-surface-700">
-                        <LogOut className="h-3 w-3 text-red-500" /> {p.heure_depart}
+                        <LogOut className="h-3 w-3 text-red-500" /> {formatHeure(p.heure_depart)}
                       </div>
+                    )}
+                    {p.heure_arrivee && p.heure_depart && (
+                      <span className="text-xs font-semibold text-surface-500">
+                        {(() => { const h = (new Date(p.heure_depart).getTime() - new Date(p.heure_arrivee).getTime()) / 3600000; return h > 0 ? `${Math.floor(h)}h${String(Math.round((h % 1) * 60)).padStart(2, '0')}` : '' })()}
+                      </span>
+                    )}
+                    {p.heure_arrivee && !p.heure_depart && (
+                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">départ non pointé</span>
                     )}
                     {(p.photo_arrivee_url || p.photo_depart_url) && (
                       <div className="ml-auto flex gap-2">
