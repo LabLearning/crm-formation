@@ -46,22 +46,22 @@ export function DevisPDF({ devis, org }: { devis: Devis; org?: any }) {
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Émetteur</PdfSectionTitle>
             <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{ofNom}</Text>
-            {org?.address && <Text style={{ fontSize: 8, color: '#57534e' }}>{org.address}</Text>}
-            {(org?.postal_code || org?.city) && <Text style={{ fontSize: 8, color: '#57534e' }}>{org?.postal_code || ''} {org?.city || ''}</Text>}
-            {org?.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {org.siret}</Text>}
-            {org?.numero_tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {org.numero_tva_intra}</Text>}
-            {org?.numero_da && <Text style={{ fontSize: 8, color: '#57534e' }}>N° DA : {org.numero_da}</Text>}
+            {org?.address && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{org.address}</Text>}
+            {(org?.postal_code || org?.city) && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{org?.postal_code || ''} {org?.city || ''}</Text>}
+            {org?.siret && <Text style={{ fontSize: 8, color: '#4E5A67', marginTop: 2 }}>SIRET : {org.siret}</Text>}
+            {org?.numero_tva_intra && <Text style={{ fontSize: 8, color: '#4E5A67' }}>TVA : {org.numero_tva_intra}</Text>}
+            {org?.numero_da && <Text style={{ fontSize: 8, color: '#4E5A67' }}>N° DA : {org.numero_da}</Text>}
           </View>
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Destinataire</PdfSectionTitle>
             <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{clientName}</Text>
             {devis.contact && (
-              <Text style={{ fontSize: 8, color: '#78716C' }}>{devis.contact.prenom} {devis.contact.nom}</Text>
+              <Text style={{ fontSize: 8, color: '#6B7885' }}>{devis.contact.prenom} {devis.contact.nom}</Text>
             )}
-            {client.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.adresse}</Text>}
-            {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
-            {client.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {client.siret}</Text>}
-            {client.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {client.tva_intra}</Text>}
+            {client.adresse && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{client.adresse}</Text>}
+            {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+            {client.siret && <Text style={{ fontSize: 8, color: '#4E5A67', marginTop: 2 }}>SIRET : {client.siret}</Text>}
+            {client.tva_intra && <Text style={{ fontSize: 8, color: '#4E5A67' }}>TVA : {client.tva_intra}</Text>}
           </View>
         </View>
 
@@ -108,7 +108,7 @@ export function DevisPDF({ devis, org }: { devis: Devis; org?: any }) {
                   <View style={{ flex: 4 }}>
                     <Text style={shared.tableCell}>{l.designation}</Text>
                     {l.description && (
-                      <Text style={{ fontSize: 7, color: '#a8a29e', marginTop: 1 }}>{l.description}</Text>
+                      <Text style={{ fontSize: 7, color: '#9AA6B2', marginTop: 1 }}>{l.description}</Text>
                     )}
                   </View>
                   <Text style={{ ...shared.tableCell, width: 50, textAlign: 'right' }}>{l.quantite}</Text>
@@ -119,7 +119,7 @@ export function DevisPDF({ devis, org }: { devis: Devis; org?: any }) {
               ))
             ) : (
               <View style={shared.tableRow}>
-                <Text style={{ ...shared.tableCell, flex: 1, color: '#a8a29e' }}>
+                <Text style={{ ...shared.tableCell, flex: 1, color: '#9AA6B2' }}>
                   {devis.formation?.intitule || devis.objet || 'Prestation de formation'}
                 </Text>
                 <Text style={{ ...shared.tableCell, width: 70, textAlign: 'right' }}>{fmt(devis.montant_ht)} €</Text>
@@ -160,13 +160,13 @@ export function DevisPDF({ devis, org }: { devis: Devis; org?: any }) {
         {devis.conditions_particulieres && (
           <View style={shared.section}>
             <PdfSectionTitle>Conditions particulières</PdfSectionTitle>
-            <Text style={{ fontSize: 8, color: '#57534e', lineHeight: 1.5 }}>{devis.conditions_particulieres}</Text>
+            <Text style={{ fontSize: 8, color: '#4E5A67', lineHeight: 1.5 }}>{devis.conditions_particulieres}</Text>
           </View>
         )}
 
         {/* Mention légale TVA */}
         <View style={{ ...shared.infoBox, marginTop: 8 }}>
-          <Text style={{ fontSize: 7, color: '#78716c', lineHeight: 1.5 }}>
+          <Text style={{ fontSize: 7, color: '#6B7885', lineHeight: 1.5 }}>
             Devis valable jusqu'au {fmtDate(devis.date_validite)}.{'\n'}
             {ofExonereTVA
               ? `TVA non applicable, art. 261-4-4° a du CGI (action de formation professionnelle continue dispensée par un organisme déclaré sous le n° ${org?.numero_da || '—'}).`
@@ -177,17 +177,17 @@ export function DevisPDF({ devis, org }: { devis: Devis; org?: any }) {
         {/* Bon pour accord */}
         <View style={{ marginTop: 20 }}>
           <PdfSectionTitle>Acceptation du devis</PdfSectionTitle>
-          <Text style={{ fontSize: 8, color: '#57534e', marginBottom: 8 }}>
+          <Text style={{ fontSize: 8, color: '#4E5A67', marginBottom: 8 }}>
             Pour acceptation, le client retourne le présent devis daté et signé avec la mention manuscrite « Bon pour accord ».
           </Text>
           <View style={{ flexDirection: 'row', gap: 20 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 8, color: '#78716c' }}>Date :</Text>
-              <View style={{ height: 24, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', marginTop: 4 }} />
+              <Text style={{ fontSize: 8, color: '#6B7885' }}>Date :</Text>
+              <View style={{ height: 24, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB', marginTop: 4 }} />
             </View>
             <View style={{ flex: 2 }}>
-              <Text style={{ fontSize: 8, color: '#78716c' }}>Signature du client précédée de « Bon pour accord » :</Text>
-              <View style={{ height: 24, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', marginTop: 4 }} />
+              <Text style={{ fontSize: 8, color: '#6B7885' }}>Signature du client précédée de « Bon pour accord » :</Text>
+              <View style={{ height: 24, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB', marginTop: 4 }} />
             </View>
           </View>
         </View>

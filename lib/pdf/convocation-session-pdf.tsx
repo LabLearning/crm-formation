@@ -57,7 +57,7 @@ export function ConvocationSessionPDF({ session, formation, org, formateur, part
           <PdfSectionTitle>Participants convoqués ({participants.length})</PdfSectionTitle>
           <View style={{ marginTop: 4 }}>
             {participants.map((p, i) => (
-              <View key={i} style={{ flexDirection: 'row', paddingVertical: 3, borderBottomWidth: 0.5, borderBottomColor: '#e7e5e4' }}>
+              <View key={i} style={{ flexDirection: 'row', paddingVertical: 3, borderBottomWidth: 0.5, borderBottomColor: '#E1E6EB' }}>
                 <Text style={{ fontSize: 8, color: SURFACE_500, width: 22 }}>{i + 1}.</Text>
                 <Text style={{ fontSize: 9, color: SURFACE_900 }}>{[p.civilite, p.prenom, p.nom].filter(Boolean).join(' ')}</Text>
               </View>
@@ -78,7 +78,7 @@ export function ConvocationSessionPDF({ session, formation, org, formateur, part
           <Text style={{ fontSize: 8, color: SURFACE_500 }}>Fait à {org?.city || org?.ville || '___________'}, le {today}</Text>
           <View style={{ marginTop: 12 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org?.name || 'Lab Learning'}</Text>
-            <View style={{ height: 46, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', width: 200 }} />
+            <View style={{ height: 46, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB', width: 200 }} />
             <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet</Text>
           </View>
         </View>

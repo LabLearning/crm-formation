@@ -74,47 +74,47 @@ export function FacturePDF({ facture, org, agence, detail }: {
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Émetteur</PdfSectionTitle>
             <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{ofNom}</Text>
-            {org?.address && <Text style={{ fontSize: 8, color: '#57534e' }}>{org.address}</Text>}
-            {(org?.postal_code || org?.city) && <Text style={{ fontSize: 8, color: '#57534e' }}>{org?.postal_code || ''} {org?.city || ''}</Text>}
-            {org?.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {org.siret}</Text>}
-            {org?.rcs && <Text style={{ fontSize: 8, color: '#57534e' }}>{org.rcs}</Text>}
-            {org?.numero_tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {org.numero_tva_intra}</Text>}
+            {org?.address && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{org.address}</Text>}
+            {(org?.postal_code || org?.city) && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{org?.postal_code || ''} {org?.city || ''}</Text>}
+            {org?.siret && <Text style={{ fontSize: 8, color: '#4E5A67', marginTop: 2 }}>SIRET : {org.siret}</Text>}
+            {org?.rcs && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{org.rcs}</Text>}
+            {org?.numero_tva_intra && <Text style={{ fontSize: 8, color: '#4E5A67' }}>TVA : {org.numero_tva_intra}</Text>}
             {(org?.forme_juridique || org?.capital_social) && (
-              <Text style={{ fontSize: 8, color: '#57534e' }}>
+              <Text style={{ fontSize: 8, color: '#4E5A67' }}>
                 {org.forme_juridique || ''}{org.capital_social ? ` au capital de ${Number(org.capital_social).toLocaleString('fr-FR').replace(/[\u202F\u00A0]/g, " ")} €` : ''}
               </Text>
             )}
-            {org?.numero_da && <Text style={{ fontSize: 8, color: '#57534e' }}>N° déclaration d'activité : {org.numero_da}</Text>}
+            {org?.numero_da && <Text style={{ fontSize: 8, color: '#4E5A67' }}>N° déclaration d'activité : {org.numero_da}</Text>}
           </View>
           <View style={{ flex: 1 }}>
             <PdfSectionTitle>Facturer à</PdfSectionTitle>
             {agence ? (
               <>
                 <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{agence.nom}</Text>
-                {agence.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{agence.adresse}</Text>}
-                {(agence.code_postal || agence.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{agence.code_postal || ''} {agence.ville || ''}</Text>}
-                {agence.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {agence.siret}</Text>}
-                {agence.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {agence.tva_intra}</Text>}
+                {agence.adresse && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{agence.adresse}</Text>}
+                {(agence.code_postal || agence.ville) && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{agence.code_postal || ''} {agence.ville || ''}</Text>}
+                {agence.siret && <Text style={{ fontSize: 8, color: '#4E5A67', marginTop: 2 }}>SIRET : {agence.siret}</Text>}
+                {agence.tva_intra && <Text style={{ fontSize: 8, color: '#4E5A67' }}>TVA : {agence.tva_intra}</Text>}
                 <View style={{ marginTop: 6 }}>
-                  <Text style={{ fontSize: 7.5, color: '#78716c' }}>Pour le compte de :</Text>
+                  <Text style={{ fontSize: 7.5, color: '#6B7885' }}>Pour le compte de :</Text>
                   {/* Pas d'italique : la police embarquée n'a pas cette variante
                       et react-pdf fait alors échouer TOUT le document. */}
-                  <Text style={{ fontSize: 8, color: '#44403c' }}>{clientName}</Text>
-                  {client.adresse && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.adresse}</Text>}
-                  {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#78716c' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                  <Text style={{ fontSize: 8, color: '#37414D' }}>{clientName}</Text>
+                  {client.adresse && <Text style={{ fontSize: 8, color: '#6B7885' }}>{client.adresse}</Text>}
+                  {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#6B7885' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
                   {/* SIRET de l'entreprise bénéficiaire : France Travail le
                       demande pour rattacher la facture au bon employeur. */}
-                  {client.siret && <Text style={{ fontSize: 8, color: '#78716c' }}>SIRET : {client.siret}</Text>}
+                  {client.siret && <Text style={{ fontSize: 8, color: '#6B7885' }}>SIRET : {client.siret}</Text>}
                 </View>
               </>
             ) : (
               <>
                 <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 3 }}>{clientName}</Text>
-                {client.adresse && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.adresse}</Text>}
-                {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
-                {client.siret && <Text style={{ fontSize: 8, color: '#57534e', marginTop: 2 }}>SIRET : {client.siret}</Text>}
-                {client.tva_intra && <Text style={{ fontSize: 8, color: '#57534e' }}>TVA : {client.tva_intra}</Text>}
-                {client.email && <Text style={{ fontSize: 8, color: '#57534e' }}>{client.email}</Text>}
+                {client.adresse && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{client.adresse}</Text>}
+                {(client.code_postal || client.ville) && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{client.code_postal || ''} {client.ville || ''}</Text>}
+                {client.siret && <Text style={{ fontSize: 8, color: '#4E5A67', marginTop: 2 }}>SIRET : {client.siret}</Text>}
+                {client.tva_intra && <Text style={{ fontSize: 8, color: '#4E5A67' }}>TVA : {client.tva_intra}</Text>}
+                {client.email && <Text style={{ fontSize: 8, color: '#4E5A67' }}>{client.email}</Text>}
               </>
             )}
           </View>
@@ -139,7 +139,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
                 {colonne.map((d) => (
                   <View key={d.label} style={{ flexDirection: 'row', marginBottom: 2 }}>
                     <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, width: 82 }}>{d.label} :</Text>
-                    <Text style={{ fontSize: 8, color: '#57534e', flex: 1 }}>{d.valeur}</Text>
+                    <Text style={{ fontSize: 8, color: '#4E5A67', flex: 1 }}>{d.valeur}</Text>
                   </View>
                 ))}
               </View>
@@ -163,7 +163,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
                   <View style={{ flex: 4 }}>
                     <Text style={shared.tableCell}>{l.designation}</Text>
                     {l.description && (
-                      <Text style={{ fontSize: 7, color: '#a8a29e', marginTop: 1 }}>{l.description}</Text>
+                      <Text style={{ fontSize: 7, color: '#9AA6B2', marginTop: 1 }}>{l.description}</Text>
                     )}
                   </View>
                   <Text style={{ ...shared.tableCell, width: 40, textAlign: 'right' }}>{l.quantite}</Text>
@@ -235,7 +235,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
                 <Text style={{ fontSize: 8, color: '#16a34a', width: 80, textAlign: 'right' }}>
                   {fmt(p.montant)} €
                 </Text>
-                {p.reference && <Text style={{ fontSize: 7, color: '#78716C', marginLeft: 8 }}>Réf. {p.reference}</Text>}
+                {p.reference && <Text style={{ fontSize: 7, color: '#6B7885', marginLeft: 8 }}>Réf. {p.reference}</Text>}
               </View>
             ))}
           </View>
@@ -275,7 +275,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
             déjà été reçu, l'information figure déjà dans le bloc des totaux. */}
         {!(facture.montant_paye > 0) && Number(facture.montant_restant ?? facture.montant_ttc) > 0 && (
           <View style={{ marginTop: 0, marginBottom: 6, alignItems: 'flex-end' }}>
-            <Text style={{ fontSize: 9.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#1c1917' }}>
+            <Text style={{ fontSize: 9.5, fontFamily: 'Satoshi', fontWeight: 700, color: '#0F1720' }}>
               Reste à régler : {fmt(facture.montant_restant ?? facture.montant_ttc)} €
             </Text>
           </View>
@@ -285,7 +285,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
         {facture.conditions_paiement && (
           <View style={{ flexDirection: 'row', marginBottom: 8 }}>
             <Text style={{ fontSize: 8.5, fontFamily: 'Satoshi', fontWeight: 700 }}>Modalité de paiement : </Text>
-            <Text style={{ fontSize: 8.5, color: '#44403c' }}>{facture.conditions_paiement}</Text>
+            <Text style={{ fontSize: 8.5, color: '#37414D' }}>{facture.conditions_paiement}</Text>
           </View>
         )}
 
@@ -303,15 +303,15 @@ export function FacturePDF({ facture, org, agence, detail }: {
             l'organisme. Imprimer notre IBAN ici ferait payer le mauvais compte. */}
         {affacture ? (
           <View wrap={false} style={{ ...shared.infoBox, marginTop: 8 }}>
-            <Text style={{ fontSize: 10.5, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 4, color: '#1c1917' }}>
+            <Text style={{ fontSize: 10.5, fontFamily: 'Satoshi', fontWeight: 700, marginBottom: 4, color: '#0F1720' }}>
               Cession de créance — règlement à {org?.affacturage_societe}
             </Text>
-            <Text style={{ fontSize: 8.5, color: '#44403c', lineHeight: 1.45 }}>
+            <Text style={{ fontSize: 8.5, color: '#37414D', lineHeight: 1.45 }}>
               {org?.affacturage_mention
                 || `Pour être libératoire, votre règlement doit être effectué directement à l'ordre de ${org?.affacturage_societe}${org?.affacturage_compte ? `, sur le compte : ${org.affacturage_compte}` : ''} qui le reçoit par subrogation dans le cadre d'un contrat d'affacturage. ${org?.affacturage_societe} devra être avisé de toute demande de renseignement ou réclamation.`}
             </Text>
             {org?.affacturage_iban && (
-              <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, color: '#1c1917', marginTop: 4 }}>
+              <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, color: '#0F1720', marginTop: 4 }}>
                 IBAN : {org.affacturage_iban}{org?.affacturage_bic ? `   Swift : ${org.affacturage_bic}` : ''}
               </Text>
             )}
@@ -323,13 +323,13 @@ export function FacturePDF({ facture, org, agence, detail }: {
             {banque && <View style={shared.row}><Text style={shared.label}>Banque</Text><Text style={shared.value}>{banque}</Text></View>}
             <View style={shared.row}><Text style={shared.label}>IBAN</Text><Text style={shared.value}>{iban}</Text></View>
             {bic && <View style={shared.row}><Text style={shared.label}>BIC</Text><Text style={shared.value}>{bic}</Text></View>}
-            <Text style={{ fontSize: 7, color: '#78716c', marginTop: 4 }}>Merci d'indiquer le numéro de facture {facture.numero} en référence du virement.</Text>
+            <Text style={{ fontSize: 7, color: '#6B7885', marginTop: 4 }}>Merci d'indiquer le numéro de facture {facture.numero} en référence du virement.</Text>
           </View>
         ) : null}
 
         {/* Mentions légales (art. L441-9, L441-10, D441-5) */}
         <View wrap={false} style={{ ...shared.infoBox, marginTop: 6, paddingVertical: 6 }}>
-          <Text style={{ fontSize: 6.5, color: '#78716c', lineHeight: 1.35 }}>
+          <Text style={{ fontSize: 6.5, color: '#6B7885', lineHeight: 1.35 }}>
             {ofExonereTVA
               ? `TVA non applicable, art. 261-4-4° a du Code général des impôts (action de formation professionnelle continue dispensée par un organisme déclaré sous le n° ${org?.numero_da || '—'}).\n`
               : 'TVA acquittée sur les encaissements (prestations de services).\n'}

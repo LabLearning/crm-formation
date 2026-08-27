@@ -156,7 +156,7 @@ export function AttestationHygienePDF({
                   <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>
                     Pour {org?.name || 'Lab Learning'} — {signataire}
                   </Text>
-                  <View style={{ height: 66, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+                  <View style={{ height: 66, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB' }}>
                     {org?.tampon_signature_url ? (
                       <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 160, height: 80, objectFit: 'contain' }} />
                     ) : null}

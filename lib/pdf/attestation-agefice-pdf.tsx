@@ -127,7 +127,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
             ['Nom et qualité du formateur', props.formateurNom ? `${props.formateurNom} — Formateur` : '—'],
             ['Nombre de participants', String(props.nbParticipants ?? 1)],
           ].map(([l, v], i) => (
-            <View key={l} style={{ flexDirection: 'row', backgroundColor: i % 2 ? '#FAFAF9' : '#FFFFFF', borderTopWidth: i ? 0.5 : 0, borderTopColor: SURFACE_200 }}>
+            <View key={l} style={{ flexDirection: 'row', backgroundColor: i % 2 ? '#F6F8FA' : '#FFFFFF', borderTopWidth: i ? 0.5 : 0, borderTopColor: SURFACE_200 }}>
               <Text style={cellLabel}>{l}</Text>
               <Text style={cellVal}>{v}</Text>
             </View>
@@ -136,13 +136,13 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
 
         {/* Durées par modalité — prévue / réalisée */}
         <View style={{ ...shared.section, borderWidth: 0.75, borderColor: SURFACE_200, borderRadius: 8, overflow: 'hidden' }}>
-          <View style={{ flexDirection: 'row', backgroundColor: '#1C1917' }}>
+          <View style={{ flexDirection: 'row', backgroundColor: '#0F1720' }}>
             <Text style={{ ...cellLabel, color: '#FFFFFF' }}>Durée en heure(s)</Text>
             <Text style={{ ...cellVal, color: '#FFFFFF', fontFamily: 'Satoshi', fontWeight: 700, textAlign: 'center' }}>Prévue</Text>
             <Text style={{ ...cellVal, color: '#FFFFFF', fontFamily: 'Satoshi', fontWeight: 700, textAlign: 'center' }}>Réalisée</Text>
           </View>
           {MODALITE_LIGNES.map((m, i) => (
-            <View key={m.cle} style={{ flexDirection: 'row', backgroundColor: i % 2 ? '#FAFAF9' : '#FFFFFF', borderTopWidth: 0.5, borderTopColor: SURFACE_200 }}>
+            <View key={m.cle} style={{ flexDirection: 'row', backgroundColor: i % 2 ? '#F6F8FA' : '#FFFFFF', borderTopWidth: 0.5, borderTopColor: SURFACE_200 }}>
               <Text style={cellLabel}>{m.label}</Text>
               <Text style={{ ...cellVal, textAlign: 'center' }}>{m.cle === ligneActive && props.heuresPrevues ? `${props.heuresPrevues} h` : ''}</Text>
               <Text style={{ ...cellVal, textAlign: 'center' }}>{m.cle === ligneActive && (props.heuresRealisees ?? props.heuresPrevues) ? `${props.heuresRealisees ?? props.heuresPrevues} h` : ''}</Text>
@@ -161,7 +161,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
         </View>
 
         {/* Attestation de règlement */}
-        <View style={{ ...shared.section, borderWidth: 0.75, borderColor: SURFACE_200, borderRadius: 8, padding: 10, backgroundColor: '#FAFAF9' }}>
+        <View style={{ ...shared.section, borderWidth: 0.75, borderColor: SURFACE_200, borderRadius: 8, padding: 10, backgroundColor: '#F6F8FA' }}>
           <Text style={{ fontSize: 9, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginBottom: 2 }}>Attestation de règlement</Text>
           <Text style={{ fontSize: 7, color: SURFACE_500, marginBottom: 4 }}>Si la facture acquittée n&apos;est pas transmise :</Text>
           <Text style={{ fontSize: 8.5, color: SURFACE_700, lineHeight: 1.65 }}>
@@ -184,7 +184,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 4 }}>L&apos;organisme de formation</Text>
             <View style={{ height: 70 }}>
-              <View style={{ position: 'absolute', bottom: 14, left: 0, right: 20, height: 0.5, backgroundColor: '#d6d3d1' }} />
+              <View style={{ position: 'absolute', bottom: 14, left: 0, right: 20, height: 0.5, backgroundColor: '#CBD3DB' }} />
               {org.tampon_signature_url ? (
                 <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 5, width: 150, height: 66, objectFit: 'contain' }} />
               ) : null}
@@ -194,7 +194,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginBottom: 4 }}>Le stagiaire</Text>
             <View style={{ height: 70 }}>
-              <View style={{ position: 'absolute', bottom: 14, left: 0, right: 20, height: 0.5, backgroundColor: '#d6d3d1' }} />
+              <View style={{ position: 'absolute', bottom: 14, left: 0, right: 20, height: 0.5, backgroundColor: '#CBD3DB' }} />
             </View>
             <Text style={{ fontSize: 7, color: SURFACE_500 }}>Signature et cachet</Text>
           </View>

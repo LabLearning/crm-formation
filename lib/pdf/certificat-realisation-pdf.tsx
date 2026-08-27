@@ -123,7 +123,7 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
           <View style={{ flexDirection: 'row', gap: 24, marginTop: 12 }} wrap={false}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org.name} — {representant}</Text>
-              <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+              <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB' }}>
                 {org.tampon_signature_url ? (
                   <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 150, height: 75, objectFit: 'contain' }} />
                 ) : null}
@@ -135,7 +135,7 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
                 <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>
                   Le bénéficiaire — {signatureCandidat?.nom || `${apprenant.prenom} ${apprenant.nom}`}
                 </Text>
-                <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }}>
+                <View style={{ height: 60, position: 'relative', borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB' }}>
                   <Image src={signatureCandidat.data} style={{ position: 'absolute', top: 0, left: 0, width: 140, height: 60, objectFit: 'contain' }} />
                 </View>
                 <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>
@@ -147,7 +147,7 @@ export function CertificatRealisationPage({ apprenant, session, formation, org, 
         </View>
 
       {/* Renvoi du modèle officiel sur les formations à distance. */}
-      <Text style={{ position: 'absolute', bottom: 44, left: 40, right: 40, fontSize: 6.5, color: SURFACE_500, borderTopWidth: 0.5, borderTopColor: '#e7e5e4', paddingTop: 4 }} fixed>
+      <Text style={{ position: 'absolute', bottom: 44, left: 40, right: 40, fontSize: 6.5, color: SURFACE_500, borderTopWidth: 0.5, borderTopColor: '#E1E6EB', paddingTop: 4 }} fixed>
         (1) Dans le cadre des formations à distance, prendre en compte la réalisation des activités
         pédagogiques et le temps estimé pour les réaliser.
       </Text>

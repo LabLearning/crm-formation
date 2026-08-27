@@ -9,12 +9,12 @@ export interface PointageSession {
   participants: { nom: string }[]
 }
 
-const GREEN = '#195144'
-const INK = '#1c1917'
-const SOFT = '#57534e'
+const GREEN = '#205040'
+const INK = '#0F1720'
+const SOFT = '#4E5A67'
 const LINE = '#e2e0db'
 
-const Box = () => <View style={{ width: 10, height: 10, borderWidth: 1, borderColor: '#44403c', borderRadius: 2, marginRight: 4 }} />
+const Box = () => <View style={{ width: 10, height: 10, borderWidth: 1, borderColor: '#37414D', borderRadius: 2, marginRight: 4 }} />
 
 /**
  * Feuille de pointage papier à imprimer : une section par session, chaque

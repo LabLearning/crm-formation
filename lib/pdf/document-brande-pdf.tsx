@@ -90,7 +90,7 @@ export function DocumentBrandePDF({ doc, franchiseNom, logoUrl, couleur, couleur
   /** Orientation héritée du document source (organigrammes, plannings larges). */
   paysage?: boolean
 }) {
-  const accent = couleur || '#195144'
+  const accent = couleur || '#205040'
   // Sur fond noir, un accent sombre disparaît : on le mélange au blanc
   // jusqu'à garantir la lisibilité (Chicken Street, marques noires…).
   let accentPop = accent

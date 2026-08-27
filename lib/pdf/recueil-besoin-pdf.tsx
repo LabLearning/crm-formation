@@ -59,7 +59,7 @@ export function RecueilBesoinPDF({ org, session, formation, client, themeLabel, 
                 <Text style={{ fontSize: 8.5, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN }}>
                   {i + 1}. {q.label}
                 </Text>
-                <Text style={{ fontSize: 9, color: rep ? SURFACE_900 : '#a8a29e', lineHeight: 1.6, marginTop: 3 }}>
+                <Text style={{ fontSize: 9, color: rep ? SURFACE_900 : '#9AA6B2', lineHeight: 1.6, marginTop: 3 }}>
                   {rep || 'Non renseigné'}
                 </Text>
               </View>
@@ -74,12 +74,12 @@ export function RecueilBesoinPDF({ org, session, formation, client, themeLabel, 
           <View style={{ flexDirection: 'row', gap: 24, marginTop: 14 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Pour {org?.name}</Text>
-              <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }} />
+              <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB' }} />
               <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>Le commanditaire — {clientNom}</Text>
-              <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1' }} />
+              <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB' }} />
               <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature</Text>
             </View>
           </View>

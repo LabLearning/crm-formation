@@ -4,36 +4,41 @@ import {
   Svg, Path, Circle, Line, Polyline, Rect,
 } from '@react-pdf/renderer'
 
-// ─── Polices plateforme (Satoshi titres + General Sans corps, via Fontshare) ──
-// Mêmes familles que l'UI (cf. app/globals.css) pour des PDF cohérents.
-const CDN = 'https://cdn.fontshare.com/wf'
+// ─── Polices design system (Montserrat titres + Manrope corps, TTF gstatic) ──
+// La famille « Satoshi » est conservée comme ALIAS pointant sur Manrope : les
+// dizaines de gabarits qui déclarent fontFamily:'Satoshi' basculent sans être
+// touchés. Montserrat est enregistrée pour les titres (PdfDocHeader).
+const MANROPE = [
+  { src: 'https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk79FO_F.ttf', fontWeight: 400 as const },
+  { src: 'https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk7PFO_F.ttf', fontWeight: 500 as const },
+  { src: 'https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk4aE-_F.ttf', fontWeight: 700 as const },
+  { src: 'https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk59E-_F.ttf', fontWeight: 900 as const },
+]
+Font.register({ family: 'Satoshi', fonts: MANROPE })
+Font.register({ family: 'Manrope', fonts: MANROPE })
 Font.register({
-  family: 'Satoshi',
+  family: 'Montserrat',
   fonts: [
-    { src: `${CDN}/TTX2Z3BF3P6Y5BQT3IV2VNOK6FL22KUT/7QYRJOI3JIMYHGY6CH7SOIFRQLZOLNJ6/KFIAZD4RUMEZIYV6FQ3T3GP5PDBDB6JY.ttf`, fontWeight: 400 },
-    { src: `${CDN}/P2LQKHE6KA6ZP4AAGN72KDWMHH6ZH3TA/ZC32TK2P7FPS5GFTL46EU6KQJA24ZYDB/7AHDUZ4A7LFLVFUIFSARGIWCRQJHISQP.ttf`, fontWeight: 500 },
-    { src: `${CDN}/LAFFD4SDUCDVQEXFPDC7C53EQ4ZELWQI/PXCT3G6LO6ICM5I3NTYENYPWJAECAWDD/GHM6WVH6MILNYOOCXHXB5GTSGNTMGXZR.ttf`, fontWeight: 700 },
-    { src: `${CDN}/NHPGVFYUXYXE33DZ75OIT4JFGHITX5PE/PSUTMASCDJTVPERDYJZPN23BVUFUCQIF/J64QX5IPOHK56I2KYUNBQ5M2XWZEYKYX.ttf`, fontWeight: 900 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCu170w-.ttf', fontWeight: 600 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM70w-.ttf', fontWeight: 700 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCvr70w-.ttf', fontWeight: 800 },
   ],
 })
-// NB : on utilise Satoshi pour titres ET corps. Le webfont TTF de General Sans
-// (Fontshare) est mal décodé par react-pdf (glyphes brouillés) ; Satoshi rend
-// parfaitement et reste une police de la plateforme → PDF nets et cohérents.
 // Évite les coupures de mots disgracieuses dans les PDF
 Font.registerHyphenationCallback((word) => [word])
 
 // ─── Branding ────────────────────────────────────────────────────────────────
-export const BRAND_GREEN = '#195144'
-export const BRAND_GREEN_DARK = '#103a30'
-export const BRAND_LIGHT = '#e8f3f0'
-export const BRAND_ULTRA_LIGHT = '#f4faf7'  // teinte vert très légère pour cartes
-export const SURFACE_50 = '#fafafa'
-export const SURFACE_100 = '#f5f5f4'
-export const SURFACE_200 = '#e7e5e4'
-export const SURFACE_400 = '#a8a29e'
-export const SURFACE_500 = '#78716C'
-export const SURFACE_700 = '#44403C'
-export const SURFACE_900 = '#1C1917'
+export const BRAND_GREEN = '#205040'
+export const BRAND_GREEN_DARK = '#183C31'
+export const BRAND_LIGHT = '#D6EBE1'
+export const BRAND_ULTRA_LIGHT = '#EEF6F2'  // teinte vert très légère pour cartes
+export const SURFACE_50 = '#F6F8FA'
+export const SURFACE_100 = '#EEF1F4'
+export const SURFACE_200 = '#E1E6EB'
+export const SURFACE_400 = '#9AA6B2'
+export const SURFACE_500 = '#6B7885'
+export const SURFACE_700 = '#37414D'
+export const SURFACE_900 = '#0F1720'
 
 // ─── Shared Styles ────────────────────────────────────────────────────────────
 export const shared = StyleSheet.create({
@@ -79,7 +84,7 @@ export const shared = StyleSheet.create({
   },
   docTitle: {
     fontSize: 22,
-    fontFamily: 'Satoshi', fontWeight: 700,
+    fontFamily: 'Montserrat', fontWeight: 700,
     color: SURFACE_900,
     textAlign: 'right',
     letterSpacing: -0.4,

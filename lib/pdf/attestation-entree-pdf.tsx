@@ -85,7 +85,7 @@ export function AttestationEntreePDF({ apprenant, formation, org, dateDebut, dat
           <View style={{ marginTop: 15 }}>
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: BRAND_GREEN, marginBottom: 6 }}>{`Pour ${org.name}`}</Text>
             <View style={{ height: 90, width: 220 }}>
-              <View style={{ position: 'absolute', bottom: 18, left: 0, height: 0.5, backgroundColor: '#d6d3d1', width: 200 }} />
+              <View style={{ position: 'absolute', bottom: 18, left: 0, height: 0.5, backgroundColor: '#CBD3DB', width: 200 }} />
               {/* Cachet de l'organisme posé sur la zone signature */}
               {org.tampon_signature_url ? (
                 <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 10, width: 170, height: 85, objectFit: 'contain' }} />

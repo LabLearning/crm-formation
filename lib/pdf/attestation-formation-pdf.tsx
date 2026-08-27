@@ -106,7 +106,7 @@ export function AttestationFormationPDF({ apprenant, session, formation, org, as
               {org.tampon_signature_url ? (
                 <Image src={org.tampon_signature_url} style={{ position: 'absolute', top: 0, left: 0, width: 160, height: 80, objectFit: 'contain' }} />
               ) : (
-                <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#d6d3d1', width: 200 }} />
+                <View style={{ height: 50, borderBottomWidth: 0.5, borderBottomColor: '#CBD3DB', width: 200 }} />
               )}
             </View>
             <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 4 }}>Signature et cachet</Text>

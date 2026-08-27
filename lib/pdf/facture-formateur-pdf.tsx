@@ -71,15 +71,15 @@ function buildParts(facture: any, formateur: any, org: any): Parts {
 
 // ─────────────────────────── Modèle « Épuré » ───────────────────────────
 const ep = StyleSheet.create({
-  page: { padding: 48, fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
+  page: { padding: 48, fontFamily: 'Satoshi', fontSize: 9, color: '#0F1720' },
   name: { fontSize: 18, fontWeight: 700, marginBottom: 4 },
-  meta: { fontSize: 9, color: '#78716c' },
-  small: { fontSize: 8, color: '#78716c', lineHeight: 1.5 },
-  rule: { borderTopWidth: 1, borderTopColor: '#1c1917', marginVertical: 20 },
-  ruleThin: { borderTopWidth: 0.5, borderTopColor: '#d6d3d1', marginVertical: 14 },
-  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#a8a29e', marginBottom: 4 },
+  meta: { fontSize: 9, color: '#6B7885' },
+  small: { fontSize: 8, color: '#6B7885', lineHeight: 1.5 },
+  rule: { borderTopWidth: 1, borderTopColor: '#0F1720', marginVertical: 20 },
+  ruleThin: { borderTopWidth: 0.5, borderTopColor: '#CBD3DB', marginVertical: 14 },
+  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#9AA6B2', marginBottom: 4 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  totLabel: { fontSize: 9, color: '#57534e' },
+  totLabel: { fontSize: 9, color: '#4E5A67' },
   totVal: { fontSize: 9 },
   ttcLabel: { fontSize: 12, fontWeight: 700 },
   ttcVal: { fontSize: 12, fontWeight: 700 },
@@ -117,20 +117,20 @@ function ModeleEpure({ p }: { p: Parts }) {
 
       <View style={ep.ruleThin} />
       <View style={{ ...ep.row, marginBottom: 8 }}>
-        <Text style={{ fontSize: 9, color: '#57534e' }}>Prestation de formation</Text>
+        <Text style={{ fontSize: 9, color: '#4E5A67' }}>Prestation de formation</Text>
         <Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text>
       </View>
 
       <View style={{ marginLeft: 'auto', width: 220, marginTop: 6 }}>
         <View style={{ ...ep.row, marginBottom: 3 }}><Text style={ep.totLabel}>Total HT</Text><Text style={ep.totVal}>{fmt(p.montantHt)} €</Text></View>
         <View style={{ ...ep.row, marginBottom: 6 }}><Text style={ep.totLabel}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={ep.totVal}>{fmt(p.montantTva)} €</Text></View>
-        <View style={{ borderTopWidth: 1, borderTopColor: '#1c1917', paddingTop: 6, ...ep.row }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: '#0F1720', paddingTop: 6, ...ep.row }}>
           <Text style={ep.ttcLabel}>Total TTC</Text><Text style={ep.ttcVal}>{fmt(p.montantTtc)} €</Text>
         </View>
       </View>
 
       <View style={{ position: 'absolute', bottom: 40, left: 48, right: 48 }}>
-        <View style={{ borderTopWidth: 0.5, borderTopColor: '#d6d3d1', paddingTop: 8 }}>
+        <View style={{ borderTopWidth: 0.5, borderTopColor: '#CBD3DB', paddingTop: 8 }}>
           <Text style={ep.small}>{p.mentionTva}</Text>
           <Text style={ep.small}>Facture émise dans le cadre d'une sous-traitance pédagogique.</Text>
         </View>
@@ -141,15 +141,15 @@ function ModeleEpure({ p }: { p: Parts }) {
 
 // ─────────────────────────── Modèle « Classique » ───────────────────────
 const cl = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
-  box: { borderWidth: 1, borderColor: '#1c1917', padding: 14 },
-  boxLight: { borderWidth: 1, borderColor: '#d6d3d1', padding: 12 },
+  page: { padding: 40, fontFamily: 'Satoshi', fontSize: 9, color: '#0F1720' },
+  box: { borderWidth: 1, borderColor: '#0F1720', padding: 14 },
+  boxLight: { borderWidth: 1, borderColor: '#CBD3DB', padding: 12 },
   h: { fontSize: 20, fontWeight: 700, letterSpacing: 1 },
-  small: { fontSize: 8, color: '#57534e', lineHeight: 1.5 },
-  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#78716c', marginBottom: 4 },
-  th: { flexDirection: 'row', backgroundColor: '#1c1917', paddingVertical: 6, paddingHorizontal: 8 },
+  small: { fontSize: 8, color: '#4E5A67', lineHeight: 1.5 },
+  label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: '#6B7885', marginBottom: 4 },
+  th: { flexDirection: 'row', backgroundColor: '#0F1720', paddingVertical: 6, paddingHorizontal: 8 },
   thc: { color: '#ffffff', fontSize: 8, fontWeight: 700 },
-  td: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e7e5e4' },
+  td: { flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#E1E6EB' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
 })
 function ModeleClassique({ p }: { p: Parts }) {
@@ -163,7 +163,7 @@ function ModeleClassique({ p }: { p: Parts }) {
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={cl.h}>FACTURE</Text>
           <Text style={{ fontSize: 9, marginTop: 4 }}>N° {p.numAffiche}</Text>
-          <Text style={{ fontSize: 9, color: '#57534e' }}>Date : {p.dateEmission}</Text>
+          <Text style={{ fontSize: 9, color: '#4E5A67' }}>Date : {p.dateEmission}</Text>
         </View>
       </View>
 
@@ -180,7 +180,7 @@ function ModeleClassique({ p }: { p: Parts }) {
         </View>
       ) : null}
 
-      <View style={{ marginTop: 14, borderWidth: 1, borderColor: '#1c1917' }}>
+      <View style={{ marginTop: 14, borderWidth: 1, borderColor: '#0F1720' }}>
         <View style={cl.th}>
           <Text style={{ ...cl.thc, flex: 4 }}>Désignation</Text>
           <Text style={{ ...cl.thc, width: 90, textAlign: 'right' }}>Montant HT</Text>
@@ -191,9 +191,9 @@ function ModeleClassique({ p }: { p: Parts }) {
         </View>
         <View style={{ padding: 8 }}>
           <View style={{ marginLeft: 'auto', width: 200 }}>
-            <View style={{ ...cl.row, marginBottom: 3 }}><Text style={{ fontSize: 9, color: '#57534e' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
-            <View style={{ ...cl.row, marginBottom: 5 }}><Text style={{ fontSize: 9, color: '#57534e' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
-            <View style={{ ...cl.row, borderTopWidth: 1, borderTopColor: '#1c1917', paddingTop: 5 }}>
+            <View style={{ ...cl.row, marginBottom: 3 }}><Text style={{ fontSize: 9, color: '#4E5A67' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
+            <View style={{ ...cl.row, marginBottom: 5 }}><Text style={{ fontSize: 9, color: '#4E5A67' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
+            <View style={{ ...cl.row, borderTopWidth: 1, borderTopColor: '#0F1720', paddingTop: 5 }}>
               <Text style={{ fontSize: 12, fontWeight: 700 }}>Total TTC</Text><Text style={{ fontSize: 12, fontWeight: 700 }}>{fmt(p.montantTtc)} €</Text>
             </View>
           </View>
@@ -211,14 +211,14 @@ function ModeleClassique({ p }: { p: Parts }) {
 // ─────────────────────────── Modèle « Moderne » ─────────────────────────
 const ACCENT = '#4338ca' // indigo — volontairement distinct du vert Lab Learning
 const mo = StyleSheet.create({
-  page: { fontFamily: 'Satoshi', fontSize: 9, color: '#1c1917' },
+  page: { fontFamily: 'Satoshi', fontSize: 9, color: '#0F1720' },
   band: { backgroundColor: ACCENT, paddingHorizontal: 40, paddingVertical: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   bandName: { color: '#ffffff', fontSize: 16, fontWeight: 700 },
   bandSmall: { color: '#c7d2fe', fontSize: 8, lineHeight: 1.5, marginTop: 3 },
   bandTitle: { color: '#ffffff', fontSize: 20, fontWeight: 700, letterSpacing: 2 },
   body: { paddingHorizontal: 40, paddingTop: 22 },
   label: { fontSize: 7, letterSpacing: 1, textTransform: 'uppercase', color: ACCENT, fontWeight: 700, marginBottom: 4 },
-  small: { fontSize: 8, color: '#57534e', lineHeight: 1.5 },
+  small: { fontSize: 8, color: '#4E5A67', lineHeight: 1.5 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   card: { backgroundColor: '#f5f3ff', borderRadius: 8, padding: 14, marginLeft: 'auto', width: 240, marginTop: 18 },
 })
@@ -253,14 +253,14 @@ function ModeleModerne({ p }: { p: Parts }) {
 
         <View style={{ borderTopWidth: 2, borderTopColor: ACCENT, paddingTop: 10 }}>
           <View style={{ ...mo.row, marginBottom: 6 }}>
-            <Text style={{ fontSize: 9, color: '#57534e' }}>Prestation de formation</Text>
+            <Text style={{ fontSize: 9, color: '#4E5A67' }}>Prestation de formation</Text>
             <Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text>
           </View>
         </View>
 
         <View style={mo.card}>
-          <View style={{ ...mo.row, marginBottom: 4 }}><Text style={{ fontSize: 9, color: '#57534e' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
-          <View style={{ ...mo.row, marginBottom: 6 }}><Text style={{ fontSize: 9, color: '#57534e' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
+          <View style={{ ...mo.row, marginBottom: 4 }}><Text style={{ fontSize: 9, color: '#4E5A67' }}>Total HT</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantHt)} €</Text></View>
+          <View style={{ ...mo.row, marginBottom: 6 }}><Text style={{ fontSize: 9, color: '#4E5A67' }}>TVA ({fmt(p.tauxTva)}%)</Text><Text style={{ fontSize: 9 }}>{fmt(p.montantTva)} €</Text></View>
           <View style={{ ...mo.row, borderTopWidth: 1, borderTopColor: '#ddd6fe', paddingTop: 6 }}>
             <Text style={{ fontSize: 12, fontWeight: 700, color: ACCENT }}>Total TTC</Text>
             <Text style={{ fontSize: 12, fontWeight: 700, color: ACCENT }}>{fmt(p.montantTtc)} €</Text>

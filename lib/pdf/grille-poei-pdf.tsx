@@ -109,7 +109,7 @@ export function GrillePoeiPDF(p: Props) {
         {([['Acquis', acquis, '#177245', '#e9f5ee'],
            ['En cours', encours, '#b45309', '#fdf1e3'],
            ['Non acquis', nonAcquis, '#b4241f', '#fbeceb'],
-           ['Évaluées', `${evalues.length}/${total}`, '#44403c', '#f5f5f4']] as const).map(([l, v, c, bg]) => (
+           ['Évaluées', `${evalues.length}/${total}`, '#37414D', '#EEF1F4']] as const).map(([l, v, c, bg]) => (
           <View key={l} style={{ flex: 1, backgroundColor: bg, borderRadius: 6, paddingVertical: 7, paddingHorizontal: 8 }}>
             <Text style={{ fontSize: 13, fontFamily: 'Satoshi', fontWeight: 700, color: c }}>{v}</Text>
             <Text style={{ fontSize: 6.5, color: c, marginTop: 1, textTransform: 'uppercase', letterSpacing: 0.3 }}>{l}</Text>
@@ -130,7 +130,7 @@ export function GrillePoeiPDF(p: Props) {
                   <Text style={{ fontSize: 8, color: SURFACE_900, lineHeight: 1.4 }}>{it.label}</Text>
                   {v?.o ? <Text style={{ fontSize: 7, color: SURFACE_500, marginTop: 1 }}>{v.o}</Text> : null}
                 </View>
-                <Text style={{ width: 58, fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: n ? n.color : '#a8a29e', textAlign: 'right' }}>
+                <Text style={{ width: 58, fontSize: 7.5, fontFamily: 'Satoshi', fontWeight: 700, color: n ? n.color : '#9AA6B2', textAlign: 'right' }}>
                   {n ? n.label : '—'}
                 </Text>
               </View>
