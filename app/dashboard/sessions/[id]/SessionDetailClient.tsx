@@ -245,11 +245,21 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
 
   // Jours de la session
   function getSessionDays(): string[] {
+    // Même règle que la génération des feuilles (lib/emargements) : les
+    // week-ends sont exclus SAUF s'ils portent réellement des données
+    // (émargement existant ou créneau planifié) — sinon ils apparaissaient
+    // comme des jours « sans présence » alors qu'aucune feuille n'existe.
+    const joursAvecDonnees = new Set<string>([
+      ...emargements.map((e: any) => e.date),
+      ...(Array.isArray((session as any).horaires_jours) ? (session as any).horaires_jours.map((j: any) => j.date) : []),
+    ].filter(Boolean))
     const days: string[] = []
     const d = new Date(session.date_debut)
     const end = new Date(session.date_fin)
     while (d <= end) {
-      days.push(d.toISOString().split('T')[0])
+      const iso = d.toISOString().split('T')[0]
+      const we = d.getDay() === 0 || d.getDay() === 6
+      if (!we || joursAvecDonnees.has(iso)) days.push(iso)
       d.setDate(d.getDate() + 1)
     }
     return days
