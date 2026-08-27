@@ -14,9 +14,10 @@ async function main() {
     to: 'digital@lab-learning.fr',
     orgName: 'Lab Learning',
     orgEmail: 'digital@lab-learning.fr',
+    orgLogoUrl: 'https://igfmlzyxufgywxkneese.supabase.co/storage/v1/object/public/organisation/ff747dfe-c034-44d8-98d7-e53892263fb5/logo-white-1780909464.png',
     qualiopiCertified: true,
     recipientName: 'Brahim',
-    subject: 'Test — nouvelle charte email Lab Learning',
+    subject: 'Test 2 — charte email avec logo',
     docTitle: 'Aperçu de la nouvelle charte',
     intro: "Voici l'email type avec la nouvelle identité : en-tête pine, fond slate, accents verts. En pièce jointe, un PDF de facture acquittée pour vérifier l'ensemble du parcours.",
     metadata: [

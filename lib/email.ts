@@ -208,8 +208,11 @@ export function emailShell(opts: {
     : ''
 
   // Logo en image si fourni, sinon nom de l'OF en texte
+  // Pastille blanche derrière le logo : lisible quelle que soit sa couleur
   const brandMark = opts.orgLogoUrl
-    ? `<img src="${opts.orgLogoUrl}" alt="${opts.orgName}" height="32" style="display:block;height:32px;width:auto;border:0;outline:none;text-decoration:none;">`
+    ? `<div style="background-color:#ffffff;border-radius:10px;padding:7px 12px;display:inline-block;">
+        <img src="${opts.orgLogoUrl}" alt="${opts.orgName}" height="28" style="display:block;height:28px;width:auto;border:0;outline:none;text-decoration:none;">
+      </div>`
     : `<span style="color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.5px;">${opts.orgName}</span>`
 
   const taglineText = opts.qualiopiCertified === false
