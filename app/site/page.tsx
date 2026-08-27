@@ -73,9 +73,6 @@ export default async function SiteHome() {
 
         <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-16 md:pb-24 grid lg:grid-cols-12 gap-12 lg:gap-12 items-center">
           <div className="ll-rise lg:col-span-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#205040]/10 text-[#205040] px-3 py-1 text-xs font-semibold mb-7">
-              <ShieldCheck className="h-3.5 w-3.5" /> Organisme certifié Qualiopi
-            </div>
             <h1 className="ll-display ll-fluid-hero text-[#14110F] text-balance">
               Former les métiers de bouche avec l’exigence du{' '}
               {/* inline-block + marges compensées : le clip du dégradé englobe
@@ -114,7 +111,7 @@ export default async function SiteHome() {
                 </Link>
               ))}
               {/* Badge flottant Qualiopi — logo officiel + mention obligatoire */}
-              <div className="hidden sm:block absolute -right-3 -top-5 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3 max-w-[220px]">
+              <div className="hidden sm:block absolute -right-4 -bottom-8 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3 max-w-[220px]">
                 <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-14 w-auto" />
                 <p className="mt-1.5 text-[8px] leading-snug text-[#78716C]">
                   La certification qualité a été délivrée au titre de la catégorie d&apos;actions suivante : ACTIONS DE FORMATION
