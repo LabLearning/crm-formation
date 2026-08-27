@@ -116,8 +116,9 @@ const TYPES_FORMATEUR_MAILS: {
   },
 ]
 
-function StatusPill({ status }: { status: string | null }) {
+function StatusPill({ status, openedAt }: { status: string | null; openedAt?: string | null }) {
   const s = status || 'pending'
+  if (openedAt) return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-600"><Eye className="h-3 w-3" /> Ouvert</span>
   if (s === 'sent') return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600"><CheckCircle2 className="h-3 w-3" /> Envoyé</span>
   if (s === 'failed') return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-danger-600"><XCircle className="h-3 w-3" /> Échec</span>
   return <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600"><Clock className="h-3 w-3" /> En cours</span>
@@ -445,7 +446,7 @@ export function SessionMails({
                         <>
                           {envoi ? (
                             <span className="flex items-center gap-2 shrink-0">
-                              <StatusPill status={envoi.status} />
+                              <StatusPill status={envoi.status} openedAt={(envoi as any).opened_at} />
                               <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
                             </span>
                           ) : (
@@ -477,7 +478,7 @@ export function SessionMails({
                       <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
                         <span className="text-xs text-surface-700 truncate">{l.subject}</span>
                         <span className="flex items-center gap-3 shrink-0">
-                          <StatusPill status={l.status} />
+                          <StatusPill status={l.status} openedAt={(l as any).opened_at} />
                           <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
                         </span>
                       </div>
@@ -534,7 +535,7 @@ export function SessionMails({
                       </div>
                       {envoi ? (
                         <span className="flex items-center gap-2 shrink-0">
-                          <StatusPill status={envoi.status} />
+                          <StatusPill status={envoi.status} openedAt={(envoi as any).opened_at} />
                           <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
                         </span>
                       ) : (
@@ -572,7 +573,7 @@ export function SessionMails({
                         <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
                           <span className="text-xs text-surface-700 truncate">{l.subject}</span>
                           <span className="flex items-center gap-3 shrink-0">
-                            <StatusPill status={l.status} />
+                            <StatusPill status={l.status} openedAt={(l as any).opened_at} />
                             <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
                           </span>
                         </div>
@@ -611,7 +612,7 @@ export function SessionMails({
                       </div>
                       {envoi ? (
                         <span className="flex items-center gap-2 shrink-0">
-                          <StatusPill status={envoi.status} />
+                          <StatusPill status={envoi.status} openedAt={(envoi as any).opened_at} />
                           <span className="text-[11px] text-surface-400">{formatDate(envoi.sent_at || envoi.created_at, { day: 'numeric', month: 'short' })}</span>
                         </span>
                       ) : (
@@ -645,7 +646,7 @@ export function SessionMails({
                       <div key={l.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
                         <span className="text-xs text-surface-700 truncate">{l.subject}</span>
                         <span className="flex items-center gap-3 shrink-0">
-                          <StatusPill status={l.status} />
+                          <StatusPill status={l.status} openedAt={(l as any).opened_at} />
                           <span className="text-[11px] text-surface-400">{formatDate(l.sent_at || l.created_at, { day: 'numeric', month: 'short' })}</span>
                         </span>
                       </div>

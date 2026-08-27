@@ -358,7 +358,7 @@ export function SessionDocuments(props: Props) {
                       <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Convention</span>
                       <div className="text-xs text-surface-400 truncate">{(apps || []).map((a) => `${a.prenom || ''} ${a.nom || ''}`.trim()).join(', ')}</div>
                     </div>
-                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
+                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : c.sent_at ? 'attente' : 'absent'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
                     {!c?.signature_client_date && (
                       <button disabled={envoiContrat === cid} onClick={() => envoyerConventionEntreprise(cid)}
                         className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">
@@ -378,7 +378,7 @@ export function SessionDocuments(props: Props) {
                       <span className="text-xs px-1.5 py-0.5 rounded bg-surface-100 text-surface-500 ml-2">Contrat particulier</span>
                       <span className="text-xs text-surface-400 ml-2">{a.email || 'sans email'}</span>
                     </div>
-                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : 'attente'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
+                    {c ? <StatutBadge etat={c.signature_client_date ? 'signe' : c.sent_at ? 'attente' : 'absent'} date={c.signature_client_date || c.sent_at} /> : <StatutBadge etat="absent" />}
                     {!c?.signature_client_date && (
                       <button disabled={!a.email || envoiContrat === a.id} onClick={() => envoyerContratParticulier(a.id)}
                         className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-1.5 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-40 shrink-0">

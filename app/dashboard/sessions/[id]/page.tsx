@@ -230,7 +230,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   let emailLogs: any[] = []
   if (peopleEmails.length > 0) {
     const { data } = await supabase.from('email_logs')
-      .select('id, to_email, to_name, subject, status, sent_at, created_at')
+      .select('id, to_email, to_name, subject, status, sent_at, created_at, opened_at')
       .eq('organization_id', session.organization.id)
       .in('to_email', peopleEmails)
       .order('created_at', { ascending: false })
