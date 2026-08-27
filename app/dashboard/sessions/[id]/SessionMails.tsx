@@ -4,11 +4,11 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Mail, GraduationCap, Users, UserCheck, CheckCircle2, Clock, XCircle,
-  Send, Loader2, Eye, ChevronRight,
+  Send, Loader2, Eye, ChevronRight, FileSignature,
 } from '@/components/ui/icons'
 import { Modal, Button, useToast } from '@/components/ui'
 import { formatDate, cn } from '@/lib/utils'
-import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction, sendContratToFormateurAction } from './actions'
+import { sendSessionInfoToFormateurAction, sendConvocationToReferentAction } from './actions'
 import { envoyerMailApprenantAction, envoyerMailATousAction, envoyerDocumentsAuReferentAction, envoyerDemandeAppreciationAction, type MailApprenantType } from '../mails-actions'
 
 interface EmailLog {
@@ -134,7 +134,7 @@ function StatusPill({ status, openedAt }: { status: string | null; openedAt?: st
  * après aperçu — on voit ce qui va partir avant que ça parte.
  */
 export function SessionMails({
-  sessionId, formateur, apprenants, contacts, emailLogs, hygiene = false, nbSupports = 0,
+  sessionId, formateur, apprenants, contacts, emailLogs, hygiene = false, nbSupports = 0, onGoTab,
 }: {
   sessionId: string
   formateur: { prenom?: string; nom?: string; email?: string | null } | null
@@ -145,6 +145,7 @@ export function SessionMails({
   hygiene?: boolean
   /** Supports pédagogiques déposés sur la session. */
   nbSupports?: number
+  onGoTab?: (t: string) => void
 }) {
   const { toast } = useToast()
   const router = useRouter()
@@ -159,7 +160,6 @@ export function SessionMails({
   const [sending, setSending] = useState(false)
   const [selectionne, setSelectionne] = useState<Person | null>(null)
   const [contactSel, setContactSel] = useState<Person | null>(null)
-  const [busyContrat, setBusyContrat] = useState(false)
 
   const types = TYPES_APPRENANT.filter((t) =>
     (!t.hygieneSeulement || hygiene) && (!t.supportsSeulement || nbSupports > 0))
@@ -180,15 +180,6 @@ export function SessionMails({
     return emailLogs.find((l) => set.has(norm(l.to_email)) && match(l.subject || ''))
   }
 
-  /** Envoi direct du contrat de prestation — pas d'aperçu sur ce circuit. */
-  async function envoyerContratFormateur() {
-    if (!confirm('Envoyer le contrat de prestation au formateur ?')) return
-    setBusyContrat(true)
-    const r = await sendContratToFormateurAction(sessionId)
-    setBusyContrat(false)
-    if ((r as any)?.success) { toast('success', `Contrat envoyé à ${(r as any).data?.email || 'au formateur'}`); router.refresh() }
-    else toast('error', (r as any)?.error || 'Erreur')
-  }
 
   /** Combien de stagiaires ont reçu ce courriel au moins une fois. */
   const compteurs = useMemo(() => {
@@ -626,11 +617,10 @@ export function SessionMails({
                           Aperçu & envoi
                         </button>
                       ) : (
-                        <button onClick={envoyerContratFormateur}
-                          disabled={!formateurPerson.email || busyContrat}
-                          className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs disabled:opacity-40">
-                          {busyContrat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                          Envoyer
+                        <button onClick={() => onGoTab?.('conventions')}
+                          className="btn-secondary inline-flex items-center gap-1.5 !py-1 !px-2.5 text-xs">
+                          <FileSignature className="h-3.5 w-3.5" />
+                          Gérer dans Contractualisation
                         </button>
                       )}
                     </div>

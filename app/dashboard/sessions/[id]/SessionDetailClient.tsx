@@ -1475,6 +1475,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           emailLogs={emailLogs as any[]}
           hygiene={estFormationHygiene(session.formation)}
           nbSupports={supports.length}
+          onGoTab={(t) => setTab(t as any)}
         />
       )}
 
