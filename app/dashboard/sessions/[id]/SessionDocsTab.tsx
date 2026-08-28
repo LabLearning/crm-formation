@@ -13,6 +13,7 @@ interface Props {
   sessionId: string
   formationId?: string | null
   estHygiene?: boolean
+  aClient?: boolean
   facture?: { id: string; numero?: string | null; status?: string | null; montant_ttc?: number | null } | null
   participants: { id: string; prenom: string | null; nom: string | null; email?: string | null }[]
   envois?: EnvoiEmail[]
@@ -41,7 +42,7 @@ function BoutonDoc({ href, icon: Icon, titre, sous, teinte = 'brand' }: {
   )
 }
 
-export function SessionDocsTab({ sessionId, formationId, estHygiene, facture, participants, envois = [] }: Props) {
+export function SessionDocsTab({ sessionId, formationId, estHygiene, aClient, facture, participants, envois = [] }: Props) {
   const nbConvoques = destinatairesDoc(envois, 'convocation')
   const etatEnvoi = (type: any, email?: string | null) => {
     const e = dernierEnvoiDoc(envois, type, email)
@@ -66,6 +67,14 @@ export function SessionDocsTab({ sessionId, formationId, estHygiene, facture, pa
           )}
           <BoutonDoc href={`/api/pdf/certificats-session?session=${sessionId}`} icon={Award} teinte="amber"
             titre="Certificats de réalisation" sous="Tous les apprenants en un document" />
+          {estHygiene && (
+            <BoutonDoc href={`/api/pdf/attestation-hygiene?session=${sessionId}`} icon={ClipboardCheck} teinte="emerald"
+              titre="Attestations d'hygiène (groupées)" sous={(() => { const e = dernierEnvoiDoc(envois, 'hygiene'); return e ? `Envoyées le ${new Date((e.sent_at || e.created_at)!).toLocaleDateString('fr-FR')}` : 'Envoi automatique à la clôture de la session' })()} />
+          )}
+          {estHygiene && aClient && (
+            <BoutonDoc href={`/api/pdf/diplome-etablissement/${sessionId}`} icon={Award} teinte="emerald"
+              titre="Diplôme d'établissement" sous="À encadrer en salle — personnel formé à l'hygiène" />
+          )}
           {facture?.id && (
             <BoutonDoc href={`/api/pdf/facture/${facture.id}`} icon={Receipt}
               titre={`Facture ${facture.numero || ''}`}

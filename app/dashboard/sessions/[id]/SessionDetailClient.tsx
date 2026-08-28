@@ -1444,6 +1444,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
           sessionId={session.id}
           formationId={session.formation_id || null}
           estHygiene={estFormationHygiene((session as any).formation || { intitule: session.intitule })}
+          aClient={!!session.client_id}
           facture={factureOpco || null}
           participants={inscriptions.map((i: any) => i.apprenant).filter(Boolean).map((a: any) => ({ id: a.id, prenom: a.prenom, nom: a.nom, email: a.email }))}
           envois={emailLogs as any[]}
