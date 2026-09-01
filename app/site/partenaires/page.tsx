@@ -15,18 +15,19 @@ const PARTENAIRES: { nom: string; logo: string; desc: string }[] = [
   { nom: 'Kassia Food', logo: '/site/logos/partenaires/kassia-food.png', desc: 'Accompagnement des établissements du réseau' },
 ]
 
-// ── Clients : enseignes et restaurants formés (logo si disponible) ──
-const CLIENTS: { nom: string; logo?: string }[] = [
+// ── Clients : enseignes et restaurants formés ──
+// `pleine` : le logo embarque son propre fond de marque → la tuile est l'image
+const CLIENTS: { nom: string; logo?: string; pleine?: boolean }[] = [
   { nom: 'La Kazdalerie', logo: '/site/logos/clients/la-kazdalerie.png' },
   { nom: 'Chicken Street', logo: '/site/logos/partenaires/chicken-street.png' },
   { nom: 'Croust Wok', logo: '/site/logos/partenaires/croust-wok.webp' },
-  { nom: 'Khadispal' },
-  { nom: 'Shake Beef' },
-  { nom: 'Tasty Crousty' },
-  { nom: 'Crousty One' },
-  { nom: 'Sushi Corner' },
-  { nom: "Chez l'ancien" },
-  { nom: 'Big Smash' },
+  { nom: 'Khadispal', logo: '/site/logos/clients/khadispal.png' },
+  { nom: 'Shake Beef', logo: '/site/logos/clients/shake-beef.png' },
+  { nom: 'Tasty Crousty', logo: '/site/logos/clients/tasty-crousty.png', pleine: true },
+  { nom: 'Crousty One', logo: '/site/logos/clients/crousty-one.png' },
+  { nom: 'Sushi Corner', logo: '/site/logos/clients/sushi-corner.png' },
+  { nom: "Chez l'ancien", logo: '/site/logos/clients/chez-lancien.png' },
+  { nom: 'Big Smash', logo: '/site/logos/clients/big-smash.jpg', pleine: true },
 ]
 
 export default function SiteClients() {
@@ -81,9 +82,9 @@ export default function SiteClients() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {CLIENTS.map((c, i) => (
             <Reveal key={c.nom} delay={(i % 5) * 60}>
-              <div className="h-28 rounded-2xl border border-[#205040]/10 bg-white flex items-center justify-center px-4 text-center hover:border-[#205040]/25 hover:shadow-sm ll-lift">
+              <div className={`h-28 rounded-2xl border border-[#205040]/10 overflow-hidden flex items-center justify-center hover:border-[#205040]/25 hover:shadow-sm ll-lift ${c.pleine ? 'bg-transparent p-0' : 'bg-white px-4 text-center'}`}>
                 {c.logo
-                  ? <img src={c.logo} alt={c.nom} className="max-h-16 w-auto max-w-[130px] object-contain" />
+                  ? <img src={c.logo} alt={c.nom} title={c.nom} className={c.pleine ? 'h-full w-full object-cover' : 'max-h-16 w-auto max-w-[130px] object-contain'} />
                   : <span className="font-heading font-semibold text-[#14110F] leading-tight">{c.nom}</span>}
               </div>
             </Reveal>
