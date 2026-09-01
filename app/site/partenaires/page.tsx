@@ -76,7 +76,7 @@ export default function SiteClients() {
                 </div>
                 {/* Avatar logo qui chevauche la couverture */}
                 <div className="px-6">
-                  <div className="-mt-10 h-20 w-20 rounded-full bg-white ring-4 ring-white shadow-lg flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2">
+                  <div className="relative z-10 -mt-10 h-20 w-20 rounded-full bg-white ring-4 ring-white shadow-lg flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2">
                     <img src={p.logo} alt={p.nom} className="h-14 w-14 object-contain" />
                   </div>
                 </div>
