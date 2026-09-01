@@ -6,13 +6,23 @@ import { Reveal } from '../Reveal'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Clients & partenaires — Lab Learning' }
 
-// ── Partenaires : les réseaux franchisés accompagnés dans la durée ──
-const PARTENAIRES: { nom: string; logo: string; desc: string }[] = [
-  { nom: "Dream's Donuts", logo: '/site/logos/partenaires/dreams-donuts.png', desc: 'Réseau national — ouvertures et montée en compétence des équipes' },
-  { nom: 'New School Tacos', logo: '/site/logos/partenaires/new-school-tacos.svg', desc: 'Formation des équipiers et référentiels de marque' },
-  { nom: 'Chamas Tacos', logo: '/site/logos/partenaires/chamas-tacos.png', desc: 'Hygiène, HACCP et standards de production du réseau' },
-  { nom: 'Chickeez', logo: '/site/logos/partenaires/chickeez.png', desc: 'POEI de recrutement et parcours équipier polyvalent' },
-  { nom: 'Kassia Food', logo: '/site/logos/partenaires/kassia-food.png', desc: 'Accompagnement des établissements du réseau' },
+// ── Partenaires : cartes « mini-page » — couverture, avatar logo, activité ──
+const PARTENAIRES: { nom: string; logo: string; cover: string; type: string; desc: string }[] = [
+  { nom: 'Chamas Tacos', logo: '/site/logos/partenaires/chamas-tacos.png', cover: '/site/metiers/rapide.webp',
+    type: 'Réseau de franchise — French tacos',
+    desc: 'Hygiène, HACCP et standards de production : nous formons les équipes du réseau au geste juste, de la réception des matières au service.' },
+  { nom: "Dream's Donuts", logo: '/site/logos/partenaires/dreams-donuts.png', cover: '/site/metiers/patisserie.webp',
+    type: 'Réseau national — donuts & coffee',
+    desc: "Ouvertures d'établissements et montée en compétence : les équipes sont formées avant le premier jour, puis accompagnées en exploitation." },
+  { nom: 'New School Tacos', logo: '/site/logos/partenaires/new-school-tacos.svg', cover: '/site/metiers/cuisine.webp',
+    type: 'Réseau de franchise — street food',
+    desc: 'Formation des équipiers et référentiels de marque : des parcours calés sur les recettes et les process du réseau.' },
+  { nom: 'Chickeez', logo: '/site/logos/partenaires/chickeez.png', cover: '/site/metiers/hcr.webp',
+    type: 'Réseau de franchise — chicken',
+    desc: 'POEI de recrutement et parcours équipier polyvalent : nous recrutons et formons les équipes avant chaque ouverture.' },
+  { nom: 'Kassia Food', logo: '/site/logos/partenaires/kassia-food.png', cover: '/site/metiers/formation.webp',
+    type: 'Réseau — restauration rapide',
+    desc: "Accompagnement des établissements du réseau : hygiène alimentaire, sécurité et formation continue des équipes." },
 ]
 
 // ── Clients : enseignes et restaurants formés ──
@@ -55,15 +65,29 @@ export default function SiteClients() {
             <div className="text-sm text-[#78716C]">Les réseaux que nous accompagnons dans la durée</div>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PARTENAIRES.map((p, i) => (
-            <Reveal key={p.nom} delay={(i % 3) * 80} className="h-full">
-              <div className="h-full rounded-2xl border border-[#205040]/10 bg-white p-6 flex flex-col hover:shadow-lg hover:shadow-black/5 hover:border-[#205040]/25 ll-lift">
-                <div className="h-20 flex items-center">
-                  <img src={p.logo} alt={p.nom} className="h-16 w-auto max-w-[170px] object-contain" />
+            <Reveal key={p.nom} delay={(i % 3) * 110} className="h-full">
+              <div className="group h-full rounded-3xl border border-[#205040]/10 bg-white overflow-hidden flex flex-col hover:shadow-xl hover:shadow-black/10 hover:border-[#205040]/25 hover:-translate-y-1.5 transition-all duration-300">
+                {/* Couverture : photo métier, zoom lent au survol */}
+                <div className="relative h-36 overflow-hidden">
+                  <img src={p.cover} alt="" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
                 </div>
-                <div className="mt-4 font-heading font-semibold text-lg text-[#14110F]">{p.nom}</div>
-                <p className="mt-1.5 text-sm text-[#57534E] flex-1">{p.desc}</p>
+                {/* Avatar logo qui chevauche la couverture */}
+                <div className="px-6">
+                  <div className="-mt-10 h-20 w-20 rounded-full bg-white ring-4 ring-white shadow-lg flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2">
+                    <img src={p.logo} alt={p.nom} className="h-14 w-14 object-contain" />
+                  </div>
+                </div>
+                <div className="px-6 pt-3 pb-6 flex flex-col flex-1">
+                  <div className="font-heading font-bold text-lg text-[#14110F]">{p.nom}</div>
+                  <div className="mt-0.5 text-xs font-semibold text-[#205040]">{p.type}</div>
+                  <p className="mt-2.5 text-sm text-[#57534E] leading-relaxed flex-1">{p.desc}</p>
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#22A972] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                    Partenaire Lab Learning <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
+                </div>
               </div>
             </Reveal>
           ))}
