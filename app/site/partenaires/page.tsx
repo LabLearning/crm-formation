@@ -17,10 +17,10 @@ const PARTENAIRES: { nom: string; logo: string; desc: string }[] = [
 
 // ── Clients : enseignes et restaurants formés ──
 // `pleine` : le logo embarque son propre fond de marque → la tuile est l'image
-const CLIENTS: { nom: string; logo?: string; pleine?: boolean }[] = [
+const CLIENTS: { nom: string; logo?: string; pleine?: boolean; grand?: boolean }[] = [
   { nom: 'La Kazdalerie', logo: '/site/logos/clients/la-kazdalerie.png' },
   { nom: 'Chicken Street', logo: '/site/logos/partenaires/chicken-street.png' },
-  { nom: 'Croust Wok', logo: '/site/logos/partenaires/croust-wok.webp' },
+  { nom: 'Croust Wok', logo: '/site/logos/partenaires/croust-wok.webp', grand: true },
   { nom: 'Khadispal', logo: '/site/logos/clients/khadispal.png' },
   { nom: 'Shake Beef', logo: '/site/logos/clients/shake-beef.png' },
   { nom: 'Tasty Crousty', logo: '/site/logos/clients/tasty-crousty.png', pleine: true },
@@ -84,7 +84,7 @@ export default function SiteClients() {
             <Reveal key={c.nom} delay={(i % 5) * 60}>
               <div className={`h-28 rounded-2xl border border-[#205040]/10 overflow-hidden flex items-center justify-center hover:border-[#205040]/25 hover:shadow-sm ll-lift ${c.pleine ? 'bg-transparent p-0' : 'bg-white px-4 text-center'}`}>
                 {c.logo
-                  ? <img src={c.logo} alt={c.nom} title={c.nom} className={c.pleine ? 'h-full w-full object-cover' : 'max-h-16 w-auto max-w-[130px] object-contain'} />
+                  ? <img src={c.logo} alt={c.nom} title={c.nom} className={c.pleine ? 'h-full w-full object-cover' : c.grand ? 'max-h-24 w-auto max-w-[160px] object-contain' : 'max-h-16 w-auto max-w-[130px] object-contain'} />
                   : <span className="font-heading font-semibold text-[#14110F] leading-tight">{c.nom}</span>}
               </div>
             </Reveal>
