@@ -20,7 +20,6 @@ async function main() {
     metadata: [
       ['Établissement', 'Chamas Tacos Montpellier'],
       ['Formation', 'Hygiène alimentaire et prévention des risques'],
-      ['Personnel formé', 'Sacha Ouzegdouh-Johnson, Abdelkader Zerhouni, Morgane Claret'],
     ],
     pdfBuffer: pdf, pdfFilename: 'diplome-etablissement-test.pdf',
     organizationId: 'ff747dfe-c034-44d8-98d7-e53892263fb5', entityType: 'test',
