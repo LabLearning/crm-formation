@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, PhoneCall, CalendarCheck, GraduationCap, DoorOpen, UserCheck } from '../icons'
+import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, DoorOpen, UserCheck } from '../icons'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -47,13 +47,6 @@ const DISPOSITIFS: { Icon: any; t: string; d: string; tag: string; href?: string
     tag: 'Individuel',
     href: '/site/formations/d8bcc0e2-80de-4784-b4c8-5bb2e1bf72f8',
   },
-]
-
-const ETAPES = [
-  { Icon: PhoneCall, t: 'On échange sur votre besoin', d: 'Un premier point pour cadrer les objectifs, le public et le calendrier.' },
-  { Icon: FileCheck2, t: 'On monte le dossier', d: 'Programme, devis et convention conformes Qualiopi, prêts pour votre financeur.' },
-  { Icon: CalendarCheck, t: 'On planifie la session', d: 'Dates, formateur et logistique calés avec vos contraintes d’exploitation.' },
-  { Icon: GraduationCap, t: 'On forme et on certifie', d: 'Évaluation des acquis et attestation en fin de parcours.' },
 ]
 
 export default async function SiteFinancements() {
@@ -106,6 +99,8 @@ export default async function SiteFinancements() {
       </section>
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
+        <Kicker className="mb-4">Les dispositifs</Kicker>
+        <h2 className="ll-display ll-fluid-h2 text-[#14110F] mb-10">Les types de financement possibles</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {DISPOSITIFS.map((x, i) => {
             const contenu = (
@@ -132,23 +127,6 @@ export default async function SiteFinancements() {
               </Reveal>
             )
           })}
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
-        <Kicker className="mb-4">Le parcours</Kicker>
-        <h2 className="ll-display ll-fluid-h2 text-[#14110F] mb-10">Comment ça se passe</h2>
-        <div className="grid md:grid-cols-4 gap-4">
-          {ETAPES.map((e, i) => (
-            <Reveal key={e.t} delay={(i % 4) * 80}>
-            <div className="relative h-full rounded-2xl border border-[#205040]/10 bg-white p-6 overflow-hidden hover:border-[#205040]/25 ll-lift">
-              <div className="ll-index absolute -right-2 -top-3 text-7xl text-[#205040]/[0.07] select-none">0{i + 1}</div>
-              <e.Icon className="h-6 w-6 text-[#205040]" />
-              <div className="mt-4 font-heading font-semibold text-[#14110F] leading-snug">{e.t}</div>
-              <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed">{e.d}</p>
-            </div>
-            </Reveal>
-          ))}
         </div>
       </section>
 
