@@ -20,7 +20,7 @@ const FAQ: { q: string; r: string }[] = [
   },
   {
     q: "La formation a-t-elle lieu dans mon établissement ?",
-    r: "Oui — c'est notre spécialité. Le formateur vient dans votre établissement et forme vos équipes sur leur poste de travail, avec votre matériel et vos produits. Pas de déplacement, pas de fermeture : les sessions sont calées sur vos horaires d'exploitation.",
+    r: "Oui, c'est notre spécialité. Le formateur vient dans votre établissement et forme vos équipes sur leur poste de travail, avec votre matériel et vos produits. Pas de déplacement, pas de fermeture : les sessions sont calées sur vos horaires d'exploitation.",
   },
   {
     q: "Qu'est-ce que la POEI et comment en bénéficier ?",
@@ -48,7 +48,7 @@ const FAQ: { q: string; r: string }[] = [
   },
   {
     q: 'Que se passe-t-il après la formation ?',
-    r: "Chaque stagiaire est évalué (positionnement à l'entrée, évaluation des acquis en sortie) et reçoit son attestation de fin de formation. Vous recevez les certificats de réalisation pour votre dossier. Trois mois après, nous mesurons ce qui est réellement appliqué en poste — et nos formations peuvent se prolonger en e-learning avec notre plateforme Learnexa.",
+    r: "Chaque stagiaire est évalué (positionnement à l'entrée, évaluation des acquis en sortie) et reçoit son attestation de fin de formation. Vous recevez les certificats de réalisation pour votre dossier. Trois mois après, nous mesurons ce qui est réellement appliqué en poste, et nos formations peuvent se prolonger en e-learning avec notre plateforme Learnexa.",
   },
 ]
 

@@ -218,8 +218,11 @@
 /* Boutons/liens : lift subtil au survol */
 .ll-lift { transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease; }
 .ll-lift:hover { transform: translateY(-2px); }
+/* Timeline d'étapes : le segment se dessine du haut vers le bas quand l'étape se révèle */
+.ll-step-line { transform: scaleY(0); transform-origin: top; transition: transform .7s cubic-bezier(.22,1,.36,1); }
+.ll-reveal-in .ll-step-line { transform: scaleY(1); }
 @media (prefers-reduced-motion: reduce) {
-  .ll-reveal, .ll-page-enter, .ll-lift { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+  .ll-reveal, .ll-page-enter, .ll-lift, .ll-step-line { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* ══ Site vitrine — élévation éditoriale (typo monumentale, kickers, motion) ══ */

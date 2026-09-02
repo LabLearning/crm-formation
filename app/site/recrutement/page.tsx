@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Hygiene, FirstAid, ChefHat, Management, UserCheck, CheckCircle2, Mail, MapPin, Briefcase, GraduationCap } from '../icons'
 
 export const metadata: Metadata = {
-  title: 'Recrutement — Devenez formateur',
+  title: 'Devenez formateur',
   description:
     "Lab Learning recrute des formateurs indépendants : hygiène alimentaire HACCP, prévention et sécurité au travail, métiers de bouche, management en restauration, POEI. Fiches de poste et candidature.",
   alternates: { canonical: '/recrutement' },
@@ -38,7 +38,7 @@ const POSTES: Poste[] = [
       'Formation HACCP attestée (ROFHYA apprécié) ; expérience de la formation pour adultes',
       "Aisance avec les publics de terrain, y compris en français langue seconde",
     ],
-    zones: 'Interventions dans toute la France — fortes demandes en Occitanie, Île-de-France, Auvergne-Rhône-Alpes',
+    zones: 'Interventions dans toute la France, fortes demandes en Occitanie, Île-de-France, Auvergne-Rhône-Alpes',
   },
   {
     icone: FirstAid,
@@ -51,7 +51,7 @@ const POSTES: Poste[] = [
       'Évaluer les acquis et documenter la session dans nos outils',
     ],
     profil: [
-      'Certification de formateur SST (INRS) ou équivalent pour les modules concernés — habilitations à jour',
+      'Certification de formateur SST (INRS) ou équivalent pour les modules concernés, habilitations à jour',
       "Expérience en prévention des risques (IPRP, HSE, ergonomie…)",
       'Pédagogie active, cas concrets tirés du secteur CHR',
     ],
@@ -103,10 +103,10 @@ const POSTES: Poste[] = [
     ],
     profil: [
       'Expérience en restauration rapide (management ou exploitation) ET en formation/insertion',
-      'Rigueur documentaire — le dispositif France Travail exige un suivi précis',
+      'Rigueur documentaire : le dispositif France Travail exige un suivi précis',
       'Goût pour les publics en insertion professionnelle',
     ],
-    zones: 'Missions longues (4 à 6 semaines) sur site — France entière selon les ouvertures',
+    zones: 'Missions longues (4 à 6 semaines) sur site, France entière selon les ouvertures',
   },
 ]
 

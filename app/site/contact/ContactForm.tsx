@@ -27,7 +27,7 @@ export function ContactForm() {
           <CheckCircle2 className="h-6 w-6 text-white" />
         </div>
         <div className="font-heading font-semibold text-lg text-[#14110F]">Message envoyé</div>
-        <p className="text-sm text-[#57534E] mt-1">Merci — notre équipe vous répond sous 24–48 h ouvrées.</p>
+        <p className="text-sm text-[#57534E] mt-1">Merci ! Notre équipe vous répond sous 24 à 48 h ouvrées.</p>
       </div>
     )
   }

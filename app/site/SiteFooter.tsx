@@ -16,7 +16,7 @@ export function SiteFooter() {
             sans la mention de la catégorie d'action, dans le même bloc.
           */}
           <div className="mt-6 max-w-sm rounded-2xl bg-white p-4">
-            <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-20 w-auto" />
+            <img src="/site/logos/qualiopi.png" alt="Qualiopi, processus certifié, République française" className="h-20 w-auto" />
             <p className="mt-2.5 text-[10px] leading-snug text-[#57534E]">
               La certification qualité a été délivrée au titre de la catégorie d&apos;action suivante&nbsp;:{' '}
               <strong className="text-[#14110F]">ACTIONS DE FORMATION</strong>
@@ -76,7 +76,7 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-5 space-y-2 text-xs text-[#78716C]">
           <p className="leading-relaxed">
-            Lab Learning — SAS au capital de 5 000 € · SIRET 931 658 561 00036 · Déclaration d’activité n° 76 34 13151 34
+            Lab Learning · SAS au capital de 5 000 € · SIRET 931 658 561 00036 · Déclaration d’activité n° 76 34 13151 34
             (cet enregistrement ne vaut pas agrément de l’État) · TVA FR41931658561
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

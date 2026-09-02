@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Nos formations',
   description:
-    'Le catalogue Lab Learning : hygiène alimentaire HACCP, sécurité, management et formations métier pour la restauration, la boucherie, la boulangerie et la pâtisserie — en établissement, financées par votre OPCO.',
+    'Le catalogue Lab Learning : hygiène alimentaire HACCP, sécurité, management et formations métier pour la restauration, la boucherie, la boulangerie et la pâtisserie, en établissement, financées par votre OPCO.',
   alternates: { canonical: '/formations' },
 }
 
@@ -33,7 +33,7 @@ const PHARES = [
     photo: '/site/formations/8ecde6a5-2c18-4986-a4f9-8284f0a8ed04.webp',
     titre: 'Hygiène alimentaire & HACCP',
     texte:
-      "Notre cœur d'activité : bonnes pratiques d'hygiène, méthode HACCP, plan de maîtrise sanitaire, nettoyage-désinfection, traçabilité et étiquetage — sur votre lieu de travail, avec vos équipes, adapté à votre production.",
+      "Notre cœur d'activité : bonnes pratiques d'hygiène, méthode HACCP, plan de maîtrise sanitaire, nettoyage-désinfection, traçabilité et étiquetage, sur votre lieu de travail, avec vos équipes, adapté à votre production.",
     points: ['Formation en établissement, sans fermer', 'Attestation d’hygiène conforme à l’arrêté du 12/02/2024', 'Déclinée par secteur d’activité'],
     secteurs: true,
     accent: '#205040',
@@ -43,7 +43,7 @@ const PHARES = [
     photo: '/site/formations/a2ebdd72-170c-4baa-b7a0-e7d8e5f7418d.webp',
     titre: 'Prévention des risques professionnels',
     texte:
-      "DUERP, gestes & postures, sauveteur secouriste du travail, sécurité incendie : la sécurité de vos équipes, traitée avec le même sérieux que celle de vos clients — et déclinée selon les risques réels de votre secteur.",
+      "DUERP, gestes & postures, sauveteur secouriste du travail, sécurité incendie : la sécurité de vos équipes, traitée avec le même sérieux que celle de vos clients, déclinée selon les risques réels de votre secteur.",
     points: ['Document unique construit avec vous', 'Formations SST et incendie certifiées', 'Déclinée par secteur d’activité'],
     secteurs: true,
     accent: '#B45309',
@@ -51,7 +51,7 @@ const PHARES = [
   {
     Icon: UserCheck,
     photo: '/site/formations/5ddb8e71-17a7-46cc-a907-8858ddbdfaac.webp',
-    titre: 'POEI — Équipier polyvalent en restauration rapide',
+    titre: 'POEI : Équipier polyvalent en restauration rapide',
     texte:
       "Vous ouvrez ou vous recrutez ? La Préparation Opérationnelle à l'Emploi forme vos futurs équipiers AVANT l'embauche, financée par France Travail. Nous gérons tout : recrutement, formation, suivi hebdomadaire, bilan avec le tuteur.",
     points: ['Jusqu’à 300 h financées par France Travail', 'Mandat de gestion : zéro paperasse pour vous', 'Bilan de compétences signé employeur / tuteur / candidat'],
@@ -73,7 +73,7 @@ const PHARES = [
     photo: '/site/formations/5facf6ca-108c-45a6-8809-bb5276169ec7.webp',
     titre: 'Intelligence artificielle au quotidien',
     texte:
-      "Découvrir et utiliser l'IA dans votre commerce : gagner du temps sur les tâches administratives, la communication, les réseaux sociaux et la relation client — sans jargon, avec des cas concrets de votre métier.",
+      "Découvrir et utiliser l'IA dans votre commerce : gagner du temps sur les tâches administratives, la communication, les réseaux sociaux et la relation client, sans jargon, avec des cas concrets de votre métier.",
     points: ['Initiation accessible à tous', 'Cas pratiques de votre établissement'],
     lien: { href: '/site/contact', label: 'En parler avec nous' },
     accent: '#6D28D9',
@@ -188,7 +188,7 @@ export default async function SiteFormations() {
         </div>
 
         <p className="mt-8 text-center text-sm text-[#78716C]">
-          Vous ne trouvez pas votre secteur ? <Link href="/site/contact" className="font-semibold text-[#205040] hover:underline">Parlons-en</Link> — on construit du sur-mesure.
+          Vous ne trouvez pas votre secteur ? <Link href="/site/contact" className="font-semibold text-[#205040] hover:underline">Parlons-en</Link> : on construit du sur-mesure.
         </p>
       </section>
     </>

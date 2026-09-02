@@ -14,19 +14,19 @@ export const metadata = {
 // ── Partenaires : cartes « mini-page » — couverture, avatar logo, activité ──
 const PARTENAIRES: { nom: string; logo: string; cover: string; type: string; desc: string }[] = [
   { nom: 'Chamas Tacos', logo: '/site/logos/partenaires/chamas-tacos.png', cover: '/site/photos/partenaires/chamas-tacos.png',
-    type: 'Réseau de franchise — French tacos',
+    type: 'Réseau de franchise · French tacos',
     desc: 'Hygiène, HACCP et standards de production : nous formons les équipes du réseau au geste juste, de la réception des matières au service.' },
   { nom: "Dream's Donuts", logo: '/site/logos/partenaires/dreams-donuts.png', cover: '/site/photos/partenaires/dreams-donuts.jpg',
-    type: 'Réseau national — donuts & coffee',
+    type: 'Réseau national · donuts & coffee',
     desc: "Ouvertures d'établissements et montée en compétence : les équipes sont formées avant le premier jour, puis accompagnées en exploitation." },
   { nom: 'New School Tacos', logo: '/site/logos/partenaires/new-school-tacos.svg', cover: '/site/photos/partenaires/new-school-tacos.webp',
-    type: 'Réseau de franchise — street food',
+    type: 'Réseau de franchise · street food',
     desc: 'Formation des équipiers et référentiels de marque : des parcours calés sur les recettes et les process du réseau.' },
   { nom: 'Chickeez', logo: '/site/logos/partenaires/chickeez.png', cover: '/site/photos/partenaires/chickeez.jpg',
-    type: 'Réseau de franchise — chicken',
+    type: 'Réseau de franchise · chicken',
     desc: 'POEI de recrutement et parcours équipier polyvalent : nous recrutons et formons les équipes avant chaque ouverture.' },
   { nom: 'Kassia Food', logo: '/site/logos/partenaires/kassia-food.png', cover: '/site/photos/partenaires/kassia-food.jpg',
-    type: 'Réseau — restauration rapide',
+    type: 'Réseau · restauration rapide',
     desc: "Accompagnement des établissements du réseau : hygiène alimentaire, sécurité et formation continue des équipes." },
 ]
 
@@ -128,7 +128,7 @@ export default function SiteClients() {
         <div className="rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-4xl text-balance text-white">Vous dirigez un restaurant ou un réseau ?</h2>
-            <p className="mt-3 text-white/70 max-w-xl">Construisons ensemble le plan de formation de vos équipes — et montons le financement avec vous.</p>
+            <p className="mt-3 text-white/70 max-w-xl">Construisons ensemble le plan de formation de vos équipes, et montons le financement avec vous.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
             Parlons de vos équipes <ArrowRight className="h-4 w-4" />

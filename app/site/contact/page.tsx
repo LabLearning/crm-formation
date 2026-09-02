@@ -16,7 +16,7 @@ export default function SiteContact() {
       <Kicker className="mb-5">Contact</Kicker>
       <h1 className="ll-display ll-fluid-h1 text-[#14110F] text-balance max-w-3xl">Parlons de votre projet de formation</h1>
       <p className="mt-5 text-lg md:text-xl text-[#57534E] max-w-2xl">
-        Un besoin précis, une équipe à former, un financement à monter ? Écrivez-nous — nous revenons vers vous rapidement.
+        Un besoin précis, une équipe à former, un financement à monter ? Écrivez-nous : nous revenons vers vous rapidement.
       </p>
 
       <div className="mt-12 grid lg:grid-cols-5 gap-10">

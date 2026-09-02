@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   if (!f) return { title: 'Formation' }
   const description = (f.sous_titre
     || (f.objectifs[0] ? `Objectifs : ${f.objectifs.slice(0, 2).join(' · ')}` : null)
-    || `Formation ${titreFormation(f.intitule)} — ${f.duree_heures || ''}h, financement OPCO, certifiée Qualiopi.`)
+    || `Formation ${titreFormation(f.intitule)} : ${f.duree_heures || ''} h, financement OPCO, certifiée Qualiopi.`)
     .slice(0, 158)
   return {
     title: titreFormation(f.intitule).slice(0, 58),

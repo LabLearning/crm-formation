@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, CheckCircle2, FileCheck2 } from '../icons'
+import { ArrowRight, Banknote, CheckCircle2, FileCheck2, PhoneCall, GraduationCap } from '../icons'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const metadata = {
   title: 'Financements',
   description:
-    'POEI, OPCO, AIF, CPF, AGEFICE : les dispositifs qui financent vos formations, du recrutement à la formation continue — on monte le dossier avec vous de A à Z.',
+    'POEI, OPCO, AIF, CPF, AGEFICE : les dispositifs qui financent vos formations, du recrutement à la formation continue. On monte le dossier avec vous de A à Z.',
   alternates: { canonical: '/financements' },
 }
 
@@ -39,22 +39,14 @@ const DISPOSITIFS: {
     t: 'Plan de développement des compétences',
     sous: 'Votre OPCO de branche',
     pourQui: 'Salariés en poste',
-    d: 'Votre opérateur de compétences finance tout ou partie de la formation de vos salariés. Nos tarifs sont calés sur les barèmes de votre branche — le reste à charge est souvent nul.',
-    points: ['Barèmes AKTO et OPCO EP', 'Formations pendant l’exploitation', 'Reste à charge souvent nul'],
+    d: 'Votre opérateur de compétences finance tout ou partie de la formation de vos salariés : AKTO, OPCO EP, L’Opcommerce et les autres OPCO de branche. Nos tarifs sont calés sur leurs barèmes, le reste à charge est souvent nul.',
+    points: ['AKTO, OPCO EP, L’Opcommerce et d’autres', 'Formations pendant l’exploitation', 'Reste à charge souvent nul'],
     logos: [
       { src: '/site/logos/financeurs/akto.png', alt: 'AKTO' },
       { src: '/site/logos/financeurs/opco-ep.svg', alt: 'OPCO EP' },
+      { src: '/site/logos/financeurs/opcommerce.svg', alt: "L'Opcommerce" },
     ],
     photo: '/site/metiers/cuisine.webp',
-  },
-  {
-    t: 'AIF',
-    sous: 'Aide Individuelle à la Formation',
-    pourQui: 'Demandeurs d’emploi',
-    d: 'Pour un demandeur d’emploi, France Travail peut financer une montée en compétence vers un poste concret quand aucun autre dispositif ne couvre le besoin.',
-    points: ['Financement individuel France Travail', 'Vers un retour à l’emploi concret', 'Dossier monté avec votre conseiller'],
-    logos: [{ src: '/site/logos/financeurs/france-travail.svg', alt: 'France Travail' }],
-    photo: '/site/metiers/formation.webp',
   },
   {
     t: 'CPF',
@@ -71,7 +63,7 @@ const DISPOSITIFS: {
     t: 'AGEFICE',
     sous: 'Dirigeants non salariés du commerce et des services',
     pourQui: 'Gérants & indépendants',
-    d: 'Vous êtes gérant non salarié d’un restaurant, d’un commerce de bouche ? L’AGEFICE rembourse vos formations selon les barèmes en vigueur — nous déposons le dossier auprès de votre Point d’Accueil.',
+    d: 'Vous êtes gérant non salarié d’un restaurant, d’un commerce de bouche ? L’AGEFICE rembourse vos formations selon les barèmes en vigueur ; nous déposons le dossier auprès de votre Point d’Accueil.',
     points: ['Formations obligatoires et métier', 'Dossier déposé par nos soins', 'Remboursement selon les barèmes en vigueur'],
     logos: [{ src: '/site/logos/financeurs/agefice.png', alt: 'AGEFICE' }],
     photo: '/site/metiers/hcr.webp',
@@ -82,8 +74,17 @@ const FINANCEURS = [
   { src: '/site/logos/financeurs/france-travail.svg', alt: 'France Travail' },
   { src: '/site/logos/financeurs/akto.png', alt: 'AKTO' },
   { src: '/site/logos/financeurs/opco-ep.svg', alt: 'OPCO EP' },
+  { src: '/site/logos/financeurs/opcommerce.svg', alt: "L'Opcommerce" },
   { src: '/site/logos/financeurs/mon-compte-formation.svg', alt: 'Mon Compte Formation' },
   { src: '/site/logos/financeurs/agefice.png', alt: 'AGEFICE' },
+]
+
+/** Le parcours « zéro paperasse » : ce qu'on fait, dans l'ordre, à votre place. */
+const PARCOURS = [
+  { Icon: PhoneCall, t: 'On échange sur votre besoin', d: 'Objectifs, équipe à former, calendrier : un premier point suffit pour cadrer.' },
+  { Icon: Banknote, t: 'On identifie le bon financeur', d: 'POEI, OPCO, AGEFICE ou CPF : on trouve le dispositif et le barème de votre branche.' },
+  { Icon: FileCheck2, t: 'On prépare et on dépose le dossier', d: 'Programme, devis et convention conformes Qualiopi, déposés auprès du financeur.' },
+  { Icon: GraduationCap, t: 'Vous formez, on suit jusqu’au paiement', d: 'Accord de prise en charge, session planifiée, facturation directement au financeur.' },
 ]
 
 function PlaqueLogos({ logos }: { logos: { src: string; alt: string }[] }) {
@@ -160,8 +161,8 @@ export default function SiteFinancements() {
           </div>
         </Reveal>
 
-        {/* Les 4 autres dispositifs : cartes « mini-page » avec couverture + logo */}
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        {/* Les autres dispositifs : cartes « mini-page » avec couverture + logo */}
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {autres.map((x, i) => (
             <Reveal key={x.t} delay={(i % 2) * 110} className="h-full">
               <div className="group h-full rounded-3xl border border-[#205040]/10 bg-white overflow-hidden flex flex-col hover:shadow-xl hover:shadow-black/10 hover:border-[#205040]/25 hover:-translate-y-1.5 transition-all duration-300">
@@ -194,28 +195,45 @@ export default function SiteFinancements() {
         </div>
       </section>
 
-      {/* ── L'accompagnement : ce qu'on prend en charge ── */}
+      {/* ── Zéro paperasse : le parcours animé, étape après étape ── */}
       <section className="bg-[#FAFAFA] border-y border-[#205040]/10">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 md:flex items-center gap-10">
-          <div className="md:w-1/2">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20 grid lg:grid-cols-12 gap-10 lg:gap-16">
+          <div className="lg:col-span-5">
             <Kicker className="mb-4">Zéro paperasse pour vous</Kicker>
             <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">On monte le dossier de A à Z</h2>
             <p className="mt-4 text-[#57534E] leading-relaxed">
-              Identifier le bon dispositif, chiffrer la prise en charge, préparer le programme, le devis et la
-              convention conformes Qualiopi, déposer la demande auprès du financeur : c&apos;est notre travail, pas le vôtre.
+              Le montage du financement, c&apos;est notre travail, pas le vôtre. Voilà comment ça se passe,
+              dans l&apos;ordre : vous nous parlez de vos équipes, on s&apos;occupe de tout le reste.
             </p>
+            <Link href="/site/contact" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#205040] text-white text-sm font-semibold hover:bg-[#123f34] ll-lift">
+              Lancer la première étape <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <ul className="md:w-1/2 mt-6 md:mt-0 space-y-3">
-            {[
-              'Identification du financeur et du barème de votre branche',
-              'Dossier complet préparé et déposé par nos équipes',
-              'Suivi de l’accord de prise en charge jusqu’au paiement',
-            ].map((p) => (
-              <li key={p} className="flex items-start gap-3 rounded-2xl border border-[#205040]/10 bg-white p-4 text-sm text-[#44403C]">
-                <FileCheck2 className="h-5 w-5 shrink-0 text-[#205040]" /> {p}
-              </li>
+          {/* Timeline verticale : chaque étape se révèle en cascade, la ligne se dessine avec elle */}
+          <div className="lg:col-span-7">
+            {PARCOURS.map((e, i) => (
+              <Reveal key={e.t} delay={i * 180}>
+                <div className="group relative flex gap-5 pb-2">
+                  {/* Rail : pastille icône + segment de ligne qui se dessine */}
+                  <div className="flex flex-col items-center">
+                    <span className="relative z-10 h-12 w-12 shrink-0 rounded-2xl bg-white ring-1 ring-[#205040]/15 shadow-sm flex items-center justify-center text-[#205040] transition-all duration-300 group-hover:bg-[#205040] group-hover:text-white group-hover:scale-110 group-hover:rotate-3">
+                      <e.Icon className="h-5 w-5" />
+                    </span>
+                    {i < PARCOURS.length - 1 && (
+                      <span className="ll-step-line w-px flex-1 my-1 bg-gradient-to-b from-[#38C588] to-[#205040]/20" style={{ transitionDelay: `${i * 180 + 220}ms` }} />
+                    )}
+                  </div>
+                  <div className={i < PARCOURS.length - 1 ? 'pb-8' : ''}>
+                    <div className="flex items-baseline gap-2.5">
+                      <span className="font-heading font-black text-sm text-[#38C588] tabular-nums">0{i + 1}</span>
+                      <span className="font-heading font-semibold text-lg text-[#14110F]">{e.t}</span>
+                    </div>
+                    <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed max-w-md">{e.d}</p>
+                  </div>
+                </div>
+              </Reveal>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
@@ -223,7 +241,7 @@ export default function SiteFinancements() {
         <div className="rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-4xl text-balance text-white">On monte votre dossier de financement</h2>
-            <p className="mt-3 text-white/70 max-w-xl">Dites-nous qui former et pour quel objectif — on s’occupe du reste.</p>
+            <p className="mt-3 text-white/70 max-w-xl">Dites-nous qui former et pour quel objectif : on s’occupe du reste.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
             Étudier mon financement <ArrowRight className="h-4 w-4" />

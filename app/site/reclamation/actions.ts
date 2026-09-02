@@ -69,7 +69,7 @@ export async function deposerReclamationPubliqueAction(formData: FormData): Prom
       orgLogoUrl: (org as any)?.logo_url,
       qualiopiCertified: (org as any)?.is_qualiopi !== false,
       recipientName: nom,
-      subject: `Accusé de réception de votre réclamation — ${data.numero || ''}`,
+      subject: `Accusé de réception de votre réclamation ${data.numero || ''}`,
       docTitle: 'Nous avons bien reçu votre réclamation',
       intro: `Nous accusons réception de votre réclamation et vous remercions de nous avoir fait part de votre retour. Conformément à notre engagement qualité, nous allons l'analyser et vous tenir informé(e) des suites données.`,
       metadata: [
@@ -96,12 +96,12 @@ export async function deposerReclamationPubliqueAction(formData: FormData): Prom
         orgLogoUrl: (org as any)?.logo_url,
         qualiopiCertified: (org as any)?.is_qualiopi !== false,
         recipientName: 'Équipe qualité',
-        subject: `Nouvelle réclamation ${data.numero || ''} — ${objet.slice(0, 60)}`,
+        subject: `Nouvelle réclamation ${data.numero || ''} : ${objet.slice(0, 60)}`,
         docTitle: 'Une réclamation vient d’être déposée sur le site',
         intro: description.slice(0, 600),
         metadata: [
           ['Référence', data.numero || ''],
-          ['Émetteur', `${nom} — ${email}${telephone ? ` — ${telephone}` : ''}`],
+          ['Émetteur', `${nom} · ${email}${telephone ? ` · ${telephone}` : ''}`],
           ['Qualité', origine],
         ],
         ctaLabel: 'Ouvrir le registre des réclamations',

@@ -47,7 +47,7 @@ export function SiteNav() {
         : 'bg-white/60 backdrop-blur-md border-b border-transparent'
     }`}>
       <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between gap-6">
-        <Link href="/site" className="flex items-center shrink-0" aria-label="Lab Learning — accueil">
+        <Link href="/site" className="flex items-center shrink-0" aria-label="Lab Learning, accueil">
           <img src="/logo-lablearning.svg" alt="Lab Learning" className="h-7 w-auto" />
         </Link>
 

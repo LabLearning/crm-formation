@@ -106,7 +106,7 @@ export default async function SiteAPropos() {
           <div className="absolute inset-0 -z-0 opacity-70" style={{ background: 'radial-gradient(600px 300px at 20% 0%, rgba(25,81,68,0.5), transparent 60%), radial-gradient(500px 260px at 100% 100%, rgba(99,102,241,0.35), transparent 55%)' }} />
           <div className="relative">
           <h2 className="ll-display ll-fluid-h2 text-balance text-white">Travaillons ensemble</h2>
-          <p className="mt-3 text-white/60 max-w-xl mx-auto text-lg">Parlez-nous de vos équipes et de vos objectifs — on construit le parcours.</p>
+          <p className="mt-3 text-white/60 max-w-xl mx-auto text-lg">Parlez-nous de vos équipes et de vos objectifs : on construit le parcours.</p>
           <Link href="/site/contact" className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
             Nous contacter <ArrowRight className="h-4 w-4" />
           </Link>

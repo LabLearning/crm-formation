@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!b) return { title: 'Formations' }
   return {
     title: `Formations ${b.label}`,
-    description: `${b.tagline} — les formations Lab Learning pour la branche ${b.label} : hygiène, sécurité et compétences métier, en établissement, financées par votre OPCO.`,
+    description: `${b.tagline}. Les formations Lab Learning pour la branche ${b.label} : hygiène, sécurité et compétences métier, en établissement, financées par votre OPCO.`,
     alternates: { canonical: `/branches/${b.slug}` },
   }
 }

@@ -23,7 +23,7 @@ export async function sendContactMessageAction(formData: FormData): Promise<Cont
   const esc = (s: string) => s.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
   const html = `
     <div style="font-family:sans-serif;color:#1c1917;line-height:1.6">
-      <h2 style="color:#205040">Nouveau message — site Lab Learning</h2>
+      <h2 style="color:#205040">Nouveau message du site Lab Learning</h2>
       <p><strong>Nom :</strong> ${esc(nom)}<br/>
       <strong>Email :</strong> ${esc(email)}<br/>
       ${entreprise ? `<strong>Entreprise :</strong> ${esc(entreprise)}<br/>` : ''}
@@ -36,7 +36,7 @@ export async function sendContactMessageAction(formData: FormData): Promise<Cont
     const { sendBrandedEmail } = await import('@/lib/email')
     const r = await sendBrandedEmail({
       to: CONTACT_TO,
-      subject: `Site — ${sujet || 'Nouveau message'} (${nom})`,
+      subject: `Site web · ${sujet || 'Nouveau message'} (${nom})`,
       html,
       orgName: 'Lab Learning',
       orgEmail: email, // reply-to = l'expéditeur, pour répondre directement

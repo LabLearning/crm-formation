@@ -114,7 +114,7 @@ export default async function SiteHome() {
               ))}
               {/* Badge flottant Qualiopi — logo officiel + mention obligatoire */}
               <div className="hidden sm:block absolute -right-4 -bottom-8 rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-black/5 px-4 py-3 max-w-[220px]">
-                <img src="/site/logos/qualiopi.png" alt="Qualiopi — processus certifié — République française" className="h-14 w-auto" />
+                <img src="/site/logos/qualiopi.png" alt="Qualiopi, processus certifié, République française" className="h-14 w-auto" />
                 <p className="mt-1.5 text-[8px] leading-snug text-[#78716C]">
                   La certification qualité a été délivrée au titre de la catégorie d&apos;actions suivante : ACTIONS DE FORMATION
                 </p>
@@ -209,7 +209,7 @@ export default async function SiteHome() {
         <div className="max-w-2xl">
           <Kicker className="mb-4">Votre métier</Kicker>
           <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Des formations pensées pour votre activité</h2>
-          <p className="mt-4 text-lg text-[#57534E]">Identifiez-vous par votre métier — on vous montre ce à quoi vous avez droit, financement compris.</p>
+          <p className="mt-4 text-lg text-[#57534E]">Identifiez-vous par votre métier : on vous montre ce à quoi vous avez droit, financement compris.</p>
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
           {BRANCHES.map((b, i) => (
@@ -339,10 +339,10 @@ export default async function SiteHome() {
         </div>
         <div className="space-y-3">
           {[
-            { q: 'Combien coûte une formation, et qui la finance ?', r: "Dans la plupart des cas, votre OPCO prend en charge tout ou partie de la formation — nos tarifs sont calés sur les barèmes de votre branche, le reste à charge est souvent nul. On monte le dossier avec vous." },
-            { q: 'La formation a-t-elle lieu dans mon établissement ?', r: "Oui, c'est notre spécialité : le formateur vient chez vous, forme vos équipes sur leur poste, avec votre matériel — sans fermer et sur vos horaires." },
+            { q: 'Combien coûte une formation, et qui la finance ?', r: "Dans la plupart des cas, votre OPCO prend en charge tout ou partie de la formation : nos tarifs sont calés sur les barèmes de votre branche, le reste à charge est souvent nul. On monte le dossier avec vous." },
+            { q: 'La formation a-t-elle lieu dans mon établissement ?', r: "Oui, c'est notre spécialité : le formateur vient chez vous, forme vos équipes sur leur poste, avec votre matériel, sans fermer et sur vos horaires." },
             { q: 'Sous quel délai peut-on démarrer ?', r: "Une session se planifie généralement sous 2 à 4 semaines après validation du devis et de la prise en charge." },
-            { q: 'Êtes-vous certifiés Qualiopi ?', r: "Oui — certification Qualiopi actions de formation, condition du financement OPCO et France Travail. Nous sommes aussi inscrits sur la liste DRAAF pour l'hygiène alimentaire." },
+            { q: 'Êtes-vous certifiés Qualiopi ?', r: "Oui : certification Qualiopi actions de formation, condition du financement OPCO et France Travail. Nous sommes aussi inscrits sur la liste DRAAF pour l'hygiène alimentaire." },
           ].map((f, i) => (
             <details key={i} className="group rounded-2xl bg-white ring-1 ring-black/5 open:ring-[#205040]/20 open:shadow-lg open:shadow-black/5 transition-shadow">
               <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4">

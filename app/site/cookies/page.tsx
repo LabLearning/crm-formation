@@ -17,9 +17,9 @@ export default function Cookies() {
 
       <h2>Cookies utilisés</h2>
       <ul>
-        <li><strong>Cookies strictement nécessaires</strong> — indispensables au fonctionnement du site (navigation,
+        <li><strong>Cookies strictement nécessaires</strong> : indispensables au fonctionnement du site (navigation,
           sécurité). Ils ne requièrent pas votre consentement.</li>
-        <li><strong>Cookies de mesure d’audience</strong> — nous aideraient à comprendre l’utilisation du site pour
+        <li><strong>Cookies de mesure d’audience</strong> : nous aideraient à comprendre l’utilisation du site pour
           l’améliorer. <strong>Aucun outil de mesure d’audience n’est déployé à ce jour</strong> ; s’il l’était, il ne
           serait activé qu’avec votre consentement.</li>
       </ul>
@@ -35,7 +35,7 @@ export default function Cookies() {
       <p>
         Vous pouvez configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage de certains cookies
         peut toutefois affecter votre expérience de navigation. La procédure varie selon le navigateur (Chrome, Firefox,
-        Safari, Edge) — consultez la rubrique d’aide de votre navigateur.
+        Safari, Edge) : consultez la rubrique d’aide de votre navigateur.
       </p>
 
       <h2>En savoir plus</h2>

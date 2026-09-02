@@ -16,7 +16,7 @@ export default function MentionsLegales() {
       </p>
       <ul>
         <li><strong>Siège social :</strong> 6b boulevard Berthelot, Bureau 3, 34000 Montpellier</li>
-        <li><strong>SIRET :</strong> 931 658 561 00036 — RCS Montpellier — Code APE : 8559A</li>
+        <li><strong>SIRET :</strong> 931 658 561 00036 · RCS Montpellier · Code APE : 8559A</li>
         <li><strong>TVA intracommunautaire :</strong> FR41931658561</li>
         <li><strong>Représentant légal et directeur de la publication :</strong> Julien COLELLA, Président</li>
         <li><strong>Téléphone :</strong> 04 51 330 330</li>
@@ -31,16 +31,16 @@ export default function MentionsLegales() {
       </p>
       <p>
         Lab Learning est <strong>certifié Qualiopi</strong> au titre de la catégorie « Actions de formation »
-        — certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION,
-        valable jusqu&apos;au 04/11/2027 (<a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer">consulter le certificat</a>) —
+        (certificat n° CERT_S1024_0345_1 délivré par CEVA SOLUTION,
+        valable jusqu&apos;au 04/11/2027 <a href="/site/documents/certificat-qualiopi-lab-learning.pdf" target="_blank" rel="noopener noreferrer">consulter le certificat</a>),
         et inscrit sur la liste officielle de la <strong>DRAAF</strong> pour dispenser la formation en hygiène
         alimentaire (HACCP).
       </p>
 
       <h2>Hébergement</h2>
       <p>
-        Le site est hébergé par <strong>Vercel Inc.</strong> — 440 N Barranca Avenue #4133, Covina,
-        CA 91723, États-Unis — <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a>.
+        Le site est hébergé par <strong>Vercel Inc.</strong>, 440 N Barranca Avenue #4133, Covina,
+        CA 91723, États-Unis · <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a>.
         Les données applicatives sont hébergées par <strong>Supabase</strong> sur des serveurs situés
         dans l&apos;Union européenne (région Paris, AWS eu-west-3).
       </p>

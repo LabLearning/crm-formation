@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Nos résultats',
   description:
-    'Nos indicateurs de résultats publiés : satisfaction, réussite et assiduité des stagiaires, formation par formation — la transparence exigée par Qualiopi.',
+    'Nos indicateurs de résultats publiés : satisfaction, réussite et assiduité des stagiaires, formation par formation. La transparence exigée par Qualiopi.',
   alternates: { canonical: '/resultats' },
 }
 
@@ -50,7 +50,7 @@ export default async function SiteResultats() {
           </h1>
           <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
             Organisme de formation certifié Qualiopi, nous publions nos indicateurs de résultats
-            {r?.periode ? <> — période <strong>{r.periode}</strong></> : null}.
+            {r?.periode ? <> (période <strong>{r.periode}</strong>)</> : null}.
           </p>
         </div>
       </section>
@@ -111,10 +111,10 @@ export default async function SiteResultats() {
                         </Link>
                         {f.duree_heures ? <span className="block text-xs text-[#A8A29E] mt-0.5">{f.duree_heures} heures</span> : null}
                       </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F]">{sessionsParTitre.get(normTitre(f.intitule)) || '—'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F]">{sessionsParTitre.get(normTitre(f.intitule)) || '·'}</td>
                       <td className="px-5 py-3.5 text-right tabular-nums text-[#14110F] font-semibold">{f.nombre_apprenants_total}</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '—'}</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '—'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_satisfaction != null ? `${f.taux_satisfaction} %` : '·'}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-[#205040] font-semibold">{f.taux_reussite != null ? `${f.taux_reussite} %` : '·'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -126,7 +126,7 @@ export default async function SiteResultats() {
         <div className="mt-14 rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-12 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-3xl text-balance text-white">Envie de former vos équipes ?</h2>
-            <p className="mt-3 text-white/70 max-w-xl">Parlons de votre projet — on monte le parcours et le financement avec vous.</p>
+            <p className="mt-3 text-white/70 max-w-xl">Parlons de votre projet : on monte le parcours et le financement avec vous.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
             Nous contacter <ArrowRight className="h-4 w-4" />

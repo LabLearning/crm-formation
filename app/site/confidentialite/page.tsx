@@ -17,7 +17,7 @@ export default function Confidentialite() {
 
       <h2>Responsable de traitement</h2>
       <p>
-        Lab Learning, SAS — 6b boulevard Berthelot, Bureau 3, 34000 Montpellier. Contact : <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
+        Lab Learning, SAS, 6b boulevard Berthelot, Bureau 3, 34000 Montpellier. Contact : <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
         Délégué à la protection des données (DPO) : <a href="mailto:dpo@lab-learning.fr">dpo@lab-learning.fr</a>.
       </p>
 
@@ -26,15 +26,15 @@ export default function Confidentialite() {
       <ul>
         <li>Identité et coordonnées (nom, prénom, email, téléphone, entreprise) ;</li>
         <li>Informations relatives à votre demande de formation ou de financement ;</li>
-        <li>Données de navigation (via les cookies — voir notre <a href="/site/cookies">politique cookies</a>).</li>
+        <li>Données de navigation (via les cookies ; voir notre <a href="/site/cookies">politique cookies</a>).</li>
       </ul>
 
       <h2>Finalités &amp; bases légales</h2>
       <ul>
-        <li><strong>Répondre à vos demandes</strong> (formulaire de contact) — intérêt légitime / mesures précontractuelles ;</li>
-        <li><strong>Gérer les inscriptions et le suivi des formations</strong> — exécution du contrat ;</li>
-        <li><strong>Respecter nos obligations</strong> (Qualiopi, comptables, légales) — obligation légale ;</li>
-        <li><strong>Amélioration du site et statistiques</strong> — consentement / intérêt légitime.</li>
+        <li><strong>Répondre à vos demandes</strong> (formulaire de contact) : intérêt légitime / mesures précontractuelles ;</li>
+        <li><strong>Gérer les inscriptions et le suivi des formations</strong> : exécution du contrat ;</li>
+        <li><strong>Respecter nos obligations</strong> (Qualiopi, comptables, légales) : obligation légale ;</li>
+        <li><strong>Amélioration du site et statistiques</strong> : consentement / intérêt légitime.</li>
       </ul>
 
       <h2>Durée de conservation</h2>
@@ -42,7 +42,7 @@ export default function Confidentialite() {
         <li><strong>Demandes de contact et prospects :</strong> 3 ans après le dernier échange ;</li>
         <li><strong>Dossiers de formation</strong> (convention, émargements, évaluations, attestations) : 3 ans à compter
           de la fin de l&apos;année du dernier paiement, conformément aux obligations liées aux financements publics et
-          mutualisés — durée étendue en cas de cofinancement européen ;</li>
+          mutualisés (durée étendue en cas de cofinancement européen) ;</li>
         <li><strong>Documents comptables :</strong> 10 ans ;</li>
         <li><strong>Données de navigation :</strong> 13 mois au maximum.</li>
       </ul>
@@ -54,11 +54,11 @@ export default function Confidentialite() {
         vendues à des tiers. Nos sous-traitants techniques, liés par des engagements de conformité RGPD :
       </p>
       <ul>
-        <li><strong>Vercel</strong> — hébergement du site (clauses contractuelles types pour les transferts hors UE) ;</li>
-        <li><strong>Supabase</strong> — base de données, hébergée dans l&apos;Union européenne (région Paris) ;</li>
-        <li><strong>Resend</strong> — envoi des emails transactionnels (convocations, attestations) ;</li>
-        <li><strong>Meta (WhatsApp Business)</strong> — notifications WhatsApp, uniquement avec votre consentement ;</li>
-        <li><strong>Google Workspace</strong> — messagerie et documents internes.</li>
+        <li><strong>Vercel</strong> : hébergement du site (clauses contractuelles types pour les transferts hors UE) ;</li>
+        <li><strong>Supabase</strong> : base de données, hébergée dans l&apos;Union européenne (région Paris) ;</li>
+        <li><strong>Resend</strong> : envoi des emails transactionnels (convocations, attestations) ;</li>
+        <li><strong>Meta (WhatsApp Business)</strong> : notifications WhatsApp, uniquement avec votre consentement ;</li>
+        <li><strong>Google Workspace</strong> : messagerie et documents internes.</li>
       </ul>
 
       <h2>Vos droits</h2>

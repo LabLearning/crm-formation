@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   // lab-learning.fr, même quand la page est servie via crm.lab-learning.fr/site.
   metadataBase: new URL('https://www.lab-learning.fr'),
   title: {
-    default: 'Lab Learning — Formations Qualiopi métiers de bouche & CHR',
+    default: 'Formations Qualiopi métiers de bouche & CHR | Lab Learning',
     template: '%s | Lab Learning',
   },
   description:
@@ -25,15 +25,15 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'fr_FR',
     siteName: 'Lab Learning',
-    title: 'Lab Learning — Formations Qualiopi métiers de bouche & CHR',
+    title: 'Formations Qualiopi métiers de bouche & CHR | Lab Learning',
     description:
       'Formations professionnelles en intra-entreprise, prises en charge OPCO : hygiène alimentaire HACCP, sécurité, management en restauration.',
     url: '/',
-    images: [{ url: '/site/metiers/formation.webp', width: 1200, height: 630, alt: 'Formation aux métiers de la restauration — Lab Learning' }],
+    images: [{ url: '/site/metiers/formation.webp', width: 1200, height: 630, alt: 'Formation aux métiers de la restauration avec Lab Learning' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lab Learning — Formations Qualiopi métiers de bouche & CHR',
+    title: 'Formations Qualiopi métiers de bouche & CHR | Lab Learning',
     description: 'Formations professionnelles certifiées Qualiopi, financées par les OPCO.',
   },
   robots: { index: true, follow: true },
@@ -68,7 +68,7 @@ const SCHEMA_ORGANISATION = {
       },
       hasCredential: {
         '@type': 'EducationalOccupationalCredential',
-        name: 'Certification Qualiopi — Actions de formation',
+        name: 'Certification Qualiopi, catégorie Actions de formation',
         url: 'https://www.lab-learning.fr/site/documents/certificat-qualiopi-lab-learning.pdf',
       },
     },
