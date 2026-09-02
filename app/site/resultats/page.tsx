@@ -126,7 +126,7 @@ export default async function SiteResultats() {
         <div className="mt-14 rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-12 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-3xl text-balance text-white">Envie de former vos équipes ?</h2>
-            <p className="mt-3 text-white/70 max-w-xl">Parlons de votre projet : on monte le parcours et le financement avec vous.</p>
+            <p className="mt-3 text-white/70 max-w-xl">Parlons de votre projet : on construit le parcours et on vous accompagne dans le financement.</p>
           </div>
           <Link href="/site/contact" className="mt-6 md:mt-0 shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#205040] text-sm font-semibold hover:bg-[#F6F4EF] transition-colors">
             Nous contacter <ArrowRight className="h-4 w-4" />

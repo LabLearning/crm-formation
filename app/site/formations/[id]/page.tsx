@@ -180,7 +180,7 @@ export default async function SiteFormationDetail({ params }: { params: { id: st
         <aside className="lg:col-span-1">
           <div className="lg:sticky lg:top-24 rounded-3xl border border-[#205040]/10 bg-white p-6">
             <div className="font-heading font-bold text-[#14110F]">Intéressé par cette formation ?</div>
-            <p className="mt-1.5 text-sm text-[#57534E]">Nous montons le programme et le financement avec vous.</p>
+            <p className="mt-1.5 text-sm text-[#57534E]">On construit le programme et on vous accompagne dans le financement.</p>
             <div className="mt-4 space-y-2 text-sm">
               {f.duree_heures ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Durée</span><span className="font-medium text-[#14110F]">{f.duree_heures} h{f.duree_jours ? ` · ${f.duree_jours} j` : ''}</span></div> : null}
               {f.modalite ? <div className="flex items-center justify-between"><span className="text-[#78716C]">Modalité</span><span className="font-medium text-[#14110F]">{MODALITE[f.modalite] || f.modalite}</span></div> : null}

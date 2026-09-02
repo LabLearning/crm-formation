@@ -54,7 +54,7 @@ const PHARES = [
     titre: 'POEI : Équipier polyvalent en restauration rapide',
     texte:
       "Vous ouvrez ou vous recrutez ? La Préparation Opérationnelle à l'Emploi forme vos futurs équipiers AVANT l'embauche, financée par France Travail. Nous gérons tout : recrutement, formation, suivi hebdomadaire, bilan avec le tuteur.",
-    points: ['Jusqu’à 300 h financées par France Travail', 'Mandat de gestion : zéro paperasse pour vous', 'Bilan de compétences signé employeur / tuteur / candidat'],
+    points: ['Jusqu’à 300 h financées par France Travail', 'Accompagnement complet dans la démarche France Travail', 'Bilan de compétences signé employeur / tuteur / candidat'],
     lien: { href: '/site/contact', label: 'Monter un projet POEI' },
     accent: '#0F766E',
   },

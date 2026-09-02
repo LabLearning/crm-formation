@@ -5,7 +5,7 @@ import { Kicker } from '../Kicker'
 export const metadata = {
   title: 'Contact',
   description:
-    'Contactez Lab Learning pour former vos équipes : étude de votre besoin, montage du financement OPCO ou France Travail, réponse sous 24 à 48 h ouvrées.',
+    'Contactez Lab Learning pour former vos équipes : étude de votre besoin, accompagnement au financement OPCO ou France Travail, réponse sous 24 à 48 h ouvrées.',
   alternates: { canonical: '/contact' },
 }
 

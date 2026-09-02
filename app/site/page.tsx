@@ -24,7 +24,7 @@ const fmt = (n: number) => n.toLocaleString('fr-FR')
 
 const POURQUOI = [
   { Icon: UserCheck, t: 'Des formateurs de terrain', d: 'Des praticiens du métier qui transmettent le geste réel, pas de la théorie hors-sol.' },
-  { Icon: Banknote, t: 'Financement clé en main', d: 'On monte votre dossier OPCO / France Travail de A à Z. Vous formez, on gère l’administratif.' },
+  { Icon: Banknote, t: 'Financement accompagné', d: 'On vous guide dans votre dossier OPCO / France Travail et on fait en sorte que la formation soit prise en charge.' },
   { Icon: ShieldCheck, t: 'Qualité certifiée Qualiopi', d: 'Des parcours évalués et tracés, du positionnement à l’attestation.' },
   { Icon: SlidersHorizontal, t: 'Sur-mesure', d: 'Programmes adaptés à votre établissement, vos équipes et vos contraintes d’exploitation.' },
 ]
@@ -339,7 +339,7 @@ export default async function SiteHome() {
         </div>
         <div className="space-y-3">
           {[
-            { q: 'Combien coûte une formation, et qui la finance ?', r: "Dans la plupart des cas, votre OPCO prend en charge tout ou partie de la formation : nos tarifs sont calés sur les barèmes de votre branche, le reste à charge est souvent nul. On monte le dossier avec vous." },
+            { q: 'Combien coûte une formation, et qui la finance ?', r: "Dans la plupart des cas, votre OPCO prend en charge tout ou partie de la formation : nos tarifs sont calés sur les barèmes de votre branche, le reste à charge est souvent nul. On vous accompagne dans le dossier." },
             { q: 'La formation a-t-elle lieu dans mon établissement ?', r: "Oui, c'est notre spécialité : le formateur vient chez vous, forme vos équipes sur leur poste, avec votre matériel, sans fermer et sur vos horaires." },
             { q: 'Sous quel délai peut-on démarrer ?', r: "Une session se planifie généralement sous 2 à 4 semaines après validation du devis et de la prise en charge." },
             { q: 'Êtes-vous certifiés Qualiopi ?', r: "Oui : certification Qualiopi actions de formation, condition du financement OPCO et France Travail. Nous sommes aussi inscrits sur la liste DRAAF pour l'hygiène alimentaire." },
@@ -370,7 +370,7 @@ export default async function SiteHome() {
           <div className="relative">
             <Kicker tone="light" center className="mb-5 justify-center">Prêt à démarrer</Kicker>
             <h2 className="ll-display ll-fluid-h1 text-balance max-w-3xl mx-auto text-white">Prêt à faire monter vos équipes en compétences ?</h2>
-            <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">Nous étudions votre besoin, montons le financement OPCO et planifions les sessions.</p>
+            <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">Nous étudions votre besoin, vous accompagnons dans le financement OPCO et planifions les sessions.</p>
             <Link href="/site/contact" className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
               Demander un devis <ArrowRight className="h-4 w-4" />
             </Link>
