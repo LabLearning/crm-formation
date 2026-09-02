@@ -1,21 +1,32 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, X, Send, Loader2 } from '@/components/ui/icons'
+import { Sparkles, X, Send, Loader2, CheckCircle2, XCircle, Zap, RotateCcw } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
-interface Message { role: 'user' | 'assistant'; content: string }
+interface ActionProposee {
+  id: string
+  type: string
+  params: Record<string, any>
+  libelle: string
+  etat?: 'en_attente' | 'en_cours' | 'faite' | 'ignoree' | 'erreur'
+  resultat?: string
+}
+interface Message { role: 'user' | 'assistant'; content: string; actions?: ActionProposee[] }
+
+const CLE_HISTO = 'll_assistant_conversation'
 
 /**
- * Assistant CRM en bulle flottante (équipe interne uniquement). Pose une
- * question en langage naturel ; l'IA interroge le CRM (lecture seule) et
- * répond avec les liens vers les fiches et les documents.
+ * Assistant CRM en bulle flottante (équipe interne). L'IA lit le CRM et
+ * répond avec des liens ; elle peut aussi PROPOSER des actions (convocation,
+ * convention, relance) que l'utilisateur confirme d'un clic — rien ne part
+ * sans confirmation humaine. La conversation survit à la navigation
+ * (localStorage), « Nouvelle conversation » remet à zéro.
  */
 
 /** Rendu minimal du markdown de l'assistant : liens, gras, listes. */
 function LigneRendue({ texte }: { texte: string }) {
   const morceaux: React.ReactNode[] = []
-  // Découpe sur les liens [label](url) et le gras **x**
   const regex = /\[([^\]]+)\]\(([^)\s]+)\)|\*\*([^*]+)\*\*/g
   let curseur = 0
   let m: RegExpExecArray | null
@@ -57,8 +68,8 @@ function MessageRendu({ contenu }: { contenu: string }) {
 
 const SUGGESTIONS = [
   'Quelles sessions cette semaine ?',
-  'Où en est la facturation ?',
-  'Trouve-moi la convention de Boucherie les halles',
+  'Qui nous doit de l’argent ?',
+  'Qui n’a pas signé ses émargements ?',
 ]
 
 export function AssistantWidget() {
@@ -67,6 +78,17 @@ export function AssistantWidget() {
   const [saisie, setSaisie] = useState('')
   const [busy, setBusy] = useState(false)
   const finRef = useRef<HTMLDivElement>(null)
+
+  // La conversation survit à la navigation entre pages du CRM.
+  useEffect(() => {
+    try {
+      const brut = localStorage.getItem(CLE_HISTO)
+      if (brut) setMessages(JSON.parse(brut))
+    } catch { /* stockage indisponible */ }
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem(CLE_HISTO, JSON.stringify(messages.slice(-40))) } catch { /* plein */ }
+  }, [messages])
 
   useEffect(() => { finRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, busy])
 
@@ -81,15 +103,79 @@ export function AssistantWidget() {
       const r = await fetch('/api/assistant', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ messages: suivant }),
+        // L'API n'attend que role/content : on ne renvoie pas les cartes d'action.
+        body: JSON.stringify({ messages: suivant.map(({ role, content }) => ({ role, content })) }),
       })
       const j = await r.json().catch(() => null)
       const reponse = r.ok && j?.reponse ? j.reponse : (j?.error || 'L’assistant est indisponible, réessaie.')
-      setMessages((prev) => [...prev, { role: 'assistant', content: reponse }])
+      const actions: ActionProposee[] = (j?.actions || []).map((a: any) => ({ ...a, etat: 'en_attente' }))
+      setMessages((prev) => [...prev, { role: 'assistant', content: reponse, actions: actions.length ? actions : undefined }])
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Connexion impossible, réessaie dans un instant.' }])
     }
     setBusy(false)
+  }
+
+  function majAction(idxMessage: number, idAction: string, patch: Partial<ActionProposee>) {
+    setMessages((prev) => prev.map((mes, i) => i !== idxMessage ? mes : {
+      ...mes,
+      actions: mes.actions?.map((a) => a.id === idAction ? { ...a, ...patch } : a),
+    }))
+  }
+
+  async function confirmerAction(idxMessage: number, action: ActionProposee) {
+    majAction(idxMessage, action.id, { etat: 'en_cours' })
+    try {
+      const r = await fetch('/api/assistant/action', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: action.type, params: action.params }),
+      })
+      const j = await r.json().catch(() => null)
+      if (r.ok && j?.success) majAction(idxMessage, action.id, { etat: 'faite', resultat: j.message })
+      else majAction(idxMessage, action.id, { etat: 'erreur', resultat: j?.message || j?.error || 'Échec' })
+    } catch {
+      majAction(idxMessage, action.id, { etat: 'erreur', resultat: 'Connexion impossible' })
+    }
+  }
+
+  function CarteAction({ action, idxMessage }: { action: ActionProposee; idxMessage: number }) {
+    return (
+      <div className={cn(
+        'mt-2 rounded-xl border px-3 py-2.5',
+        action.etat === 'faite' ? 'border-emerald-200 bg-emerald-50'
+        : action.etat === 'erreur' ? 'border-danger-200 bg-danger-50'
+        : action.etat === 'ignoree' ? 'border-surface-200 bg-surface-50 opacity-60'
+        : 'border-amber-200 bg-amber-50',
+      )}>
+        <div className="flex items-start gap-2">
+          <Zap className={cn('h-4 w-4 mt-0.5 shrink-0', action.etat === 'faite' ? 'text-emerald-600' : action.etat === 'erreur' ? 'text-danger-500' : 'text-amber-500')} />
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-surface-800">{action.libelle}</div>
+            {action.resultat && (
+              <div className={cn('text-[11px] mt-0.5', action.etat === 'faite' ? 'text-emerald-700' : 'text-danger-600')}>{action.resultat}</div>
+            )}
+          </div>
+        </div>
+        {(action.etat === 'en_attente' || action.etat === 'en_cours') && (
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              onClick={() => confirmerAction(idxMessage, action)}
+              disabled={action.etat === 'en_cours'}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-50">
+              {action.etat === 'en_cours' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+              Confirmer et envoyer
+            </button>
+            <button
+              onClick={() => majAction(idxMessage, action.id, { etat: 'ignoree' })}
+              disabled={action.etat === 'en_cours'}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 bg-white px-3 py-1.5 text-xs font-medium text-surface-600 hover:bg-surface-50 disabled:opacity-50">
+              <XCircle className="h-3.5 w-3.5" /> Ignorer
+            </button>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -117,8 +203,14 @@ export function AssistantWidget() {
             <span className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center"><Sparkles className="h-4 w-4" /></span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">Assistant CRM</div>
-              <div className="text-[11px] text-white/70">Interne · lecture seule · liens directs vers vos fiches</div>
+              <div className="text-[11px] text-white/70">Interne · les actions partent après votre confirmation</div>
             </div>
+            {messages.length > 0 && (
+              <button onClick={() => setMessages([])} title="Nouvelle conversation" aria-label="Nouvelle conversation"
+                className="h-8 w-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            )}
             <button onClick={() => setOpen(false)} aria-label="Fermer" className="h-8 w-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
               <X className="h-4 w-4" />
             </button>
@@ -130,6 +222,7 @@ export function AssistantWidget() {
               <div className="pt-6 text-center space-y-4">
                 <p className="text-sm text-surface-500 max-w-[280px] mx-auto">
                   Demandez n&apos;importe quoi sur le CRM : une session, un client, un document, un chiffre.
+                  Je peux aussi envoyer une convocation, une convention ou relancer une facture, avec votre accord.
                 </p>
                 <div className="flex flex-col items-center gap-2">
                   {SUGGESTIONS.map((s) => (
@@ -148,6 +241,7 @@ export function AssistantWidget() {
                   mes.role === 'user' ? 'bg-brand-500 text-white text-sm' : 'bg-white ring-1 ring-black/5 text-surface-700',
                 )}>
                   {mes.role === 'user' ? mes.content : <MessageRendu contenu={mes.content} />}
+                  {mes.actions?.map((a) => <CarteAction key={a.id} action={a} idxMessage={i} />)}
                 </div>
               </div>
             ))}

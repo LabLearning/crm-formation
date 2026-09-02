@@ -64,6 +64,35 @@ export const OUTILS_ASSISTANT = [
     description: 'Chiffres clés du moment : sessions en cours et à venir, factures en attente de paiement (avec montant), leads ouverts, réclamations ouvertes.',
     input_schema: { type: 'object', properties: {} },
   },
+  {
+    name: 'analyse_financiere',
+    description: "Analyse financière : encaissements sur une période, encours et retards par client (top débiteurs), factures récentes. Pour « combien on a encaissé ce mois », « qui nous doit de l'argent », « où en est la facturation de X ».",
+    input_schema: {
+      type: 'object',
+      properties: {
+        debut: { type: 'string', description: 'Date AAAA-MM-JJ (défaut : 1er jour du mois en cours)' },
+        fin: { type: 'string', description: 'Date AAAA-MM-JJ (défaut : aujourd’hui)' },
+      },
+    },
+  },
+  {
+    name: 'emargements_session',
+    description: "État des émargements (signatures de présence) d'une session : par stagiaire, créneaux signés / manquants / absences. Pour « qui n'a pas signé », « la feuille est-elle complète ».",
+    input_schema: {
+      type: 'object',
+      properties: { session_id: { type: 'string', description: 'UUID de la session' } },
+      required: ['session_id'],
+    },
+  },
+  {
+    name: 'detail_formation',
+    description: 'Fiche d’une formation du catalogue (tarifs, durée, taux) et ses prochaines sessions. Cherche par nom.',
+    input_schema: {
+      type: 'object',
+      properties: { nom: { type: 'string', description: 'Nom (ou morceau du nom) de la formation' } },
+      required: ['nom'],
+    },
+  },
 ] as const
 
 const nomClient = (c: any) => c?.nom_commercial || c?.raison_sociale || 'Client'
@@ -227,6 +256,85 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
         reclamations_ouvertes: reclOuvertes.count || 0,
         liens: { sessions: '/dashboard/sessions', factures: '/dashboard/factures', leads: '/dashboard/leads' },
       }
+    }
+
+    if (nom === 'analyse_financiere') {
+      const maintenant = new Date()
+      const debut = args.debut || `${maintenant.getFullYear()}-${String(maintenant.getMonth() + 1).padStart(2, '0')}-01`
+      const fin = args.fin || maintenant.toISOString().slice(0, 10)
+      const [{ data: paiements }, { data: impayees }] = await Promise.all([
+        org(supabase.from('paiements').select('montant, date_paiement, mode')).gte('date_paiement', debut).lte('date_paiement', fin),
+        org(supabase.from('factures').select('id, numero, status, montant_restant, montant_ttc, date_echeance, relance_count, financeur_nom, client:client_id(id, raison_sociale, nom_commercial)'))
+          .in('status', ['emise', 'envoyee', 'en_retard', 'payee_partiellement']).gt('montant_restant', 0),
+      ])
+      // Regroupe les impayés par débiteur : le client, sinon le FINANCEUR
+      // (les factures subrogées AKTO/OPCO n'ont pas de client_id).
+      const parClient = new Map<string, { debiteur: string; client_id: string | null; nb: number; du: number; factures: any[] }>()
+      for (const f of (impayees || []) as any[]) {
+        const cle = f.client?.id || `financeur:${f.financeur_nom || 'inconnu'}`
+        if (!parClient.has(cle)) parClient.set(cle, { debiteur: f.client ? nomClient(f.client) : (f.financeur_nom || 'Sans destinataire'), client_id: f.client?.id || null, nb: 0, du: 0, factures: [] })
+        const e = parClient.get(cle)!
+        e.nb++; e.du += Number(f.montant_restant || 0)
+        if (e.factures.length < 5) e.factures.push({ numero: f.numero, statut: f.status, du: f.montant_restant, echeance: f.date_echeance, relances: f.relance_count || 0, pdf: `/api/pdf/facture/${f.id}` })
+      }
+      const debiteurs = [...parClient.values()].sort((a, b) => b.du - a.du).slice(0, 10)
+        .map((d) => ({ ...d, lien: d.client_id ? `/dashboard/clients/${d.client_id}` : null }))
+      const encaisse = ((paiements || []) as any[]).reduce((s, p) => s + Number(p.montant || 0), 0)
+      return {
+        periode: { debut, fin },
+        encaisse: { total: encaisse, nb_paiements: (paiements || []).length },
+        encours_total: (impayees || []).reduce((s: number, f: any) => s + Number(f.montant_restant || 0), 0),
+        top_debiteurs: debiteurs,
+        lien_factures: '/dashboard/factures',
+      }
+    }
+
+    if (nom === 'emargements_session') {
+      const sid = String(args.session_id)
+      const { data: s } = await org(supabase.from('sessions').select('id, formation:formation_id(intitule)')).eq('id', sid).maybeSingle()
+      if (!s) return { erreur: 'Session introuvable dans cette organisation' }
+      const [{ data: emargs }, { data: insc }] = await Promise.all([
+        supabase.from('emargements').select('apprenant_id, date, creneau, est_present, signed_at, motif_absence').eq('session_id', sid),
+        supabase.from('inscriptions').select('apprenant:apprenants(id, prenom, nom)').eq('session_id', sid).not('status', 'in', '("annule","abandonne")'),
+      ])
+      const parApprenant = new Map<string, { nom: string; signes: number; presents_non_signes: number; absences: number }>()
+      for (const i of (insc || []) as any[]) {
+        if (i.apprenant) parApprenant.set(i.apprenant.id, { nom: `${i.apprenant.prenom || ''} ${i.apprenant.nom || ''}`.trim(), signes: 0, presents_non_signes: 0, absences: 0 })
+      }
+      for (const e of (emargs || []) as any[]) {
+        const a = parApprenant.get(e.apprenant_id)
+        if (!a) continue
+        if (e.est_present === false) a.absences++
+        else if (e.signed_at) a.signes++
+        else a.presents_non_signes++
+      }
+      return {
+        formation: (s as any).formation?.intitule,
+        stagiaires: [...parApprenant.values()],
+        feuille_pdf: `/api/pdf/emargement/${sid}`,
+        lien_session: `/dashboard/sessions/${sid}?tab=presences`,
+      }
+    }
+
+    if (nom === 'detail_formation') {
+      const motif = `%${String(args.nom || '').trim()}%`
+      const { data: fs } = await org(supabase.from('formations')
+        .select('id, intitule, categorie, duree_heures, duree_jours, tarif_inter_ht, tarif_intra_ht, taux_satisfaction, taux_reussite, nombre_apprenants_total, is_active'))
+        .ilike('intitule', motif).eq('is_active', true).limit(4)
+      if (!fs?.length) return { erreur: 'Aucune formation trouvée avec ce nom' }
+      const auj = new Date().toISOString().slice(0, 10)
+      const sorties = await Promise.all((fs as any[]).map(async (f) => {
+        const { data: sessions } = await org(supabase.from('sessions')
+          .select('id, date_debut, status, client:client_id(raison_sociale, nom_commercial)'))
+          .eq('formation_id', f.id).gte('date_debut', auj).order('date_debut').limit(5)
+        return {
+          ...f,
+          lien: `/dashboard/formations/${f.id}`,
+          programme_pdf: `/api/pdf/programme/${f.id}`,
+          prochaines_sessions: (sessions || []).map((se: any) => ({ du: se.date_debut, statut: se.status, client: nomClient(se.client), lien: `/dashboard/sessions/${se.id}` })),
+        }
+      }))
+      return { formations: sorties }
     }
 
     return { erreur: `Outil inconnu : ${nom}` }
