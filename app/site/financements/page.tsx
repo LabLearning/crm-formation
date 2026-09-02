@@ -15,7 +15,7 @@ export const metadata = {
 
 const ORG = process.env.PUBLIC_SITE_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
 
-const DISPOSITIFS = [
+const DISPOSITIFS: { Icon: any; t: string; d: string; tag: string; href?: string }[] = [
   {
     Icon: DoorOpen,
     t: 'POEI — avant l’ouverture',
@@ -43,8 +43,9 @@ const DISPOSITIFS = [
   {
     Icon: UserCheck,
     t: 'CPF — Compte Personnel de Formation',
-    d: "Chaque actif dispose d’un budget formation attaché à son compte. Pour les formations éligibles, le CPF finance tout ou partie du parcours — mobilisable directement par le salarié ou le demandeur d’emploi.",
+    d: "Chaque actif dispose d’un budget formation attaché à son compte. Notre formation Création d’entreprise est éligible : le CPF finance tout ou partie du parcours, mobilisable directement par le salarié ou le demandeur d’emploi.",
     tag: 'Individuel',
+    href: '/site/formations/d8bcc0e2-80de-4784-b4c8-5bb2e1bf72f8',
   },
 ]
 
@@ -106,18 +107,31 @@ export default async function SiteFinancements() {
 
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {DISPOSITIFS.map((x, i) => (
-            <Reveal key={x.t} delay={(i % 3) * 80}>
-            <div className="group h-full rounded-2xl border border-[#205040]/10 bg-white p-6 flex flex-col hover:shadow-lg hover:shadow-black/5 hover:border-[#205040]/25 ll-lift">
-              <div className="flex items-center justify-between mb-4">
-                <span className="h-11 w-11 rounded-xl bg-[#205040]/8 flex items-center justify-center group-hover:bg-[#205040] transition-colors"><x.Icon className="h-5 w-5 text-[#205040] group-hover:text-white transition-colors" /></span>
-                <span className="text-xs font-semibold text-[#205040] bg-[#205040]/8 rounded-full px-2.5 py-1">{x.tag}</span>
-              </div>
-              <div className="font-heading font-semibold text-lg text-[#14110F]">{x.t}</div>
-              <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed flex-1">{x.d}</p>
-            </div>
-            </Reveal>
-          ))}
+          {DISPOSITIFS.map((x, i) => {
+            const contenu = (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="h-11 w-11 rounded-xl bg-[#205040]/8 flex items-center justify-center group-hover:bg-[#205040] transition-colors"><x.Icon className="h-5 w-5 text-[#205040] group-hover:text-white transition-colors" /></span>
+                  <span className="text-xs font-semibold text-[#205040] bg-[#205040]/8 rounded-full px-2.5 py-1">{x.tag}</span>
+                </div>
+                <div className="font-heading font-semibold text-lg text-[#14110F]">{x.t}</div>
+                <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed flex-1">{x.d}</p>
+                {x.href && (
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040]">
+                    Voir la formation <ArrowRight className="h-4 w-4" />
+                  </span>
+                )}
+              </>
+            )
+            const classes = 'group h-full rounded-2xl border border-[#205040]/10 bg-white p-6 flex flex-col hover:shadow-lg hover:shadow-black/5 hover:border-[#205040]/25 ll-lift'
+            return (
+              <Reveal key={x.t} delay={(i % 3) * 80}>
+                {x.href
+                  ? <Link href={x.href} className={classes}>{contenu}</Link>
+                  : <div className={classes}>{contenu}</div>}
+              </Reveal>
+            )
+          })}
         </div>
       </section>
 

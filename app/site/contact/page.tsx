@@ -1,4 +1,4 @@
-import { Mail, ShieldCheck, Banknote, Clock } from '../icons'
+import { Mail, PhoneCall, ShieldCheck, Banknote, Clock } from '../icons'
 import { ContactForm } from './ContactForm'
 import { Kicker } from '../Kicker'
 
@@ -26,9 +26,13 @@ export default function SiteContact() {
           </div>
         </div>
         <div className="lg:col-span-2 space-y-4">
-          <a href="mailto:digital@lab-learning.fr" className="flex items-start gap-3 rounded-2xl border border-[#205040]/10 bg-white p-5 hover:border-[#205040]/30 transition-colors">
+          <a href="mailto:contact@lab-learning.fr" className="flex items-start gap-3 rounded-2xl border border-[#205040]/10 bg-white p-5 hover:border-[#205040]/30 transition-colors">
             <span className="h-10 w-10 rounded-xl bg-[#205040]/8 flex items-center justify-center shrink-0"><Mail className="h-5 w-5 text-[#205040]" /></span>
-            <span><span className="block font-heading font-semibold text-[#14110F]">Email</span><span className="text-sm text-[#57534E]">digital@lab-learning.fr</span></span>
+            <span><span className="block font-heading font-semibold text-[#14110F]">Email</span><span className="text-sm text-[#57534E]">contact@lab-learning.fr</span></span>
+          </a>
+          <a href="tel:+33451330330" className="flex items-start gap-3 rounded-2xl border border-[#205040]/10 bg-white p-5 hover:border-[#205040]/30 transition-colors">
+            <span className="h-10 w-10 rounded-xl bg-[#205040]/8 flex items-center justify-center shrink-0"><PhoneCall className="h-5 w-5 text-[#205040]" /></span>
+            <span><span className="block font-heading font-semibold text-[#14110F]">Téléphone</span><span className="text-sm text-[#57534E]">04 51 330 330</span></span>
           </a>
           {[
             { Icon: ShieldCheck, t: 'Certifié Qualiopi', d: 'Actions de formation conformes aux exigences qualité.' },

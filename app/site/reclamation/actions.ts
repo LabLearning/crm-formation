@@ -54,7 +54,7 @@ export async function deposerReclamationPubliqueAction(formData: FormData): Prom
 
   if (error) {
     console.error('[reclamation publique]', error)
-    return { success: false, error: 'Une erreur est survenue. Vous pouvez nous écrire directement à digital@lab-learning.fr.' }
+    return { success: false, error: 'Une erreur est survenue. Vous pouvez nous écrire directement à contact@lab-learning.fr.' }
   }
 
   const { data: org } = await supabase.from('organizations').select('*').eq('id', ORG).single()
