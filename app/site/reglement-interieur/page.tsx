@@ -1,7 +1,11 @@
 import { LegalPage } from '../LegalPage'
 import { RI_BLOCS, RI_VERSION } from './contenu'
 
-export const metadata = { title: 'Règlement intérieur' }
+export const metadata = {
+  title: 'Règlement intérieur',
+  description: 'Règlement intérieur applicable aux stagiaires des formations Lab Learning (articles L6352-3 à L6352-5 du code du travail).',
+  alternates: { canonical: '/reglement-interieur' },
+}
 
 /**
  * Règlement intérieur applicable aux stagiaires (articles L6352-3 à L6352-5 et
@@ -14,7 +18,9 @@ export const metadata = { title: 'Règlement intérieur' }
  */
 export default function ReglementInterieur() {
   return (
-    <LegalPage title="Règlement intérieur applicable aux stagiaires" updated="août 2026">
+    // Pas de prop `updated` : la version datée (RI_VERSION) fait foi, une
+    // seconde date en tête créerait un doublon contradictoire.
+    <LegalPage title="Règlement intérieur applicable aux stagiaires">
       <p>
         <a
           href="/api/pdf/reglement-interieur"

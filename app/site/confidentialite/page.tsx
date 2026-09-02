@@ -1,6 +1,10 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Politique de confidentialité' }
+export const metadata = {
+  title: 'Politique de confidentialité',
+  description: 'Comment Lab Learning collecte, utilise et protège vos données personnelles, et comment exercer vos droits RGPD.',
+  alternates: { canonical: '/confidentialite' },
+}
 
 export default function Confidentialite() {
   return (

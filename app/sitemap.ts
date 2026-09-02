@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/mentions-legales`, changeFrequency: 'yearly', priority: 0.1 },
     { url: `${BASE}/cgv`, changeFrequency: 'yearly', priority: 0.1 },
     { url: `${BASE}/confidentialite`, changeFrequency: 'yearly', priority: 0.1 },
+    { url: `${BASE}/cookies`, changeFrequency: 'yearly', priority: 0.1 },
   ]
 
   const branches = ['restauration-rapide', 'restaurant-hcr', 'boucherie-charcuterie', 'boulangerie-patisserie']

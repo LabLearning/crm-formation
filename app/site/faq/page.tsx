@@ -32,7 +32,7 @@ const FAQ: { q: string; r: string }[] = [
   },
   {
     q: 'Êtes-vous certifiés Qualiopi ?',
-    r: "Oui. Lab Learning est certifié Qualiopi au titre des actions de formation (certificat CERT_S1024_0345_1, délivré par CEVA Solution, valable jusqu'au 04/11/2027). Cette certification est la condition pour que vos formations soient finançables par les OPCO et France Travail. Nous sommes également inscrits sur la liste DRAAF pour la formation hygiène alimentaire (HACCP).",
+    r: "Oui. Lab Learning est certifié Qualiopi au titre des actions de formation (certificat CERT_S1024_0345_1, délivré par CEVA SOLUTION, valable jusqu'au 04/11/2027). Cette certification est la condition pour que vos formations soient finançables par les OPCO et France Travail. Nous sommes également inscrits sur la liste DRAAF pour la formation hygiène alimentaire (HACCP).",
   },
   {
     q: "L'attestation d'hygiène alimentaire est-elle officielle ?",

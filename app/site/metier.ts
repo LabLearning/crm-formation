@@ -1,4 +1,4 @@
-import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, UtensilsCrossed, Wine, Sandwich, Management, Hygiene, FirstAid, Formation } from './icons'
+import { ChefHat, Beef, Wheat, Cake, Croissant, Coffee, Wine, Sandwich, Management, Hygiene, FirstAid, Formation } from './icons'
 
 export interface MetierStyle {
   Icon: any

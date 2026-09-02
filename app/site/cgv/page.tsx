@@ -1,6 +1,10 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Conditions générales de vente' }
+export const metadata = {
+  title: 'Conditions générales de vente',
+  description: 'Conditions générales de vente des prestations de formation Lab Learning : inscription, tarifs, annulation, réclamations.',
+  alternates: { canonical: '/cgv' },
+}
 
 export default function CGV() {
   return (
@@ -60,7 +64,8 @@ export default function CGV() {
 
       <h2>8. Réclamations</h2>
       <p>
-        Toute réclamation peut être adressée par email à <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
+        Toute réclamation peut être déposée via notre <a href="/site/reclamation">formulaire de réclamation</a> ou
+        adressée par email à <a href="mailto:contact@lab-learning.fr">contact@lab-learning.fr</a>.
         Elle fait l’objet d’un traitement dans le cadre de notre démarche qualité Qualiopi.
       </p>
 

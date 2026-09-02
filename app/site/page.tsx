@@ -16,6 +16,10 @@ import { BRANCHES } from './branches'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  alternates: { canonical: '/' },
+}
+
 const fmt = (n: number) => n.toLocaleString('fr-FR')
 
 const POURQUOI = [
@@ -55,12 +59,10 @@ export default async function SiteHome() {
       bullets: ['Notre plateforme e-learning Learnexa', 'Modules à la demande, accessibles partout', 'Suivi de la progression en continu'],
       Icon: MonitorPlay, from: '#4C1D95', to: '#7C3AED',
       img: '/site/formations/18570280-76ec-474e-8312-3f30a12005d9.webp',
-      chips: [{ Icon: Laptop, label: 'Plateforme Learnexa' }, { Icon: GraduationCap, label: `${fmt(stats.apprenants)} apprenants` }],
+      chips: [{ Icon: Laptop, label: 'Plateforme Learnexa' }, { Icon: GraduationCap, label: `${fmt(stats.apprenants)} stagiaires formés` }],
       href: 'https://learnexa.fr', cta: 'Découvrir Learnexa',
     },
   ]
-
-  const heroTiles = BRANCHES
 
   return (
     <>
@@ -98,9 +100,9 @@ export default async function SiteHome() {
           </div>
 
           {/* Collage métier (données live) — asymétrique */}
-          {heroTiles.length >= 2 && (
+          {BRANCHES.length >= 2 && (
             <div className="ll-rise lg:col-span-6 grid grid-cols-2 gap-4 sm:gap-5 relative" style={{ animationDelay: '0.12s' }}>
-              {heroTiles.map((b, i) => (
+              {BRANCHES.map((b, i) => (
                 <Link key={b.slug} href={`/site/branches/${b.slug}`}
                   className={`group rounded-3xl overflow-hidden shadow-sm ring-1 ring-black/5 ll-lift ${i % 2 === 1 ? 'translate-y-6 sm:translate-y-10' : ''}`}>
                   <MetierVisual nom={b.label} label={b.label} height={i % 2 === 1 ? 'h-56 sm:h-72' : 'h-52 sm:h-64'} />
@@ -123,7 +125,7 @@ export default async function SiteHome() {
                 <span className="h-9 w-9 rounded-xl bg-[#205040]/10 flex items-center justify-center"><GraduationCap className="h-5 w-5 text-[#205040]" /></span>
                 <span className="leading-tight">
                   <span className="block font-heading font-black text-lg text-[#14110F] tabular-nums">{fmt(stats.apprenants)}</span>
-                  <span className="block text-[11px] text-[#78716C]">apprenants formés</span>
+                  <span className="block text-[11px] text-[#78716C]">stagiaires formés</span>
                 </span>
               </div>
             </div>
@@ -144,7 +146,7 @@ export default async function SiteHome() {
           </div>
           <div className="mt-10 text-center">
             <Link href="/site/partenaires" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] hover:gap-2.5 transition-all">
-              Voir tous nos clients <ArrowRight className="h-4 w-4" />
+              Voir tous nos clients et partenaires <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </section>
@@ -310,8 +312,8 @@ export default async function SiteHome() {
       <section className="border-y border-[#205040]/10 bg-[#FAFAFA]">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 md:divide-x md:divide-[#205040]/10">
           {[
-            { v: stats.formations, l: 'programmes au catalogue', Icon: GraduationCap },
-            { v: stats.apprenants, l: 'apprenants formés', Icon: Users },
+            { v: stats.formations, l: 'formations au catalogue', Icon: GraduationCap },
+            { v: stats.apprenants, l: 'stagiaires formés', Icon: Users },
             { v: stats.sessionsRealisees, l: 'sessions réalisées', Icon: CheckCircle2 },
             { v: stats.entreprises, l: 'entreprises accompagnées', Icon: Building2 },
           ].map((s, i) => (

@@ -1,6 +1,11 @@
 import { LegalPage } from '../LegalPage'
+import { GererCookies } from './GererCookies'
 
-export const metadata = { title: 'Politique de gestion des cookies' }
+export const metadata = {
+  title: 'Politique de gestion des cookies',
+  description: 'Les cookies utilisés par le site Lab Learning et comment gérer votre consentement.',
+  alternates: { canonical: '/cookies' },
+}
 
 export default function Cookies() {
   return (
@@ -14,15 +19,17 @@ export default function Cookies() {
       <ul>
         <li><strong>Cookies strictement nécessaires</strong> — indispensables au fonctionnement du site (navigation,
           sécurité). Ils ne requièrent pas votre consentement.</li>
-        <li><strong>Cookies de mesure d’audience</strong> — nous aident à comprendre l’utilisation du site pour
-          l’améliorer. Déposés uniquement avec votre consentement.</li>
+        <li><strong>Cookies de mesure d’audience</strong> — nous aideraient à comprendre l’utilisation du site pour
+          l’améliorer. <strong>Aucun outil de mesure d’audience n’est déployé à ce jour</strong> ; s’il l’était, il ne
+          serait activé qu’avec votre consentement.</li>
       </ul>
 
       <h2>Consentement</h2>
       <p>
-        Lors de votre première visite, vous pouvez accepter ou refuser les cookies non essentiels. Vous pouvez modifier
-        votre choix à tout moment via les paramètres de votre navigateur.
+        Lors de votre première visite, un bandeau vous permet d’accepter ou de refuser les cookies non essentiels.
+        Votre choix est mémorisé sur votre appareil. Vous pouvez le modifier ou le retirer à tout moment :
       </p>
+      <p><GererCookies /></p>
 
       <h2>Gérer les cookies</h2>
       <p>

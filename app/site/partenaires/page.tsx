@@ -4,7 +4,12 @@ import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Clients & partenaires' }
+export const metadata = {
+  title: 'Clients & partenaires',
+  description:
+    'Chamas Tacos, Dream\'s Donuts, New School Tacos, Chickeez, Kassia Food… : les réseaux et les restaurants qui forment leurs équipes avec Lab Learning.',
+  alternates: { canonical: '/partenaires' },
+}
 
 // ── Partenaires : cartes « mini-page » — couverture, avatar logo, activité ──
 const PARTENAIRES: { nom: string; logo: string; cover: string; type: string; desc: string }[] = [
@@ -52,7 +57,7 @@ export default function SiteClients() {
         </h1>
         <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
           Des réseaux franchisés qui nous confient leurs ouvertures et leurs équipes dans la durée,
-          et des dizaines de restaurants formés partout en France.
+          et plus de 200 établissements formés partout en France.
         </p>
       </section>
 
@@ -115,7 +120,7 @@ export default function SiteClients() {
           ))}
         </div>
         <p className="mt-5 text-sm text-[#78716C]">
-          … et plus de 200 établissements formés : restauration rapide, boucherie, boulangerie, pâtisserie, hôtellerie.
+          … et bien d&apos;autres établissements formés partout en France : restauration rapide, boucherie, boulangerie, pâtisserie, hôtellerie.
         </p>
       </section>
 

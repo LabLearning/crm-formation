@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: 'Lab Learning — Formations Qualiopi métiers de bouche & CHR',
     description:
       'Formations professionnelles en intra-entreprise, prises en charge OPCO : hygiène alimentaire HACCP, sécurité, management en restauration.',
-    url: '/site',
+    url: '/',
     images: [{ url: '/site/metiers/formation.webp', width: 1200, height: 630, alt: 'Formation aux métiers de la restauration — Lab Learning' }],
   },
   twitter: {
@@ -50,11 +50,11 @@ const SCHEMA_ORGANISATION = {
   '@graph': [
     {
       '@type': 'Organization',
-      '@id': 'https://crm.lab-learning.fr/site#organization',
+      '@id': 'https://www.lab-learning.fr/#organization',
       name: 'Lab Learning',
       legalName: 'SAS Lab-Learning',
-      url: 'https://crm.lab-learning.fr/site',
-      logo: 'https://crm.lab-learning.fr/logo-lablearning.svg',
+      url: 'https://www.lab-learning.fr',
+      logo: 'https://www.lab-learning.fr/logo-lablearning.svg',
       email: 'contact@lab-learning.fr',
       telephone: '+33451330330',
       vatID: 'FR41931658561',
@@ -69,15 +69,15 @@ const SCHEMA_ORGANISATION = {
       hasCredential: {
         '@type': 'EducationalOccupationalCredential',
         name: 'Certification Qualiopi — Actions de formation',
-        url: 'https://crm.lab-learning.fr/site/documents/certificat-qualiopi-lab-learning.pdf',
+        url: 'https://www.lab-learning.fr/site/documents/certificat-qualiopi-lab-learning.pdf',
       },
     },
     {
       '@type': 'LocalBusiness',
-      '@id': 'https://crm.lab-learning.fr/site#localbusiness',
+      '@id': 'https://www.lab-learning.fr/#localbusiness',
       name: 'Lab Learning',
-      parentOrganization: { '@id': 'https://crm.lab-learning.fr/site#organization' },
-      url: 'https://crm.lab-learning.fr/site',
+      parentOrganization: { '@id': 'https://www.lab-learning.fr/#organization' },
+      url: 'https://www.lab-learning.fr',
       telephone: '+33451330330',
       address: {
         '@type': 'PostalAddress',

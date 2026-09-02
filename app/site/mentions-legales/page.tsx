@@ -1,6 +1,10 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Mentions légales' }
+export const metadata = {
+  title: 'Mentions légales',
+  description: 'Mentions légales du site Lab Learning : éditeur, hébergeur, propriété intellectuelle.',
+  alternates: { canonical: '/mentions-legales' },
+}
 
 export default function MentionsLegales() {
   return (

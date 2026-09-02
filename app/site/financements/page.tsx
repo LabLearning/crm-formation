@@ -6,7 +6,12 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { SimulateurPriseEnCharge } from './SimulateurPriseEnCharge'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Financements' }
+export const metadata = {
+  title: 'Financements',
+  description:
+    'POEI, OPCO, plan de développement des compétences : les dispositifs qui financent vos formations, avec un simulateur de prise en charge et un accompagnement au montage du dossier.',
+  alternates: { canonical: '/financements' },
+}
 
 const ORG = process.env.PUBLIC_SITE_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
 

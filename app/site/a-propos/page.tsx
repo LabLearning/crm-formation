@@ -5,7 +5,12 @@ import { Kicker } from '../Kicker'
 import { CountUp } from '../CountUp'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'À propos' }
+export const metadata = {
+  title: 'À propos',
+  description:
+    'Lab Learning, organisme de formation certifié Qualiopi à Montpellier : formateurs praticiens des métiers de bouche, interventions en établissement partout en France.',
+  alternates: { canonical: '/a-propos' },
+}
 
 const VALEURS = [
   { Icon: Target, t: 'Le geste juste', d: "Une pédagogie ancrée dans le réel du métier : on apprend en faisant, sur les gestes qui comptent en production." },
@@ -17,7 +22,7 @@ export default async function SiteAPropos() {
   const { stats } = await getPublicSiteData()
   const chiffres = [
     { v: stats.formations, l: 'Formations au catalogue' },
-    { v: stats.apprenants, l: 'Apprenants formés' },
+    { v: stats.apprenants, l: 'Stagiaires formés' },
     { v: stats.sessionsRealisees, l: 'Sessions réalisées' },
     { v: stats.entreprises, l: 'Entreprises accompagnées' },
   ]

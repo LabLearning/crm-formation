@@ -7,7 +7,12 @@ import { Reveal } from '../Reveal'
 import { Kicker } from '../Kicker'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Nos formations' }
+export const metadata = {
+  title: 'Nos formations',
+  description:
+    'Le catalogue Lab Learning : hygiène alimentaire HACCP, sécurité, management et formations métier pour la restauration, la boucherie, la boulangerie et la pâtisserie — en établissement, financées par votre OPCO.',
+  alternates: { canonical: '/formations' },
+}
 
 /**
  * La page présente L'OFFRE, pas le catalogue : ce que Lab Learning fait le

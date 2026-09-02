@@ -7,7 +7,12 @@ import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Nos résultats' }
+export const metadata = {
+  title: 'Nos résultats',
+  description:
+    'Nos indicateurs de résultats publiés : satisfaction, réussite et assiduité des stagiaires, formation par formation — la transparence exigée par Qualiopi.',
+  alternates: { canonical: '/resultats' },
+}
 
 export default async function SiteResultats() {
   const r = await getPublicResultats()

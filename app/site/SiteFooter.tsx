@@ -35,11 +35,11 @@ export function SiteFooter() {
         <div className="md:col-span-3">
           <div className="text-xs font-semibold uppercase tracking-wider text-[#78716C] mb-4">Nos formations</div>
           <ul className="space-y-2.5 text-sm">
-            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">Hygiène alimentaire &amp; HACCP</Link></li>
-            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">Prévention des risques</Link></li>
-            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">POEI restauration rapide</Link></li>
-            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">Management &amp; gestion</Link></li>
-            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">Intelligence artificielle</Link></li>
+            <li><Link href="/site/branches/restauration-rapide" className="text-[#D6D3D1] hover:text-white transition-colors">Restauration rapide</Link></li>
+            <li><Link href="/site/branches/restaurant-hcr" className="text-[#D6D3D1] hover:text-white transition-colors">Restaurant &amp; HCR</Link></li>
+            <li><Link href="/site/branches/boucherie-charcuterie" className="text-[#D6D3D1] hover:text-white transition-colors">Boucherie-charcuterie</Link></li>
+            <li><Link href="/site/branches/boulangerie-patisserie" className="text-[#D6D3D1] hover:text-white transition-colors">Boulangerie-pâtisserie</Link></li>
+            <li><Link href="/site/formations" className="text-[#D6D3D1] hover:text-white transition-colors">Tout le catalogue</Link></li>
             <li><Link href="/site/financements" className="text-[#D6D3D1] hover:text-white transition-colors">Financements OPCO &amp; France Travail</Link></li>
           </ul>
         </div>
@@ -67,7 +67,7 @@ export function SiteFooter() {
               <PhoneCall className="h-4 w-4 shrink-0" /> 04 51 330 330
             </a>
             <div className="flex items-start gap-2 text-[#A8A29E]">
-              <MapPin className="h-4 w-4 shrink-0 mt-0.5" /> 6b bd Berthelot, Bureau 3, 34000 Montpellier
+              <MapPin className="h-4 w-4 shrink-0 mt-0.5" /> 6b boulevard Berthelot, Bureau 3, 34000 Montpellier
             </div>
           </div>
         </div>
@@ -83,7 +83,6 @@ export function SiteFooter() {
             <Link href="/site/mentions-legales" className="hover:text-[#D6D3D1]">Mentions légales</Link>
             <Link href="/site/cgv" className="hover:text-[#D6D3D1]">CGV</Link>
             <Link href="/site/reglement-interieur" className="hover:text-[#D6D3D1]">Règlement intérieur</Link>
-            <Link href="/site/recrutement" className="hover:text-[#D6D3D1]">Recrutement</Link>
             <Link href="/site/reclamation" className="hover:text-[#D6D3D1]">Réclamations</Link>
             <Link href="/site/confidentialite" className="hover:text-[#D6D3D1]">Confidentialité</Link>
             <Link href="/site/cookies" className="hover:text-[#D6D3D1]">Cookies</Link>

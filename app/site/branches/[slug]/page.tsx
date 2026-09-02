@@ -13,12 +13,14 @@ export const dynamic = 'force-dynamic'
 
 const MODALITE: Record<string, string> = { presentiel: 'Présentiel', distanciel: 'À distance', mixte: 'Mixte' }
 
-// Visuel de la card selon le thème de la formation ; cœur de métier → photo de la branche.
-const GROUP_IMG: Record<string, string> = { hygiene: 'hygiene', prevention: 'secourisme', management: 'management' }
-
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const b = brancheBySlug(params.slug)
-  return { title: b ? `Formations ${b.label} — Lab Learning` : 'Formations — Lab Learning' }
+  if (!b) return { title: 'Formations' }
+  return {
+    title: `Formations ${b.label}`,
+    description: `${b.tagline} — les formations Lab Learning pour la branche ${b.label} : hygiène, sécurité et compétences métier, en établissement, financées par votre OPCO.`,
+    alternates: { canonical: `/branches/${b.slug}` },
+  }
 }
 
 export default async function SiteBranche({ params }: { params: { slug: string } }) {

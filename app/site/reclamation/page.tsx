@@ -1,6 +1,11 @@
 import { ReclamationForm } from './ReclamationForm'
 
-export const metadata = { title: 'Déposer une réclamation' }
+export const metadata = {
+  title: 'Déposer une réclamation',
+  description:
+    'Le canal officiel pour signaler une difficulté ou une insatisfaction sur une formation Lab Learning : chaque réclamation est enregistrée, traitée et suivie.',
+  alternates: { canonical: '/reclamation' },
+}
 
 /**
  * Dépôt public d'une réclamation (indicateur 31 du RNQ) : stagiaires,
