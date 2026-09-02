@@ -191,7 +191,7 @@ export function AssistantWidget() {
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          <img src="/starkk.svg" alt="" className="h-7 w-7 rounded-full ring-2 ring-white/30" />
+          <img src="/starkk.png" alt="" className="h-7 w-7 rounded-full ring-2 ring-white/30" />
           Starkk
         </button>
       )}
@@ -200,7 +200,7 @@ export function AssistantWidget() {
         <div className="fixed inset-0 z-50 md:inset-auto md:right-6 md:bottom-6 md:h-[640px] md:max-h-[calc(100vh-3rem)] md:w-[440px] flex flex-col bg-white md:rounded-3xl shadow-2xl shadow-black/25 ring-1 ring-black/5 overflow-hidden">
           {/* En-tête */}
           <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#205040] to-[#2c6e55] text-white shrink-0">
-            <img src="/starkk.svg" alt="Starkk" className="h-9 w-9 rounded-full ring-2 ring-white/25" />
+            <img src="/starkk.png" alt="Starkk" className="h-9 w-9 rounded-full ring-2 ring-white/25" />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">Starkk</div>
               <div className="text-[11px] text-white/70">L&apos;assistant Lab Learning · les actions partent après votre confirmation</div>
@@ -220,7 +220,8 @@ export function AssistantWidget() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-surface-50">
             {messages.length === 0 && (
               <div className="pt-6 text-center space-y-4">
-                <img src="/starkk.svg" alt="" className="h-16 w-16 mx-auto rounded-full shadow-lg shadow-[#205040]/30" />
+                <video src="/starkk-intro.mp4" poster="/starkk.png" autoPlay loop muted playsInline
+                  className="h-24 w-24 mx-auto rounded-full object-cover shadow-lg shadow-[#205040]/30 ring-2 ring-[#5CD9A0]/30" />
                 <p className="text-sm text-surface-500 max-w-[280px] mx-auto">
                   Starkk connaît tout le CRM : une session, un client, un document, un chiffre.
                   Il peut aussi envoyer une convocation, une convention ou relancer une facture, avec votre accord.
@@ -237,7 +238,7 @@ export function AssistantWidget() {
             )}
             {messages.map((mes, i) => (
               <div key={i} className={cn('flex items-end gap-2', mes.role === 'user' ? 'justify-end' : 'justify-start')}>
-                {mes.role === 'assistant' && <img src="/starkk.svg" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1" />}
+                {mes.role === 'assistant' && <img src="/starkk.png" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1" />}
                 <div className={cn(
                   'max-w-[85%] rounded-2xl px-3.5 py-2.5',
                   mes.role === 'user' ? 'bg-brand-500 text-white text-sm' : 'bg-white ring-1 ring-black/5 text-surface-700',
@@ -249,7 +250,7 @@ export function AssistantWidget() {
             ))}
             {busy && (
               <div className="flex items-end gap-2 justify-start">
-                <img src="/starkk.svg" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1 animate-pulse" />
+                <img src="/starkk.png" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1 animate-pulse" />
                 <div className="rounded-2xl bg-white ring-1 ring-black/5 px-3.5 py-2.5 inline-flex items-center gap-2 text-sm text-surface-500">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" /> Starkk consulte le CRM…
                 </div>
