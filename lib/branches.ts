@@ -15,7 +15,7 @@ export interface BrancheBase {
 
 export const BRANCHES_BASE: BrancheBase[] = [
   { slug: 'restauration-rapide', label: 'Restauration rapide', tagline: 'Fast-food, tacos, pizza, burger, snacking' },
-  { slug: 'restaurant-hcr', label: 'Restaurant & Hôtellerie', tagline: 'Restaurant, hôtel, café, bar — CHR' },
+  { slug: 'restaurant-hcr', label: 'Restaurant & Hôtellerie', tagline: 'Restaurant, hôtel, café, bar · CHR' },
   { slug: 'boucherie-charcuterie', label: 'Boucherie – Charcuterie', tagline: 'Boucherie, charcuterie, préparation des viandes' },
   { slug: 'boulangerie-patisserie', label: 'Boulangerie – Pâtisserie', tagline: 'Boulangerie, pâtisserie, viennoiserie' },
 ]

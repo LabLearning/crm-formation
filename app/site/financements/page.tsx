@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal'
 export const metadata = {
   title: 'Financements',
   description:
-    'POEI, OPCO, AIF, CPF, AGEFICE : les dispositifs qui financent vos formations, du recrutement à la formation continue. On monte le dossier avec vous de A à Z.',
+    'POEI, OPCO, CPF, AGEFICE : les dispositifs qui financent vos formations, du recrutement à la formation continue. On monte le dossier avec vous de A à Z.',
   alternates: { canonical: '/financements' },
 }
 
