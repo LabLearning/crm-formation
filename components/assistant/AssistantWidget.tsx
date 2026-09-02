@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, X, Send, Loader2, CheckCircle2, XCircle, Zap, RotateCcw } from '@/components/ui/icons'
+import { X, Send, Loader2, CheckCircle2, XCircle, Zap, RotateCcw } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 interface ActionProposee {
@@ -183,7 +183,7 @@ export function AssistantWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Ouvrir l’assistant CRM"
+          aria-label="Ouvrir Starkk, l’assistant CRM"
           className={cn(
             'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
             'flex items-center gap-2 rounded-full pl-4 pr-5 py-3 text-sm font-semibold text-white',
@@ -191,8 +191,8 @@ export function AssistantWidget() {
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          <Sparkles className="h-[18px] w-[18px]" />
-          Assistant
+          <img src="/starkk.svg" alt="" className="h-7 w-7 rounded-full ring-2 ring-white/30" />
+          Starkk
         </button>
       )}
 
@@ -200,10 +200,10 @@ export function AssistantWidget() {
         <div className="fixed inset-0 z-50 md:inset-auto md:right-6 md:bottom-6 md:h-[640px] md:max-h-[calc(100vh-3rem)] md:w-[440px] flex flex-col bg-white md:rounded-3xl shadow-2xl shadow-black/25 ring-1 ring-black/5 overflow-hidden">
           {/* En-tête */}
           <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#205040] to-[#2c6e55] text-white shrink-0">
-            <span className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center"><Sparkles className="h-4 w-4" /></span>
+            <img src="/starkk.svg" alt="Starkk" className="h-9 w-9 rounded-full ring-2 ring-white/25" />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold">Assistant CRM</div>
-              <div className="text-[11px] text-white/70">Interne · les actions partent après votre confirmation</div>
+              <div className="text-sm font-semibold">Starkk</div>
+              <div className="text-[11px] text-white/70">L&apos;assistant Lab Learning · les actions partent après votre confirmation</div>
             </div>
             {messages.length > 0 && (
               <button onClick={() => setMessages([])} title="Nouvelle conversation" aria-label="Nouvelle conversation"
@@ -220,9 +220,10 @@ export function AssistantWidget() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-surface-50">
             {messages.length === 0 && (
               <div className="pt-6 text-center space-y-4">
+                <img src="/starkk.svg" alt="" className="h-16 w-16 mx-auto rounded-full shadow-lg shadow-[#205040]/30" />
                 <p className="text-sm text-surface-500 max-w-[280px] mx-auto">
-                  Demandez n&apos;importe quoi sur le CRM : une session, un client, un document, un chiffre.
-                  Je peux aussi envoyer une convocation, une convention ou relancer une facture, avec votre accord.
+                  Starkk connaît tout le CRM : une session, un client, un document, un chiffre.
+                  Il peut aussi envoyer une convocation, une convention ou relancer une facture, avec votre accord.
                 </p>
                 <div className="flex flex-col items-center gap-2">
                   {SUGGESTIONS.map((s) => (
@@ -235,7 +236,8 @@ export function AssistantWidget() {
               </div>
             )}
             {messages.map((mes, i) => (
-              <div key={i} className={cn('flex', mes.role === 'user' ? 'justify-end' : 'justify-start')}>
+              <div key={i} className={cn('flex items-end gap-2', mes.role === 'user' ? 'justify-end' : 'justify-start')}>
+                {mes.role === 'assistant' && <img src="/starkk.svg" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1" />}
                 <div className={cn(
                   'max-w-[85%] rounded-2xl px-3.5 py-2.5',
                   mes.role === 'user' ? 'bg-brand-500 text-white text-sm' : 'bg-white ring-1 ring-black/5 text-surface-700',
@@ -246,9 +248,10 @@ export function AssistantWidget() {
               </div>
             ))}
             {busy && (
-              <div className="flex justify-start">
+              <div className="flex items-end gap-2 justify-start">
+                <img src="/starkk.svg" alt="" className="h-6 w-6 rounded-full shrink-0 mb-1 animate-pulse" />
                 <div className="rounded-2xl bg-white ring-1 ring-black/5 px-3.5 py-2.5 inline-flex items-center gap-2 text-sm text-surface-500">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Je consulte le CRM…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Starkk consulte le CRM…
                 </div>
               </div>
             )}
@@ -262,7 +265,7 @@ export function AssistantWidget() {
                 value={saisie}
                 onChange={(e) => setSaisie(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }}
-                placeholder="Votre question…"
+                placeholder="Demandez à Starkk…"
                 rows={1}
                 className="flex-1 resize-none rounded-xl border border-surface-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-brand-300 max-h-28"
               />
