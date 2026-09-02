@@ -2,7 +2,7 @@ import { Mail, ShieldCheck, Banknote, Clock } from '../icons'
 import { ContactForm } from './ContactForm'
 import { Kicker } from '../Kicker'
 
-export const metadata = { title: 'Contact — Lab Learning' }
+export const metadata = { title: 'Contact' }
 
 export default function SiteContact() {
   return (

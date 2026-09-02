@@ -1,6 +1,6 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Politique de gestion des cookies — Lab Learning' }
+export const metadata = { title: 'Politique de gestion des cookies' }
 
 export default function Cookies() {
   return (

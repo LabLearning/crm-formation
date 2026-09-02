@@ -6,7 +6,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { SimulateurPriseEnCharge } from './SimulateurPriseEnCharge'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Financements — Lab Learning' }
+export const metadata = { title: 'Financements' }
 
 const ORG = process.env.PUBLIC_SITE_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
 

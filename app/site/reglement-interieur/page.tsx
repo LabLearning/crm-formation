@@ -1,7 +1,7 @@
 import { LegalPage } from '../LegalPage'
 import { RI_BLOCS, RI_VERSION } from './contenu'
 
-export const metadata = { title: 'Règlement intérieur — Lab Learning' }
+export const metadata = { title: 'Règlement intérieur' }
 
 /**
  * Règlement intérieur applicable aux stagiaires (articles L6352-3 à L6352-5 et

@@ -4,7 +4,7 @@ import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const metadata = {
-  title: 'Questions fréquentes — Lab Learning',
+  title: 'Questions fréquentes',
   description: 'Financement OPCO, POEI France Travail, formations en établissement, délais, Qualiopi, accessibilité : les réponses aux questions les plus posées.',
   alternates: { canonical: '/faq' },
 }

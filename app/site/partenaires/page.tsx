@@ -4,7 +4,7 @@ import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Clients & partenaires — Lab Learning' }
+export const metadata = { title: 'Clients & partenaires' }
 
 // ── Partenaires : cartes « mini-page » — couverture, avatar logo, activité ──
 const PARTENAIRES: { nom: string; logo: string; cover: string; type: string; desc: string }[] = [

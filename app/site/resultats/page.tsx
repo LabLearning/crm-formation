@@ -7,7 +7,7 @@ import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Nos résultats — Lab Learning' }
+export const metadata = { title: 'Nos résultats' }
 
 export default async function SiteResultats() {
   const r = await getPublicResultats()

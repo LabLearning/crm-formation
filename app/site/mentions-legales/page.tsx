@@ -1,6 +1,6 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Mentions légales — Lab Learning' }
+export const metadata = { title: 'Mentions légales' }
 
 export default function MentionsLegales() {
   return (

@@ -5,7 +5,7 @@ import { Kicker } from '../Kicker'
 import { CountUp } from '../CountUp'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'À propos — Lab Learning' }
+export const metadata = { title: 'À propos' }
 
 const VALEURS = [
   { Icon: Target, t: 'Le geste juste', d: "Une pédagogie ancrée dans le réel du métier : on apprend en faisant, sur les gestes qui comptent en production." },

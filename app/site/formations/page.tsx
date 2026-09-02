@@ -7,7 +7,7 @@ import { Reveal } from '../Reveal'
 import { Kicker } from '../Kicker'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Nos formations — Lab Learning' }
+export const metadata = { title: 'Nos formations' }
 
 /**
  * La page présente L'OFFRE, pas le catalogue : ce que Lab Learning fait le

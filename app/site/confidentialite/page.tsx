@@ -1,6 +1,6 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Politique de confidentialité — Lab Learning' }
+export const metadata = { title: 'Politique de confidentialité' }
 
 export default function Confidentialite() {
   return (

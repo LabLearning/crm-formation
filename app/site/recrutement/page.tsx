@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Hygiene, FirstAid, ChefHat, Management, UserCheck, CheckCircle2, Mail, MapPin, Briefcase, GraduationCap } from '../icons'
 
 export const metadata: Metadata = {
-  title: 'Recrutement — Devenez formateur Lab Learning',
+  title: 'Recrutement — Devenez formateur',
   description:
     "Lab Learning recrute des formateurs indépendants : hygiène alimentaire HACCP, prévention et sécurité au travail, métiers de bouche, management en restauration, POEI. Fiches de poste et candidature.",
   alternates: { canonical: '/recrutement' },

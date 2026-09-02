@@ -1,6 +1,6 @@
 import { LegalPage } from '../LegalPage'
 
-export const metadata = { title: 'Conditions générales de vente — Lab Learning' }
+export const metadata = { title: 'Conditions générales de vente' }
 
 export default function CGV() {
   return (
