@@ -1,63 +1,105 @@
 import Link from 'next/link'
-import { ArrowRight, Banknote, Building2, Briefcase, TrendingUp, FileCheck2, DoorOpen, UserCheck } from '../icons'
+import { ArrowRight, Banknote, CheckCircle2, FileCheck2 } from '../icons'
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
-import { createServiceRoleClient } from '@/lib/supabase/server'
-import { SimulateurPriseEnCharge } from './SimulateurPriseEnCharge'
 
-export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Financements',
   description:
-    'POEI, OPCO, plan de développement des compétences : les dispositifs qui financent vos formations, avec un simulateur de prise en charge et un accompagnement au montage du dossier.',
+    'POEI, OPCO, AIF, CPF, AGEFICE : les dispositifs qui financent vos formations, du recrutement à la formation continue — on monte le dossier avec vous de A à Z.',
   alternates: { canonical: '/financements' },
 }
 
-const ORG = process.env.PUBLIC_SITE_ORG || 'ff747dfe-c034-44d8-98d7-e53892263fb5'
-
-const DISPOSITIFS: { Icon: any; t: string; d: string; tag: string; href?: string }[] = [
+/**
+ * Les types de financement possibles — une carte par dispositif, avec le logo
+ * officiel du financeur et les points concrets de prise en charge. La première
+ * carte (POEI) est mise en avant : c'est le dispositif signature de Lab Learning.
+ */
+const DISPOSITIFS: {
+  t: string
+  sous: string
+  pourQui: string
+  d: string
+  points: string[]
+  logos: { src: string; alt: string }[]
+  photo: string
+  href?: string
+  cta?: string
+}[] = [
   {
-    Icon: DoorOpen,
-    t: 'POEI — avant l’ouverture',
-    d: "La Préparation Opérationnelle à l’Emploi Individuelle finance la formation de vos futurs salariés avant leur prise de poste. Idéale à l’ouverture : vous recrutez et formez une équipe déjà opérationnelle, financée par France Travail.",
-    tag: 'Recrutement',
+    t: 'POEI',
+    sous: 'Préparation Opérationnelle à l’Emploi Individuelle',
+    pourQui: 'Recrutement & ouverture',
+    d: 'France Travail finance la formation de vos futurs salariés avant leur prise de poste. Idéale à l’ouverture : vous recrutez et formez une équipe déjà opérationnelle dès le premier jour.',
+    points: ['Formation financée avant l’embauche', 'Recrutement + formation avant l’ouverture', 'Équipe opérationnelle dès le jour 1'],
+    logos: [{ src: '/site/logos/financeurs/france-travail.svg', alt: 'France Travail' }],
+    photo: '/site/metiers/rapide.webp',
   },
   {
-    Icon: Building2,
-    t: 'OPCO',
-    d: "Les Opérateurs de Compétences financent tout ou partie de la formation de vos salariés au titre du plan de développement des compétences ou de dispositifs dédiés à votre branche.",
-    tag: 'Salariés',
-  },
-  {
-    Icon: Briefcase,
-    t: 'France Travail',
-    d: "Pour les demandeurs d’emploi, des dispositifs comme l’AIF ou la POEI permettent de financer une montée en compétence vers un poste concret.",
-    tag: 'Demandeurs d’emploi',
-  },
-  {
-    Icon: TrendingUp,
     t: 'Plan de développement des compétences',
-    d: "L’employeur mobilise son budget formation pour faire monter ses équipes en compétence — un levier de fidélisation et de performance en cuisine comme en salle.",
-    tag: 'Employeurs',
+    sous: 'Votre OPCO de branche',
+    pourQui: 'Salariés en poste',
+    d: 'Votre opérateur de compétences finance tout ou partie de la formation de vos salariés. Nos tarifs sont calés sur les barèmes de votre branche — le reste à charge est souvent nul.',
+    points: ['Barèmes AKTO et OPCO EP', 'Formations pendant l’exploitation', 'Reste à charge souvent nul'],
+    logos: [
+      { src: '/site/logos/financeurs/akto.png', alt: 'AKTO' },
+      { src: '/site/logos/financeurs/opco-ep.svg', alt: 'OPCO EP' },
+    ],
+    photo: '/site/metiers/cuisine.webp',
   },
   {
-    Icon: UserCheck,
-    t: 'CPF — Compte Personnel de Formation',
-    d: "Chaque actif dispose d’un budget formation attaché à son compte. Notre formation Création d’entreprise est éligible : le CPF finance tout ou partie du parcours, mobilisable directement par le salarié ou le demandeur d’emploi.",
-    tag: 'Individuel',
+    t: 'AIF',
+    sous: 'Aide Individuelle à la Formation',
+    pourQui: 'Demandeurs d’emploi',
+    d: 'Pour un demandeur d’emploi, France Travail peut financer une montée en compétence vers un poste concret quand aucun autre dispositif ne couvre le besoin.',
+    points: ['Financement individuel France Travail', 'Vers un retour à l’emploi concret', 'Dossier monté avec votre conseiller'],
+    logos: [{ src: '/site/logos/financeurs/france-travail.svg', alt: 'France Travail' }],
+    photo: '/site/metiers/formation.webp',
+  },
+  {
+    t: 'CPF',
+    sous: 'Mon Compte Formation',
+    pourQui: 'Individuel',
+    d: 'Chaque actif dispose d’un budget formation attaché à son compte. Notre formation Création d’entreprise est éligible : le CPF finance tout ou partie du parcours.',
+    points: ['Mobilisable par le salarié ou le demandeur d’emploi', 'Formation Création d’entreprise éligible'],
+    logos: [{ src: '/site/logos/financeurs/mon-compte-formation.svg', alt: 'Mon Compte Formation' }],
+    photo: '/site/metiers/management.webp',
     href: '/site/formations/d8bcc0e2-80de-4784-b4c8-5bb2e1bf72f8',
+    cta: 'Voir la formation éligible',
+  },
+  {
+    t: 'AGEFICE',
+    sous: 'Dirigeants non salariés du commerce et des services',
+    pourQui: 'Gérants & indépendants',
+    d: 'Vous êtes gérant non salarié d’un restaurant, d’un commerce de bouche ? L’AGEFICE rembourse vos formations selon les barèmes en vigueur — nous déposons le dossier auprès de votre Point d’Accueil.',
+    points: ['Formations obligatoires et métier', 'Dossier déposé par nos soins', 'Remboursement selon les barèmes en vigueur'],
+    logos: [{ src: '/site/logos/financeurs/agefice.png', alt: 'AGEFICE' }],
+    photo: '/site/metiers/hcr.webp',
   },
 ]
 
-export default async function SiteFinancements() {
-  // Fiches publiées avec leur branche : la matière du simulateur.
-  const supabase = await createServiceRoleClient()
-  const { data: formationsSimu } = await supabase.from('formations')
-    .select('id, intitule, duree_heures, duree_jours, branches')
-    .eq('organization_id', ORG).eq('is_active', true).eq('site_publie', true)
-    .not('branches', 'is', null)
-    .order('nombre_apprenants_total', { ascending: false, nullsFirst: false })
+const FINANCEURS = [
+  { src: '/site/logos/financeurs/france-travail.svg', alt: 'France Travail' },
+  { src: '/site/logos/financeurs/akto.png', alt: 'AKTO' },
+  { src: '/site/logos/financeurs/opco-ep.svg', alt: 'OPCO EP' },
+  { src: '/site/logos/financeurs/mon-compte-formation.svg', alt: 'Mon Compte Formation' },
+  { src: '/site/logos/financeurs/agefice.png', alt: 'AGEFICE' },
+]
 
+function PlaqueLogos({ logos }: { logos: { src: string; alt: string }[] }) {
+  return (
+    <div className="flex items-center gap-2">
+      {logos.map((l) => (
+        <span key={l.alt} className="inline-flex h-14 items-center rounded-xl bg-white ring-1 ring-black/10 shadow-sm px-3">
+          <img src={l.src} alt={l.alt} title={l.alt} className="h-9 w-auto max-w-[120px] object-contain" />
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export default function SiteFinancements() {
+  const [poei, ...autres] = DISPOSITIFS
   return (
     <>
       <section className="relative overflow-hidden">
@@ -68,69 +110,116 @@ export default async function SiteFinancements() {
             Vos formations, <span className="text-[#205040]">financées</span>.
           </h1>
           <p className="mt-7 text-lg md:text-xl text-[#57534E] leading-relaxed max-w-2xl">
-            De l’ouverture avec la POEI à la formation continue de vos équipes, nos formations sont éligibles
-            aux principaux dispositifs. On vous accompagne de bout en bout dans le montage du dossier.
+            Du recrutement à la formation continue, il existe un dispositif pour chaque situation.
+            On identifie le bon financeur et on monte le dossier avec vous, de A à Z.
           </p>
-        </div>
-      </section>
-
-      {/* ── SIMULATEUR : l'outil de conversion de la page ── */}
-      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
-        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
-          <div className="lg:col-span-2">
-            <Kicker className="mb-4">Simulateur</Kicker>
-            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Estimez votre prise en charge en 1 minute</h2>
-            <p className="mt-4 text-[#57534E] leading-relaxed">
-              Votre SIRET, votre activité, la formation visée : on vous affiche le barème de prise en charge
-              de votre branche — et on vérifie ensuite le montant réel auprès de votre OPCO.
-            </p>
-            <ul className="mt-5 space-y-2">
-              {['Barèmes AKTO et OPCO EP réels', 'Estimation immédiate, sans engagement', 'Étude détaillée gratuite sous 24-48 h'].map((p) => (
-                <li key={p} className="flex items-center gap-2 text-sm text-[#44403C]">
-                  <span className="text-[#205040]"><FileCheck2 className="h-4 w-4" /></span>{p}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-3">
-            <SimulateurPriseEnCharge formations={(formationsSimu || []) as any[]} />
+          {/* Le mur des financeurs : la preuve avant l'argumentaire */}
+          <div className="mt-10 flex flex-wrap items-center gap-3">
+            {FINANCEURS.map((l, i) => (
+              <Reveal key={l.alt} delay={i * 70}>
+                <span className="inline-flex h-16 items-center rounded-2xl bg-white ring-1 ring-black/5 shadow-sm px-5 hover:ring-[#205040]/25 hover:shadow-md transition-all">
+                  <img src={l.src} alt={l.alt} title={l.alt} className="h-10 w-auto max-w-[140px] object-contain" />
+                </span>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* ── Les types de financement possibles ── */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 pb-16">
         <Kicker className="mb-4">Les dispositifs</Kicker>
         <h2 className="ll-display ll-fluid-h2 text-[#14110F] mb-10">Les types de financement possibles</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {DISPOSITIFS.map((x, i) => {
-            const contenu = (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="h-11 w-11 rounded-xl bg-[#205040]/8 flex items-center justify-center group-hover:bg-[#205040] transition-colors"><x.Icon className="h-5 w-5 text-[#205040] group-hover:text-white transition-colors" /></span>
-                  <span className="text-xs font-semibold text-[#205040] bg-[#205040]/8 rounded-full px-2.5 py-1">{x.tag}</span>
+
+        {/* POEI en vedette : carte horizontale pleine largeur */}
+        <Reveal>
+          <div className="group rounded-3xl border border-[#205040]/10 bg-white overflow-hidden grid md:grid-cols-2 hover:shadow-xl hover:shadow-black/10 hover:border-[#205040]/25 transition-all duration-300">
+            <div className="relative h-52 md:h-auto overflow-hidden order-first md:order-last">
+              <img src={poei.photo} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/25 via-transparent to-transparent" />
+            </div>
+            <div className="p-6 md:p-10 flex flex-col">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <PlaqueLogos logos={poei.logos} />
+                <span className="text-xs font-semibold text-[#205040] bg-[#205040]/8 rounded-full px-3 py-1.5">{poei.pourQui}</span>
+              </div>
+              <div className="mt-5 font-heading font-bold text-2xl text-[#14110F]">{poei.t}</div>
+              <div className="mt-0.5 text-sm font-semibold text-[#22A972]">{poei.sous}</div>
+              <p className="mt-3 text-[#57534E] leading-relaxed">{poei.d}</p>
+              <ul className="mt-4 space-y-2">
+                {poei.points.map((p) => (
+                  <li key={p} className="flex items-center gap-2 text-sm text-[#44403C]">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#205040]" /> {p}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/site/contact" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] hover:gap-2.5 transition-all">
+                Monter ce dossier <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Les 4 autres dispositifs : cartes « mini-page » avec couverture + logo */}
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          {autres.map((x, i) => (
+            <Reveal key={x.t} delay={(i % 2) * 110} className="h-full">
+              <div className="group h-full rounded-3xl border border-[#205040]/10 bg-white overflow-hidden flex flex-col hover:shadow-xl hover:shadow-black/10 hover:border-[#205040]/25 hover:-translate-y-1.5 transition-all duration-300">
+                <div className="relative h-36 overflow-hidden">
+                  <img src={x.photo} alt="" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                  <span className="absolute top-3 right-3 text-xs font-semibold text-[#205040] bg-white/95 rounded-full px-3 py-1.5 shadow-sm">{x.pourQui}</span>
                 </div>
-                <div className="font-heading font-semibold text-lg text-[#14110F]">{x.t}</div>
-                <p className="mt-1.5 text-sm text-[#57534E] leading-relaxed flex-1">{x.d}</p>
-                {x.href && (
-                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040]">
-                    Voir la formation <ArrowRight className="h-4 w-4" />
-                  </span>
-                )}
-              </>
-            )
-            const classes = 'group h-full rounded-2xl border border-[#205040]/10 bg-white p-6 flex flex-col hover:shadow-lg hover:shadow-black/5 hover:border-[#205040]/25 ll-lift'
-            return (
-              <Reveal key={x.t} delay={(i % 3) * 80}>
-                {x.href
-                  ? <Link href={x.href} className={classes}>{contenu}</Link>
-                  : <div className={classes}>{contenu}</div>}
-              </Reveal>
-            )
-          })}
+                <div className="px-6 relative z-10 -mt-7">
+                  <PlaqueLogos logos={x.logos} />
+                </div>
+                <div className="px-6 pt-4 pb-6 flex flex-col flex-1">
+                  <div className="font-heading font-bold text-lg text-[#14110F]">{x.t}</div>
+                  <div className="mt-0.5 text-xs font-semibold text-[#22A972]">{x.sous}</div>
+                  <p className="mt-2.5 text-sm text-[#57534E] leading-relaxed">{x.d}</p>
+                  <ul className="mt-3 space-y-1.5 flex-1">
+                    {x.points.map((p) => (
+                      <li key={p} className="flex items-center gap-2 text-sm text-[#44403C]">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#205040]" /> {p}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={x.href || '/site/contact'} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#205040] hover:gap-2.5 transition-all">
+                    {x.cta || 'Monter ce dossier'} <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-20">
+      {/* ── L'accompagnement : ce qu'on prend en charge ── */}
+      <section className="bg-[#FAFAFA] border-y border-[#205040]/10">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-14 md:flex items-center gap-10">
+          <div className="md:w-1/2">
+            <Kicker className="mb-4">Zéro paperasse pour vous</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">On monte le dossier de A à Z</h2>
+            <p className="mt-4 text-[#57534E] leading-relaxed">
+              Identifier le bon dispositif, chiffrer la prise en charge, préparer le programme, le devis et la
+              convention conformes Qualiopi, déposer la demande auprès du financeur : c&apos;est notre travail, pas le vôtre.
+            </p>
+          </div>
+          <ul className="md:w-1/2 mt-6 md:mt-0 space-y-3">
+            {[
+              'Identification du financeur et du barème de votre branche',
+              'Dossier complet préparé et déposé par nos équipes',
+              'Suivi de l’accord de prise en charge jusqu’au paiement',
+            ].map((p) => (
+              <li key={p} className="flex items-start gap-3 rounded-2xl border border-[#205040]/10 bg-white p-4 text-sm text-[#44403C]">
+                <FileCheck2 className="h-5 w-5 shrink-0 text-[#205040]" /> {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-20">
         <div className="rounded-[28px] bg-[#205040] text-white px-6 md:px-14 py-14 md:flex items-center justify-between gap-8">
           <div>
             <h2 className="ll-display text-2xl md:text-4xl text-balance text-white">On monte votre dossier de financement</h2>
