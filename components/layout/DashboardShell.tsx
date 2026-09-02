@@ -8,6 +8,7 @@ import { Header } from './Header'
 import { MobileNav } from './MobileNav'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { AssistantWidget } from '@/components/assistant/AssistantWidget'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/types'
 import { stopImpersonationAction } from '@/app/dashboard/users/actions'
@@ -62,6 +63,9 @@ export function DashboardShell({ user, orgName, permissions, children, impersona
             {children}
           </main>
         </div>
+
+        {/* Assistant CRM interne : jamais pour les comptes formateur/apprenant */}
+        {!['formateur', 'apprenant'].includes(user.role) && <AssistantWidget />}
       </div>
     </ToastProvider>
   )
