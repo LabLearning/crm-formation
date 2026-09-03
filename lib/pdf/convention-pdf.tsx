@@ -287,7 +287,8 @@ export function ConventionPDF({ convention, org }: { convention: any; org?: any 
         <PdfDocHeader
           docTitle={((convention as any).type === 'particulier' || (convention as any).client?.type === 'particulier') ? 'Contrat de formation professionnelle' : 'Convention de formation'}
           numero={convention.numero}
-          date={`Émise le ${fmtDate(convention.date_emission)}`}
+          // Pas de date d'émission dans l'en-tête : elle contredisait la date
+          // de signature quand le document était signé après coup.
           statut={TYPE_LABELS[convention.type] || convention.type}
           org={org}
         />

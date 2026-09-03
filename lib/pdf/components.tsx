@@ -255,7 +255,8 @@ export function PdfDocHeader({
 }: {
   docTitle: string
   numero: string
-  date: string
+  /** Optionnelle : les documents signés après coup n'affichent pas de date d'émission. */
+  date?: string
   statut?: string
   /** Si fourni, utilise le logo de l'org (logo_url) et son nom ; sinon fallback Lab Learning */
   org?: { name?: string; logo_url?: string | null; numero_da?: string | null; is_qualiopi?: boolean }
@@ -277,7 +278,7 @@ export function PdfDocHeader({
       <View style={{ flex: 1, alignItems: 'flex-end' }}>
         <Text style={shared.docTitle}>{docTitle}</Text>
         {numero && <Text style={shared.docMeta}>Réf. {numero}</Text>}
-        <Text style={shared.docMeta}>{date}</Text>
+        {date ? <Text style={shared.docMeta}>{date}</Text> : null}
         {statut && <View style={{ marginTop: 6 }}><Text style={shared.pill}>{statut}</Text></View>}
       </View>
     </View>
