@@ -273,11 +273,12 @@ export function AssistantWidget() {
             ))}
             {busy && (
               <div className="flex items-end gap-2 justify-start">
-                {/* Vignette non zoomée : on doit voir les documents holographiques autour de lui */}
-                <video src="/starkk-pense.mp4" poster="/starkk.png" autoPlay loop muted playsInline
-                  className="h-24 w-24 rounded-2xl object-cover shrink-0 ring-1 ring-[#5CD9A0]/40 shadow-md shadow-[#205040]/20" />
-                <div className="rounded-2xl bg-white ring-1 ring-black/5 px-3.5 py-2.5 inline-flex items-center gap-2 text-sm text-surface-500 mb-1">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Starkk fouille le CRM…
+                <AvatarStarkk taille="h-6 w-6" className="mb-1" />
+                {/* Simple indicateur de frappe : trois bulles qui dansent */}
+                <div className="rounded-2xl bg-white ring-1 ring-black/5 px-4 py-3 inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce" />
+                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce [animation-delay:150ms]" />
+                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce [animation-delay:300ms]" />
                 </div>
               </div>
             )}
