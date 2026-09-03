@@ -214,7 +214,11 @@ export function AssistantWidget() {
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          <AvatarStarkk taille="h-8 w-8" className="ring-2 ring-white/40" cadrage="scale-[2.1] origin-[50%_20%]" />
+          {/* Fine ligne verte lumineuse en rotation autour de l'avatar (plan buste) */}
+          <span className="relative h-9 w-9 shrink-0">
+            <span className="ll-ligne-verte absolute -inset-0.5 rounded-full" />
+            <AvatarStarkk taille="h-8 w-8" className="absolute inset-0 m-auto" />
+          </span>
           Starkk
         </button>
       )}

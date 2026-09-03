@@ -221,6 +221,16 @@
 /* Timeline d'étapes : le segment se dessine du haut vers le bas quand l'étape se révèle */
 .ll-step-line { transform: scaleY(0); transform-origin: top; transition: transform .7s cubic-bezier(.22,1,.36,1); }
 .ll-reveal-in .ll-step-line { transform: scaleY(1); }
+/* Bulle Starkk : fine ligne verte lumineuse qui tourne autour de l'avatar (effet comète) */
+@keyframes ll-ligne-rotation { to { transform: rotate(360deg); } }
+.ll-ligne-verte {
+  background: conic-gradient(from 0deg, transparent 0deg 240deg, rgba(92,217,160,0.3) 285deg, #5CD9A0 330deg, #EAFBF3 350deg, transparent 360deg);
+  animation: ll-ligne-rotation 2.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-ligne-verte { animation: none !important; background: rgba(92,217,160,0.5); }
+}
+
 /* Texte « réflexion » de Starkk : un reflet lumineux balaie le texte en continu */
 @keyframes ll-shimmer { from { background-position: 200% center; } to { background-position: -200% center; } }
 .ll-shimmer {
