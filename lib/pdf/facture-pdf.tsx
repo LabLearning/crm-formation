@@ -41,7 +41,11 @@ export function FacturePDF({ facture, org, agence, detail }: {
   /** Type, référence, participant, dates, durée, lieu, n° d'engagement… */
   detail?: DetailAction[]
 }) {
-  const affacture = !!org?.affacturage_actif && !!org?.affacturage_societe
+  // La créance n'est cédée au factor que sur les factures réglées par un
+  // financeur (OPCO, France Travail). Un payeur direct (AGEFICE : le dirigeant
+  // paie l'OF lui-même) règle Lab Learning, jamais Bibby Factor.
+  const payeurFinanceur = !!(facture.financeur_type || facture.financeur_nom)
+  const affacture = !!org?.affacturage_actif && !!org?.affacturage_societe && payeurFinanceur
   const clientName = facture.client?.raison_sociale
     || (facture.client?.nom ? `${facture.client.prenom || ''} ${facture.client.nom}`.trim() : '—')
   const client: any = facture.client || {}
