@@ -221,16 +221,6 @@
 /* Timeline d'étapes : le segment se dessine du haut vers le bas quand l'étape se révèle */
 .ll-step-line { transform: scaleY(0); transform-origin: top; transition: transform .7s cubic-bezier(.22,1,.36,1); }
 .ll-reveal-in .ll-step-line { transform: scaleY(1); }
-/* Anneau de Starkk : dégradé menthe conique en rotation lente autour de l'avatar */
-@keyframes ll-anneau-rotation { to { transform: rotate(360deg); } }
-.ll-anneau {
-  background: conic-gradient(from 0deg, #5CD9A0, #205040 40%, #38C588 65%, #EAFBF3 82%, #5CD9A0);
-  animation: ll-anneau-rotation 4s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ll-anneau { animation: none !important; }
-}
-
 /* Texte « réflexion » de Starkk : un reflet lumineux balaie le texte en continu */
 @keyframes ll-shimmer { from { background-position: 200% center; } to { background-position: -200% center; } }
 .ll-shimmer {

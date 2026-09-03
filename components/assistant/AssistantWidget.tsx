@@ -208,24 +208,14 @@ export function AssistantWidget() {
           onClick={() => setOpen(true)}
           aria-label="Ouvrir Starkk, l’assistant CRM"
           className={cn(
-            'group fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
-            'flex items-center gap-2.5 rounded-full pl-2 pr-5 py-2 text-sm font-semibold text-white',
-            'bg-[#0F1B16]/85 backdrop-blur-md ring-1 ring-white/10',
-            'shadow-[0_8px_28px_rgba(32,80,64,0.45)] hover:shadow-[0_10px_36px_rgba(56,197,136,0.4)]',
-            'hover:scale-[1.04] active:scale-100 transition-all duration-300',
+            'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
+            'flex items-center gap-2 rounded-full pl-4 pr-5 py-3 text-sm font-semibold text-white',
+            'bg-gradient-to-r from-[#205040] to-[#38C588] shadow-lg shadow-[#205040]/30',
+            'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          {/* Avatar cerclé d'un anneau dégradé menthe en rotation lente */}
-          <span className="relative h-10 w-10 shrink-0">
-            <span className="ll-anneau absolute inset-0 rounded-full" />
-            <AvatarStarkk taille="h-[34px] w-[34px]" className="absolute inset-0 m-auto ring-2 ring-[#0F1B16]" cadrage="scale-[2.1] origin-[50%_20%]" />
-            {/* Pastille de présence */}
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3">
-              <span className="absolute inset-0 rounded-full bg-[#5CD9A0] opacity-60 animate-ping" />
-              <span className="absolute inset-0 rounded-full bg-[#5CD9A0] ring-2 ring-[#0F1B16]" />
-            </span>
-          </span>
-          <span className="tracking-wide">Starkk</span>
+          <AvatarStarkk taille="h-8 w-8" className="ring-2 ring-white/40" cadrage="scale-[2.1] origin-[50%_20%]" />
+          Starkk
         </button>
       )}
 
