@@ -273,12 +273,10 @@ export function AssistantWidget() {
             ))}
             {busy && (
               <div className="flex items-end gap-2 justify-start">
-                <AvatarStarkk taille="h-6 w-6" className="mb-1" />
-                {/* Simple indicateur de frappe : trois bulles qui dansent */}
-                <div className="rounded-2xl bg-white ring-1 ring-black/5 px-4 py-3 inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce" />
-                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce [animation-delay:150ms]" />
-                  <span className="h-2 w-2 rounded-full bg-[#38C588] animate-bounce [animation-delay:300ms]" />
+                <VideoStarkk src="/starkk-pense.mp4" taille="h-10 w-10" className="mb-0.5 ring-2 ring-[#5CD9A0]/40" />
+                {/* Bulle sobre : texte balayé par un reflet lumineux (shimmer) */}
+                <div className="rounded-2xl bg-white ring-1 ring-black/5 px-4 py-2.5">
+                  <span className="ll-shimmer text-sm font-medium">Starkk réfléchit…</span>
                 </div>
               </div>
             )}

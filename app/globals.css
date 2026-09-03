@@ -221,6 +221,19 @@
 /* Timeline d'étapes : le segment se dessine du haut vers le bas quand l'étape se révèle */
 .ll-step-line { transform: scaleY(0); transform-origin: top; transition: transform .7s cubic-bezier(.22,1,.36,1); }
 .ll-reveal-in .ll-step-line { transform: scaleY(1); }
+/* Texte « réflexion » de Starkk : un reflet lumineux balaie le texte en continu */
+@keyframes ll-shimmer { from { background-position: 200% center; } to { background-position: -200% center; } }
+.ll-shimmer {
+  background: linear-gradient(90deg, #78716C 35%, #38C588 50%, #78716C 65%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ll-shimmer 2.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-shimmer { animation: none !important; color: #78716C; background: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .ll-reveal, .ll-page-enter, .ll-lift, .ll-step-line { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
 }
