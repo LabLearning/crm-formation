@@ -25,7 +25,7 @@ export function OrganigrammePDF({ org, poles, nbFormateurs }: {
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Organigramme fonctionnel" numero="" date={today} org={org} />
+        <PdfDocHeader docTitle="Organigramme fonctionnel" numero="" org={org} />
 
         <View style={shared.infoBox}>
           <Text style={{ fontSize: 8, color: SURFACE_700, lineHeight: 1.6 }}>

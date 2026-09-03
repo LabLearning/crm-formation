@@ -38,7 +38,7 @@ export function AttestationSortiePDF({ apprenant, formation, org, dateDebut, dat
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Attestation de sortie de formation" numero={numero} date={today} org={org} />
+        <PdfDocHeader docTitle="Attestation de sortie de formation" numero={numero} org={org} />
 
         <View style={shared.section}>
           <Text style={{ fontSize: 10, color: SURFACE_700, lineHeight: 1.8, marginBottom: 10 }}>

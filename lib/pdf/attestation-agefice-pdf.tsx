@@ -101,7 +101,7 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Attestation d'assiduité de formation et de règlement" numero={numero} date={today} org={org} />
+        <PdfDocHeader docTitle="Attestation d'assiduité de formation et de règlement" numero={numero} org={org} />
         <Text style={{ fontSize: 7, color: SURFACE_500, marginBottom: 8 }}>Conforme au modèle AGEFICE 2025/2026</Text>
 
         <View style={shared.section}>

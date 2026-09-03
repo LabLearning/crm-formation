@@ -48,7 +48,7 @@ export function GrilleEntretienPDF({ org }: { org: any }) {
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Grille d'entretien de recrutement — formateur" numero="" date={today} org={org} />
+        <PdfDocHeader docTitle="Grille d'entretien de recrutement — formateur" numero="" org={org} />
 
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
           {['Candidat', 'Recruteur', 'Date et heure', 'Domaine / référentiel visé'].map((l) => (

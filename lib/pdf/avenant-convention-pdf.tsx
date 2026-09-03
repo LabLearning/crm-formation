@@ -41,7 +41,7 @@ export function AvenantConventionPDF({ avenant, convention, org }: AvenantProps)
   return (
     <Document title={numeroAvenant} author={org?.name || 'Lab Learning'}>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle={`Avenant n°${avenant.numero}`} numero={convention.numero || ''} date={`Établi le ${today}`} org={org} />
+        <PdfDocHeader docTitle={`Avenant n°${avenant.numero}`} numero={convention.numero || ''} org={org} />
 
         <Text style={{ fontSize: 13, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginBottom: 4 }}>
           Avenant n°{avenant.numero} à la convention de formation {convention.numero}

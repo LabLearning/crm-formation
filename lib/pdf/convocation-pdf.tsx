@@ -26,7 +26,7 @@ export function ConvocationPDF({ apprenant, session, formation, org, formateur }
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Convocation" numero={numero} date={today} org={org} />
+        <PdfDocHeader docTitle="Convocation" numero={numero} org={org} />
 
         <View style={shared.section}>
           <Text style={{ fontSize: 10, color: SURFACE_900, fontFamily: 'Satoshi', fontWeight: 700 }}>

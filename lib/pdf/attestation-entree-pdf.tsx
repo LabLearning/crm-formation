@@ -31,7 +31,7 @@ export function AttestationEntreePDF({ apprenant, formation, org, dateDebut, dat
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Attestation d'entrée en formation" numero={numero} date={today} org={org} />
+        <PdfDocHeader docTitle="Attestation d'entrée en formation" numero={numero} org={org} />
 
         <View style={shared.section}>
           {/* Chaîne unique : les interpolations en segments provoquent des chevauchements/espaces avalés */}

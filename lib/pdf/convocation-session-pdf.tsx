@@ -26,7 +26,7 @@ export function ConvocationSessionPDF({ session, formation, org, formateur, part
   return (
     <Document>
       <Page size="A4" style={shared.page}>
-        <PdfDocHeader docTitle="Convocation de formation" numero={numero} date={today} org={org} />
+        <PdfDocHeader docTitle="Convocation de formation" numero={numero} org={org} />
 
         <View style={shared.section}>
           {entreprise && <Text style={{ fontSize: 10, color: SURFACE_900, fontFamily: 'Satoshi', fontWeight: 700 }}>{entreprise}</Text>}
