@@ -211,7 +211,8 @@ export function AssistantWidget() {
             // fixed sert aussi de contexte de positionnement pour la comète absolue
             // (surtout pas de 'relative' en plus : twMerge ne garderait que lui).
             'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
-            'rounded-full p-[1.5px] overflow-hidden bg-[#183C31]',
+            // Fond transparent : seule la comète dessine le contour en passant
+            'rounded-full p-[1.5px] overflow-hidden bg-transparent',
             'shadow-lg shadow-[#205040]/30 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
