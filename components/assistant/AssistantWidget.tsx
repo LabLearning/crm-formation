@@ -209,17 +209,18 @@ export function AssistantWidget() {
           aria-label="Ouvrir Starkk, l’assistant CRM"
           className={cn(
             'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
-            'flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-sm font-semibold text-white',
-            'bg-gradient-to-r from-[#205040] to-[#38C588] shadow-lg shadow-[#205040]/30',
-            'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
+            'relative rounded-full p-[1.5px] overflow-hidden bg-[#183C31]',
+            'shadow-lg shadow-[#205040]/30 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          {/* Fine ligne verte lumineuse en rotation autour de l'avatar (plan buste) */}
-          <span className="relative h-9 w-9 shrink-0">
-            <span className="ll-ligne-verte absolute inset-0 rounded-full" />
-            <AvatarStarkk taille="h-[34px] w-[34px]" className="absolute inset-0 m-auto" />
+          {/* Fine ligne lumineuse qui parcourt le contour de la bulle entière */}
+          <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2">
+            <span className="ll-ligne-verte block h-full w-full" />
           </span>
-          Starkk
+          <span className="relative flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-sm font-semibold text-white bg-gradient-to-r from-[#205040] to-[#38C588]">
+            <AvatarStarkk taille="h-[34px] w-[34px]" />
+            Starkk
+          </span>
         </button>
       )}
 
