@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2 } from '@/components/ui/icons'
+import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2, PenLine, Check, CheckCircle2 } from '@/components/ui/icons'
 import { Button, Input, Select, useToast } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES } from '@/lib/agefice'
-import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, genererFactureAgeficeAction } from '@/app/dashboard/agefice/actions'
+import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, genererFactureAgeficeAction, lienSignatureAttestationAction } from '@/app/dashboard/agefice/actions'
 
 /**
  * Formulaire du dossier AGEFICE en 2 phases (prise en charge → règlement
@@ -31,6 +31,8 @@ export interface DossierAgefice {
   mode_reglement: string | null
   reference_reglement: string | null
   date_reglement: string | null
+  signature_stagiaire_data?: string | null
+  signature_stagiaire_date?: string | null
   date_debut_formation: string | null
   date_fin_formation: string | null
   date_depot: string | null
@@ -79,6 +81,20 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [facturation, setFacturation] = useState(false)
+  const [lienEnCours, setLienEnCours] = useState(false)
+  const [lienCopie, setLienCopie] = useState(false)
+
+  async function copierLienSignature() {
+    setLienEnCours(true)
+    const r = await lienSignatureAttestationAction(dossier.id)
+    setLienEnCours(false)
+    if (r.success && r.data) {
+      await navigator.clipboard.writeText(r.data.url)
+      setLienCopie(true)
+      setTimeout(() => setLienCopie(false), 2000)
+      toast('success', 'Lien de signature copié : envoyez-le au dirigeant')
+    } else toast('error', r.error || 'Génération du lien impossible')
+  }
   const [pieces, setPieces] = useState<Record<string, boolean>>(dossier.pieces || {})
 
   async function genererFacture() {
@@ -197,6 +213,18 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
               className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300 transition-colors">
               <FileDown className="h-3.5 w-3.5" /> Attestation d&apos;assiduité et de règlement
             </a>
+            {dossier.signature_stagiaire_date ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Signée par le stagiaire le {frDate(dossier.signature_stagiaire_date)}
+              </span>
+            ) : (
+              <button type="button" onClick={copierLienSignature} disabled={lienEnCours}
+                title="Copier le lien où le dirigeant signe son attestation (cartouche « Le stagiaire »)"
+                className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300 transition-colors disabled:opacity-50">
+                {lienEnCours ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : lienCopie ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <PenLine className="h-3.5 w-3.5" />}
+                {lienCopie ? 'Lien copié' : 'Lien de signature stagiaire'}
+              </button>
+            )}
             <span className="text-[11px] text-surface-400">
               Enregistrez le paiement sur la facture pour qu&apos;elle ressorte « acquittée ».
             </span>

@@ -10,6 +10,9 @@ import { PdfDocHeader, PdfDocFooter, shared, BRAND_GREEN, SURFACE_200, SURFACE_5
  * double signature organisme + stagiaire.
  */
 interface AttestationAgeficeProps {
+  /** Signature électronique du stagiaire (data URI) posée depuis son portail. */
+  signatureStagiaire?: string | null
+  signatureStagiaireDate?: string | null
   org: any
   representant?: string | null
   qualiteRepresentant?: string | null
@@ -195,8 +198,15 @@ export function AttestationAgeficePDF(props: AttestationAgeficeProps) {
             <Text style={{ fontSize: 8, fontFamily: 'Satoshi', fontWeight: 700, color: SURFACE_900, marginBottom: 4 }}>Le stagiaire</Text>
             <View style={{ height: 70 }}>
               <View style={{ position: 'absolute', bottom: 14, left: 0, right: 20, height: 0.5, backgroundColor: '#CBD3DB' }} />
+              {props.signatureStagiaire ? (
+                <Image src={props.signatureStagiaire} style={{ position: 'absolute', top: 2, left: 5, width: 130, height: 56, objectFit: 'contain' }} />
+              ) : null}
             </View>
-            <Text style={{ fontSize: 7, color: SURFACE_500 }}>Signature et cachet</Text>
+            <Text style={{ fontSize: 7, color: SURFACE_500 }}>
+              {props.signatureStagiaire
+                ? `Signé électroniquement${props.signatureStagiaireDate ? ` le ${frDate(props.signatureStagiaireDate)}` : ''}`
+                : 'Signature et cachet'}
+            </Text>
           </View>
         </View>
 

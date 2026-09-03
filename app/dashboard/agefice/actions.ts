@@ -221,3 +221,33 @@ export async function genererFactureAgeficeAction(dossierId: string): Promise<{ 
   revalidatePath('/dashboard/factures')
   return { success: true, data: { factureId: facture.id, numero: (facture as any).numero } }
 }
+
+
+/**
+ * Lien de signature de l'attestation d'assiduité : le dirigeant signe sur son
+ * portail (/portail/{token}/attestations). Réutilise (ou crée) son token.
+ */
+export async function lienSignatureAttestationAction(dossierId: string): Promise<{ success: boolean; error?: string; data?: { url: string } }> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+
+  const { data: dossier } = await supabase.from('dossiers_agefice')
+    .select('id, apprenant_id, apprenant:apprenant_id(email)')
+    .eq('id', dossierId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!dossier?.apprenant_id) return { success: false, error: 'Aucun dirigeant rattaché au dossier' }
+
+  const { data: existant } = await supabase.from('portal_access_tokens')
+    .select('token').eq('organization_id', session.organization.id)
+    .eq('type', 'apprenant').eq('apprenant_id', dossier.apprenant_id).eq('is_active', true)
+    .limit(1).maybeSingle()
+  let token = existant?.token
+  if (!token) {
+    const { data: cree, error } = await supabase.from('portal_access_tokens')
+      .insert({ organization_id: session.organization.id, type: 'apprenant', apprenant_id: dossier.apprenant_id, email: (dossier as any).apprenant?.email || null, created_by: session.user.id })
+      .select('token').single()
+    if (error) return { success: false, error: 'Génération du lien impossible' }
+    token = cree.token
+  }
+  return { success: true, data: { url: `${appUrl}/portail/${token}/attestations` } }
+}

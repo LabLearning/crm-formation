@@ -56,6 +56,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       modeReglement: dossier.mode_reglement,
       referenceReglement: dossier.reference_reglement,
       dateReglement: dossier.date_reglement,
+      signatureStagiaire: dossier.signature_stagiaire_data || null,
+      signatureStagiaireDate: dossier.signature_stagiaire_date || null,
     }) as any,
   )
   const nom = (dossier as any).apprenant?.nom || 'stagiaire'
