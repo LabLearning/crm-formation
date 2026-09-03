@@ -216,8 +216,8 @@ export function AssistantWidget() {
         >
           {/* Fine ligne verte lumineuse en rotation autour de l'avatar (plan buste) */}
           <span className="relative h-9 w-9 shrink-0">
-            <span className="ll-ligne-verte absolute -inset-0.5 rounded-full" />
-            <AvatarStarkk taille="h-8 w-8" className="absolute inset-0 m-auto" />
+            <span className="ll-ligne-verte absolute inset-0 rounded-full" />
+            <AvatarStarkk taille="h-[34px] w-[34px]" className="absolute inset-0 m-auto" />
           </span>
           Starkk
         </button>
