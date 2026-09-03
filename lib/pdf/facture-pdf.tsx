@@ -61,6 +61,10 @@ export function FacturePDF({ facture, org, agence, detail }: {
   const bic = org?.banque_bic || ''
   const banque = org?.banque_nom || ''
   const titulaire = org?.banque_titulaire || ofNom
+  // Facture soldée : le statut le dit ou les règlements couvrent le TTC.
+  const totalRegleGlobal = (paiements || []).filter((p: any) => p.status !== 'refuse' && p.status !== 'annule')
+    .reduce((t: number, p: any) => t + Number(p.montant || 0), 0)
+  const estAcquittee = facture.status === 'payee' || (totalRegleGlobal > 0 && totalRegleGlobal >= Number(facture.montant_ttc || 0))
 
   return (
     <Document title={`${docTitle} ${facture.numero}`} author="Lab Learning">
@@ -69,7 +73,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
           docTitle={docTitle === 'FACTURE' ? 'Facture' : docTitle === 'AVOIR' ? 'Avoir' : docTitle === 'FACTURE D\'ACOMPTE' ? 'Facture d\'acompte' : docTitle === 'FACTURE DE SOLDE' ? 'Facture de solde' : docTitle}
           numero={facture.numero}
           date={`Émise le ${fmtDate(facture.date_emission)}`}
-          statut={`Échéance ${fmtDate(facture.date_echeance)}`}
+          statut={estAcquittee ? 'Acquittée' : `Échéance ${fmtDate(facture.date_echeance)}`}
           org={org}
         />
 
@@ -256,7 +260,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
           const detailReglement = [
             dernier.date_paiement ? `le ${fmtDate(dernier.date_paiement)}` : null,
             dernier.mode ? `par ${(PAIEMENT_LABELS as any)[dernier.mode] || dernier.mode}` : null,
-            dernier.reference ? `n° ${dernier.reference}` : null,
+            dernier.reference ? (/n°/i.test(dernier.reference) ? dernier.reference : `n° ${dernier.reference}`) : null,
           ].filter(Boolean).join(' ')
           return (
             <View style={{ marginBottom: 10, backgroundColor: '#F1F8F4', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -320,7 +324,7 @@ export function FacturePDF({ facture, org, agence, detail }: {
               </Text>
             )}
           </View>
-        ) : iban ? (
+        ) : iban && !estAcquittee ? (
           <View wrap={false} style={{ ...shared.section, marginBottom: 10 }}>
             <PdfSectionTitle>Règlement par virement</PdfSectionTitle>
             <View style={shared.row}><Text style={shared.label}>Bénéficiaire</Text><Text style={shared.value}>{titulaire}</Text></View>
