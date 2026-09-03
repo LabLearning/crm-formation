@@ -1431,3 +1431,106 @@ async function envoyerHygieneAutomatique(supabase: any, sessionId: string, orgId
     organizationId: orgId, entityType: 'session', entityId: sessionId,
   })
 }
+
+/**
+ * Liens de signature d'émargement : chaque apprenant signe SES créneaux sur
+ * son portail (/portail/{token}/mes-emargements). Génère (ou réutilise) le
+ * token portail de chaque inscrit et renvoie les liens — l'envoi email est
+ * une action séparée, tracée dans email_logs.
+ */
+export async function liensSignatureEmargementsAction(sessionId: string): Promise<ActionResult & {
+  data?: { liens: { apprenant_id: string; nom: string; email: string | null; url: string }[] }
+}> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+
+  const { data: sess } = await supabase.from('sessions').select('id')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: insc } = await supabase.from('inscriptions')
+    .select('apprenant:apprenants(id, prenom, nom, email)')
+    .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+
+  const liens: { apprenant_id: string; nom: string; email: string | null; url: string }[] = []
+  for (const i of (insc || []) as any[]) {
+    const a = i.apprenant
+    if (!a) continue
+    // Token portail existant, sinon création
+    const { data: existant } = await supabase.from('portal_access_tokens')
+      .select('token').eq('organization_id', session.organization.id)
+      .eq('type', 'apprenant').eq('apprenant_id', a.id).eq('is_active', true)
+      .limit(1).maybeSingle()
+    let token = existant?.token
+    if (!token) {
+      const { data: cree, error } = await supabase.from('portal_access_tokens')
+        .insert({ organization_id: session.organization.id, type: 'apprenant', apprenant_id: a.id, email: a.email, created_by: session.user.id })
+        .select('token').single()
+      if (error) return { success: false, error: `Token impossible pour ${a.prenom} ${a.nom}` }
+      token = cree.token
+    }
+    liens.push({
+      apprenant_id: a.id,
+      nom: `${a.prenom || ''} ${a.nom || ''}`.trim(),
+      email: a.email || null,
+      url: `${appUrl}/portail/${token}/mes-emargements`,
+    })
+  }
+  return { success: true, data: { liens } }
+}
+
+/** Envoie par email le lien de signature d'émargement à un apprenant. */
+export async function envoyerLienEmargementAction(sessionId: string, apprenantId: string): Promise<ActionResult> {
+  const session = await getSession()
+  const supabase = await createServiceRoleClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+
+  const { data: sess } = await supabase.from('sessions')
+    .select('id, date_debut, date_fin, formation:formation_id(intitule)')
+    .eq('id', sessionId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!sess) return { success: false, error: 'Session introuvable' }
+
+  const { data: a } = await supabase.from('apprenants').select('id, prenom, nom, email')
+    .eq('id', apprenantId).eq('organization_id', session.organization.id).maybeSingle()
+  if (!a) return { success: false, error: 'Apprenant introuvable' }
+  if (!a.email) return { success: false, error: `${a.prenom} ${a.nom} n'a pas d'adresse email` }
+
+  const { data: tok } = await supabase.from('portal_access_tokens')
+    .select('token').eq('organization_id', session.organization.id)
+    .eq('type', 'apprenant').eq('apprenant_id', a.id).eq('is_active', true)
+    .limit(1).maybeSingle()
+  if (!tok) return { success: false, error: 'Générez d\'abord le lien (bouton Liens de signature)' }
+
+  const url = `${appUrl}/portail/${tok.token}/mes-emargements`
+  const intitule = (sess as any).formation?.intitule || 'votre formation'
+  const { data: org } = await supabase.from('organizations').select('name, email').eq('id', session.organization.id).single()
+  const { sendBrandedEmail } = await import('@/lib/email')
+  const r = await sendBrandedEmail({
+    to: a.email,
+    toName: `${a.prenom || ''} ${a.nom || ''}`.trim(),
+    subject: `Signature de vos émargements : ${intitule}`,
+    html: `
+      <div style="font-family:sans-serif;color:#1c1917;line-height:1.6">
+        <p>Bonjour ${a.prenom || ''},</p>
+        <p>Pour valider votre présence à la formation « <strong>${intitule}</strong> », merci de signer
+        vos feuilles d'émargement en ligne. Cela ne prend qu'une minute, depuis votre téléphone ou un ordinateur :</p>
+        <p style="text-align:center;margin:24px 0">
+          <a href="${url}" style="display:inline-block;background:#205040;color:#ffffff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600">
+            Signer mes émargements
+          </a>
+        </p>
+        <p style="font-size:13px;color:#57534E">Ce lien est personnel, merci de ne pas le transférer.
+        Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :<br/>${url}</p>
+      </div>`,
+    orgName: org?.name || 'Lab Learning',
+    orgEmail: (org as any)?.email || undefined,
+    organizationId: session.organization.id,
+    entityType: 'emargement',
+    entityId: sessionId,
+    triggeredBy: session.user.id,
+  })
+  if (!r.success) return { success: false, error: r.error || 'Envoi impossible' }
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { email: a.email } }
+}

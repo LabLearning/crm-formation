@@ -25,6 +25,7 @@ import { cn, formatDate, companyLabel } from '@/lib/utils'
 import { updateSessionStatusAction, togglePresenceAction, updateCoutFormateurAction, updateSessionPrixAction, desinscrireApprenantAction } from './actions'
 import { SessionParticipants } from './SessionParticipants'
 import { SessionDocsTab } from './SessionDocsTab'
+import { LiensSignatureEmargement } from '@/components/sessions/LiensSignatureEmargement'
 import { SessionDocuments } from './SessionDocuments'
 import { SessionMails } from './SessionMails'
 import { FacturationOpco } from './FacturationOpco'
@@ -698,6 +699,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
         <div className="space-y-4">
           {!isFormateur && (
             <div className="flex flex-wrap justify-end gap-2">
+              <LiensSignatureEmargement sessionId={session.id} />
               <a href={`/api/pdf/emargement/${session.id}`} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium hover:bg-brand-100 transition-colors">
                 <Download className="h-3.5 w-3.5" /> Feuille vierge (PDF)
