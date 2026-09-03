@@ -248,7 +248,7 @@ export function AssistantWidget() {
             {messages.length === 0 && (
               <div className="pt-6 text-center space-y-4">
                 <video src="/starkk-intro.mp4" poster="/starkk.png" autoPlay loop muted playsInline
-                  className="h-44 w-44 mx-auto rounded-3xl object-cover shadow-xl shadow-[#205040]/30 ring-1 ring-[#5CD9A0]/30" />
+                  className="h-24 w-24 mx-auto rounded-full object-cover shadow-lg shadow-[#205040]/30 ring-2 ring-[#5CD9A0]/30" />
                 <p className="text-sm text-surface-500 max-w-[280px] mx-auto">
                   Starkk connaît tout le CRM : une session, un client, un document, un chiffre.
                   Il peut aussi envoyer une convocation, une convention ou relancer une facture, avec votre accord.
