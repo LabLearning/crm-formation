@@ -209,7 +209,7 @@ export function AssistantWidget() {
           aria-label="Ouvrir Starkk, l’assistant CRM"
           className={cn(
             'fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6',
-            'flex items-center gap-2 rounded-full pl-4 pr-5 py-3 text-sm font-semibold text-white',
+            'flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-sm font-semibold text-white',
             'bg-gradient-to-r from-[#205040] to-[#38C588] shadow-lg shadow-[#205040]/30',
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
