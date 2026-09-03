@@ -68,10 +68,10 @@ function MessageRendu({ contenu }: { contenu: string }) {
 
 
 /** Avatar rond de Starkk, zoomé sur le visage (le portrait entier serait illisible en petit). */
-function AvatarStarkk({ taille, className = '' }: { taille: string; className?: string }) {
+function AvatarStarkk({ taille, className = '', cadrage = 'scale-[1.35] origin-[50%_30%]' }: { taille: string; className?: string; cadrage?: string }) {
   return (
     <span className={cn('block rounded-full overflow-hidden shrink-0', taille, className)}>
-      <img src="/starkk.png" alt="" className="h-full w-full object-cover scale-[1.35] origin-[50%_30%]" />
+      <img src="/starkk.png" alt="" className={cn('h-full w-full object-cover', cadrage)} />
     </span>
   )
 }
@@ -214,7 +214,7 @@ export function AssistantWidget() {
             'hover:opacity-95 hover:scale-[1.03] active:scale-100 transition-all',
           )}
         >
-          <AvatarStarkk taille="h-7 w-7" className="ring-2 ring-white/30" />
+          <AvatarStarkk taille="h-8 w-8" className="ring-2 ring-white/40" cadrage="scale-[2.1] origin-[50%_20%]" />
           Starkk
         </button>
       )}
