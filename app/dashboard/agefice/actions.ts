@@ -117,18 +117,21 @@ export async function creerDossierDepuisSessionAction(sessionId: string): Promis
     .eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
   if (!sess) return { success: false, error: 'Session introuvable' }
 
-  const { data: existant } = await supabase.from('dossiers_agefice')
-    .select('id').eq('session_id', sessionId).maybeSingle()
-  if (existant) return { success: false, error: 'Un dossier AGEFICE existe déjà pour cette session' }
-
-  const { data: insc } = await supabase.from('inscriptions')
-    .select('apprenant_id').eq('session_id', sessionId).order('created_at').limit(1)
+  // Un dossier PAR dirigeant : on crée pour le premier inscrit qui n'en a pas
+  const { data: existants } = await supabase.from('dossiers_agefice')
+    .select('apprenant_id').eq('session_id', sessionId)
+  const dejaServis = new Set((existants || []).map((d) => d.apprenant_id))
+  const { data: tousInsc } = await supabase.from('inscriptions')
+    .select('apprenant_id, apprenant:apprenants(client_id)').eq('session_id', sessionId)
+    .not('status', 'in', '("annule","abandonne")').order('created_at')
+  const insc = (tousInsc || []).filter((i: any) => i.apprenant_id && !dejaServis.has(i.apprenant_id))
+  if (!insc.length) return { success: false, error: 'Chaque inscrit de la session a déjà son dossier AGEFICE' }
 
   const dureeH = (sess as any).formation?.duree_heures || null
   const { error } = await supabase.from('dossiers_agefice').insert({
     organization_id: orgId,
-    client_id: sess.client_id,
-    apprenant_id: insc?.[0]?.apprenant_id || null,
+    client_id: sess.client_id || (insc[0] as any)?.apprenant?.client_id || null,
+    apprenant_id: insc[0].apprenant_id,
     formation_id: sess.formation_id,
     session_id: sess.id,
     statut: 'a_constituer',

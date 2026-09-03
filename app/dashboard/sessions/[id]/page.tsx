@@ -322,13 +322,14 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     ? await supabase.from('clients').select('id, type, raison_sociale, nom_commercial').in('id', idsClientsApprenants)
     : { data: [] as any[] }
 
-  // Dossier AGEFICE lié à la session (financement dirigeant non salarié)
-  let dossierAgefice: any = null
+  // Dossiers AGEFICE liés à la session : UN PAR DIRIGEANT (une session peut
+  // porter plusieurs dossiers quand des dirigeants se forment ensemble)
+  let dossiersAgefice: any[] = []
   try {
     const { data: dAg } = await supabase.from('dossiers_agefice')
       .select('*, client:client_id(raison_sociale, nom_commercial), apprenant:apprenant_id(prenom, nom), formation:formation_id(intitule)')
-      .eq('session_id', sessionData.id).maybeSingle()
-    dossierAgefice = dAg || null
+      .eq('session_id', sessionData.id).order('created_at')
+    dossiersAgefice = dAg || []
   } catch { /* table absente avant migration 143 */ }
 
   return (
@@ -361,7 +362,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
         supports={supports as any[]}
         positionnement={positionnement as any[]}
         isFormateur={isFormateur}
-        dossierAgefice={dossierAgefice}
+        dossiersAgefice={dossiersAgefice}
         clientsApprenants={(clientsApprenants || []) as any[]}
         userRole={session.user.role}
         isPoei={isPoei}

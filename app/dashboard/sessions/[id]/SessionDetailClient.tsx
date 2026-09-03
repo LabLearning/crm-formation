@@ -50,7 +50,7 @@ const CONVENTION_STATUS: Record<string, { label: string; variant: 'default' | 'i
 
 interface Props {
   session: any
-  dossierAgefice?: any
+  dossiersAgefice?: any[]
   clientsApprenants?: any[]
   inscriptions: any[]
   emargements: any[]
@@ -117,7 +117,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   annulee: [],
 }
 
-export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false, dossierAgefice = null, clientsApprenants = [] }: Props) {
+export function SessionDetailClient({ session, inscriptions, emargements, pointages, rapport, evaluations = [], qcmSessions = [], qcmReponses = [], qcmBank = [], conventions = [], contratFormateur = null, formationsRef = [], formateursRef = [], clientsRef = [], clientContacts = [], emailLogs = [], docEmailLogs = [], opcos = [], factureOpco = null, accordPec = null, apprenantsRef = [], sessionFormationIds = [], evaluationsAppr = [], supports = [], positionnement = [], retoursClient = [], isFormateur, userRole, isPoei, recueilTemplates = [], recueil = null, formationIntitule = '', nbEvalAcquis = 0, derouleValidations = [], derouleTableManquante = false, socleEtat = [], estHygiene = false, etatsPieces = [], piecesTableManquante = false, dossiersAgefice = [], clientsApprenants = [] }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -158,7 +158,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       router.refresh()
     } else toast('error', (r as any).error || 'Erreur')
   }
-  const estAgefice = !!dossierAgefice || (session as any).client?.financeur_type === 'agefice'
+  const estAgefice = dossiersAgefice.length > 0 || (session as any).client?.financeur_type === 'agefice'
   const [tab, setTab] = useState<'session' | 'presences' | 'apprenants' | 'pointages' | 'rapport' | 'evaluations' | 'qcm' | 'conventions' | 'docs' | 'contenu' | 'recueil' | 'deroule' | 'dossier' | 'mails' | 'facturation'>(() => {
     // Arrivée ciblée (ex. ?tab=facturation depuis la vue AGEFICE)
     if (typeof window !== 'undefined') {
@@ -1421,7 +1421,7 @@ export function SessionDetailClient({ session, inscriptions, emargements, pointa
       )}
 
       {tab === 'facturation' && !isFormateur && estAgefice && (
-        <SessionAgefice sessionId={session.id} dossier={dossierAgefice} />
+        <SessionAgefice sessionId={session.id} dossiers={dossiersAgefice} />
       )}
       {tab === 'facturation' && !isFormateur && !estAgefice && (
         <FacturationOpco
