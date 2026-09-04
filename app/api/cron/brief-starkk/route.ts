@@ -13,7 +13,8 @@ export const maxDuration = 60
  *
  * GET /api/cron/brief-starkk  (Authorization: Bearer CRON_SECRET)
  */
-const ROLES_DESTINATAIRES = ['super_admin', 'admin', 'gestionnaire', 'manager']
+// Valeurs de l'ENUM user_role uniquement (« admin »/« manager » n'existent pas)
+const ROLES_DESTINATAIRES = ['super_admin', 'gestionnaire', 'commercial']
 
 const euros = (n: number) => `${Math.round(n).toLocaleString('fr-FR').replace(/[  ]/g, ' ')} €`
 const frDate = (d: string | null | undefined) =>

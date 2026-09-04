@@ -20,5 +20,16 @@ export async function GET(req: Request) {
 
   const supabase = await createServiceRoleClient()
   const res = await syncSessionStatuts(supabase)
-  return NextResponse.json(res)
+
+  // Clôture automatique : les attestations d'hygiène partent au client dès
+  // que la session bascule en « terminée » (idempotent, sessions hygiène only).
+  let hygieneEnvoyees = 0
+  const { envoyerHygieneAutomatique } = await import('@/lib/hygiene-auto')
+  for (const s of res.terminees || []) {
+    try {
+      await envoyerHygieneAutomatique(supabase, s.id, s.organization_id)
+      hygieneEnvoyees++
+    } catch (e) { console.error('[hygiene auto]', s.id, e) }
+  }
+  return NextResponse.json({ ...res, hygiene_traitees: hygieneEnvoyees })
 }

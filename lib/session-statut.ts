@@ -33,16 +33,16 @@ export function statutAttendu(
  */
 export async function syncSessionStatuts(supabase: any, organizationId?: string) {
   const rows = await fetchAllPaged<any>((from, to) => {
-    let q = supabase.from('sessions').select('id, reference, status, date_debut, date_fin')
+    let q = supabase.from('sessions').select('id, reference, status, date_debut, date_fin, organization_id')
     if (organizationId) q = q.eq('organization_id', organizationId)
     return q.range(from, to)
   })
 
   const today = new Date().toISOString().slice(0, 10)
-  const changes: { id: string; from: string; to: string }[] = []
+  const changes: { id: string; from: string; to: string; organization_id: string }[] = []
   for (const s of rows) {
     const cible = statutAttendu(s.status, s.date_debut, s.date_fin, today)
-    if (cible && cible !== s.status) changes.push({ id: s.id, from: s.status, to: cible })
+    if (cible && cible !== s.status) changes.push({ id: s.id, from: s.status, to: cible, organization_id: s.organization_id })
   }
 
   let updated = 0
@@ -56,5 +56,8 @@ export async function syncSessionStatuts(supabase: any, organizationId?: string)
     const k = `${c.from} → ${c.to}`
     parTransition[k] = (parTransition[k] || 0) + 1
   }
-  return { examinees: rows.length, mises_a_jour: updated, transitions: parTransition }
+  // Les sessions qui viennent de se terminer : le cron déclenche dessus les
+  // automatismes de clôture (attestations d'hygiène...).
+  const terminees = changes.filter((c) => c.to === 'terminee').map((c) => ({ id: c.id, organization_id: c.organization_id }))
+  return { examinees: rows.length, mises_a_jour: updated, transitions: parTransition, terminees }
 }
