@@ -16,38 +16,38 @@ export const metadata = {
 }
 
 const CAPACITES = [
-  { Icon: AiChat, t: 'Répond à vos questions', d: "Où en est ma session ? Quand arrive mon attestation ? Qui est mon formateur ? Starkk répond immédiatement, à partir de votre dossier réel." },
-  { Icon: AiBrain, t: 'Connaît votre dossier', d: 'Formations, sessions, émargements, conventions, factures : Starkk s’appuie sur les données à jour de votre espace, pas sur des généralités.' },
-  { Icon: FileCheck2, t: 'Retrouve vos documents', d: 'Convention, convocation, attestation, certificat de réalisation : il localise le bon document et vous le remet, sans que vous ayez à fouiller vos emails.' },
-  { Icon: Calendar, t: 'Suit vos échéances', d: 'Signatures en attente, sessions à venir, dossiers de financement : Starkk garde le fil et vous alerte au bon moment.' },
+  { Icon: AiChat, t: 'Renseigne sur votre compte', d: 'Où en est ma session ? Quand arrive mon attestation ? Qui est mon formateur ? Starkk répond immédiatement, à partir des informations de votre espace.' },
+  { Icon: FileCheck2, t: 'Remet le bon document', d: 'Convention, convocation, attestation, certificat de réalisation : chacun retrouve ses documents en une demande, sans fouiller ses emails.' },
+  { Icon: GraduationCap, t: 'Aide à comprendre', d: 'Une question de quiz ratée ? Starkk reprend la notion avec l’apprenant, explique la bonne réponse et vérifie qu’elle est comprise.' },
+  { Icon: Calendar, t: 'Relance à votre place', d: 'Questionnaires de satisfaction non répondus, émargements en attente, signatures manquantes : Starkk propose les relances, vous validez, il s’en charge.' },
   { Icon: Clock, t: 'Disponible en continu', d: 'Le soir après le service ou le dimanche matin : Starkk répond quand vous travaillez, pas seulement aux heures de bureau.' },
-  { Icon: AiSecurity, t: 'Jamais sans votre accord', d: 'Starkk propose, vous confirmez. Aucune action sortante, aucun envoi, aucune modification sans validation humaine explicite.' },
+  { Icon: AiSecurity, t: 'Jamais sans votre accord', d: 'Starkk propose, vous confirmez. Aucun envoi, aucune modification sans validation. Chacun n’accède qu’aux informations de son propre espace.' },
 ]
 
 const PUBLICS = [
   {
-    Icon: Building2, badge: 'Gérants et entreprises', titre: 'Votre copilote formation',
+    Icon: Building2, badge: 'Clients et gérants', titre: 'Votre espace, sans les allers-retours',
     points: [
-      'Suivi de vos sessions et de vos équipes en un message',
-      'État de vos conventions, factures et financements OPCO',
-      'Les documents de vos salariés retrouvés instantanément',
+      'L’état de votre compte en une question : sessions, conventions, factures, financement OPCO',
+      'Les documents de vos salariés remis instantanément',
+      'Les démarches en cours suivies et relancées au bon moment',
     ],
     from: '#134E4A', to: '#0F766E',
   },
   {
-    Icon: UserCheck, badge: 'Formateurs', titre: 'Moins d’administratif, plus de terrain',
+    Icon: UserCheck, badge: 'Formateurs', titre: 'Tout votre niveau d’information, sans chercher',
     points: [
-      'Planning, lieux et effectifs de vos interventions',
-      'Émargements et grilles de saisie à jour, sans relance',
-      'Les infos de session accessibles depuis votre téléphone',
+      'Vos documents et les infos de vos interventions : planning, lieux, effectifs, grilles',
+      'Un appui pédagogique : il aide un apprenant à comprendre une question où il a répondu faux',
+      'Les questionnaires de satisfaction et les émargements relancés pour vous',
     ],
     from: '#1E3A8A', to: '#4338CA',
   },
   {
     Icon: GraduationCap, badge: 'Apprenants', titre: 'Un accompagnement à portée de main',
     points: [
-      'Vos convocations, horaires et lieux de formation',
-      'Vos attestations et certificats dès qu’ils sont prêts',
+      'Vos convocations, horaires, lieux et attestations en une demande',
+      'Une explication claire quand une question de quiz vous a échappé',
       'Une réponse simple à chaque question sur votre parcours',
     ],
     from: '#4C1D95', to: '#7C3AED',
@@ -75,8 +75,8 @@ export default function SiteStarkk() {
               Voici <span className="italic inline-block bg-gradient-to-r from-[#5CD9A0] to-[#38C588] bg-clip-text text-transparent px-2 -mx-2 pb-3 -mb-3">Starkk</span>.
             </h1>
             <p className="mt-6 text-lg md:text-xl text-white/70 max-w-xl leading-relaxed">
-              L’assistant IA de Lab Learning connaît vos formations, vos sessions et vos documents.
-              Il répond, retrouve, prépare. Vous gardez la main : rien ne part sans votre validation.
+              L’assistant IA de Lab Learning simplifie votre espace au maximum : une information sur
+              votre compte, un document, une explication, une relance. Vous demandez, il s’en occupe.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#5CD9A0] text-[#0C1210] text-sm font-semibold hover:bg-[#38C588] ll-lift">
@@ -87,8 +87,8 @@ export default function SiteStarkk() {
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/50">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#5CD9A0]" /> Déjà au travail dans nos équipes</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#5CD9A0]" /> Bientôt dans vos espaces</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#5CD9A0]" /> Pour nos clients, formateurs et apprenants</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[#5CD9A0]" /> Directement dans votre espace</span>
             </div>
           </div>
           <div className="lg:col-span-6 ll-rise" style={{ animationDelay: '0.12s' }}>
@@ -101,10 +101,10 @@ export default function SiteStarkk() {
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
         <div className="max-w-2xl">
           <Kicker className="mb-4">Ce que Starkk sait faire</Kicker>
-          <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Un assistant qui connaît vraiment votre formation</h2>
+          <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Il simplifie tout ce qui vous fait perdre du temps</h2>
           <p className="mt-4 text-lg text-[#57534E]">
-            Starkk n’est pas un chatbot générique : il est branché sur la plateforme de gestion de Lab Learning
-            et travaille sur vos données réelles, en toute confidentialité.
+            Starkk n’est pas un chatbot générique : il est branché sur votre espace Lab Learning
+            et répond à partir de vos informations réelles, en toute confidentialité.
           </p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -129,8 +129,8 @@ export default function SiteStarkk() {
             <Kicker className="mb-4">Pour qui</Kicker>
             <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Un même assistant, trois espaces</h2>
             <p className="mt-4 text-lg text-[#57534E]">
-              Starkk assiste déjà nos équipes au quotidien. Il arrive progressivement dans les espaces
-              de nos clients, de nos formateurs et de nos apprenants.
+              Client, formateur ou apprenant : chacun a son espace, et Starkk y répond avec
+              le bon niveau d’information. Il aide chacun là où il en a besoin.
             </p>
           </div>
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
