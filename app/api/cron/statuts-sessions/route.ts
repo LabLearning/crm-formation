@@ -23,13 +23,23 @@ export async function GET(req: Request) {
 
   // Clôture automatique : les attestations d'hygiène partent au client dès
   // que la session bascule en « terminée » (idempotent, sessions hygiène only).
+  // ?rattrapage=1 : traite aussi TOUTES les sessions déjà terminées (la garde
+  // email_logs évite tout doublon) — utile après une période où le hook manquait.
+  const rattrapage = new URL(req.url).searchParams.get('rattrapage') === '1'
+  let aTraiter: { id: string; organization_id: string }[] = res.terminees || []
+  if (rattrapage) {
+    const { data: terminees } = await supabase.from('sessions')
+      .select('id, organization_id').eq('status', 'terminee').gte('date_fin', '2026-06-01')
+    aTraiter = terminees || []
+  }
   let hygieneEnvoyees = 0
+  const erreurs: string[] = []
   const { envoyerHygieneAutomatique } = await import('@/lib/hygiene-auto')
-  for (const s of res.terminees || []) {
+  for (const s of aTraiter) {
     try {
       await envoyerHygieneAutomatique(supabase, s.id, s.organization_id)
       hygieneEnvoyees++
-    } catch (e) { console.error('[hygiene auto]', s.id, e) }
+    } catch (e: any) { erreurs.push(`${s.id}: ${e?.message?.slice(0, 80)}`); console.error('[hygiene auto]', s.id, e) }
   }
-  return NextResponse.json({ ...res, hygiene_traitees: hygieneEnvoyees })
+  return NextResponse.json({ ...res, hygiene_traitees: hygieneEnvoyees, hygiene_erreurs: erreurs })
 }
