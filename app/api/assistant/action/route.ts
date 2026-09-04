@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const params = corps?.params || {}
   if (!NOMS_ACTIONS.has(type)) return NextResponse.json({ error: 'Action inconnue' }, { status: 400 })
 
-  const resultat = await executerAction(type, params, organization.id)
+  const resultat = await executerAction(type, params, organization.id, user.id)
 
   try {
     await logAudit({

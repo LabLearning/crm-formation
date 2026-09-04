@@ -52,6 +52,35 @@ export const OUTILS_ACTIONS = [
       required: ['facture_id', 'libelle'],
     },
   },
+  {
+    name: 'action_envoyer_lien_emargement',
+    description: "PROPOSE l'envoi (ou la génération) du lien personnel de signature d'émargement d'un stagiaire : il y signe ses journées de présence depuis son téléphone. Si le stagiaire n'a pas d'email en fiche, le lien à copier est fourni. Confirmation utilisateur requise.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        session_id: { type: 'string', description: 'UUID de la session' },
+        apprenant_id: { type: 'string', description: 'UUID du stagiaire' },
+        libelle: { type: 'string', description: 'Résumé humain, ex. « Envoyer son lien de signature à Sophiane Benouar (session hygiène du 8 juin) »' },
+      },
+      required: ['session_id', 'apprenant_id', 'libelle'],
+    },
+  },
+  {
+    name: 'action_marquer_paiement',
+    description: "PROPOSE l'enregistrement d'un paiement reçu sur une facture (virement, chèque…) : crée le règlement, met à jour le restant dû et passe la facture en payée si elle est soldée. Confirmation utilisateur requise.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        facture_id: { type: 'string', description: 'UUID de la facture' },
+        montant: { type: 'number', description: 'Montant reçu en euros (défaut : le restant dû)' },
+        mode: { type: 'string', enum: ['virement', 'cheque', 'cb', 'especes'], description: 'Mode de paiement' },
+        reference: { type: 'string', description: 'Référence (n° de chèque, libellé de virement…)' },
+        date_paiement: { type: 'string', description: 'Date AAAA-MM-JJ (défaut : aujourd’hui)' },
+        libelle: { type: 'string', description: 'Résumé humain, ex. « Enregistrer le virement de 1 176 € reçu sur FA-2026-0215 (Les Jardins de Belleville) »' },
+      },
+      required: ['facture_id', 'mode', 'libelle'],
+    },
+  },
 ] as const
 
 export const NOMS_ACTIONS = new Set<string>(OUTILS_ACTIONS.map((o) => o.name))
@@ -116,7 +145,7 @@ async function relancerFacture(factureId: string, orgId: string): Promise<{ succ
  * réutilisent les server actions existantes (elles portent leurs propres
  * contrôles d'accès et écrivent l'historique d'envoi).
  */
-export async function executerAction(type: string, params: any, orgId: string): Promise<{ success: boolean; message: string }> {
+export async function executerAction(type: string, params: any, orgId: string, userId?: string): Promise<{ success: boolean; message: string }> {
   try {
     if (type === 'action_envoyer_convocation') {
       const { sendConvocationToReferentAction } = await import('@/app/dashboard/sessions/[id]/actions')
@@ -139,6 +168,62 @@ export async function executerAction(type: string, params: any, orgId: string): 
     }
     if (type === 'action_relancer_facture') {
       return await relancerFacture(String(params.facture_id), orgId)
+    }
+    if (type === 'action_envoyer_lien_emargement') {
+      const supabase = await createServiceRoleClient()
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://crm.lab-learning.fr'
+      const { data: a } = await supabase.from('apprenants').select('id, prenom, nom, email')
+        .eq('id', String(params.apprenant_id)).eq('organization_id', orgId).maybeSingle()
+      if (!a) return { success: false, message: 'Stagiaire introuvable' }
+      // Token portail : réutilisé ou créé
+      const { data: ex } = await supabase.from('portal_access_tokens').select('token')
+        .eq('organization_id', orgId).eq('type', 'apprenant').eq('apprenant_id', a.id).eq('is_active', true)
+        .limit(1).maybeSingle()
+      let token = ex?.token
+      if (!token) {
+        const { data: cree, error } = await supabase.from('portal_access_tokens')
+          .insert({ organization_id: orgId, type: 'apprenant', apprenant_id: a.id, email: a.email, created_by: userId || null })
+          .select('token').single()
+        if (error) return { success: false, message: 'Génération du lien impossible' }
+        token = cree.token
+      }
+      const url = `${appUrl}/portail/${token}/mes-emargements`
+      if (!a.email) return { success: false, message: `${a.prenom} ${a.nom} n'a pas d'email en fiche. Lien à copier : ${url}` }
+      const { envoyerLienEmargementAction } = await import('@/app/dashboard/sessions/[id]/actions')
+      const r = await envoyerLienEmargementAction(String(params.session_id), a.id)
+      return r.success
+        ? { success: true, message: `Lien de signature envoyé à ${a.email}` }
+        : { success: false, message: r.error || 'Envoi impossible' }
+    }
+    if (type === 'action_marquer_paiement') {
+      const supabase = await createServiceRoleClient()
+      const { data: f } = await supabase.from('factures')
+        .select('id, numero, montant_ttc, montant_paye, montant_restant, client:clients(raison_sociale, nom_commercial)')
+        .eq('id', String(params.facture_id)).eq('organization_id', orgId).maybeSingle()
+      if (!f) return { success: false, message: 'Facture introuvable' }
+      const restant = Number(f.montant_restant ?? f.montant_ttc ?? 0)
+      const montant = Number(params.montant || restant)
+      if (!montant || montant <= 0) return { success: false, message: 'Montant invalide' }
+      const datePaiement = params.date_paiement || new Date().toISOString().slice(0, 10)
+      const cli: any = (f as any).client
+      const { error: eP } = await supabase.from('paiements').insert({
+        organization_id: orgId, facture_id: f.id, montant, mode: String(params.mode), status: 'valide',
+        date_paiement: datePaiement, reference: params.reference || null,
+        payeur_nom: cli?.nom_commercial || cli?.raison_sociale || null, payeur_type: 'client',
+        created_by: userId || null, notes: 'Enregistré via Starkk (confirmé par l’utilisateur).',
+      })
+      if (eP) return { success: false, message: eP.message }
+      const paye = Number(f.montant_paye || 0) + montant
+      const nouveauRestant = Math.max(0, Number(f.montant_ttc || 0) - paye)
+      const solde = nouveauRestant <= 0
+      await supabase.from('factures').update({
+        montant_paye: paye, montant_restant: nouveauRestant,
+        status: solde ? 'payee' : 'payee_partiellement',
+        date_paiement_complet: solde ? datePaiement : null,
+      }).eq('id', f.id)
+      return { success: true, message: solde
+        ? `Paiement de ${montant.toLocaleString('fr-FR')} € enregistré : la facture ${f.numero} est soldée (acquittée)`
+        : `Paiement de ${montant.toLocaleString('fr-FR')} € enregistré : reste ${nouveauRestant.toLocaleString('fr-FR')} € sur ${f.numero}` }
     }
     return { success: false, message: `Action inconnue : ${type}` }
   } catch (e: any) {

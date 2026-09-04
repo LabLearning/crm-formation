@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     `- Donne les liens en markdown : [Fiche de la session](/dashboard/sessions/xxx), [Convention signée (PDF)](/api/pdf/convention/xxx). L'utilisateur est connecté au CRM, les liens s'ouvrent directement.`,
     `- Réponds en français, court et précis. Dates au format « 28 juillet 2026 », montants en euros.`,
     `- Si une recherche ne donne rien, dis-le et propose une orthographe ou un angle différent.`,
-    `- ACTIONS : tu peux PROPOSER certaines actions (convocation, convention, relance de facture) via les outils action_*. Elles ne s'exécutent JAMAIS directement : l'utilisateur les confirme d'un clic dans l'interface. Propose une action seulement quand on te le demande clairement, avec un libellé précis (qui, quoi, quel montant). Pour tout le reste (modifier un statut, créer une fiche…), indique où le faire dans le CRM avec le lien.`,
+    `- ACTIONS : tu peux PROPOSER certaines actions (convocation, convention, relance de facture, lien de signature d'émargement, enregistrement d'un paiement reçu) via les outils action_*. Elles ne s'exécutent JAMAIS directement : l'utilisateur les confirme d'un clic dans l'interface. Propose une action seulement quand on te le demande clairement, avec un libellé précis (qui, quoi, quel montant). Pour tout le reste (modifier un statut, créer une fiche…), indique où le faire dans le CRM avec le lien.`,
     `- Vocabulaire : jamais d'emoji ni de tiret cadratin.`,
   ].join('\n')
 

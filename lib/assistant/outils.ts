@@ -10,12 +10,12 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 export const OUTILS_ASSISTANT = [
   {
     name: 'rechercher',
-    description: "Recherche globale dans le CRM par nom, email ou numéro : clients, apprenants, formateurs, sessions, leads, factures, conventions. À utiliser en premier quand on te parle d'une personne, d'une entreprise ou d'un document sans te donner son identifiant.",
+    description: "Recherche globale dans le CRM par nom, email ou numéro : clients, apprenants, formateurs, sessions, factures, conventions. À utiliser en premier quand on te parle d'une personne, d'une entreprise ou d'un document sans te donner son identifiant.",
     input_schema: {
       type: 'object',
       properties: {
         requete: { type: 'string', description: 'Texte cherché (nom, email, numéro de facture/convention…)' },
-        type: { type: 'string', enum: ['tous', 'clients', 'apprenants', 'formateurs', 'sessions', 'leads', 'factures', 'conventions'], description: 'Limiter à un type (défaut : tous)' },
+        type: { type: 'string', enum: ['tous', 'clients', 'apprenants', 'formateurs', 'sessions', 'factures', 'conventions'], description: 'Limiter à un type (défaut : tous)' },
       },
       required: ['requete'],
     },
@@ -61,7 +61,7 @@ export const OUTILS_ASSISTANT = [
   },
   {
     name: 'indicateurs',
-    description: 'Chiffres clés du moment : sessions en cours et à venir, factures en attente de paiement (avec montant), leads ouverts, réclamations ouvertes.',
+    description: 'Chiffres clés du moment : sessions en cours et à venir, factures en attente de paiement (avec montant), réclamations ouvertes.',
     input_schema: { type: 'object', properties: {} },
   },
   {
@@ -83,6 +83,16 @@ export const OUTILS_ASSISTANT = [
       properties: { session_id: { type: 'string', description: 'UUID de la session' } },
       required: ['session_id'],
     },
+  },
+  {
+    name: 'etat_agefice',
+    description: "Pipeline AGEFICE complet : dossiers par statut, règlements et signatures d'attestation manquants, échéances de remboursement (4 mois après la fin de formation). Pour « où en sont les dossiers AGEFICE ».",
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'signatures_en_attente',
+    description: "Tout ce qui attend une signature : conventions envoyées non signées, attestations AGEFICE non signées par le dirigeant, sessions terminées avec émargements non signés. Pour « qu'est-ce qui bloque », « quelles signatures manquent ».",
+    input_schema: { type: 'object', properties: {} },
   },
   {
     name: 'detail_formation',
@@ -109,11 +119,10 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
       const motif = `%${q}%`
       const type = args.type || 'tous'
       const veut = (t: string) => type === 'tous' || type === t
-      const [clients, apprenants, formateurs, leads, factures, conventions, formations] = await Promise.all([
+      const [clients, apprenants, formateurs, factures, conventions, formations] = await Promise.all([
         veut('clients') ? org(supabase.from('clients').select('id, raison_sociale, nom_commercial, ville, type')).or(`raison_sociale.ilike.${motif},nom_commercial.ilike.${motif}`).limit(6) : { data: [] },
         veut('apprenants') ? org(supabase.from('apprenants').select('id, prenom, nom, email, client:client_id(raison_sociale, nom_commercial)')).or(`nom.ilike.${motif},prenom.ilike.${motif},email.ilike.${motif}`).limit(6) : { data: [] },
         veut('formateurs') ? org(supabase.from('formateurs').select('id, prenom, nom, email')).or(`nom.ilike.${motif},prenom.ilike.${motif}`).limit(4) : { data: [] },
-        veut('leads') ? org(supabase.from('leads').select('id, nom_entreprise, contact_nom, status')).or(`nom_entreprise.ilike.${motif},contact_nom.ilike.${motif}`).limit(5) : { data: [] },
         veut('factures') ? org(supabase.from('factures').select('id, numero, status, montant_ttc, client:client_id(raison_sociale, nom_commercial)')).ilike('numero', motif).limit(5) : { data: [] },
         veut('conventions') ? org(supabase.from('conventions').select('id, numero, status, session_id, client:client_id(raison_sociale, nom_commercial)')).ilike('numero', motif).limit(5) : { data: [] },
         veut('sessions') ? org(supabase.from('formations').select('id, intitule')).ilike('intitule', motif).limit(4) : { data: [] },
@@ -139,7 +148,6 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
         apprenants: ((apprenants as any).data || []).map((a: any) => ({ id: a.id, nom: `${a.prenom || ''} ${a.nom || ''}`.trim(), email: a.email, entreprise: nomClient(a.client), lien: `/dashboard/apprenants/${a.id}` })),
         formateurs: ((formateurs as any).data || []).map((f: any) => ({ id: f.id, nom: `${f.prenom || ''} ${f.nom || ''}`.trim(), email: f.email, lien: `/dashboard/formateurs/${f.id}` })),
         sessions: sessions.map((s: any) => ({ id: s.id, formation: s.formation?.intitule, client: nomClient(s.client), du: s.date_debut, au: s.date_fin, statut: s.status, lien: `/dashboard/sessions/${s.id}` })),
-        leads: ((leads as any).data || []).map((l: any) => ({ id: l.id, entreprise: l.nom_entreprise, contact: l.contact_nom, statut: l.status, lien: `/dashboard/leads?lead=${l.id}` })),
         factures: ((factures as any).data || []).map((f: any) => ({ id: f.id, numero: f.numero, statut: f.status, montant_ttc: f.montant_ttc, client: nomClient(f.client), pdf: `/api/pdf/facture/${f.id}` })),
         conventions: ((conventions as any).data || []).map((c: any) => ({ id: c.id, numero: c.numero, statut: c.status, client: nomClient(c.client), pdf: `/api/pdf/convention/${c.id}`, session: c.session_id ? `/dashboard/sessions/${c.session_id}?tab=conventions` : null })),
       }
@@ -235,13 +243,12 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
 
     if (nom === 'indicateurs') {
       const auj = new Date().toISOString().slice(0, 10)
-      const [enCours, aVenir, factAttente, leadsOuverts, reclOuvertes] = await Promise.all([
+      const [enCours, aVenir, factAttente, reclOuvertes] = await Promise.all([
         org(supabase.from('sessions').select('id', { count: 'exact', head: true })).lte('date_debut', auj).gte('date_fin', auj).not('status', 'in', '("annulee")'),
         org(supabase.from('sessions').select('id', { count: 'exact', head: true })).gt('date_debut', auj).not('status', 'in', '("annulee")'),
         // Le vrai encours : ce qui reste à encaisser (montant_restant) sur les
         // factures émises/envoyées/en retard — jamais montant_ttc, trompeur.
         org(supabase.from('factures').select('status, montant_ttc, montant_restant')).in('status', ['emise', 'envoyee', 'en_retard']),
-        org(supabase.from('leads').select('id', { count: 'exact', head: true })).not('status', 'in', '("gagne","perdu")'),
         org(supabase.from('reclamations').select('id', { count: 'exact', head: true })).not('status', 'in', '("cloturee","resolue")'),
       ])
       const enAttente = ((factAttente as any).data || []) as any[]
@@ -252,9 +259,8 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
         sessions_a_venir: aVenir.count || 0,
         factures_en_attente: { nombre: enAttente.length, montant_restant: restant(enAttente) },
         dont_en_retard: { nombre: retard.length, montant_restant: restant(retard) },
-        leads_ouverts: leadsOuverts.count || 0,
         reclamations_ouvertes: reclOuvertes.count || 0,
-        liens: { sessions: '/dashboard/sessions', factures: '/dashboard/factures', leads: '/dashboard/leads' },
+        liens: { sessions: '/dashboard/sessions', factures: '/dashboard/factures' },
       }
     }
 
@@ -313,6 +319,56 @@ export async function executerOutil(nom: string, args: any, orgId: string): Prom
         stagiaires: [...parApprenant.values()],
         feuille_pdf: `/api/pdf/emargement/${sid}`,
         lien_session: `/dashboard/sessions/${sid}?tab=presences`,
+      }
+    }
+
+    if (nom === 'etat_agefice') {
+      const { data: dossiers } = await org(supabase.from('dossiers_agefice')
+        .select('id, numero_dossier, statut, montant_accorde, date_fin_formation, mode_reglement, signature_stagiaire_date, session_id, client:client_id(raison_sociale, nom_commercial), apprenant:apprenant_id(prenom, nom)'))
+        .order('created_at', { ascending: false }).limit(50)
+      const auj = Date.now()
+      const lignes = ((dossiers || []) as any[]).map((d) => {
+        // Délai AGEFICE : demande de remboursement au plus tard 4 mois après la fin
+        const fin = d.date_fin_formation ? new Date(d.date_fin_formation).getTime() : null
+        const limite = fin ? new Date(fin + 122 * 86400000).toISOString().slice(0, 10) : null
+        const joursRestants = fin ? Math.round((fin + 122 * 86400000 - auj) / 86400000) : null
+        return {
+          dirigeant: `${d.apprenant?.prenom || ''} ${d.apprenant?.nom || ''}`.trim() || nomClient(d.client),
+          numero_accord: d.numero_dossier, statut: d.statut, montant: d.montant_accorde,
+          regle: !!d.mode_reglement, attestation_signee: !!d.signature_stagiaire_date,
+          limite_remboursement: limite, jours_restants: joursRestants,
+          lien: d.session_id ? `/dashboard/sessions/${d.session_id}?tab=facturation` : '/dashboard/agefice',
+        }
+      })
+      return {
+        dossiers: lignes,
+        alertes: lignes.filter((l) => (l.jours_restants != null && l.jours_restants < 45 && l.statut !== 'solde') || !l.regle || !l.attestation_signee),
+      }
+    }
+
+    if (nom === 'signatures_en_attente') {
+      const [{ data: convs }, { data: dossiers }, { data: sessions }] = await Promise.all([
+        org(supabase.from('conventions').select('id, numero, sent_at, session_id, client:client_id(raison_sociale, nom_commercial)'))
+          .not('sent_at', 'is', null).is('signature_client_date', null).order('sent_at', { ascending: false }).limit(15),
+        org(supabase.from('dossiers_agefice').select('id, numero_dossier, session_id, mode_reglement, signature_stagiaire_date, apprenant:apprenant_id(prenom, nom)'))
+          .is('signature_stagiaire_date', null),
+        org(supabase.from('sessions').select('id, date_fin, formation:formation_id(intitule), client:client_id(raison_sociale, nom_commercial)'))
+          .eq('status', 'terminee').order('date_fin', { ascending: false }).limit(12),
+      ])
+      // Émargements non signés sur les sessions terminées récentes
+      const manquesEmargement: any[] = []
+      for (const s of (sessions || []) as any[]) {
+        const { count: total } = await supabase.from('emargements').select('id', { count: 'exact', head: true }).eq('session_id', s.id)
+        if (!total) continue
+        const { count: signes } = await supabase.from('emargements').select('id', { count: 'exact', head: true }).eq('session_id', s.id).not('signature_data', 'is', null)
+        if ((signes || 0) < total) {
+          manquesEmargement.push({ formation: s.formation?.intitule, client: nomClient(s.client), fin: s.date_fin, signes: signes || 0, total, lien: `/dashboard/sessions/${s.id}?tab=presences` })
+        }
+      }
+      return {
+        conventions_non_signees: ((convs || []) as any[]).map((c) => ({ numero: c.numero, client: nomClient(c.client), envoyee_le: c.sent_at, lien: c.session_id ? `/dashboard/sessions/${c.session_id}?tab=conventions` : '/dashboard/conventions' })),
+        attestations_agefice_non_signees: ((dossiers || []) as any[]).map((d) => ({ dirigeant: `${d.apprenant?.prenom || ''} ${d.apprenant?.nom || ''}`.trim(), numero_accord: d.numero_dossier, reglement_enregistre: !!d.mode_reglement, lien: d.session_id ? `/dashboard/sessions/${d.session_id}?tab=facturation` : '/dashboard/agefice' })),
+        emargements_incomplets: manquesEmargement,
       }
     }
 
