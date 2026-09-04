@@ -18,9 +18,9 @@ export const metadata = {
 const CAPACITES = [
   { Icon: AiChat, t: 'Répond à vos questions', d: "Où en est ma session ? Quand arrive mon attestation ? Qui est mon formateur ? Starkk répond immédiatement, à partir de votre dossier réel." },
   { Icon: AiBrain, t: 'Connaît votre dossier', d: 'Formations, sessions, émargements, conventions, factures : Starkk s’appuie sur les données à jour de votre espace, pas sur des généralités.' },
-  { Icon: FileCheck2, t: 'Retrouve vos documents', d: 'Convention, convocation, attestation, certificat de réalisation : il localise le bon document et vous le remet sans fouiller vos emails.' },
+  { Icon: FileCheck2, t: 'Retrouve vos documents', d: 'Convention, convocation, attestation, certificat de réalisation : il localise le bon document et vous le remet, sans que vous ayez à fouiller vos emails.' },
   { Icon: Calendar, t: 'Suit vos échéances', d: 'Signatures en attente, sessions à venir, dossiers de financement : Starkk garde le fil et vous alerte au bon moment.' },
-  { Icon: Clock, t: 'Disponible en continu', d: 'Le soir après le service ou le dimanche matin : Starkk répond quand vous travaillez, pas seulement aux horaires de bureau.' },
+  { Icon: Clock, t: 'Disponible en continu', d: 'Le soir après le service ou le dimanche matin : Starkk répond quand vous travaillez, pas seulement aux heures de bureau.' },
   { Icon: AiSecurity, t: 'Jamais sans votre accord', d: 'Starkk propose, vous confirmez. Aucune action sortante, aucun envoi, aucune modification sans validation humaine explicite.' },
 ]
 
@@ -80,7 +80,7 @@ export default function SiteStarkk() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#5CD9A0] text-[#0C1210] text-sm font-semibold hover:bg-[#38C588] ll-lift">
-                Découvrir Starkk avec nous <ArrowRight className="h-4 w-4" />
+                Découvrir Starkk <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/site/formations" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-white/20 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
                 Nos formations
@@ -127,7 +127,7 @@ export default function SiteStarkk() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28">
           <div className="max-w-2xl">
             <Kicker className="mb-4">Pour qui</Kicker>
-            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Le même assistant, trois métiers servis</h2>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Un même assistant, trois espaces</h2>
             <p className="mt-4 text-lg text-[#57534E]">
               Starkk assiste déjà nos équipes au quotidien. Il arrive progressivement dans les espaces
               de nos clients, de nos formateurs et de nos apprenants.
@@ -201,8 +201,8 @@ export default function SiteStarkk() {
               <Kicker tone="light" center className="mb-5 justify-center">L’IA au service du geste juste</Kicker>
               <h2 className="ll-display ll-fluid-h1 text-balance max-w-3xl mx-auto text-white">Une formation suivie par des humains, épaulés par Starkk</h2>
               <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">
-                Nos conseillers restent vos interlocuteurs. Starkk leur donne, et bientôt vous donnera,
-                des réponses immédiates et un suivi sans faille.
+                Nos conseillers restent vos interlocuteurs. Starkk leur apporte des réponses
+                immédiates et un suivi sans faille. Bientôt, il vous les apportera aussi.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link href="/site/contact" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#14110F] text-sm font-semibold hover:bg-[#F6F4EF] ll-lift">
