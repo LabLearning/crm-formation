@@ -6,7 +6,6 @@ import {
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 import { StarkkHero } from './StarkkHero'
-import { TypingLine } from './TypingLine'
 import { ChatDemo } from './ChatDemo'
 import { ProposerConfirmer } from './ProposerConfirmer'
 
@@ -76,7 +75,6 @@ export default function SiteStarkk() {
               L’assistant IA de Lab Learning simplifie votre espace au maximum : une information sur
               votre compte, un document, une explication, une relance. Vous demandez, il s’en occupe.
             </p>
-            <TypingLine />
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#5CD9A0] text-[#0C1210] text-sm font-semibold hover:bg-[#38C588] ll-lift">
                 Découvrir Starkk <ArrowRight className="h-4 w-4" />
