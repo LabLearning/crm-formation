@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2, PenLine, Check, CheckCircle2 } from '@/components/ui/icons'
-import { Button, Input, Select, useToast } from '@/components/ui'
+import { Trash2, Save, CheckSquare, Square, Mail, FileDown, Receipt, Loader2, PenLine, Check, CheckCircle2, Copy, Send as SendIcon } from '@/components/ui/icons'
+import { Button, Input, Select, Modal, useToast } from '@/components/ui'
 import { AGEFICE_STATUTS, PIECES_AVANT, PIECES_APRES } from '@/lib/agefice'
 import { majDossierAgeficeAction, cocherPieceAgeficeAction, supprimerDossierAgeficeAction, genererFactureAgeficeAction, lienSignatureAttestationAction } from '@/app/dashboard/agefice/actions'
 
@@ -52,12 +52,16 @@ export function nomClientAgefice(c: DossierAgefice['client']): string {
 
 const frDate = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—')
 
-/** mailto prérempli vers le Point d'Accueil — l'envoi part de la boîte de l'admin. */
-function mailtoPointAccueil(d: DossierAgefice, phase: 'pec' | 'remboursement'): string {
+/**
+ * Email au Point d'Accueil : on prépare destinataire + objet + corps.
+ * Le bouton ouvre une fenêtre avec Gmail en premier choix — un simple
+ * mailto: ne fait RIEN quand aucune app mail n'est configurée au poste.
+ */
+function emailPointAccueil(d: DossierAgefice, phase: 'pec' | 'remboursement'): { to: string; objet: string; corps: string } {
   const dirigeant = d.apprenant ? `${d.apprenant.prenom || ''} ${d.apprenant.nom || ''}`.trim() : nomClientAgefice(d.client)
   const objet = phase === 'pec'
-    ? `Demande de prise en charge AGEFICE — ${dirigeant} — ${d.formation?.intitule || 'formation'}`
-    : `Demande de remboursement AGEFICE — ${dirigeant}${d.numero_dossier ? ` — dossier ${d.numero_dossier}` : ''}`
+    ? `Demande de prise en charge AGEFICE : ${dirigeant} (${d.formation?.intitule || 'formation'})`
+    : `Demande de remboursement AGEFICE : ${dirigeant}${d.numero_dossier ? ` (dossier ${d.numero_dossier})` : ''}`
   const pieces = phase === 'pec'
     ? ['l\'imprimé de demande signé', 'la convention / le devis', 'le programme détaillé', 'l\'attestation CFP URSSAF', 'la pièce d\'identité du dirigeant']
     : ['l\'attestation d\'assiduité et de règlement', 'la facture acquittée', 'les feuilles d\'émargement']
@@ -71,9 +75,9 @@ function mailtoPointAccueil(d: DossierAgefice, phase: 'pec' | 'remboursement'): 
     `Pièces jointes : ${pieces.join(', ')}.`,
     '',
     'Bien cordialement,',
-    'Lab Learning — digital@lab-learning.fr',
+    'Lab Learning · digital@lab-learning.fr',
   ].join('\n')
-  return `mailto:${d.point_accueil_email || ''}?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(corps)}`
+  return { to: d.point_accueil_email || '', objet, corps }
 }
 
 export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefice; onDone?: () => void }) {
@@ -83,6 +87,16 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
   const [facturation, setFacturation] = useState(false)
   const [lienEnCours, setLienEnCours] = useState(false)
   const [lienCopie, setLienCopie] = useState(false)
+  const [emailPA, setEmailPA] = useState<{ to: string; objet: string; corps: string } | null>(null)
+  const [copieEmail, setCopieEmail] = useState<string | null>(null)
+
+  async function copierEmail(cle: string, valeur: string) {
+    await navigator.clipboard.writeText(valeur)
+    setCopieEmail(cle)
+    setTimeout(() => setCopieEmail(null), 1800)
+  }
+  const gmailUrl = (e: { to: string; objet: string; corps: string }) =>
+    `https://mail.google.com/mail/?view=cm&fm=1&to=${encodeURIComponent(e.to)}&su=${encodeURIComponent(e.objet)}&body=${encodeURIComponent(e.corps)}`
 
   async function copierLienSignature() {
     setLienEnCours(true)
@@ -156,10 +170,10 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
         <div className="rounded-xl border border-surface-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 1 — Demande de prise en charge</div>
-            <a href={mailtoPointAccueil(dossier, 'pec')}
+            <button type="button" onClick={() => setEmailPA(emailPointAccueil(dossier, 'pec'))}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
               <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
-            </a>
+            </button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <a href={`/api/pdf/demande-agefice/${dossier.id}`} target="_blank" rel="noopener noreferrer"
@@ -182,10 +196,10 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
         <div className="rounded-xl border border-surface-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Phase 2 — Règlement client & remboursement</div>
-            <a href={mailtoPointAccueil(dossier, 'remboursement')}
+            <button type="button" onClick={() => setEmailPA(emailPointAccueil(dossier, 'remboursement'))}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
               <Mail className="h-3.5 w-3.5" /> Préparer l&apos;email
-            </a>
+            </button>
           </div>
           <p className="text-[11px] text-surface-400 -mt-1">
             Paiement direct obligatoire du dirigeant vers l&apos;organisme (virement ou chèque) — toute avance de fonds est interdite par l&apos;AGEFICE.
@@ -238,6 +252,52 @@ export function DossierAgeficeForm({ dossier, onDone }: { dossier: DossierAgefic
           <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>Enregistrer</Button>
         </div>
       </form>
+
+      {/* Fenêtre « Préparer l'email » au Point d'Accueil : Gmail d'abord,
+          mailto en repli, tout copiable — un mailto seul ne fait rien quand
+          aucune application mail n'est configurée sur le poste. */}
+      <Modal isOpen={!!emailPA} onClose={() => setEmailPA(null)} title="Email au Point d'Accueil" size="md">
+        {emailPA && (
+          <div className="space-y-3">
+            {!emailPA.to && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Aucun email de Point d&apos;Accueil sur le dossier : renseignez-le dans le formulaire, ou saisissez le destinataire à la main dans Gmail.
+              </p>
+            )}
+            {[['Destinataire', emailPA.to || '(à saisir)'], ['Objet', emailPA.objet]].map(([label, valeur]) => (
+              <div key={label} className="flex items-start gap-2">
+                <span className="text-xs text-surface-400 w-24 shrink-0 pt-1.5">{label}</span>
+                <span className="flex-1 text-sm text-surface-800 bg-surface-50 rounded-lg px-3 py-1.5">{valeur}</span>
+                <button type="button" onClick={() => copierEmail(label, valeur)} title={`Copier ${label.toLowerCase()}`}
+                  className="shrink-0 h-8 w-8 rounded-lg border border-surface-200 flex items-center justify-center text-surface-500 hover:bg-surface-50">
+                  {copieEmail === label ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            ))}
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-surface-400 w-24 shrink-0 pt-1.5">Message</span>
+              <pre className="flex-1 text-xs text-surface-700 bg-surface-50 rounded-lg px-3 py-2 whitespace-pre-wrap font-sans leading-relaxed">{emailPA.corps}</pre>
+              <button type="button" onClick={() => copierEmail('Message', emailPA.corps)} title="Copier le message"
+                className="shrink-0 h-8 w-8 rounded-lg border border-surface-200 flex items-center justify-center text-surface-500 hover:bg-surface-50">
+                {copieEmail === 'Message' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-surface-400">
+              Pensez à joindre les pièces listées dans le message avant d&apos;envoyer.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <a href={`mailto:${emailPA.to}?subject=${encodeURIComponent(emailPA.objet)}&body=${encodeURIComponent(emailPA.corps)}`}
+                className="inline-flex items-center gap-1.5 text-xs font-medium rounded-xl border border-surface-200 bg-white px-3 py-2 text-surface-700 hover:border-surface-300">
+                <Mail className="h-3.5 w-3.5" /> App mail du poste
+              </a>
+              <a href={gmailUrl(emailPA)} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold rounded-xl bg-brand-500 px-3.5 py-2 text-white hover:bg-brand-600">
+                <SendIcon className="h-3.5 w-3.5" /> Ouvrir dans Gmail
+              </a>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Checklists de pièces — liste officielle AGEFICE (janvier 2026) */}
       <div className="grid md:grid-cols-2 gap-4">
