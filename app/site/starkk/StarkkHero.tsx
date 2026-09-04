@@ -24,11 +24,12 @@ export function StarkkHero() {
           />
         ) : (
           <video
-            src="/starkk-intro.mp4"
+            src="/starkk-hologramme.mp4"
             autoPlay
             loop
             muted
             playsInline
+            poster="/starkk.png"
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}
