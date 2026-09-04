@@ -65,3 +65,64 @@ export async function signerMonEmargementAction(
   revalidatePath(`/dashboard/sessions/${em.session_id}`)
   return { success: true }
 }
+
+/**
+ * Signature d'une JOURNÉE entière : une seule signature du stagiaire remplit
+ * tous ses créneaux signables du jour (matin + après-midi) — la feuille
+ * d'émargement garde bien une signature par demi-journée, capturée une fois.
+ * Mêmes règles que la signature par créneau : pas de créneau futur, pas de
+ * créneau déjà signé ou marqué absent, pas de feuille déjà validée.
+ */
+export async function signerMaJourneeAction(
+  token: string,
+  sessionId: string,
+  date: string,
+  signatureBase64: string,
+): Promise<{ success: boolean; error?: string; data?: { signes: number } }> {
+  const context = await getPortalContext(token)
+  if (!context || context.type !== 'apprenant') {
+    return { success: false, error: 'Accès non autorisé' }
+  }
+  if (!signatureBase64?.startsWith('data:image/')) {
+    return { success: false, error: 'Signature invalide' }
+  }
+  if (String(date) > new Date().toISOString().slice(0, 10)) {
+    return { success: false, error: 'Cette journée n\'a pas encore eu lieu' }
+  }
+
+  const supabase = await createServiceRoleClient()
+  const { data: ems } = await supabase
+    .from('emargements')
+    .select('id, creneau, est_present, signature_data')
+    .eq('apprenant_id', context.apprenant.id)
+    .eq('session_id', sessionId)
+    .eq('date', date)
+  const signables = (ems || []).filter((e) => !e.signature_data && e.est_present !== false)
+  if (!signables.length) return { success: false, error: 'Aucun créneau à signer sur cette journée' }
+
+  // Feuilles déjà validées par le formateur : créneaux verrouillés
+  const { data: feuilles } = await supabase
+    .from('emargement_feuilles')
+    .select('creneau, validated_at')
+    .eq('session_id', sessionId)
+    .eq('date', date)
+  const verrouilles = new Set((feuilles || []).filter((f) => f.validated_at).map((f) => f.creneau))
+  const cibles = signables.filter((e) => !verrouilles.has(e.creneau))
+  if (!cibles.length) return { success: false, error: 'Les feuilles de cette journée sont déjà validées' }
+
+  const { error } = await supabase
+    .from('emargements')
+    .update({
+      est_present: true,
+      signature_data: signatureBase64,
+      signed_at: new Date().toISOString(),
+      signed_via: 'portail_apprenant',
+      motif_absence: null,
+    })
+    .in('id', cibles.map((e) => e.id))
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/portail/${token}/mes-emargements`)
+  revalidatePath(`/dashboard/sessions/${sessionId}`)
+  return { success: true, data: { signes: cibles.length } }
+}

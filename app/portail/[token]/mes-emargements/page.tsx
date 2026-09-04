@@ -7,9 +7,9 @@ import { ToastProvider } from '@/components/ui'
 export const dynamic = 'force-dynamic'
 
 /**
- * Émargements de l'apprenant sur son portail : sa présence par session,
- * demi-journée par demi-journée — et la signature directe des créneaux
- * passés non encore signés.
+ * Émargements de l'apprenant sur son portail, regroupés PAR JOURNÉE : une
+ * seule signature remplit les créneaux du jour (matin + après-midi) — la
+ * feuille garde une signature par demi-journée, capturée en une fois.
  */
 export default async function PortalEmargementsPage({ params }: { params: { token: string } }) {
   const context = await getPortalContext(params.token)
@@ -29,21 +29,36 @@ export default async function PortalEmargementsPage({ params }: { params: { toke
     parSession.get(e.session_id)!.push(e)
   }
 
-  const groupes = [...parSession.entries()].map(([sessionId, lignes]) => ({
-    sessionId,
-    titre: lignes[0].session?.formation?.intitule || lignes[0].session?.reference || 'Formation',
-    lignes: lignes.map((l: any) => ({
-      id: l.id,
-      date: String(l.date),
-      creneau: l.creneau,
-      est_present: l.est_present,
-      motif_absence: l.motif_absence,
-      signe: !!l.signature_data,
-      // Signable : créneau passé (ou du jour), pas encore signé, pas une
-      // absence motivée.
-      signable: !l.signature_data && String(l.date) <= aujourdhui && l.est_present !== false,
-    })),
-  }))
+  const groupes = [...parSession.entries()].map(([sessionId, lignes]) => {
+    // Regroupement par jour : un jour = une signature qui couvre ses créneaux
+    const parJour = new Map<string, any[]>()
+    for (const l of lignes) {
+      const d = String(l.date)
+      if (!parJour.has(d)) parJour.set(d, [])
+      parJour.get(d)!.push(l)
+    }
+    const jours = [...parJour.entries()]
+      .sort(([a], [b]) => (a < b ? 1 : -1))
+      .map(([date, creneaux]) => {
+        const tries = creneaux.sort((a: any, b: any) => (a.creneau === 'matin' ? -1 : 1))
+        return {
+          date,
+          creneaux: tries.map((c: any) => ({
+            creneau: c.creneau,
+            est_present: c.est_present,
+            motif_absence: c.motif_absence,
+            signe: !!c.signature_data,
+          })),
+          // Journée signable : au moins un créneau passé, non signé, non absent
+          signable: tries.some((c: any) => !c.signature_data && date <= aujourdhui && c.est_present !== false),
+        }
+      })
+    return {
+      sessionId,
+      titre: lignes[0].session?.formation?.intitule || lignes[0].session?.reference || 'Formation',
+      jours,
+    }
+  })
 
   return <ToastProvider><MesEmargementsClient token={params.token} groupes={groupes} /></ToastProvider>
 }
