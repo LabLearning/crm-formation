@@ -149,13 +149,14 @@ export function SiteNav() {
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Starkk : bouton animé signature */}
-          <Link href="/site/starkk"
-            className="ll-starkk-btn hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-black italic text-white ll-lift">
-            <span className="relative z-10 flex h-2 w-2 not-italic">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CD9A0] opacity-75 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5CD9A0]" />
+          <Link href="/site/starkk" className="ll-starkk-btn hidden sm:inline-flex rounded-full ll-lift">
+            <span className="ll-starkk-inner inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-black italic text-white">
+              <span className="relative z-10 flex h-2 w-2 not-italic">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CD9A0] opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5CD9A0]" />
+              </span>
+              <span className="relative z-10">Starkk</span>
             </span>
-            <span className="relative z-10">Starkk</span>
           </Link>
           <button className="lg:hidden h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-black/[0.04] text-[#14110F]"
             onClick={() => setOpen((v) => !v)} aria-label="Menu">
@@ -217,12 +218,14 @@ export function SiteNav() {
 
             <div className="my-1 border-t border-[#F0EEE9]" />
             <Link href="/site/starkk" onClick={() => setOpen(false)}
-              className="ll-starkk-btn mt-1 mb-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-black italic">
-              <span className="relative z-10 flex h-2 w-2 not-italic">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CD9A0] opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5CD9A0]" />
+              className="ll-starkk-btn mt-1 mb-1 flex rounded-2xl">
+              <span className="ll-starkk-inner flex flex-1 items-center justify-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-black italic">
+                <span className="relative z-10 flex h-2 w-2 not-italic">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CD9A0] opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5CD9A0]" />
+                </span>
+                <span className="relative z-10">Starkk, notre IA</span>
               </span>
-              <span className="relative z-10">Starkk, notre IA</span>
             </Link>
           </nav>
         </div>
