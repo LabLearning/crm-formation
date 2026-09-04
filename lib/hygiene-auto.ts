@@ -40,6 +40,7 @@ export async function envoyerHygieneAutomatique(supabase: any, sessionId: string
   const { data: em } = await supabase.from('emargements')
     .select('apprenant_id, est_present').eq('session_id', sessionId)
   const dureePrevue = Number((sess as any).formation?.duree_heures || 0)
+  if (!dureePrevue) return // pas de durée fiable : jamais d'attestation à 0 h
   const heuresParApprenant: Record<string, number> = {}
   for (const a of apprenants) {
     const lignes = (em || []).filter((e: any) => e.apprenant_id === a.id)
@@ -48,6 +49,13 @@ export async function envoyerHygieneAutomatique(supabase: any, sessionId: string
       ? Math.round((dureePrevue * presents / lignes.length) * 100) / 100
       : dureePrevue
   }
+  // RÈGLE ABSOLUE : aucune attestation à 0 heure ne part. Un stagiaire sans
+  // présence pointée/signée est retiré du lot ; s'il ne reste personne,
+  // l'envoi attend que les présences soient posées (liens de signature).
+  const apprenantsValides = apprenants.filter((a: any) => (heuresParApprenant[a.id] || 0) > 0)
+  if (!apprenantsValides.length) return
+  apprenants.length = 0
+  apprenants.push(...apprenantsValides)
 
   const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', orgId).single()
   const { withDocumentLogo, resolveEmailLogoUrl } = await import('@/lib/pdf/org-logo')
