@@ -6,6 +6,9 @@ import {
 import { Kicker } from '../Kicker'
 import { Reveal } from '../Reveal'
 import { StarkkHero } from './StarkkHero'
+import { TypingLine } from './TypingLine'
+import { ChatDemo } from './ChatDemo'
+import { ProposerConfirmer } from './ProposerConfirmer'
 
 export const dynamic = 'force-dynamic'
 export const metadata = {
@@ -51,12 +54,6 @@ const PUBLICS = [
   },
 ]
 
-const ETAPES = [
-  { n: '01', t: 'Vous demandez', d: 'En langage naturel, comme à un collègue : « envoie-moi ma convention », « où en est la session de mardi ? »' },
-  { n: '02', t: 'Starkk prépare', d: 'Il consulte votre dossier, rassemble les éléments et vous propose une réponse ou une action prête à partir.' },
-  { n: '03', t: 'Vous validez', d: 'Rien ne part sans vous : chaque action est confirmée d’un clic avant d’être exécutée.' },
-]
-
 const kickerSombre = (label: string) => (
   <span className="inline-flex items-center gap-2 rounded-full bg-[#5CD9A0]/10 ring-1 ring-[#5CD9A0]/25 px-3.5 py-1.5 text-xs font-semibold tracking-wide uppercase text-[#5CD9A0]">
     <Sparkles className="h-3.5 w-3.5" /> {label}
@@ -79,6 +76,7 @@ export default function SiteStarkk() {
               L’assistant IA de Lab Learning simplifie votre espace au maximum : une information sur
               votre compte, un document, une explication, une relance. Vous demandez, il s’en occupe.
             </p>
+            <TypingLine />
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/site/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#5CD9A0] text-[#0C1210] text-sm font-semibold hover:bg-[#38C588] ll-lift">
                 Découvrir Starkk <ArrowRight className="h-4 w-4" />
@@ -120,6 +118,26 @@ export default function SiteStarkk() {
               </div>
             </Reveal>
           ))}
+        </div>
+      </section>
+
+      {/* ── DÉMO INTERACTIVE (clair, fenêtre sombre) ── */}
+      <section className="bg-[#FAFAFA] border-y border-[#205040]/10">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-20 md:py-28 grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          <div className="lg:col-span-5">
+            <Kicker className="mb-4">Essayez par vous-même</Kicker>
+            <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Posez-lui une question, là, maintenant</h2>
+            <p className="mt-4 text-lg text-[#57534E] leading-relaxed">
+              Une démonstration avec des données fictives, mais des réponses fidèles à ce que Starkk
+              fait au quotidien : renseigner, remettre un document, expliquer, proposer une relance.
+            </p>
+            <p className="mt-3 text-sm text-[#78716C]">
+              Dans votre espace, Starkk répondra avec vos vraies informations.
+            </p>
+          </div>
+          <div className="lg:col-span-7">
+            <Reveal><ChatDemo /></Reveal>
+          </div>
         </div>
       </section>
 
@@ -167,16 +185,8 @@ export default function SiteStarkk() {
           <Kicker className="mb-4">Comment ça marche</Kicker>
           <h2 className="ll-display ll-fluid-h2 text-[#14110F] text-balance">Vous demandez, il prépare, vous validez</h2>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {ETAPES.map((e, i) => (
-            <Reveal key={e.n} delay={(i % 3) * 90}>
-              <div className="h-full rounded-3xl bg-white ring-1 ring-black/5 p-7">
-                <div className="ll-display text-4xl text-[#205040]/25">{e.n}</div>
-                <div className="mt-4 font-heading font-semibold text-[#14110F]">{e.t}</div>
-                <p className="mt-2 text-sm text-[#57534E] leading-relaxed">{e.d}</p>
-              </div>
-            </Reveal>
-          ))}
+        <div className="mt-12">
+          <ProposerConfirmer />
         </div>
         <Reveal>
           <div className="mt-10 flex items-start gap-4 rounded-2xl border border-[#205040]/15 bg-[#205040]/4 p-6">
