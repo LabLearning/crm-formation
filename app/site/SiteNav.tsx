@@ -13,6 +13,7 @@ import { BRANCHES } from './branches'
  */
 const LINKS = [
   { href: '/site/financements', label: 'Financements' },
+  { href: '/site/starkk', label: 'Starkk' },
   { href: '/site/partenaires', label: 'Nos clients' },
   { href: '/site/resultats', label: 'Résultats' },
   { href: '/site/a-propos', label: 'À propos' },

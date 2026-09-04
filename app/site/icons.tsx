@@ -16,6 +16,7 @@ import {
   HeartHandshakeIcon, Award01Icon, BookOpen01Icon, ListViewIcon, BulbIcon,
   ManagerIcon, CleaningBucketIcon, FirstAidKitIcon, GraduationScrollIcon,
   StarIcon, ArrowDown01Icon,
+  AiMagicIcon, AiChat01Icon, AiBrain01Icon, AiSecurity01Icon,
 } from '@hugeicons/core-free-icons'
 
 type P = { className?: string; strokeWidth?: number }
@@ -92,3 +93,9 @@ export const Sandwich = make(Hamburger01Icon)
 export const Wine = make(Restaurant03Icon)
 export const Star = make(StarIcon)
 export const ChevronDown = make(ArrowDown01Icon)
+
+// ── Starkk / IA ──
+export const Sparkles = make(AiMagicIcon)        // réservé aux features IA
+export const AiChat = make(AiChat01Icon)         // conversation avec Starkk
+export const AiBrain = make(AiBrain01Icon)       // connaissance du dossier
+export const AiSecurity = make(AiSecurity01Icon) // garde-fous / confirmation humaine
