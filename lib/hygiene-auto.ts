@@ -102,3 +102,54 @@ export async function envoyerHygieneAutomatique(supabase: any, sessionId: string
     organizationId: orgId, entityType: 'session', entityId: sessionId,
   })
 }
+
+
+/**
+ * Aperçu SANS ENVOI : applique exactement les mêmes règles que l'envoi
+ * (formation hygiène, destinataire, anti-doublon, jamais 0 h) et dit ce qui
+ * partirait. Sert au mode validation du rattrapage.
+ */
+export async function apercuHygiene(supabase: any, sessionId: string, orgId: string): Promise<{
+  envoyable: boolean; raison?: string; client?: string; destinataire?: string; stagiaires?: number; heures?: string
+}> {
+  const { estFormationHygiene } = await import('@/lib/formation-hygiene')
+  const { data: sess } = await supabase.from('sessions')
+    .select('id, formation:formation_id(intitule, categorie, duree_heures), client:client_id(id, raison_sociale, nom_commercial, email)')
+    .eq('id', sessionId).eq('organization_id', orgId).maybeSingle()
+  if (!sess || !estFormationHygiene((sess as any).formation)) return { envoyable: false, raison: 'pas une formation hygiène' }
+  const client: any = (sess as any).client
+  if (!client) return { envoyable: false, raison: 'aucun client' }
+  const nomClient = client.nom_commercial || client.raison_sociale || '?'
+
+  let toEmail: string | null = client.email || null
+  if (!toEmail) {
+    const { data: contact } = await supabase.from('contacts')
+      .select('email').eq('client_id', client.id).not('email', 'is', null).limit(1).maybeSingle()
+    toEmail = contact?.email || null
+  }
+  if (!toEmail) return { envoyable: false, raison: 'aucun email (client ni contact)', client: nomClient }
+
+  const { data: deja } = await supabase.from('email_logs')
+    .select('id').eq('organization_id', orgId).eq('entity_type', 'session').eq('entity_id', sessionId)
+    .ilike('subject', '%attestations d_hygiène%').limit(1)
+  if ((deja || []).length) return { envoyable: false, raison: 'déjà envoyée', client: nomClient }
+
+  const { data: inscriptions } = await supabase.from('inscriptions')
+    .select('apprenant_id').eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+  if (!inscriptions?.length) return { envoyable: false, raison: 'aucun inscrit', client: nomClient }
+  const dureePrevue = Number((sess as any).formation?.duree_heures || 0)
+  if (!dureePrevue) return { envoyable: false, raison: 'durée de formation absente', client: nomClient }
+  const { data: em } = await supabase.from('emargements').select('apprenant_id, est_present').eq('session_id', sessionId)
+  const heures = inscriptions.map((i: any) => {
+    const lignes = (em || []).filter((e: any) => e.apprenant_id === i.apprenant_id)
+    const presents = lignes.filter((e: any) => e.est_present).length
+    return lignes.length > 0 ? Math.round((dureePrevue * presents / lignes.length) * 100) / 100 : dureePrevue
+  })
+  const valides = heures.filter((h: number) => h > 0)
+  if (!valides.length) return { envoyable: false, raison: 'tous les stagiaires à 0 h (présences non posées)', client: nomClient }
+  return {
+    envoyable: true, client: nomClient, destinataire: toEmail,
+    stagiaires: valides.length,
+    heures: `${Math.min(...valides)} à ${Math.max(...valides)} h` + (valides.length < heures.length ? ` (${heures.length - valides.length} stagiaire(s) à 0 h exclu(s))` : ''),
+  }
+}
