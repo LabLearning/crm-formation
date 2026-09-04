@@ -27,7 +27,7 @@ export async function envoyerHygieneAutomatique(supabase: any, sessionId: string
   // Garde anti-doublon : un envoi automatique déjà tracé pour cette session ?
   const { data: deja } = await supabase.from('email_logs')
     .select('id').eq('organization_id', orgId).eq('entity_type', 'session').eq('entity_id', sessionId)
-    .ilike('subject', '%hygiène%').limit(1)
+    .ilike('subject', '%attestations d_hygiène%').limit(1)
   if ((deja || []).length) return
 
   // Stagiaires + heures réellement suivies (mêmes règles que la route PDF)
