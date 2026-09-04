@@ -140,18 +140,19 @@ export function SiteNav() {
             <span className={soulignement(isActive('/site/financements'))} />
           </Link>
 
-          {/* Starkk : bouton dégradé vert, italique comme le héro */}
-          <Link href="/site/starkk"
-            className="inline-flex items-center rounded-full bg-gradient-to-r from-[#205040] to-[#38C588] px-4 py-1.5 text-sm font-bold italic text-white shadow-sm hover:shadow-md hover:brightness-110 transition-all ll-lift">
-            Starkk
+          {/* Contact : accès direct */}
+          <Link href="/site/contact" className={lienNav(isActive('/site/contact'))}>
+            Contact
+            <span className={soulignement(isActive('/site/contact'))} />
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/site/contact"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#205040] text-white text-sm font-semibold pl-4 pr-3 py-2 hover:bg-[#123f34] ll-lift">
-            Demander un devis
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20"><ArrowRight className="h-3 w-3" /></span>
+          {/* Starkk : bouton animé signature */}
+          <Link href="/site/starkk"
+            className="ll-starkk-btn hidden sm:inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-extrabold italic text-white ll-lift">
+            <span className="relative z-10">Starkk</span>
+            <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-[#5CD9A0] animate-pulse not-italic" />
           </Link>
           <button className="lg:hidden h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-black/[0.04] text-[#14110F]"
             onClick={() => setOpen((v) => !v)} aria-label="Menu">
@@ -203,15 +204,19 @@ export function SiteNav() {
               Financements
               <ArrowRight className={`h-4 w-4 ${isActive('/site/financements') ? 'opacity-100' : 'opacity-30'}`} />
             </Link>
+            <Link href="/site/contact" onClick={() => setOpen(false)}
+              className={`flex items-center justify-between px-3 py-3 rounded-2xl text-sm font-medium transition-colors ${
+                isActive('/site/contact') ? 'bg-[#205040]/8 text-[#205040]' : 'text-[#44403C] hover:bg-black/[0.03]'
+              }`}>
+              Contact
+              <ArrowRight className={`h-4 w-4 ${isActive('/site/contact') ? 'opacity-100' : 'opacity-30'}`} />
+            </Link>
 
             <div className="my-1 border-t border-[#F0EEE9]" />
             <Link href="/site/starkk" onClick={() => setOpen(false)}
-              className="mt-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-[#205040] to-[#38C588] text-white text-sm font-bold italic hover:brightness-110 transition-all">
-              Starkk, notre IA <ArrowRight className="h-4 w-4 not-italic" />
-            </Link>
-            <Link href="/site/contact" onClick={() => setOpen(false)}
-              className="mt-1 mb-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#205040] text-white text-sm font-semibold hover:bg-[#123f34]">
-              Demander un devis <ArrowRight className="h-4 w-4" />
+              className="ll-starkk-btn mt-1 mb-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-extrabold italic">
+              <span className="relative z-10">Starkk, notre IA</span>
+              <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-[#5CD9A0] animate-pulse" />
             </Link>
           </nav>
         </div>

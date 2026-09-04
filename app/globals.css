@@ -361,3 +361,30 @@
 @keyframes ll-float { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-12px) rotate(1.5deg); } }
 .ll-float { animation: ll-float 7s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ll-float { animation: none; } }
+
+/* Bouton Starkk (nav site) : noir profond traversé de vert, reflet balayant, halo menthe */
+.ll-starkk-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(115deg, #07100C 0%, #0C1210 30%, #1C7A55 50%, #0C1210 70%, #07100C 100%);
+  background-size: 240% 100%;
+  animation: ll-starkk-shift 6s ease-in-out infinite, ll-starkk-glow 3s ease-in-out infinite;
+}
+.ll-starkk-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(92,217,160,0.35) 50%, transparent 58%);
+  transform: translateX(-130%);
+  animation: ll-starkk-shine 3.4s ease-in-out infinite;
+}
+.ll-starkk-btn:hover { animation-duration: 3s, 1.6s; }
+@keyframes ll-starkk-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes ll-starkk-shine { 0%, 55% { transform: translateX(-130%); } 85%, 100% { transform: translateX(130%); } }
+@keyframes ll-starkk-glow {
+  0%, 100% { box-shadow: 0 0 16px -6px rgba(92,217,160,0.45), inset 0 0 0 1px rgba(92,217,160,0.35); }
+  50% { box-shadow: 0 0 26px -4px rgba(92,217,160,0.8), inset 0 0 0 1px rgba(92,217,160,0.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-starkk-btn, .ll-starkk-btn::after { animation: none !important; }
+}
