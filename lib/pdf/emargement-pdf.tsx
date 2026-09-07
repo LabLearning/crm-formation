@@ -33,7 +33,18 @@ function buildCreneaux(dateDebut: string, dateFin: string, inclureWeekend = fals
 }
 
 export function EmargementPDF({ session, formation, org, formateur, apprenants }: EmargementProps) {
-  const allCreneaux = buildCreneaux(session.date_debut, session.date_fin, !!session.poei_intervention_id)
+  // Les jours RÉELS de la session (horaires_jours, ex. 3 jours par semaine)
+  // priment sur le déroulé continu entre les bornes : sinon la feuille
+  // fabrique des colonnes pour des jours sans formation.
+  const datesReelles: string[] = Array.isArray(session.horaires_jours)
+    ? [...new Set((session.horaires_jours as any[]).map((j) => j?.date).filter(Boolean))].sort() as string[]
+    : []
+  const allCreneaux = datesReelles.length > 0
+    ? datesReelles.flatMap((d) => {
+        const jour = new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+        return [{ jour, creneau: 'Matin' }, { jour, creneau: 'Après-midi' }]
+      })
+    : buildCreneaux(session.date_debut, session.date_fin, !!session.poei_intervention_id)
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   const lieu = session.lieu || session.adresse || [session.code_postal, session.ville].filter(Boolean).join(' ') || '—'
   const numero = session.reference || `SESS-${String(session.id || '').slice(0, 8)}`
@@ -56,9 +67,24 @@ export function EmargementPDF({ session, formation, org, formateur, apprenants }
       {jours.map((creneaux, dayIdx) => {
       const creneauW = creneaux.length > 0 ? (pageWidth - nameW) / creneaux.length : 60
       const isMultiPage = jours.length > 1
-      // Date de cette feuille (= 1 jour) pour le bandeau
-      const startDateForPage = new Date(session.date_debut)
-      startDateForPage.setDate(startDateForPage.getDate() + dayIdx)
+      // Date de cette feuille (= 1 jour) pour le bandeau : la vraie date du
+      // jour posé, pas un simple décalage depuis le début (qui dérivait dès
+      // qu'un week-end ou un jour sans formation s'intercalait).
+      let startDateForPage: Date
+      if (datesReelles.length > 0) {
+        startDateForPage = new Date(datesReelles[dayIdx] + 'T12:00:00Z')
+      } else {
+        startDateForPage = new Date(session.date_debut)
+        let restants = dayIdx
+        const weekendOk = !!session.poei_intervention_id
+        let garde = 0
+        while (restants > 0 && garde < 60) {
+          startDateForPage.setDate(startDateForPage.getDate() + 1)
+          const js = startDateForPage.getDay()
+          if (weekendOk || (js !== 0 && js !== 6)) restants--
+          garde++
+        }
+      }
       const jourLabel = startDateForPage.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
       return (
       <Page key={dayIdx} size="A4" orientation="portrait" style={shared.page}>
