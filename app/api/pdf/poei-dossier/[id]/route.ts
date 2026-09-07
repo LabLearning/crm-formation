@@ -9,6 +9,7 @@ import { GET as facturesZipGET } from '../../poei-factures/[id]/route'
 import { GET as pdcGET } from '../../pdc/[id]/route'
 import { GET as attestationEntreeGET } from '../../attestation-entree/[id]/route'
 import { GET as mandatGET } from '../../mandat-poei/[id]/route'
+import { GET as planningsGET } from '../../poei-plannings/[id]/route'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -101,6 +102,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     collecter('5 - Certificats de realisation', certificatsZipGET as any, params.id, 'Certificats.pdf'),
     collecter('6 - Factures', facturesZipGET as any, params.id, 'Factures.pdf'),
     collecter('7 - Mandat', mandatGET as any, params.id, 'Mandat POEI.pdf'),
+    collecter('8 - Plannings de travail', planningsGET as any, params.id, 'Planning.pdf'),
   ])
 
   if (Object.keys(files).length === 0) {

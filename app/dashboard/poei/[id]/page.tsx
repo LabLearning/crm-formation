@@ -18,6 +18,7 @@ import { PoeiDocuments } from './PoeiDocuments'
 import { PoeiMandat } from './PoeiMandat'
 import { PoeiMails } from './PoeiMails'
 import { PoeiIncidents } from '@/components/poei/PoeiIncidents'
+import { PoeiPlanning } from './PoeiPlanning'
 import type { CandidatMail } from './PoeiMails'
 import type { CandidatDoc } from './PoeiDocuments'
 import type { LigneCandidat, Etat } from './PoeiPilotage'
@@ -102,6 +103,19 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       .eq('is_active', true)
       .order('nom'),
   ])
+
+  // Planning de travail des candidats (post-théorie) + période proposée par
+  // défaut : du lendemain de la fin de POEI, sur 4 semaines.
+  const { data: planningJours } = await supabase
+    .from('poei_plannings')
+    .select('id, candidat_id, date, repos, creneau1_debut, creneau1_fin, creneau2_debut, creneau2_fin, note')
+    .eq('poei_id', params.id)
+    .order('date')
+  const baseDebut = p.date_fin ? new Date(new Date(p.date_fin + 'T12:00:00Z').getTime() + 24 * 3600 * 1000) : new Date()
+  const planningDefaults = {
+    dateDebut: baseDebut.toISOString().slice(0, 10),
+    dateFin: new Date(baseDebut.getTime() + 27 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+  }
 
   // Devis POEI existants → map candidat_id → devis (pour le bouton de téléchargement par personne)
   const { data: devisPoei } = await supabase
@@ -406,6 +420,14 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
             }))}
             formateurs={(formateursList || []) as any[]}
             dureeTotale={p.duree_heures}
+          />
+        }
+        planning={
+          <PoeiPlanning
+            poeiId={p.id}
+            candidats={candidats.map((c: any) => ({ id: c.id, nom: `${c.apprenant?.prenom || ''} ${c.apprenant?.nom || ''}`.trim() || 'Candidat' }))}
+            jours={(planningJours || []) as any[]}
+            defaults={planningDefaults}
           />
         }
         evaluations={
