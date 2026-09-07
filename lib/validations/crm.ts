@@ -95,6 +95,8 @@ export const createClientSchema = z.object({
   code_naf: z.string().optional(),
   secteur_activite: z.string().optional(),
   branche: z.string().optional(),
+  franchise_id: z.string().uuid().optional().or(z.literal('')),
+  apporteur_id: z.string().uuid().optional().or(z.literal('')),
   taille_entreprise: z.string().optional(),
   // Particulier
   civilite: z.string().optional(),
