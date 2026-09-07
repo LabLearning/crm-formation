@@ -136,12 +136,28 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
 
   // ENTREPRISES → clients
   {
+    // Dendreo contient des entreprises en double (même SIRET sous deux ids) :
+    // ne jamais recréer une fiche dont le SIRET existe déjà côté CRM, sinon
+    // chaque fusion de doublons est défaite au sync suivant.
+    const siretsExistants = new Set<string>()
+    for (let from = 0; ; from += 1000) {
+      const r = await fetch(`${SBASE}/rest/v1/clients?organization_id=eq.${ORG}&select=siret&siret=not.is.null`, { headers: { ...sbHeaders, Range: `${from}-${from + 999}` }, cache: 'no-store' })
+      if (!r.ok) break
+      const batch = await r.json()
+      if (!batch.length) break
+      for (const c of batch) { const s = String(c.siret || '').replace(/\D/g, ''); if (s.length >= 9) siretsExistants.add(s) }
+      if (batch.length < 1000) break
+    }
+    let doublonsSiretIgnores = 0
     const toInsert: any[] = []
     for (const e of entreprises) {
       const did = String(e.id_entreprise)
       if (clientMap.has(did)) continue
       const raison = clean(e.raison_sociale) || clean(e.appellation) || [clean(e.prenom), clean(e.nom)].filter(Boolean).join(' ')
       if (!raison) continue
+      const siretNorm = String(clean(e.siret) || '').replace(/\D/g, '')
+      if (siretNorm.length >= 9 && siretsExistants.has(siretNorm)) { doublonsSiretIgnores++; continue }
+      if (siretNorm.length >= 9) siretsExistants.add(siretNorm)
       toInsert.push({
         organization_id: ORG, dendreo_id: did, type: 'entreprise',
         raison_sociale: raison, siret: clean(e.siret), tva_intra: clean(e.num_tva_intra),
@@ -155,7 +171,7 @@ export async function runDendreoSync(apply: boolean): Promise<SyncReport> {
     }
     const created = await insertBatch('clients', toInsert)
     created.forEach((r) => r.dendreo_id && clientMap.set(String(r.dendreo_id), r.id))
-    report.clients = { new: toInsert.length, existing: entreprises.length - toInsert.length }
+    report.clients = { new: toInsert.length, existing: entreprises.length - toInsert.length, doublons_siret_ignores: doublonsSiretIgnores }
   }
 
   // FORMATEURS

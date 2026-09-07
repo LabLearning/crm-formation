@@ -114,6 +114,10 @@ export async function updateClientAction(id: string, formData: FormData): Promis
   for (const [key, value] of formData.entries()) {
     raw[key] = value
   }
+  // Les SIRET hérités (Dendreo, saisies anciennes) contiennent parfois des
+  // espaces : on les normalise AVANT validation pour ne pas bloquer
+  // l'enregistrement d'une fiche qu'on n'a même pas touchée.
+  if (typeof raw.siret === 'string') raw.siret = raw.siret.replace(/\s/g, '')
 
   const parsed = createClientSchema.safeParse(raw)
   if (!parsed.success) {
@@ -122,11 +126,17 @@ export async function updateClientAction(id: string, formData: FormData): Promis
     return { success: false, errors: fieldErrors, error: formErrors[0] }
   }
 
-  // Anti-doublon SIRET (cross-entité : clients + leads), en excluant ce client
+  // Anti-doublon SIRET (cross-entité : clients + leads), en excluant ce client.
+  // Vérifié UNIQUEMENT si le SIRET change : une fiche dont le doublon existe
+  // déjà en base doit rester modifiable (le doublon se règle par fusion).
   {
     const { normalizeSiret, findSiretOwner, siretDuplicateMessage } = await import('@/lib/siret')
-    const owner = await findSiretOwner(supabase, session.organization.id, normalizeSiret(parsed.data.siret), { clientId: id })
-    if (owner) return { success: false, errors: { siret: [siretDuplicateMessage(owner)] }, error: siretDuplicateMessage(owner) }
+    const { data: actuel } = await supabase.from('clients').select('siret').eq('id', id).eq('organization_id', session.organization.id).single()
+    const nouveau = normalizeSiret(parsed.data.siret)
+    if (nouveau && nouveau !== normalizeSiret(actuel?.siret)) {
+      const owner = await findSiretOwner(supabase, session.organization.id, nouveau, { clientId: id })
+      if (owner) return { success: false, errors: { siret: [siretDuplicateMessage(owner)] }, error: siretDuplicateMessage(owner) }
+    }
   }
 
   const updateData = {
@@ -181,7 +191,7 @@ export async function updateClientAction(id: string, formData: FormData): Promis
     .eq('organization_id', session.organization.id)
 
   if (error) {
-    return { success: false, error: 'Erreur lors de la mise à jour' }
+    return { success: false, error: `Erreur lors de la mise à jour : ${error.message}` }
   }
 
   await logAudit({ action: 'update', entity_type: 'client', entity_id: id })

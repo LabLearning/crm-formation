@@ -191,6 +191,16 @@ export async function applyDendreoEvent(resource: string, verb: string, obj: any
       const { error } = await sb.from(mapped.table).update(mapped.row).eq('id', existing.id)
       if (error) return { status: 'error', error: error.message }
     } else {
+      // Doublon Dendreo : un client au même SIRET existe déjà sous un autre
+      // dendreo_id → on n'en recrée pas un deuxième (les fusions tiendraient
+      // un sync sinon).
+      if (mapped.table === 'clients') {
+        const siretNorm = String(mapped.row.siret || '').replace(/\D/g, '')
+        if (siretNorm.length >= 9) {
+          const { data: memesSiret } = await sb.from('clients').select('id, siret').eq('organization_id', ORG).not('siret', 'is', null)
+          if ((memesSiret || []).some((c: any) => String(c.siret || '').replace(/\D/g, '') === siretNorm)) return { status: 'ignored' }
+        }
+      }
       const { error } = await sb.from(mapped.table).insert(mapped.row)
       if (error) return { status: 'error', error: error.message }
     }
