@@ -137,6 +137,18 @@ export function PoeiDocuments({
       sous="Produits et téléchargés ici ; leur état se lit dans l'onglet Pilotage."
     >
       <div className="space-y-3">
+      <div className="card p-4 flex items-center gap-3 flex-wrap">
+        <Download className="h-4 w-4 text-brand-600 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-heading font-semibold text-surface-900">Dossier complet</div>
+          <div className="text-xs text-surface-500">Toutes les familles de documents dans une seule archive, un répertoire par type</div>
+        </div>
+        <a href={`/api/pdf/poei-dossier/${poeiId}`}
+          className="btn-primary inline-flex items-center gap-1.5 !py-1.5 !px-3 text-sm">
+          <Download className="h-4 w-4" /> Tout le dossier (ZIP)
+        </a>
+      </div>
+
       {devisPrevisionnel && (
         <div className="card p-4 flex items-center gap-3">
           <Euro className="h-4 w-4 text-surface-500 shrink-0" />
