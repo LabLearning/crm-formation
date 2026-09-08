@@ -196,7 +196,7 @@ export async function recalcSessionCommission(
 ): Promise<SessionCommissionResult | null> {
   const { data: sess } = await supabase
     .from('sessions')
-    .select('id, client_id, status, prix_ht, montant_finance_opco, cout_formateur, horaires_jours, formation:formation_id(duree_jours), client:client_id(franchise_id)')
+    .select('id, client_id, status, prix_ht, montant_finance_opco, cout_formateur, horaires_jours, poei_intervention_id, formation:formation_id(duree_jours), client:client_id(franchise_id)')
     .eq('id', sessionId)
     .eq('organization_id', organizationId)
     .maybeSingle()
@@ -208,11 +208,26 @@ export async function recalcSessionCommission(
     .select('id, status, cout_formateur_manuel, commission_montant, base_montant, base_source, cout_formateur, commission_type')
     .eq('session_id', sessionId)
     .maybeSingle()
-
-  if (!franchiseId) {
-    if (existante) await supabase.from('commissions_sessions').delete().eq('id', existante.id)
+  const retirer = async () => {
+    if (existante && !['validee', 'payee'].includes(existante.status)) {
+      await supabase.from('commissions_sessions').delete().eq('id', existante.id)
+    }
     return null
   }
+
+  if (!franchiseId) return retirer()
+
+  // Une session « intervention » d'une POEI est le versant coût formateur du
+  // parcours : son coût est déduit sur la session POEI, elle ne porte pas de
+  // commission propre.
+  if (sess.poei_intervention_id) return retirer()
+
+  // Une session sans aucun inscrit (résidu d'import, doublon) n'est pas une
+  // formation délivrée : pas de ligne de commission.
+  const { count: nbInscrits } = await supabase
+    .from('inscriptions').select('id', { count: 'exact', head: true })
+    .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
+  if (!nbInscrits) return retirer()
 
   const fige = existante && (existante.status === 'validee' || existante.status === 'payee')
   if (fige && !opts?.force) {
@@ -243,11 +258,14 @@ export async function recalcSessionCommission(
     const facture = (factures || []).reduce((s: number, f: any) => s + Number(f.montant_ht || 0), 0)
     if (facture > 0) { base = facture; baseSource = 'factures' }
   }
-  if (base <= 0) {
-    const { data: poei } = await supabase
-      .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
-    let montantPoei = Number(poei?.montant_total || 0)
-    if (poei && montantPoei <= 0 && Number(poei.montant_horaire) > 0 && Number(poei.duree_heures) > 0) {
+  // Session principale d'une POEI ? Elle porte l'économie du parcours entier :
+  // montant du dossier en repli de base, et coûts formateur de toutes les
+  // sessions d'intervention rattachées.
+  const { data: poei } = await supabase
+    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+  if (base <= 0 && poei) {
+    let montantPoei = Number(poei.montant_total || 0)
+    if (montantPoei <= 0 && Number(poei.montant_horaire) > 0 && Number(poei.duree_heures) > 0) {
       // Total non figé sur le dossier : taux horaire × heures × candidats actifs
       const { count } = await supabase.from('poei_candidats').select('id', { count: 'exact', head: true })
         .eq('poei_id', poei.id).neq('statut', 'abandonne')
@@ -260,6 +278,18 @@ export async function recalcSessionCommission(
   const { data: contrats } = await supabase
     .from('contrats_formateur').select('montant_ht').eq('session_id', sessionId).neq('status', 'annule')
   let coutFormateur = (contrats || []).reduce((s: number, c: any) => s + Number(c.montant_ht || 0), 0)
+  if (poei) {
+    const { data: interventions } = await supabase.from('poei_interventions').select('id').eq('poei_id', poei.id)
+    const ivIds = (interventions || []).map((i: any) => i.id)
+    if (ivIds.length) {
+      const { data: sessIv } = await supabase.from('sessions').select('id, cout_formateur').in('poei_intervention_id', ivIds)
+      for (const si of sessIv || []) {
+        const { data: ctr } = await supabase.from('contrats_formateur').select('montant_ht').eq('session_id', si.id).neq('status', 'annule')
+        const c = (ctr || []).reduce((s: number, x: any) => s + Number(x.montant_ht || 0), 0)
+        coutFormateur += c > 0 ? c : Number(si.cout_formateur || 0)
+      }
+    }
+  }
   if (coutFormateur <= 0 && existante?.cout_formateur_manuel != null) {
     const nbHoraires = Array.isArray(sess.horaires_jours) ? sess.horaires_jours.length : 0
     const nbJours = Math.max(1, nbHoraires || Number((sess.formation as any)?.duree_jours) || 1)
