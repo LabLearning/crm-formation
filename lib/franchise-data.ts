@@ -48,16 +48,20 @@ export async function getFranchiseStats(
     .from('clients').select('id').eq('franchise_id', franchiseId).eq('organization_id', orgId)
   const clientIds = (clients || []).map((c: any) => c.id)
 
-  // Sessions des établissements (hors annulées)
-  const sessions = clientIds.length
-    ? await tout((f, t) => supabase.from('sessions')
-        .select('id, client_id, status, prix_ht, montant_finance_opco')
-        .eq('organization_id', orgId).in('client_id', clientIds).neq('status', 'annulee').range(f, t))
-    : []
+  // Ce qui compte = les sessions qui portent une ligne de commission : les
+  // résidus d'import sans inscrit et les sessions d'intervention POEI (versant
+  // coût d'un parcours) en sont exclus par le calcul.
+  const { data: lignesCommission } = await supabase
+    .from('commissions_sessions')
+    .select('session_id, client_id, base_montant, commission_montant, status, session:session_id(status)')
+    .eq('organization_id', orgId).eq('franchise_id', franchiseId).neq('status', 'annulee')
+  const sessions = ((lignesCommission || []) as any[])
+    .map((l) => ({ id: l.session_id, client_id: l.client_id, status: (Array.isArray(l.session) ? l.session[0] : l.session)?.status, base: Number(l.base_montant || 0), commission: Number(l.commission_montant || 0), statut_commission: l.status }))
+    .filter((s) => s.status !== 'annulee')
   const sessionIds = sessions.map((s: any) => s.id)
   const realisees = sessions.filter((s: any) => s.status === 'terminee')
   const etablissementsFormes = new Set(sessions.map((s: any) => s.client_id).filter(Boolean))
-  const baseDe = (s: any) => (Number(s.montant_finance_opco || 0) > 0 ? Number(s.montant_finance_opco) : Number(s.prix_ht || 0))
+  const baseDe = (s: any) => Number(s.base || 0)
 
   // Participants (inscriptions)
   let nbParticipants = 0
@@ -82,18 +86,7 @@ export async function getFranchiseStats(
   const totalEmargements = nbPresences + nbAbsences
   const tauxPresence = totalEmargements > 0 ? Math.round((nbPresences / totalEmargements) * 100) : null
 
-  // Commissions par session : la base y intègre les replis (factures, POEI),
-  // c'est donc elle qui fait foi pour la prise en charge affichée.
-  const { data: commissions } = await supabase
-    .from('commissions_sessions')
-    .select('session_id, base_montant, commission_montant, status')
-    .eq('organization_id', orgId).eq('franchise_id', franchiseId)
-  const cs = ((commissions || []) as any[]).filter((c) => c.status !== 'annulee')
-  const somme = (filtre: (c: any) => boolean) => cs.filter(filtre).reduce((s, c) => s + Number(c.commission_montant || 0), 0)
-  const statutSession = new Map(sessions.map((s: any) => [s.id, s.status]))
-  const baseLigne = new Map(cs.map((c) => [c.session_id, Number(c.base_montant || 0)]))
-  // Sessions connues sans ligne (pas encore synchronisées) : base brute de la session
-  const baseSession = (s: any) => (baseLigne.has(s.id) ? baseLigne.get(s.id)! : baseDe(s))
+  const somme = (filtre: (s: any) => boolean) => sessions.filter(filtre).reduce((t: number, s: any) => t + s.commission, 0)
 
   return {
     nbEtablissements: clientIds.length,
@@ -105,13 +98,13 @@ export async function getFranchiseStats(
     nbPresences,
     nbAbsences,
     tauxPresence,
-    caGenere: realisees.reduce((s: number, x: any) => s + baseSession(x), 0),
-    priseEnChargeTotal: sessions.reduce((s: number, x: any) => s + baseSession(x), 0),
-    commissionAVenir: somme((c) => c.status === 'a_venir'),
-    commissionValidee: somme((c) => c.status === 'validee'),
-    commissionPayee: somme((c) => c.status === 'payee'),
+    caGenere: realisees.reduce((t: number, s: any) => t + baseDe(s), 0),
+    priseEnChargeTotal: sessions.reduce((t: number, s: any) => t + baseDe(s), 0),
+    commissionAVenir: somme((s) => s.statut_commission === 'a_venir'),
+    commissionValidee: somme((s) => s.statut_commission === 'validee'),
+    commissionPayee: somme((s) => s.statut_commission === 'payee'),
     commissionTotale: somme(() => true),
-    nbSessionsSansMontant: sessions.filter((s: any) => baseSession(s) <= 0 && (statutSession.get(s.id) !== 'annulee')).length,
+    nbSessionsSansMontant: sessions.filter((s: any) => baseDe(s) <= 0).length,
   }
 }
 

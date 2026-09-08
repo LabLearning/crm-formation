@@ -222,12 +222,23 @@ export async function recalcSessionCommission(
   // commission propre.
   if (sess.poei_intervention_id) return retirer()
 
+  // Session principale d'une POEI ? Elle porte l'économie du parcours entier.
+  const { data: poei } = await supabase
+    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+
   // Une session sans aucun inscrit (résidu d'import, doublon) n'est pas une
-  // formation délivrée : pas de ligne de commission.
+  // formation délivrée : pas de ligne de commission. Les candidats d'une POEI
+  // comptent comme inscrits.
   const { count: nbInscrits } = await supabase
     .from('inscriptions').select('id', { count: 'exact', head: true })
     .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
-  if (!nbInscrits) return retirer()
+  let effectif = nbInscrits || 0
+  if (!effectif && poei) {
+    const { count } = await supabase.from('poei_candidats').select('id', { count: 'exact', head: true })
+      .eq('poei_id', poei.id).neq('statut', 'abandonne')
+    effectif = count || 0
+  }
+  if (!effectif) return retirer()
 
   const fige = existante && (existante.status === 'validee' || existante.status === 'payee')
   if (fige && !opts?.force) {
@@ -258,11 +269,8 @@ export async function recalcSessionCommission(
     const facture = (factures || []).reduce((s: number, f: any) => s + Number(f.montant_ht || 0), 0)
     if (facture > 0) { base = facture; baseSource = 'factures' }
   }
-  // Session principale d'une POEI ? Elle porte l'économie du parcours entier :
-  // montant du dossier en repli de base, et coûts formateur de toutes les
-  // sessions d'intervention rattachées.
-  const { data: poei } = await supabase
-    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+  // POEI : montant du dossier en repli de base, et coûts formateur de toutes
+  // les sessions d'intervention rattachées.
   if (base <= 0 && poei) {
     let montantPoei = Number(poei.montant_total || 0)
     if (montantPoei <= 0 && Number(poei.montant_horaire) > 0 && Number(poei.duree_heures) > 0) {
