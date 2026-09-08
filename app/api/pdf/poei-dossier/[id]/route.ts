@@ -67,7 +67,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     query = '',
   ) => {
     try {
-      const res = await handler(new NextRequest(`http://interne/api${query}`), { params: { id } })
+      // Même origine que l'appel entrant : certaines sous-routes résolvent des
+      // URL absolues depuis req.url (ex. le gabarit PDF du plan de compétences).
+      const res = await handler(new NextRequest(`${req.nextUrl.origin}/api${query}`), { params: { id } })
       if (!res.ok) return
       const type = res.headers.get('content-type') || ''
       const data = new Uint8Array(await res.arrayBuffer())
