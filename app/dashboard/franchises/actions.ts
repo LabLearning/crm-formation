@@ -276,6 +276,9 @@ export async function updateFranchiseCommissionConfigAction(
   for (const d of dossiers || []) {
     await recalcDossierCommission(supabase, d.id, session.organization.id)
   }
+  // Modèle courant : commissions par session
+  const { syncFranchiseCommissions } = await import('@/lib/commission')
+  await syncFranchiseCommissions(supabase, franchiseId, session.organization.id)
 
   await logAudit({ action: 'update_commission_config', entity_type: 'franchise', entity_id: franchiseId })
   revalidatePath('/dashboard/franchises')
@@ -401,6 +404,14 @@ export async function linkClientToFranchiseAction(
     .eq('organization_id', session.organization.id)
   for (const d of dossiers || []) {
     await recalcDossierCommission(supabase, d.id, session.organization.id)
+  }
+  // Modèle courant : les sessions de l'établissement entrent (ou sortent) du
+  // périmètre de la franchise
+  const { recalcSessionCommission } = await import('@/lib/commission')
+  const { data: sessionsClient } = await supabase
+    .from('sessions').select('id').eq('client_id', clientId).eq('organization_id', session.organization.id)
+  for (const s of sessionsClient || []) {
+    await recalcSessionCommission(supabase, s.id, session.organization.id)
   }
 
   revalidatePath('/dashboard/franchises')

@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { ArrowLeft, Store, Building2, Banknote, Target, ClipboardCheck, Star } from '@/components/ui/icons'
-import { commissionTypeLabel } from '@/lib/commission'
+import { commissionTypeLabel, syncFranchiseCommissions } from '@/lib/commission'
+import { getFranchiseCommissionLines } from '@/lib/franchise-data'
 import FranchiseDetailClient from './FranchiseDetailClient'
 import FranchiseAccessClient from './FranchiseAccessClient'
 import FranchiseCoverageClient from './FranchiseCoverageClient'
@@ -69,26 +70,10 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
       .limit(8),
   ])
 
-  const clientIds = (etablissements || []).map((c) => c.id)
-
-  // Dossiers de la franchise (par franchise_id OU par client rattaché)
-  const { data: dossiers } = await supabase
-    .from('dossiers_formation')
-    .select(`
-      id, numero, status, opco_workflow_status,
-      montant_total_ttc, montant_prise_en_charge, cout_formateur, cout_formateur_manuel,
-      commission_montant, commission_taux, commission_type, commission_status, commission_payee_at,
-      date_creation,
-      client:clients(id, raison_sociale),
-      formation:formations(intitule)
-    `)
-    .eq('organization_id', orgId)
-    .or(
-      clientIds.length
-        ? `franchise_id.eq.${params.id},client_id.in.(${clientIds.join(',')})`
-        : `franchise_id.eq.${params.id}`,
-    )
-    .order('date_creation', { ascending: false })
+  // Le financier est assis sur les SESSIONS des établissements : on aligne les
+  // lignes de commission (création / recalcul des non figées) avant de lire.
+  await syncFranchiseCommissions(supabase, params.id, orgId)
+  const lignes = await getFranchiseCommissionLines(supabase, params.id, orgId)
 
   const auditsList = audits || []
   const auditsWithNote = auditsList.filter((a) => a.note_globale != null)
@@ -96,18 +81,18 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
     ? auditsWithNote.reduce((s, a) => s + (Number(a.note_globale) / a.note_sur) * 20, 0) / auditsWithNote.length
     : null
 
-  const ds = dossiers || []
   const name = franchise.nom || franchise.raison_sociale || 'Franchise'
 
-  // Totaux financiers
-  const caTotal = ds.reduce((s, d) => s + Number(d.montant_total_ttc || 0), 0)
-  const pecTotal = ds.reduce((s, d) => s + Number(d.montant_prise_en_charge || 0), 0)
-  const coutFormateurTotal = ds.reduce((s, d) => s + Number(d.cout_formateur || 0), 0)
-  // Couverture : établissements formés = ceux qui ont au moins un dossier
-  const nbFormes = new Set(ds.map((d) => (d.client as any)?.id).filter(Boolean)).size
-  const commAVenir = ds.filter((d) => d.commission_status === 'a_venir').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
-  const commValidee = ds.filter((d) => d.commission_status === 'validee').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
-  const commPayee = ds.filter((d) => d.commission_status === 'payee').reduce((s, d) => s + Number(d.commission_montant || 0), 0)
+  // Totaux financiers (sessions non annulées)
+  const actives = lignes.filter((l) => l.status !== 'annulee')
+  const pecTotal = actives.reduce((s, l) => s + Number(l.base_montant || 0), 0)
+  const caTotal = actives.filter((l) => l.session?.status === 'terminee').reduce((s, l) => s + Number(l.base_montant || 0), 0)
+  const coutFormateurTotal = actives.reduce((s, l) => s + Number(l.cout_formateur || 0), 0)
+  // Couverture : établissements formés = ceux qui ont au moins une session
+  const nbFormes = new Set(actives.map((l) => l.client?.id).filter(Boolean)).size
+  const commAVenir = lignes.filter((l) => l.status === 'a_venir').reduce((s, l) => s + Number(l.commission_montant || 0), 0)
+  const commValidee = lignes.filter((l) => l.status === 'validee').reduce((s, l) => s + Number(l.commission_montant || 0), 0)
+  const commPayee = lignes.filter((l) => l.status === 'payee').reduce((s, l) => s + Number(l.commission_montant || 0), 0)
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -145,8 +130,8 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
 
       {/* Financier global */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <FinCard label="CA généré (TTC)" value={fmtEuro(caTotal)} />
-        <FinCard label="Prise en charge OPCO" value={fmtEuro(pecTotal)} />
+        <FinCard label="Sessions réalisées (prise en charge)" value={fmtEuro(caTotal)} />
+        <FinCard label="Prise en charge, toutes sessions" value={fmtEuro(pecTotal)} />
         <FinCard label="Coût formateurs" value={fmtEuro(coutFormateurTotal)} />
         <FinCard label="Commissions totales" value={fmtEuro(commAVenir + commValidee + commPayee)} accent />
       </div>
@@ -174,7 +159,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
         commAVenir={commAVenir}
         commValidee={commValidee}
         commPayee={commPayee}
-        dossiers={ds as any[]}
+        lignes={lignes}
       />
 
       {/* Audits */}
@@ -235,7 +220,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
         ) : (
           <div className="card divide-y divide-surface-100">
             {(etablissements || []).map((c) => {
-              const cDossiers = ds.filter((d) => (d.client as any)?.id === c.id)
+              const cSessions = actives.filter((l) => l.client?.id === c.id)
               return (
                 <div key={c.id} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50/60 transition-colors">
                   <Link href={`/dashboard/clients/${c.id}`} className="flex items-center gap-3 flex-1 min-w-0">
@@ -247,7 +232,7 @@ export default async function FranchiseDetailPage({ params }: { params: { id: st
                       <div className="text-xs text-surface-500">{[c.code_postal, c.ville].filter(Boolean).join(' ')}</div>
                     </div>
                     <div className="text-xs text-surface-500 shrink-0">
-                      {cDossiers.length} dossier{cDossiers.length > 1 ? 's' : ''}
+                      {cSessions.length} session{cSessions.length > 1 ? 's' : ''}
                     </div>
                   </Link>
                   <UnlinkButton clientId={c.id} />

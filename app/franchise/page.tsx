@@ -88,7 +88,7 @@ export default async function FranchiseDashboard() {
           </div>
           <div className="text-3xl font-heading font-bold text-amber-600 tabular-nums">{fmtEuro(stats.commissionTotale)}</div>
           <div className="text-xs text-surface-500 mt-2">
-            Sur {stats.nbDossiers} dossier{stats.nbDossiers > 1 ? 's' : ''} de formation de votre réseau.
+            Sur {stats.nbSessions} session{stats.nbSessions > 1 ? 's' : ''} de formation de votre réseau.
           </div>
         </div>
       </div>

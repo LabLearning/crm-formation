@@ -22,30 +22,33 @@ interface Franchise {
   is_active: boolean
 }
 interface Client { id: string; franchise_id: string | null }
-interface Dossier { id: string; franchise_id: string | null; montant_total_ttc: number | null; commission_montant: number | null; commission_status: string | null }
+/** Une ligne de commission = une session d'un établissement de la franchise. */
+interface Commission { id: string; franchise_id: string | null; client_id: string | null; base_montant: number | null; commission_montant: number | null; status: string | null }
 
 const fmtEuro = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0)
 
 export default function FranchisesClient({
-  franchises, clients, dossiers,
-}: { franchises: Franchise[]; clients: Client[]; dossiers: Dossier[] }) {
+  franchises, clients, commissions,
+}: { franchises: Franchise[]; clients: Client[]; commissions: Commission[] }) {
   const [showCreate, setShowCreate] = useState(false)
 
+  const actives = commissions.filter((c) => c.status !== 'annulee')
   const statsFor = (fid: string) => {
     const etabs = clients.filter((c) => c.franchise_id === fid).length
-    const ds = dossiers.filter((d) => d.franchise_id === fid)
-    const ca = ds.reduce((s, d) => s + Number(d.montant_total_ttc || 0), 0)
-    const commAVenir = ds.filter((d) => d.commission_status === 'a_venir' || d.commission_status === 'validee')
-      .reduce((s, d) => s + Number(d.commission_montant || 0), 0)
-    return { etabs, dossiers: ds.length, ca, commAVenir }
+    const cs = actives.filter((c) => c.franchise_id === fid)
+    const formes = new Set(cs.map((c) => c.client_id).filter(Boolean)).size
+    const ca = cs.reduce((s, c) => s + Number(c.base_montant || 0), 0)
+    const commAVenir = cs.filter((c) => c.status === 'a_venir' || c.status === 'validee')
+      .reduce((s, c) => s + Number(c.commission_montant || 0), 0)
+    return { etabs, formes, sessions: cs.length, ca, commAVenir }
   }
 
   const totalEtabs = clients.length
-  const totalCommAVenir = dossiers.filter((d) => d.commission_status === 'a_venir' || d.commission_status === 'validee')
-    .reduce((s, d) => s + Number(d.commission_montant || 0), 0)
-  const totalCommPayee = dossiers.filter((d) => d.commission_status === 'payee')
-    .reduce((s, d) => s + Number(d.commission_montant || 0), 0)
+  const totalCommAVenir = actives.filter((c) => c.status === 'a_venir' || c.status === 'validee')
+    .reduce((s, c) => s + Number(c.commission_montant || 0), 0)
+  const totalCommPayee = commissions.filter((c) => c.status === 'payee')
+    .reduce((s, c) => s + Number(c.commission_montant || 0), 0)
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -99,9 +102,9 @@ export default function FranchisesClient({
                   <ChevronRight className="h-4 w-4 text-surface-300 group-hover:text-brand-500 transition-colors shrink-0" />
                 </div>
                 <div className="grid grid-cols-3 gap-2 mt-4">
-                  <Mini label="Établissements" value={String(st.etabs)} />
-                  <Mini label="Dossiers" value={String(st.dossiers)} />
-                  <Mini label="CA généré" value={fmtEuro(st.ca)} />
+                  <Mini label="Établissements" value={`${st.formes}/${st.etabs}`} />
+                  <Mini label="Sessions" value={String(st.sessions)} />
+                  <Mini label="Prise en charge" value={fmtEuro(st.ca)} />
                 </div>
                 <div className="mt-3 pt-3 border-t border-surface-100 flex items-center justify-between">
                   <span className="text-xs text-surface-500 inline-flex items-center gap-1">

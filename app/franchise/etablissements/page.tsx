@@ -19,26 +19,22 @@ export default async function FranchiseEtablissementsPage() {
 
   const clientIds = (etablissements || []).map((c) => c.id)
 
-  // Compter les dossiers/sessions par établissement. Une formation est
-  // « réalisée » quand sa SESSION est terminée (le statut du dossier reste
-  // souvent 'en_cours' même après la formation).
-  const { data: dossiers } = clientIds.length
+  // Sessions par établissement : la session est l'unité réelle de la
+  // formation (les dossiers ne sont plus alimentés). Réalisée = terminée.
+  const { data: sessions } = clientIds.length
     ? await supabase
-        .from('dossiers_formation')
-        .select('id, client_id, status, session:session_id(status)')
+        .from('sessions')
+        .select('id, client_id, status')
         .eq('organization_id', orgId)
         .in('client_id', clientIds)
+        .neq('status', 'annulee')
     : { data: [] as any[] }
 
   const countFor = (cid: string) => {
-    const ds = (dossiers || []).filter((d: any) => d.client_id === cid && d.status !== 'annule')
-    const realises = ds.filter((d: any) => (d.session as any)?.status === 'terminee').length
-    // En cours : session active (planifiée/confirmée/en cours), pas encore terminée
-    const enCours = ds.filter((d: any) => {
-      const st = (d.session as any)?.status
-      return st && st !== 'terminee' && st !== 'annulee'
-    }).length
-    return { total: ds.length, realises, enCours }
+    const ss = (sessions || []).filter((s: any) => s.client_id === cid)
+    const realises = ss.filter((s: any) => s.status === 'terminee').length
+    const enCours = ss.length - realises
+    return { total: ss.length, realises, enCours }
   }
 
   return (

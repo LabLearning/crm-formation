@@ -18,14 +18,16 @@ export default async function FranchisesPage() {
 
   const franchiseIds = (franchises || []).map((f) => f.id)
 
-  const [{ data: clients }, { data: dossiers }] = await Promise.all([
+  // Établissements rattachés + commissions par session (modèle courant)
+  const [{ data: clients }, { data: commissions }] = await Promise.all([
     franchiseIds.length
       ? supabase.from('clients').select('id, franchise_id').in('franchise_id', franchiseIds)
       : Promise.resolve({ data: [] as any[] }),
     franchiseIds.length
       ? supabase
-          .from('dossiers_formation')
-          .select('id, franchise_id, montant_total_ttc, commission_montant, commission_status')
+          .from('commissions_sessions')
+          .select('id, franchise_id, client_id, base_montant, commission_montant, status')
+          .eq('organization_id', orgId)
           .in('franchise_id', franchiseIds)
       : Promise.resolve({ data: [] as any[] }),
   ])
@@ -34,7 +36,7 @@ export default async function FranchisesPage() {
     <FranchisesClient
       franchises={(franchises || []) as any[]}
       clients={(clients || []) as any[]}
-      dossiers={(dossiers || []) as any[]}
+      commissions={(commissions || []) as any[]}
     />
   )
 }
