@@ -217,29 +217,19 @@ export async function recalcSessionCommission(
 
   if (!franchiseId) return retirer()
 
-  // Session principale d'une POEI ? Elle porte l'économie du parcours entier
-  // (même si elle est aussi la première session d'intervention).
+  // Les POEI sont HORS commission franchise pour l'instant (décision Brahim,
+  // 08/09/2026 : leur économie demande un calcul spécifique, à traiter à part).
+  // Ni la session principale du dossier, ni ses sessions d'intervention.
   const { data: poei } = await supabase
-    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
-
-  // Une session « intervention » d'une POEI est le versant coût formateur du
-  // parcours : son coût est déduit sur la session POEI, elle ne porte pas de
-  // commission propre.
-  if (sess.poei_intervention_id && !poei) return retirer()
+    .from('poei').select('id').eq('session_id', sessionId).maybeSingle()
+  if (poei || sess.poei_intervention_id) return retirer()
 
   // Une session sans aucun inscrit (résidu d'import, doublon) n'est pas une
-  // formation délivrée : pas de ligne de commission. Les candidats d'une POEI
-  // comptent comme inscrits.
+  // formation délivrée : pas de ligne de commission.
   const { count: nbInscrits } = await supabase
     .from('inscriptions').select('id', { count: 'exact', head: true })
     .eq('session_id', sessionId).not('status', 'in', '("annule","abandonne")')
-  let effectif = nbInscrits || 0
-  if (!effectif && poei) {
-    const { count } = await supabase.from('poei_candidats').select('id', { count: 'exact', head: true })
-      .eq('poei_id', poei.id).neq('statut', 'abandonne')
-    effectif = count || 0
-  }
-  if (!effectif) return retirer()
+  if (!nbInscrits) return retirer()
 
   const fige = existante && (existante.status === 'validee' || existante.status === 'payee')
   if (fige && !opts?.force) {
@@ -270,19 +260,6 @@ export async function recalcSessionCommission(
     const facture = (factures || []).reduce((s: number, f: any) => s + Number(f.montant_ht || 0), 0)
     if (facture > 0) { base = facture; baseSource = 'factures' }
   }
-  // POEI : montant du dossier en repli de base, et coûts formateur de toutes
-  // les sessions d'intervention rattachées.
-  if (base <= 0 && poei) {
-    let montantPoei = Number(poei.montant_total || 0)
-    if (montantPoei <= 0 && Number(poei.montant_horaire) > 0 && Number(poei.duree_heures) > 0) {
-      // Total non figé sur le dossier : taux horaire × heures × candidats actifs
-      const { count } = await supabase.from('poei_candidats').select('id', { count: 'exact', head: true })
-        .eq('poei_id', poei.id).neq('statut', 'abandonne')
-      montantPoei = Number(poei.montant_horaire) * Number(poei.duree_heures) * Math.max(1, count || 0)
-    }
-    if (montantPoei > 0) { base = Math.round(montantPoei * 100) / 100; baseSource = 'poei' }
-  }
-
   // Coût formateur de la session : contrats, sinon tarif journalier saisi × jours, sinon champ session
   const { data: contrats } = await supabase
     .from('contrats_formateur').select('montant_ht').eq('session_id', sessionId).neq('status', 'annule')
@@ -293,20 +270,6 @@ export async function recalcSessionCommission(
     coutFormateur = (Number(existante.cout_formateur_manuel) || 0) * nbJours
   }
   if (coutFormateur <= 0) coutFormateur = Number(sess.cout_formateur || 0)
-
-  // POEI : on ajoute les coûts formateur des AUTRES sessions d'intervention du parcours
-  if (poei) {
-    const { data: interventions } = await supabase.from('poei_interventions').select('id').eq('poei_id', poei.id)
-    const ivIds = (interventions || []).map((i: any) => i.id)
-    if (ivIds.length) {
-      const { data: sessIv } = await supabase.from('sessions').select('id, cout_formateur').in('poei_intervention_id', ivIds).neq('id', sessionId)
-      for (const si of sessIv || []) {
-        const { data: ctr } = await supabase.from('contrats_formateur').select('montant_ht').eq('session_id', si.id).neq('status', 'annule')
-        const c = (ctr || []).reduce((s: number, x: any) => s + Number(x.montant_ht || 0), 0)
-        coutFormateur += c > 0 ? c : Number(si.cout_formateur || 0)
-      }
-    }
-  }
 
   const { montant } = computeCommission({ type, taux, montantPriseEnCharge: base, coutFormateur })
   const status: CommissionStatus = sess.status === 'annulee'
