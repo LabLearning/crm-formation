@@ -4,6 +4,7 @@
  * Un aperçu qui divergerait de ce qui part vraiment ferait pire que pas
  * d'aperçu du tout.
  */
+import { blocDocumentsAccueil } from '@/lib/email'
 
 export interface EnveloppeOrg {
   orgName: string
@@ -161,7 +162,9 @@ export function paramsAttestationEntree(ctx: ContexteMailPoei, a: any, custom?: 
     subject: custom?.subject?.trim() || `Votre attestation d'entrée en formation — ${intitule}`,
     logSubject: custom?.subject?.trim() || `Attestation d'entrée — ${intitule}`,
     docTitle: "Attestation d'entrée en formation",
-    intro: custom?.message?.trim() || `Vous trouverez ci-joint votre attestation d'entrée en formation « ${intitule} », à transmettre à France Travail si nécessaire.`,
+    // Livret d'accueil + règlement intérieur : remis avant l'entrée en formation
+    intro: (custom?.message?.trim() || `Vous trouverez ci-joint votre attestation d'entrée en formation « ${intitule} », à transmettre à France Travail si nécessaire.`)
+      + blocDocumentsAccueil(ctx.orgRaw),
     metadata: [
       ['Formation', intitule],
       ['Dates', ctx.p.date_debut ? `Du ${new Date(ctx.p.date_debut).toLocaleDateString('fr-FR')} au ${new Date(ctx.p.date_fin || ctx.p.date_debut).toLocaleDateString('fr-FR')}` : '—'],
@@ -180,7 +183,9 @@ export function paramsMessageLibre(
     recipientName: nomComplet(a),
     subject: sujet,
     docTitle: sujet,
-    intro: texteVersHtml(remplirVariables(ctx, a, payload.message)),
+    // Livret d'accueil + règlement intérieur en fin de message (mêmes liens que les convocations)
+    intro: texteVersHtml(remplirVariables(ctx, a, payload.message))
+      + `<p style="margin:0 0 14px;color:#71717a;font-size:15px;line-height:1.7;">${blocDocumentsAccueil(ctx.orgRaw).replace(/^<br><br>/, '')}</p>`,
     metadata: (ctx.formation ? [
       ['Formation', ctx.formation.intitule],
       ...(ctx.datesStr ? [['Dates', ctx.datesStr] as [string, string]] : []),
