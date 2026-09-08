@@ -82,13 +82,18 @@ export async function getFranchiseStats(
   const totalEmargements = nbPresences + nbAbsences
   const tauxPresence = totalEmargements > 0 ? Math.round((nbPresences / totalEmargements) * 100) : null
 
-  // Commissions par session
+  // Commissions par session : la base y intègre les replis (factures, POEI),
+  // c'est donc elle qui fait foi pour la prise en charge affichée.
   const { data: commissions } = await supabase
     .from('commissions_sessions')
-    .select('commission_montant, status')
+    .select('session_id, base_montant, commission_montant, status')
     .eq('organization_id', orgId).eq('franchise_id', franchiseId)
-  const cs = (commissions || []) as any[]
+  const cs = ((commissions || []) as any[]).filter((c) => c.status !== 'annulee')
   const somme = (filtre: (c: any) => boolean) => cs.filter(filtre).reduce((s, c) => s + Number(c.commission_montant || 0), 0)
+  const statutSession = new Map(sessions.map((s: any) => [s.id, s.status]))
+  const baseLigne = new Map(cs.map((c) => [c.session_id, Number(c.base_montant || 0)]))
+  // Sessions connues sans ligne (pas encore synchronisées) : base brute de la session
+  const baseSession = (s: any) => (baseLigne.has(s.id) ? baseLigne.get(s.id)! : baseDe(s))
 
   return {
     nbEtablissements: clientIds.length,
@@ -100,13 +105,13 @@ export async function getFranchiseStats(
     nbPresences,
     nbAbsences,
     tauxPresence,
-    caGenere: realisees.reduce((s: number, x: any) => s + baseDe(x), 0),
-    priseEnChargeTotal: sessions.reduce((s: number, x: any) => s + baseDe(x), 0),
+    caGenere: realisees.reduce((s: number, x: any) => s + baseSession(x), 0),
+    priseEnChargeTotal: sessions.reduce((s: number, x: any) => s + baseSession(x), 0),
     commissionAVenir: somme((c) => c.status === 'a_venir'),
     commissionValidee: somme((c) => c.status === 'validee'),
     commissionPayee: somme((c) => c.status === 'payee'),
-    commissionTotale: somme((c) => c.status !== 'annulee'),
-    nbSessionsSansMontant: sessions.filter((s: any) => baseDe(s) <= 0).length,
+    commissionTotale: somme(() => true),
+    nbSessionsSansMontant: sessions.filter((s: any) => baseSession(s) <= 0 && (statutSession.get(s.id) !== 'annulee')).length,
   }
 }
 
