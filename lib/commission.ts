@@ -217,14 +217,15 @@ export async function recalcSessionCommission(
 
   if (!franchiseId) return retirer()
 
+  // Session principale d'une POEI ? Elle porte l'économie du parcours entier
+  // (même si elle est aussi la première session d'intervention).
+  const { data: poei } = await supabase
+    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+
   // Une session « intervention » d'une POEI est le versant coût formateur du
   // parcours : son coût est déduit sur la session POEI, elle ne porte pas de
   // commission propre.
-  if (sess.poei_intervention_id) return retirer()
-
-  // Session principale d'une POEI ? Elle porte l'économie du parcours entier.
-  const { data: poei } = await supabase
-    .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+  if (sess.poei_intervention_id && !poei) return retirer()
 
   // Une session sans aucun inscrit (résidu d'import, doublon) n'est pas une
   // formation délivrée : pas de ligne de commission. Les candidats d'une POEI
@@ -282,15 +283,23 @@ export async function recalcSessionCommission(
     if (montantPoei > 0) { base = Math.round(montantPoei * 100) / 100; baseSource = 'poei' }
   }
 
-  // Coût formateur : contrats de la session, sinon tarif journalier saisi × jours, sinon champ session
+  // Coût formateur de la session : contrats, sinon tarif journalier saisi × jours, sinon champ session
   const { data: contrats } = await supabase
     .from('contrats_formateur').select('montant_ht').eq('session_id', sessionId).neq('status', 'annule')
   let coutFormateur = (contrats || []).reduce((s: number, c: any) => s + Number(c.montant_ht || 0), 0)
+  if (coutFormateur <= 0 && existante?.cout_formateur_manuel != null) {
+    const nbHoraires = Array.isArray(sess.horaires_jours) ? sess.horaires_jours.length : 0
+    const nbJours = Math.max(1, nbHoraires || Number((sess.formation as any)?.duree_jours) || 1)
+    coutFormateur = (Number(existante.cout_formateur_manuel) || 0) * nbJours
+  }
+  if (coutFormateur <= 0) coutFormateur = Number(sess.cout_formateur || 0)
+
+  // POEI : on ajoute les coûts formateur des AUTRES sessions d'intervention du parcours
   if (poei) {
     const { data: interventions } = await supabase.from('poei_interventions').select('id').eq('poei_id', poei.id)
     const ivIds = (interventions || []).map((i: any) => i.id)
     if (ivIds.length) {
-      const { data: sessIv } = await supabase.from('sessions').select('id, cout_formateur').in('poei_intervention_id', ivIds)
+      const { data: sessIv } = await supabase.from('sessions').select('id, cout_formateur').in('poei_intervention_id', ivIds).neq('id', sessionId)
       for (const si of sessIv || []) {
         const { data: ctr } = await supabase.from('contrats_formateur').select('montant_ht').eq('session_id', si.id).neq('status', 'annule')
         const c = (ctr || []).reduce((s: number, x: any) => s + Number(x.montant_ht || 0), 0)
@@ -298,12 +307,6 @@ export async function recalcSessionCommission(
       }
     }
   }
-  if (coutFormateur <= 0 && existante?.cout_formateur_manuel != null) {
-    const nbHoraires = Array.isArray(sess.horaires_jours) ? sess.horaires_jours.length : 0
-    const nbJours = Math.max(1, nbHoraires || Number((sess.formation as any)?.duree_jours) || 1)
-    coutFormateur = (Number(existante.cout_formateur_manuel) || 0) * nbJours
-  }
-  if (coutFormateur <= 0) coutFormateur = Number(sess.cout_formateur || 0)
 
   const { montant } = computeCommission({ type, taux, montantPriseEnCharge: base, coutFormateur })
   const status: CommissionStatus = sess.status === 'annulee'
