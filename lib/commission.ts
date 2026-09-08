@@ -173,7 +173,7 @@ export async function recalcDossierCommission(
 export interface SessionCommissionResult {
   montant: number
   base: number
-  baseSource: 'opco' | 'prix_ht' | 'aucune'
+  baseSource: 'opco' | 'prix_ht' | 'factures' | 'poei' | 'aucune'
   coutFormateur: number
   type: CommissionType
   status: CommissionStatus
@@ -229,11 +229,32 @@ export async function recalcSessionCommission(
   const type: CommissionType = (franchise.commission_type as CommissionType) || 'budget_debloque'
   const taux = Number(franchise.taux_commission || (type === 'budget_net' ? 40 : 10))
 
-  // Base : prise en charge OPCO de la session, sinon prix HT
+  // Base : prise en charge OPCO de la session, sinon prix HT, sinon ce qui a
+  // été facturé pour la session (factures rattachées, hors brouillons et
+  // annulées), sinon le montant du dossier POEI dont elle est la session.
   const opco = Number(sess.montant_finance_opco || 0)
   const prix = Number(sess.prix_ht || 0)
-  const base = opco > 0 ? opco : prix
-  const baseSource: SessionCommissionResult['baseSource'] = opco > 0 ? 'opco' : prix > 0 ? 'prix_ht' : 'aucune'
+  let base = opco > 0 ? opco : prix
+  let baseSource: SessionCommissionResult['baseSource'] = opco > 0 ? 'opco' : prix > 0 ? 'prix_ht' : 'aucune'
+  if (base <= 0) {
+    const { data: factures } = await supabase
+      .from('factures').select('montant_ht, status').eq('session_id', sessionId)
+      .not('status', 'in', '("brouillon","annulee")')
+    const facture = (factures || []).reduce((s: number, f: any) => s + Number(f.montant_ht || 0), 0)
+    if (facture > 0) { base = facture; baseSource = 'factures' }
+  }
+  if (base <= 0) {
+    const { data: poei } = await supabase
+      .from('poei').select('id, montant_total, montant_horaire, duree_heures').eq('session_id', sessionId).maybeSingle()
+    let montantPoei = Number(poei?.montant_total || 0)
+    if (poei && montantPoei <= 0 && Number(poei.montant_horaire) > 0 && Number(poei.duree_heures) > 0) {
+      // Total non figé sur le dossier : taux horaire × heures × candidats actifs
+      const { count } = await supabase.from('poei_candidats').select('id', { count: 'exact', head: true })
+        .eq('poei_id', poei.id).neq('statut', 'abandonne')
+      montantPoei = Number(poei.montant_horaire) * Number(poei.duree_heures) * Math.max(1, count || 0)
+    }
+    if (montantPoei > 0) { base = Math.round(montantPoei * 100) / 100; baseSource = 'poei' }
+  }
 
   // Coût formateur : contrats de la session, sinon tarif journalier saisi × jours, sinon champ session
   const { data: contrats } = await supabase
