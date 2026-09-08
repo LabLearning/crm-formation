@@ -104,6 +104,24 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       .order('nom'),
   ])
 
+  // Formateurs intervenus (uniques) et état des évaluations demandées au
+  // référent pour chacun d'eux — résilient avant la migration 146.
+  const formateursPoei = Array.from(
+    new Map(((interventions || []) as any[])
+      .filter((iv) => iv.formateur_id)
+      .map((iv) => [String(iv.formateur_id), { id: String(iv.formateur_id), nom: `${iv.formateur?.prenom || ''} ${iv.formateur?.nom || ''}`.trim() || 'Formateur' }]))
+      .values(),
+  )
+  const { data: evalsFormateurs } = await supabase
+    .from('appreciations_parties_prenantes')
+    .select('formateur_id, statut, sent_at, repondu_at, note_globale')
+    .eq('poei_id', params.id).eq('type', 'evaluation_formateur')
+  const etatEvaluations: Record<string, { statut: string; date: string | null; note: number | null }> = {}
+  for (const e of (evalsFormateurs || []) as any[]) {
+    if (!e.formateur_id) continue
+    const prev = etatEvaluations[e.formateur_id]
+    if (!prev || e.statut === 'repondu') etatEvaluations[e.formateur_id] = { statut: e.statut, date: e.repondu_at || e.sent_at || null, note: e.note_globale ?? null }
+  }
   // Planning de travail des candidats (post-théorie) + période proposée par
   // défaut : du lendemain de la fin de POEI, sur 4 semaines.
   const { data: planningJours } = await supabase
@@ -174,6 +192,9 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
       || (contactsClient || []).find((x: any) => x.est_principal)
       || (contactsClient || [])[0] || null
   }
+  // Destinataire affiché dans l'onglet Mails pour les évaluations formateur
+  // (l'action d'envoi refait sa propre résolution, référent formation en tête).
+  const referentMail = referent?.email ? { nom: `${referent.prenom || ''} ${referent.nom || ''}`.trim(), email: referent.email as string } : null
 
   // Signature de l'employeur sur l'attestation de développement de
   // compétences : demandée, signée, ou encore à envoyer. Résilient avant la
@@ -454,6 +475,9 @@ export default async function PoeiDetailPage({ params }: { params: { id: string 
           <PoeiMails
             poeiId={p.id}
             candidats={candidatsMails}
+            formateurs={formateursPoei}
+            etatEvaluations={etatEvaluations}
+            referent={referentMail}
             historique={<PoeiEmailHistory logs={(emailLogs || []) as any[]} />}
           />
         }

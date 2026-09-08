@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine, ArrowLeft, ArrowRight, Eye, Paperclip, AlertTriangle } from '@/components/ui/icons'
+import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine, ArrowLeft, ArrowRight, Eye, Paperclip, AlertTriangle, ClipboardCheck } from '@/components/ui/icons'
 import { Button, Modal, Input, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { PoeiSection } from './PoeiSection'
 import { sendAttestationsEntreeAction, sendGroupEmailToCandidatsAction, getPoeiEmailTemplatesAction } from '../actions'
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 import { apercuEnvoiPoeiAction, type ApercuMail } from '../apercu-mail-actions'
+import { envoyerEvaluationsFormateursAction } from '../evaluation-formateur-actions'
 
 export interface CandidatMail {
   id: string
@@ -20,12 +21,16 @@ export interface CandidatMail {
   certificatSigneLe?: string | null
 }
 
-type TypeEnvoi = 'attestation' | 'certificat' | 'libre'
+export interface FormateurMail { id: string; nom: string }
+export type EtatEvaluation = { statut: string; date: string | null; note: number | null }
+
+type TypeEnvoi = 'attestation' | 'certificat' | 'libre' | 'evaluation_formateur'
 
 const TYPES: { cle: TypeEnvoi; titre: string; sous: string; icone: React.ElementType }[] = [
   { cle: 'attestation', titre: "Attestation d'entrée en formation", sous: 'À envoyer au démarrage du parcours', icone: GraduationCap },
   { cle: 'certificat', titre: 'Certificat de réalisation à signer', sous: 'Lien de signature envoyé en fin de parcours', icone: Award },
   { cle: 'libre', titre: 'Message libre', sous: 'Courrier personnalisé, avec ou sans pièce jointe', icone: PenLine },
+  { cle: 'evaluation_formateur', titre: 'Évaluation du formateur par le référent', sous: 'Un questionnaire par formateur, adressé au référent de l’établissement', icone: ClipboardCheck },
 ]
 
 /**
@@ -34,16 +39,22 @@ const TYPES: { cle: TypeEnvoi; titre: string; sous: string; icone: React.Element
  * gabarit et mêmes textes que l'envoi réel) avant de confirmer.
  */
 export function PoeiMails({
-  poeiId, candidats, historique,
+  poeiId, candidats, historique, formateurs = [], etatEvaluations = {}, referent = null,
 }: {
   poeiId: string
   candidats: CandidatMail[]
   historique: React.ReactNode
+  /** Formateurs intervenus sur la POEI (évaluation par le référent). */
+  formateurs?: FormateurMail[]
+  etatEvaluations?: Record<string, EtatEvaluation>
+  /** Référent de l'établissement, destinataire des évaluations formateur. */
+  referent?: { nom: string; email: string } | null
 }) {
   const router = useRouter()
   const { toast } = useToast()
   const [type, setType] = useState<TypeEnvoi | null>(null)
   const [selection, setSelection] = useState<string[]>([])
+  const [selectionFormateurs, setSelectionFormateurs] = useState<string[]>([])
   const [sujet, setSujet] = useState('')
   const [message, setMessage] = useState('')
   const [templates, setTemplates] = useState<{ slug: string; nom: string; sujet: string; corps_texte: string }[]>([])
@@ -59,6 +70,7 @@ export function PoeiMails({
     setApercus(null)
     setIndex(0)
     setSelection(avecEmail.map((c) => c.id))
+    setSelectionFormateurs(formateurs.filter((f) => etatEvaluations[f.id]?.statut !== 'repondu').map((f) => f.id))
     if (t === 'libre') {
       setSujet('')
       setMessage('')
@@ -74,6 +86,15 @@ export function PoeiMails({
   }
 
   async function previsualiser() {
+    if (type === 'evaluation_formateur') {
+      if (selectionFormateurs.length === 0) { toast('error', 'Aucun formateur sélectionné'); return }
+      setChargementApercu(true)
+      const r = await envoyerEvaluationsFormateursAction(poeiId, selectionFormateurs, { preview: true })
+      setChargementApercu(false)
+      if (r.success && r.data?.apercus) { setApercus(r.data.apercus); setIndex(0) }
+      else toast('error', r.error || "Impossible de préparer l'aperçu")
+      return
+    }
     if (selection.length === 0) { toast('error', 'Aucun destinataire sélectionné'); return }
     if (type === 'libre' && (!sujet.trim() || !message.trim())) { toast('error', 'Sujet et message sont requis'); return }
     setChargementApercu(true)
@@ -84,6 +105,17 @@ export function PoeiMails({
   }
 
   async function envoyer() {
+    if (type === 'evaluation_formateur') {
+      setEnvoi(true)
+      const r = await envoyerEvaluationsFormateursAction(poeiId, selectionFormateurs)
+      setEnvoi(false)
+      if (r.success) {
+        toast('success', `Questionnaire${(r.data?.sent || 0) > 1 ? 's' : ''} envoyé${(r.data?.sent || 0) > 1 ? 's' : ''} à ${r.data?.referent?.email || 'référent'}${r.data?.skipped?.length ? ` (ignorés : ${r.data.skipped.join(', ')})` : ''}`)
+        fermer()
+        router.refresh()
+      } else toast('error', r.error || "L'envoi a échoué")
+      return
+    }
     if (selection.length === 0) { toast('error', 'Aucun destinataire sélectionné'); return }
     setEnvoi(true)
     let r: any
@@ -131,16 +163,22 @@ export function PoeiMails({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {TYPES.map((t) => {
           const Icone = t.icone
+          const estEval = t.cle === 'evaluation_formateur'
+          const total = estEval ? formateurs.length : candidats.length
           const faits = t.cle === 'attestation'
             ? candidats.filter((c) => c.attestationEnvoyeeLe).length
             : t.cle === 'certificat'
               ? candidats.filter((c) => c.certificatEnvoyeLe || c.certificatSigneLe).length
-              : null
+              : estEval
+                ? formateurs.filter((f) => etatEvaluations[f.id]?.statut === 'repondu').length
+                : null
+          const inactif = estEval ? (formateurs.length === 0 || !referent) : avecEmail.length === 0
           return (
             <button
               key={t.cle}
               onClick={() => ouvrir(t.cle)}
-              disabled={avecEmail.length === 0}
+              disabled={inactif}
+              title={estEval && !referent ? 'Aucun référent avec email sur la fiche client' : undefined}
               className="card p-4 text-left hover:border-surface-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-start justify-between gap-2">
@@ -148,9 +186,9 @@ export function PoeiMails({
                 {faits !== null && (
                   <span className={cn(
                     'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
-                    faits === candidats.length && candidats.length > 0 ? 'bg-success-50 text-success-700' : 'bg-danger-50 text-danger-700',
+                    faits === total && total > 0 ? 'bg-success-50 text-success-700' : 'bg-danger-50 text-danger-700',
                   )}>
-                    {faits}/{candidats.length}
+                    {faits}/{total}
                   </span>
                 )}
               </div>
@@ -294,6 +332,55 @@ export function PoeiMails({
               </>
             )}
 
+            {type === 'evaluation_formateur' ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm">
+                  <span className="text-surface-500">Destinataire : </span>
+                  {referent ? (
+                    <span className="text-surface-900">{referent.nom || 'Référent'} <span className="text-surface-500">&lt;{referent.email}&gt;</span></span>
+                  ) : (
+                    <span className="text-danger-700">aucun référent avec email sur la fiche client</span>
+                  )}
+                  <div className="text-xs text-surface-500 mt-0.5">Le référent reçoit un questionnaire distinct pour chaque formateur coché.</div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="section-label">Formateurs ({selectionFormateurs.length}/{formateurs.length})</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectionFormateurs(selectionFormateurs.length === formateurs.length ? [] : formateurs.map((f) => f.id))}
+                      className="text-xs text-brand-600 hover:underline"
+                    >
+                      {selectionFormateurs.length === formateurs.length ? 'Tout décocher' : 'Tout sélectionner'}
+                    </button>
+                  </div>
+                  <div className="rounded-xl border border-surface-200 divide-y divide-surface-100">
+                    {formateurs.map((f) => {
+                      const etat = etatEvaluations[f.id]
+                      return (
+                        <label key={f.id} className="flex items-center gap-3 px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={selectionFormateurs.includes(f.id)}
+                            onChange={() => setSelectionFormateurs((s) => (s.includes(f.id) ? s.filter((x) => x !== f.id) : [...s, f.id]))}
+                            className="h-4 w-4 rounded border-surface-300 text-brand-600"
+                          />
+                          <span className="min-w-0 flex-1 text-sm text-surface-800 truncate">{f.nom}</span>
+                          {etat?.statut === 'repondu' && (
+                            <span className="text-[11px] text-success-600 shrink-0 inline-flex items-center gap-1">
+                              <Check className="h-3 w-3" /> Évalué{etat.note != null ? ` ${etat.note}/5` : ''}{etat.date ? ` le ${formatDate(etat.date)}` : ''}
+                            </span>
+                          )}
+                          {etat?.statut === 'envoye' && (
+                            <span className="text-[11px] text-surface-500 shrink-0">Envoyé{etat.date ? ` le ${formatDate(etat.date)}` : ''}, en attente</span>
+                          )}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="section-label">Destinataires ({selection.length}/{avecEmail.length})</span>
@@ -334,11 +421,14 @@ export function PoeiMails({
                 })}
               </div>
             </div>
+            )}
 
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={fermer}>Annuler</Button>
               <Button onClick={previsualiser} isLoading={chargementApercu} icon={<Eye className="h-4 w-4" />}>
-                Prévisualiser ({selection.length} candidat{selection.length > 1 ? 's' : ''})
+                {type === 'evaluation_formateur'
+                  ? `Prévisualiser (${selectionFormateurs.length} questionnaire${selectionFormateurs.length > 1 ? 's' : ''})`
+                  : `Prévisualiser (${selection.length} candidat${selection.length > 1 ? 's' : ''})`}
               </Button>
             </div>
           </div>

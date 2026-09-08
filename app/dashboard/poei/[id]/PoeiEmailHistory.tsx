@@ -19,6 +19,7 @@ interface EmailLog {
 const TEMPLATE_LABELS: Record<string, string> = {
   attestation_entree: "Attestation d'entrée",
   poei_groupe: 'Mail groupé',
+  evaluation_formateur: 'Évaluation formateur (référent)',
   convocation: 'Convocation',
   livret_accueil: "Livret d'accueil",
 }

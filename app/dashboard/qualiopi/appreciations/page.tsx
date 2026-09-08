@@ -7,10 +7,19 @@ import { BackLink } from '@/components/ui/BackLink'
 export const dynamic = 'force-dynamic'
 
 const TYPES: Record<string, { label: string; Icon: any }> = {
+  evaluation_formateur: { label: 'Évaluations des formateurs par les référents', Icon: GraduationCap },
   formateur: { label: 'Formateurs', Icon: GraduationCap },
   entreprise: { label: 'Entreprises clientes', Icon: Building2 },
   financeur: { label: 'Financeurs', Icon: Landmark },
 }
+
+const CRITERES_FORMATEUR: [string, string][] = [
+  ['note_ponctualite', 'Ponctualité'],
+  ['note_pedagogie', 'Pédagogie'],
+  ['note_maitrise', 'Maîtrise du métier'],
+  ['note_relationnel', 'Relationnel'],
+  ['note_adaptation', 'Adaptation'],
+]
 
 /**
  * Registre des appréciations des parties prenantes (indicateur 30) : toutes
@@ -23,11 +32,13 @@ export default async function AppreciationsPage() {
 
   const { data: appreciations } = await supabase
     .from('appreciations_parties_prenantes')
-    .select('id, type, note_globale, note_organisation, note_intervenant, recommande, commentaire, repondant_nom, repondant_fonction, created_at, client:client_id(raison_sociale, nom_commercial), session:session_id(reference)')
+    .select('id, type, statut, note_globale, note_organisation, note_intervenant, note_ponctualite, note_pedagogie, note_maitrise, note_relationnel, note_adaptation, recommande, commentaire, repondant_nom, repondant_fonction, created_at, repondu_at, client:client_id(raison_sociale, nom_commercial), session:session_id(reference), formateur:formateur_id(prenom, nom), poei:poei_id(numero)')
     .eq('organization_id', session.organization.id)
     .order('created_at', { ascending: false })
 
-  const rows = (appreciations || []) as any[]
+  // Les demandes envoyées au référent mais sans réponse ne sont pas des
+  // appréciations : hors registre et hors moyenne.
+  const rows = ((appreciations || []) as any[]).filter((r) => r.statut !== 'envoye')
   const moyenne = rows.filter((r) => r.note_globale != null)
   const note = moyenne.length ? (moyenne.reduce((a, r) => a + r.note_globale, 0) / moyenne.length).toFixed(1) : null
 
@@ -73,8 +84,15 @@ export default async function AppreciationsPage() {
                           <Star className="h-4 w-4 text-amber-400" /> {r.note_globale}/5
                         </span>
                       )}
+                      {r.type === 'evaluation_formateur' && r.formateur && (
+                        <span className="text-sm font-semibold text-surface-900">
+                          {[r.formateur.prenom, r.formateur.nom].filter(Boolean).join(' ')}
+                          <span className="font-normal text-surface-400"> évalué par</span>
+                        </span>
+                      )}
                       <span className="text-sm text-surface-800">{r.repondant_nom || 'Anonyme'}</span>
                       {r.repondant_fonction && <span className="text-xs text-surface-400">{r.repondant_fonction.replace(' — recueilli par téléphone', '')}</span>}
+                      {r.poei?.numero && <span className="text-xs text-surface-400">· {r.poei.numero}</span>}
                       {(r.client?.nom_commercial || r.client?.raison_sociale) && (
                         <span className="text-xs text-surface-500">· {r.client.nom_commercial || r.client.raison_sociale}</span>
                       )}
@@ -88,7 +106,12 @@ export default async function AppreciationsPage() {
                       </span>
                     </div>
                     {r.commentaire && <p className="text-sm text-surface-600 mt-1.5 whitespace-pre-line">{r.commentaire}</p>}
-                    {(r.note_organisation != null || r.note_intervenant != null || r.recommande != null) && (
+                    {r.type === 'evaluation_formateur' ? (
+                      <div className="flex items-center gap-4 mt-1.5 text-2xs text-surface-400 flex-wrap">
+                        {CRITERES_FORMATEUR.map(([cle, label]) => r[cle] != null && <span key={cle}>{label} : {r[cle]}/5</span>)}
+                        {r.recommande != null && <span>{r.recommande ? 'Retravaillerait avec ce formateur' : 'Ne souhaite pas retravailler avec ce formateur'}</span>}
+                      </div>
+                    ) : (r.note_organisation != null || r.note_intervenant != null || r.recommande != null) && (
                       <div className="flex items-center gap-4 mt-1.5 text-2xs text-surface-400">
                         {r.note_organisation != null && <span>Organisation : {r.note_organisation}/5</span>}
                         {r.note_intervenant != null && <span>Intervenant : {r.note_intervenant}/5</span>}
