@@ -359,23 +359,13 @@ export async function sendAttestationsEntreeAction(
   if (!canManage(session.user.role)) return { success: false, error: 'Accès non autorisé' }
   const supabase = await createServiceRoleClient()
 
-  const { data: p } = await supabase.from('poei').select('*').eq('id', poeiId).eq('organization_id', session.organization.id).single()
-  if (!p) return { success: false, error: 'Projet POEI introuvable' }
-
-  const { data: formation } = p.formation_id
-    ? await supabase.from('formations').select('*').eq('id', p.formation_id).single()
-    : { data: null } as any
+  // Contexte et textes partagés avec l'aperçu (lib/poei-emails) : ce qui est
+  // prévisualisé est exactement ce qui part.
+  const { contexteMailPoei, paramsAttestationEntree, enveloppeOrg, nomComplet } = await import('@/lib/poei-emails')
+  const ctx = await contexteMailPoei(supabase, session.organization.id, poeiId)
+  if (!ctx) return { success: false, error: 'Projet POEI introuvable' }
+  const { p, formation, employeur, org, orgRaw } = ctx
   if (!formation) return { success: false, error: 'Aucune formation liée au projet' }
-
-  let employeur: string | null = null
-  if (p.client_id) {
-    const { data: cl } = await supabase.from('clients').select('raison_sociale').eq('id', p.client_id).single()
-    employeur = cl?.raison_sociale || null
-  }
-
-  const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', session.organization.id).single()
-  const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
-  const org = await withDocumentLogo(supabase, orgRaw)
 
   const { renderToBuffer } = await import('@react-pdf/renderer')
   const { createElement } = await import('react')
@@ -393,7 +383,7 @@ export async function sendAttestationsEntreeAction(
   for (const c of candidats || []) {
     const a: any = c.apprenant
     if (!a) { skipped.push('candidat sans fiche apprenant'); continue }
-    if (!a.email) { skipped.push(`${a.prenom || ''} ${a.nom || ''}`.trim() || 'sans nom'); continue }
+    if (!a.email) { skipped.push(nomComplet(a) || 'sans nom'); continue }
 
     const buffer = await renderToBuffer(createElement(AttestationEntreePDF, {
       apprenant: a, formation, org,
@@ -402,29 +392,19 @@ export async function sendAttestationsEntreeAction(
       poei: { identifiant_ft: c.identifiant_ft, poste_vise: c.poste_vise, employeur },
     }) as any)
 
+    const { logSubject, ...params } = paramsAttestationEntree(ctx, a, custom)
     const result = await sendDocumentEmail({
       to: a.email,
-      orgName: org?.name || 'Lab Learning',
-      orgEmail: (org as any)?.email_contact || org?.email,
-      orgLogoUrl: (orgRaw as any)?.logo_url,  // logo clair : en-tête email sur fond vert
-      qualiopiCertified: (org as any)?.is_qualiopi !== false,
-      recipientName: `${a.prenom || ''} ${a.nom || ''}`.trim(),
-      subject: custom?.subject?.trim() || `Votre attestation d'entrée en formation — ${formation.intitule}`,
-      docTitle: "Attestation d'entrée en formation",
-      intro: custom?.message?.trim() || `Vous trouverez ci-joint votre attestation d'entrée en formation « ${formation.intitule} », à transmettre à France Travail si nécessaire.`,
-      metadata: [
-        ['Formation', formation.intitule],
-        ['Dates', p.date_debut ? `Du ${new Date(p.date_debut).toLocaleDateString('fr-FR')} au ${new Date(p.date_fin || p.date_debut).toLocaleDateString('fr-FR')}` : '—'],
-      ],
+      ...enveloppeOrg(org, orgRaw),
+      ...params,
       pdfBuffer: Buffer.from(buffer),
-      pdfFilename: `attestation-entree-${a.nom || 'candidat'}.pdf`,
     })
 
     await supabase.from('email_logs').insert({
       organization_id: session.organization.id,
       to_email: a.email,
-      to_name: `${a.prenom || ''} ${a.nom || ''}`.trim() || null,
-      subject: custom?.subject?.trim() || `Attestation d'entrée — ${formation.intitule}`,
+      to_name: nomComplet(a) || null,
+      subject: logSubject,
       template: 'attestation_entree',
       entity_type: 'poei',
       entity_id: poeiId,
@@ -435,7 +415,7 @@ export async function sendAttestationsEntreeAction(
     })
 
     if (result.success) sent++
-    else skipped.push(`${a.prenom || ''} ${a.nom || ''}`.trim())
+    else skipped.push(nomComplet(a))
   }
 
   await logAudit({ action: 'send_attestations_entree', entity_type: 'poei', entity_id: poeiId, details: { sent, skipped: skipped.length } })
@@ -907,22 +887,11 @@ export async function sendGroupEmailToCandidatsAction(
   const orgId = session.organization.id
   const supabase = await createServiceRoleClient()
 
-  const { data: p } = await supabase.from('poei').select('*').eq('id', poeiId).eq('organization_id', orgId).single()
-  if (!p) return { success: false, error: 'Projet POEI introuvable' }
-
-  const { data: formation } = p.formation_id
-    ? await supabase.from('formations').select('*').eq('id', p.formation_id).single()
-    : { data: null } as any
-
-  let employeur: string | null = null
-  if (p.client_id) {
-    const { data: cl } = await supabase.from('clients').select('raison_sociale').eq('id', p.client_id).single()
-    employeur = cl?.raison_sociale || null
-  }
-
-  const { data: orgRaw } = await supabase.from('organizations').select('*').eq('id', orgId).single()
-  const { withDocumentLogo } = await import('@/lib/pdf/org-logo')
-  const org = await withDocumentLogo(supabase, orgRaw)
+  // Contexte, variables et textes partagés avec l'aperçu (lib/poei-emails).
+  const { contexteMailPoei, paramsMessageLibre, enveloppeOrg, nomComplet } = await import('@/lib/poei-emails')
+  const ctx = await contexteMailPoei(supabase, orgId, poeiId)
+  if (!ctx) return { success: false, error: 'Projet POEI introuvable' }
+  const { p, formation, employeur, org, orgRaw } = ctx
   const { sendDocumentEmail } = await import('@/lib/email')
 
   const { data: candidats } = await supabase
@@ -931,95 +900,18 @@ export async function sendGroupEmailToCandidatsAction(
     .in('id', candidatIds)
     .eq('organization_id', orgId)
 
-  const fmtFr = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : ''
-  const datesStr = p.date_debut ? `du ${fmtFr(p.date_debut)} au ${fmtFr(p.date_fin || p.date_debut)}` : ''
-
-  // Lieu et planning : ce sont les interventions qui portent l'adresse et les
-  // horaires réels, le parcours ne fait que les chapeauter
-  const { data: interventions } = await supabase
-    .from('poei_interventions')
-    .select('libelle, date_debut, date_fin, lieu, adresse, code_postal, ville, horaires, formateur:formateurs(prenom, nom)')
-    .eq('poei_id', poeiId)
-    .order('date_debut', { ascending: true })
-
-  const adresseDe = (x: any) =>
-    [x?.lieu, x?.adresse, [x?.code_postal, x?.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ')
-
-  const premiere = (interventions || []).find((iv: any) => adresseDe(iv))
-  let lieuStr = premiere ? adresseDe(premiere) : ''
-  let horairesStr = (premiere as any)?.horaires || ''
-  let formateurStr = ''
-  if (premiere) {
-    const f: any = Array.isArray((premiere as any).formateur) ? (premiere as any).formateur[0] : (premiere as any).formateur
-    formateurStr = f ? `${f.prenom || ''} ${f.nom || ''}`.trim() : ''
-  }
-
-  // Repli sur la session du parcours si aucune intervention n'est renseignée
-  if (!lieuStr && p.session_id) {
-    const { data: sess } = await supabase.from('sessions').select('lieu, adresse, code_postal, ville, horaires').eq('id', p.session_id).single()
-    lieuStr = adresseDe(sess)
-    horairesStr = horairesStr || sess?.horaires || ''
-  }
-
-  // Planning détaillé : une ligne par période, pour une convocation complète
-  const planningStr = (interventions || [])
-    .filter((iv: any) => iv.date_debut)
-    .map((iv: any) => {
-      const f: any = Array.isArray(iv.formateur) ? iv.formateur[0] : iv.formateur
-      const periode = iv.date_fin && iv.date_fin !== iv.date_debut
-        ? `du ${fmtFr(iv.date_debut)} au ${fmtFr(iv.date_fin)}`
-        : `le ${fmtFr(iv.date_debut)}`
-      return [
-        `• ${iv.libelle} — ${periode}`,
-        iv.horaires ? `  Horaires : ${iv.horaires}` : null,
-        adresseDe(iv) ? `  Lieu : ${adresseDe(iv)}` : null,
-        f ? `  Formateur : ${`${f.prenom || ''} ${f.nom || ''}`.trim()}` : null,
-      ].filter(Boolean).join('\n')
-    })
-    .join('\n\n')
-
-  // Texte saisi → HTML email : paragraphes (ligne vide), retours à la ligne,
-  // **gras**. Sans ça, tout le message arriverait en un seul bloc.
-  const toHtml = (txt: string) => {
-    const escaped = txt
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#18181b;">$1</strong>')
-    return escaped
-      .split(/\n\s*\n/)
-      .map((para) => para.trim())
-      .filter(Boolean)
-      .map((para) => `<p style="margin:0 0 14px;color:#71717a;font-size:15px;line-height:1.7;">${para.replace(/\n/g, '<br>')}</p>`)
-      .join('')
-  }
-
   let sent = 0
   const skipped: string[] = []
   for (const c of candidats || []) {
     const a: any = c.apprenant
-    const nomComplet = `${a?.prenom || ''} ${a?.nom || ''}`.trim()
     if (!a) { skipped.push('candidat sans fiche apprenant'); continue }
-    if (!a.email) { skipped.push(nomComplet || 'sans nom'); continue }
+    if (!a.email) { skipped.push(nomComplet(a) || 'sans nom'); continue }
 
-    // Personnalisation par destinataire
-    const fill = (s: string) => s
-      .replace(/\{prenom\}/gi, a.prenom || '')
-      .replace(/\{nom\}/gi, a.nom || '')
-      .replace(/\{formation\}/gi, formation?.intitule || '')
-      .replace(/\{entreprise\}/gi, employeur || '')
-      .replace(/\{dates\}/gi, datesStr)
-      .replace(/\{lieu\}/gi, lieuStr)
-      .replace(/\{duree_heures\}/gi, p.duree_heures != null ? String(p.duree_heures) : '')
-      .replace(/\{date_debut\}/gi, fmtFr(p.date_debut))
-      .replace(/\{date_fin\}/gi, fmtFr(p.date_fin))
-      .replace(/\{adresse\}/gi, lieuStr)
-      .replace(/\{horaires\}/gi, horairesStr)
-      .replace(/\{formateur\}/gi, formateurStr)
-      .replace(/\{planning\}/gi, planningStr)
+    const params = paramsMessageLibre(ctx, a, payload)
 
     // Pièce jointe optionnelle : attestation d'entrée du candidat
     let pdfBuffer: Buffer | undefined
-    let pdfFilename: string | undefined
-    if (payload.joindreAttestation && formation) {
+    if (params.pdfFilename) {
       try {
         const { renderToBuffer } = await import('@react-pdf/renderer')
         const { createElement } = await import('react')
@@ -1031,33 +923,23 @@ export async function sendGroupEmailToCandidatsAction(
           poei: { identifiant_ft: c.identifiant_ft, poste_vise: c.poste_vise, employeur },
         }) as any)
         pdfBuffer = Buffer.from(buf)
-        pdfFilename = `attestation-entree-${a.nom || 'candidat'}.pdf`
       } catch (e) { console.error('[mail groupé — attestation]', e) }
     }
 
     const result = await sendDocumentEmail({
       to: a.email,
-      orgName: org?.name || 'Lab Learning',
-      orgEmail: (org as any)?.email_contact || org?.email,
-      orgLogoUrl: (orgRaw as any)?.logo_url,  // logo clair : en-tête email sur fond vert
-      qualiopiCertified: (org as any)?.is_qualiopi !== false,
-      recipientName: nomComplet,
-      subject: fill(payload.subject),
-      docTitle: fill(payload.subject),
-      intro: toHtml(fill(payload.message)),
-      metadata: formation ? [
-        ['Formation', formation.intitule],
-        ...(datesStr ? [['Dates', datesStr] as [string, string]] : []),
-      ] : [],
-      pdfBuffer, pdfFilename,
+      ...enveloppeOrg(org, orgRaw),
+      ...params,
+      pdfFilename: pdfBuffer ? params.pdfFilename : undefined,
+      pdfBuffer,
       extraAttachments: payload.attachments,
     })
 
     await supabase.from('email_logs').insert({
       organization_id: orgId,
       to_email: a.email,
-      to_name: nomComplet || null,
-      subject: fill(payload.subject),
+      to_name: nomComplet(a) || null,
+      subject: params.subject,
       template: 'poei_groupe',
       entity_type: 'poei',
       entity_id: poeiId,
@@ -1068,7 +950,7 @@ export async function sendGroupEmailToCandidatsAction(
     })
 
     if (result.success) sent++
-    else skipped.push(nomComplet)
+    else skipped.push(nomComplet(a))
   }
 
   await logAudit({ action: 'send_group_email_poei', entity_type: 'poei', entity_id: poeiId, details: { sent, skipped: skipped.length } })
