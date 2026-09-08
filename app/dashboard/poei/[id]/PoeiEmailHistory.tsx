@@ -20,6 +20,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   attestation_entree: "Attestation d'entrée",
   poei_groupe: 'Mail groupé',
   evaluation_formateur: 'Évaluation formateur (référent)',
+  hygiene_poei: 'Attestations hygiène + diplôme',
   convocation: 'Convocation',
   livret_accueil: "Livret d'accueil",
 }

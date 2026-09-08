@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine, ArrowLeft, ArrowRight, Eye, Paperclip, AlertTriangle, ClipboardCheck } from '@/components/ui/icons'
+import { Mail, Send, GraduationCap, Award, Users, Check, Loader2, PenLine, ArrowLeft, ArrowRight, Eye, Paperclip, AlertTriangle, ClipboardCheck, ShieldCheck } from '@/components/ui/icons'
 import { Button, Modal, Input, useToast } from '@/components/ui'
 import { cn, formatDate } from '@/lib/utils'
 import { PoeiSection } from './PoeiSection'
@@ -10,6 +10,7 @@ import { sendAttestationsEntreeAction, sendGroupEmailToCandidatsAction, getPoeiE
 import { sendCertificatSignatureAction, sendAllCertificatSignaturesAction } from '../certificat-signature-actions'
 import { apercuEnvoiPoeiAction, type ApercuMail } from '../apercu-mail-actions'
 import { envoyerEvaluationsFormateursAction } from '../evaluation-formateur-actions'
+import { envoyerHygienePoeiAction } from '../hygiene-poei-actions'
 
 export interface CandidatMail {
   id: string
@@ -24,14 +25,18 @@ export interface CandidatMail {
 export interface FormateurMail { id: string; nom: string }
 export type EtatEvaluation = { statut: string; date: string | null; note: number | null }
 
-type TypeEnvoi = 'attestation' | 'certificat' | 'libre' | 'evaluation_formateur'
+type TypeEnvoi = 'attestation' | 'certificat' | 'libre' | 'evaluation_formateur' | 'hygiene'
 
 const TYPES: { cle: TypeEnvoi; titre: string; sous: string; icone: React.ElementType }[] = [
   { cle: 'attestation', titre: "Attestation d'entrée en formation", sous: 'À envoyer au démarrage du parcours', icone: GraduationCap },
   { cle: 'certificat', titre: 'Certificat de réalisation à signer', sous: 'Lien de signature envoyé en fin de parcours', icone: Award },
   { cle: 'libre', titre: 'Message libre', sous: 'Courrier personnalisé, avec ou sans pièce jointe', icone: PenLine },
+  { cle: 'hygiene', titre: 'Attestations d’hygiène et diplôme de l’établissement', sous: 'Envoyés au référent en fin de parcours, une attestation par candidat', icone: ShieldCheck },
   { cle: 'evaluation_formateur', titre: 'Évaluation du formateur par le référent', sous: 'Un questionnaire par formateur, adressé au référent de l’établissement', icone: ClipboardCheck },
 ]
+
+/** Durée du module hygiène alimentaire portée sur les attestations (modifiable, jamais 0). */
+const HEURES_HYGIENE_DEFAUT = 14
 
 /**
  * Centre d'envoi du dossier : on choisit un type d'envoi, les destinataires,
@@ -55,6 +60,8 @@ export function PoeiMails({
   const [type, setType] = useState<TypeEnvoi | null>(null)
   const [selection, setSelection] = useState<string[]>([])
   const [selectionFormateurs, setSelectionFormateurs] = useState<string[]>([])
+  const [selectionHygiene, setSelectionHygiene] = useState<string[]>([])
+  const [heuresHygiene, setHeuresHygiene] = useState<string>(String(HEURES_HYGIENE_DEFAUT))
   const [sujet, setSujet] = useState('')
   const [message, setMessage] = useState('')
   const [templates, setTemplates] = useState<{ slug: string; nom: string; sujet: string; corps_texte: string }[]>([])
@@ -71,6 +78,7 @@ export function PoeiMails({
     setIndex(0)
     setSelection(avecEmail.map((c) => c.id))
     setSelectionFormateurs(formateurs.filter((f) => etatEvaluations[f.id]?.statut !== 'repondu').map((f) => f.id))
+    setSelectionHygiene(candidats.filter((c) => c.apprenantId).map((c) => c.id))
     if (t === 'libre') {
       setSujet('')
       setMessage('')
@@ -86,6 +94,17 @@ export function PoeiMails({
   }
 
   async function previsualiser() {
+    if (type === 'hygiene') {
+      const heures = Number(heuresHygiene)
+      if (!selectionHygiene.length) { toast('error', 'Aucun candidat sélectionné'); return }
+      if (!(heures > 0)) { toast('error', 'Indiquez la durée du module hygiène (jamais 0 heure)'); return }
+      setChargementApercu(true)
+      const r = await envoyerHygienePoeiAction(poeiId, { candidatIds: selectionHygiene, heures, preview: true })
+      setChargementApercu(false)
+      if (r.success && r.data?.apercus) { setApercus(r.data.apercus); setIndex(0) }
+      else toast('error', r.error || "Impossible de préparer l'aperçu")
+      return
+    }
     if (type === 'evaluation_formateur') {
       if (selectionFormateurs.length === 0) { toast('error', 'Aucun formateur sélectionné'); return }
       setChargementApercu(true)
@@ -105,6 +124,17 @@ export function PoeiMails({
   }
 
   async function envoyer() {
+    if (type === 'hygiene') {
+      setEnvoi(true)
+      const r = await envoyerHygienePoeiAction(poeiId, { candidatIds: selectionHygiene, heures: Number(heuresHygiene) })
+      setEnvoi(false)
+      if (r.success) {
+        toast('success', `Attestations d'hygiène et diplôme envoyés à ${r.data?.referent?.email || 'l’établissement'}`)
+        fermer()
+        router.refresh()
+      } else toast('error', r.error || "L'envoi a échoué")
+      return
+    }
     if (type === 'evaluation_formateur') {
       setEnvoi(true)
       const r = await envoyerEvaluationsFormateursAction(poeiId, selectionFormateurs)
@@ -164,6 +194,7 @@ export function PoeiMails({
         {TYPES.map((t) => {
           const Icone = t.icone
           const estEval = t.cle === 'evaluation_formateur'
+          const estHygiene = t.cle === 'hygiene'
           const total = estEval ? formateurs.length : candidats.length
           const faits = t.cle === 'attestation'
             ? candidats.filter((c) => c.attestationEnvoyeeLe).length
@@ -172,13 +203,17 @@ export function PoeiMails({
               : estEval
                 ? formateurs.filter((f) => etatEvaluations[f.id]?.statut === 'repondu').length
                 : null
-          const inactif = estEval ? (formateurs.length === 0 || !referent) : avecEmail.length === 0
+          const inactif = estEval
+            ? (formateurs.length === 0 || !referent)
+            : estHygiene
+              ? (candidats.length === 0 || !referent)
+              : avecEmail.length === 0
           return (
             <button
               key={t.cle}
               onClick={() => ouvrir(t.cle)}
               disabled={inactif}
-              title={estEval && !referent ? 'Aucun référent avec email sur la fiche client' : undefined}
+              title={(estEval || estHygiene) && !referent ? 'Aucun référent avec email sur la fiche client' : undefined}
               className="card p-4 text-left hover:border-surface-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-start justify-between gap-2">
@@ -332,7 +367,48 @@ export function PoeiMails({
               </>
             )}
 
-            {type === 'evaluation_formateur' ? (
+            {type === 'hygiene' ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm">
+                  <span className="text-surface-500">Destinataire : </span>
+                  {referent ? (
+                    <span className="text-surface-900">{referent.nom || 'Référent'} <span className="text-surface-500">&lt;{referent.email}&gt;</span></span>
+                  ) : (
+                    <span className="text-danger-700">aucun référent avec email sur la fiche client</span>
+                  )}
+                  <div className="text-xs text-surface-500 mt-0.5">Un seul email : les attestations d’hygiène des candidats cochés (une page chacun) et le diplôme de l’établissement en pièces jointes.</div>
+                </div>
+                <label className="block text-sm font-medium text-surface-700">
+                  Durée du module hygiène alimentaire portée sur les attestations (heures)
+                  <input type="number" min={1} step={0.5} value={heuresHygiene} onChange={(e) => setHeuresHygiene(e.target.value)} className="input-base mt-1.5 w-40" />
+                </label>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="section-label">Candidats ({selectionHygiene.length}/{candidats.length})</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectionHygiene(selectionHygiene.length === candidats.length ? [] : candidats.map((c) => c.id))}
+                      className="text-xs text-brand-600 hover:underline"
+                    >
+                      {selectionHygiene.length === candidats.length ? 'Tout décocher' : 'Tout sélectionner'}
+                    </button>
+                  </div>
+                  <div className="rounded-xl border border-surface-200 divide-y divide-surface-100 max-h-64 overflow-y-auto">
+                    {candidats.map((c) => (
+                      <label key={c.id} className="flex items-center gap-3 px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectionHygiene.includes(c.id)}
+                          onChange={() => setSelectionHygiene((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))}
+                          className="h-4 w-4 rounded border-surface-300 text-brand-600"
+                        />
+                        <span className="min-w-0 flex-1 text-sm text-surface-800 truncate">{c.nom}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : type === 'evaluation_formateur' ? (
               <div className="space-y-3">
                 <div className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm">
                   <span className="text-surface-500">Destinataire : </span>
@@ -428,7 +504,9 @@ export function PoeiMails({
               <Button onClick={previsualiser} isLoading={chargementApercu} icon={<Eye className="h-4 w-4" />}>
                 {type === 'evaluation_formateur'
                   ? `Prévisualiser (${selectionFormateurs.length} questionnaire${selectionFormateurs.length > 1 ? 's' : ''})`
-                  : `Prévisualiser (${selection.length} candidat${selection.length > 1 ? 's' : ''})`}
+                  : type === 'hygiene'
+                    ? `Prévisualiser (${selectionHygiene.length} attestation${selectionHygiene.length > 1 ? 's' : ''} + diplôme)`
+                    : `Prévisualiser (${selection.length} candidat${selection.length > 1 ? 's' : ''})`}
               </Button>
             </div>
           </div>
